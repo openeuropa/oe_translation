@@ -1,0 +1,6 @@
+name: OpenEuropa Translation
+description: Provides the translation capabilities for OpenEuropa contents and translatable items.
+package: OpenEuropa
+
+type: module
+core: 8.x
