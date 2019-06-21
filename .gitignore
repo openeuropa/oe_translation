@@ -1,0 +1,10 @@
+.DS_Store
+.idea
+behat.yml
+build
+composer.lock
+docker-compose.*.yml
+grumphp.yml
+phpunit.xml
+runner.yml
+vendor
