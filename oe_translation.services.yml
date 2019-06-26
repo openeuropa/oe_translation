@@ -1,0 +1,8 @@
+services:
+  oe_translation.route_subscriber:
+    class: Drupal\oe_translation\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  oe_translation.translation_provider_routes:
+    class: Drupal\oe_translation\Routing\TranslationProviderRoutes
+    arguments: ['@plugin.manager.tmgmt.translator']

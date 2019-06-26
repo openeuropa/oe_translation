@@ -2,7 +2,128 @@
 
 /**
  * @file
- * OpenEuropa Translation module.
+ * OpenEuropa Translation module file.
  */
 
 declare(strict_types = 1);
+
+use Drupal\oe_translation\AlterableTranslatorInterface;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Breadcrumb\Breadcrumb;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\LocalTranslatorInterface;
+use Drupal\oe_translation\TranslationModerationHandler;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the Local Task item edit form.
+ */
+function oe_translation_form_tmgmt_local_task_item_edit_form_alter(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\tmgmt_local\LocalTaskItemInterface $task_item */
+  $task_item = $form_state->getBuildInfo()['callback_object']->getEntity();
+  $job = $task_item->getJobItem()->getJob();
+  try {
+    $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($job->getTranslator()->getPluginId());
+    if ($translator_plugin instanceof AlterableTranslatorInterface) {
+      $translator_plugin->localTaskItemFormAlter($form, $form_state);
+    }
+  }
+  catch (PluginNotFoundException $exception) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_form_alter() for the Job item edit form.
+ *
+ * This is the form used to review the translation.
+ */
+function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  /** @var \Drupal\tmgmt\JobItemInterface $job_item */
+  $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
+  $job = $job_item->getJob();
+  try {
+    $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($job->getTranslator()->getPluginId());
+    if ($translator_plugin instanceof AlterableTranslatorInterface) {
+      $translator_plugin->jobItemFormAlter($form, $form_state);
+    }
+  }
+  catch (PluginNotFoundException $exception) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function oe_translation_entity_type_alter(array &$entity_types) {
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if (!$entity_type->hasHandlerClass('moderation')) {
+      continue;
+    }
+
+    $entity_type->setHandlerClass('moderation', TranslationModerationHandler::class);
+  }
+}
+
+/**
+ * Implements hook_tmgmt_translatable_fields_alter().
+ */
+function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $entity, &$translatable_fields) {
+  if (isset($translatable_fields['moderation_state'])) {
+    unset($translatable_fields['moderation_state']);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for the Local Task Item.
+ */
+function oe_translation_tmgmt_local_task_item_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  $access = AccessResult::neutral();
+
+  /** @var \Drupal\tmgmt\TranslatorInterface[] $translators */
+  $translators = \Drupal::entityTypeManager()->getStorage('tmgmt_translator')->loadMultiple();
+  foreach ($translators as $translator) {
+    $plugin_id = $translator->getPluginId();
+    try {
+      $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($plugin_id);
+      if ($translator_plugin instanceof LocalTranslatorInterface) {
+        $access = $access->orIf($translator_plugin->localTaskItemAccess($entity, $operation, $account))->addCacheableDependency($translator);
+      }
+    }
+    catch (PluginNotFoundException $exception) {
+      continue;
+    }
+  }
+
+  return $access->addCacheableDependency(\Drupal::entityTypeManager()->getStorage('tmgmt_translator')->getEntityType()->getListCacheTags());
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function oe_translation_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context) {
+  if ($route_match->getRouteName() !== 'entity.tmgmt_local_task_item.canonical') {
+    return;
+  }
+
+  /** @var \Drupal\tmgmt\TranslatorInterface[] $translators */
+  $translators = \Drupal::entityTypeManager()->getStorage('tmgmt_translator')->loadMultiple();
+  foreach ($translators as $translator) {
+    $plugin_id = $translator->getPluginId();
+    try {
+      $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($plugin_id);
+      if ($translator_plugin instanceof LocalTranslatorInterface) {
+        $translator_plugin->localTaskItemBreadcrumbAlter($breadcrumb, $route_match, $context);
+      }
+    }
+    catch (PluginNotFoundException $exception) {
+      continue;
+    }
+  }
+
+}

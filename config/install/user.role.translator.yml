@@ -1,0 +1,14 @@
+langcode: en
+status: true
+dependencies: {  }
+id: translator
+label: Translator
+weight: 2
+is_admin: null
+permissions:
+  - 'access administration pages'
+  - 'access content'
+  - 'access content overview'
+  - 'access toolbar'
+  - 'translate any entity'
+  - 'view the administration theme'

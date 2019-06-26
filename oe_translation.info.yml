@@ -1,6 +1,16 @@
 name: OpenEuropa Translation
-description: Provides the translation capabilities for OpenEuropa contents and translatable items.
+description: Translation management tool for the OpenEuropa project.
 package: OpenEuropa
 
 type: module
 core: 8.x
+dependencies:
+  - tmgmt
+  - tmgmt_content
+  - tmgmt_local
+
+config_devel:
+  install:
+    - tmgmt.translator.current_user
+    - tmgmt.translator.translator_role
+    - user.role.translator
