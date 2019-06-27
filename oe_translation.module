@@ -125,5 +125,17 @@ function oe_translation_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMa
       continue;
     }
   }
+}
 
+/**
+ * Implements template_preprocess_node().
+ */
+function oe_translation_preprocess_node(&$variables) {
+  // Ensure that on the TMGMT preview page, we treat the node as the full page
+  // display.
+  if (\Drupal::service('current_route_match')->getRouteName() !== 'tmgmt_content.job_item_preview') {
+    return;
+  }
+
+  $variables['page'] = TRUE;
 }

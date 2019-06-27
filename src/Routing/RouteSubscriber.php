@@ -28,8 +28,15 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection): void {
     foreach ($collection as $route) {
+      // Swap the content translation overview controller.
       if ($route->getDefault('_controller') == '\Drupal\tmgmt_content\Controller\ContentTranslationControllerOverride::overview') {
         $route->setDefault('_controller', '\Drupal\oe_translation\Controller\ContentTranslationController::overview');
+      }
+
+      // Swap the TMGMT content preview controller.
+      if ($route->getDefault('_controller') == '\Drupal\tmgmt_content\Controller\ContentTranslationPreviewController::preview') {
+        $route->setDefault('_controller', '\Drupal\oe_translation\Controller\ContentPreviewController::preview');
+        $route->setDefault('_title_callback', '\Drupal\oe_translation\Controller\ContentPreviewController::title');
       }
     }
   }
