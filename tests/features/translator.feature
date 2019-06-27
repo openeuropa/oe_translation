@@ -7,4 +7,4 @@ Feature: Translator role is available
   Scenario: See the Translator role
     Given I am logged in as a user with the "administer permissions" permission
     When I am on "admin/people/roles"
-    Then I should not see the text "Translator"
+    Then I should see the text "Translator"
