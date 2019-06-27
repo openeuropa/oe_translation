@@ -32,6 +32,7 @@ use Drupal\tmgmt\TranslatorPluginBase;
 use Drupal\tmgmt_local\LocalTaskInterface;
 use Drupal\tmgmt_local\LocalTaskItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -89,6 +90,13 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
   protected $formBuilder;
 
   /**
+   * The current request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * PermissionTranslator constructor.
    *
    * @param array $configuration
@@ -107,14 +115,17 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
    *   The entity type manager.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, FormBuilderInterface $form_builder) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, FormBuilderInterface $form_builder, RequestStack $requestStack) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->languageManager = $language_manager;
     $this->accessManager = $access_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->formBuilder = $form_builder;
+    $this->request = $requestStack->getCurrentRequest();
   }
 
   /**
@@ -129,7 +140,8 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
       $container->get('language_manager'),
       $container->get('access_manager'),
       $container->get('entity_type.manager'),
-      $container->get('form_builder')
+      $container->get('form_builder'),
+      $container->get('request_stack')
     );
   }
 
@@ -241,6 +253,27 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
     }
     if (isset($form['actions']['save'])) {
       $form['actions']['save']['#value'] = t('Save and come back later');
+    }
+
+    if (isset($form['actions']['preview'])) {
+      array_unshift($form['actions']['preview']['#submit'], [$this, 'localTaskItemPreview']);
+    }
+  }
+
+  /**
+   * Submit callback for the local item task preview button.
+   *
+   * We ensure that no other destination takes precedence over the intended
+   * form redirect to the preview page.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function localTaskItemPreview(array &$form, FormStateInterface $form_state) {
+    if ($destination = $this->request->query->get('destination')) {
+      $this->request->query->remove('destination');
     }
   }
 

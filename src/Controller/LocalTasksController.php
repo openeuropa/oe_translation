@@ -18,6 +18,7 @@ use Drupal\tmgmt\TranslatorManager;
 use Drupal\tmgmt_local\LocalTaskInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller responsible for routes that deal with the translation local tasks.
@@ -32,6 +33,13 @@ class LocalTasksController extends ControllerBase {
   protected $translatorManager;
 
   /**
+   * The current request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * Initializes the content translation controller.
    *
    * @param \Drupal\content_translation\ContentTranslationManagerInterface $manager
@@ -42,11 +50,14 @@ class LocalTasksController extends ControllerBase {
    *   The translation manager.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
    */
-  public function __construct(ContentTranslationManagerInterface $manager, EntityTypeManagerInterface $entity_type_manager, TranslatorManager $translator_manager, AccountProxyInterface $current_user) {
+  public function __construct(ContentTranslationManagerInterface $manager, EntityTypeManagerInterface $entity_type_manager, TranslatorManager $translator_manager, AccountProxyInterface $current_user, RequestStack $request_stack) {
     $this->entityTypeManager = $entity_type_manager;
     $this->translatorManager = $translator_manager;
     $this->currentUser = $current_user;
+    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
@@ -57,7 +68,8 @@ class LocalTasksController extends ControllerBase {
       $container->get('content_translation.manager'),
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.tmgmt.translator'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('request_stack')
     );
   }
 
@@ -112,8 +124,8 @@ class LocalTasksController extends ControllerBase {
       $url->setOption('language', $target);
 
       // Pass on any destinations to the actually intended form page.
-      if ($destination = \Drupal::request()->query->get('destination')) {
-        \Drupal::request()->query->remove('destination');
+      if ($destination = $this->request->query->get('destination')) {
+        $this->request->query->remove('destination');
         $url->setOption('query', ['destination' => $destination]);
       }
       return new RedirectResponse($url->toString());
