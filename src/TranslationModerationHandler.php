@@ -50,6 +50,12 @@ class TranslationModerationHandler extends ModerationHandler {
    * {@inheritdoc}
    */
   public function onPresave(ContentEntityInterface $entity, $default_revision, $published_state) {
+    $workflow = $this->moderationInfo->getWorkflowForEntity($entity);
+    if ($workflow->getTypePlugin()->getPluginId() !== 'content_moderation') {
+      parent::onPresave($entity, $default_revision, $published_state);
+      return;
+    }
+
     if ($entity->isDefaultTranslation()) {
       parent::onPresave($entity, $default_revision, $published_state);
     }
