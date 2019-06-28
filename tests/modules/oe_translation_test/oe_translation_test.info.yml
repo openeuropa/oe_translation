@@ -1,0 +1,8 @@
+name: OE Translation Test
+description: Test module for OE Translation
+core: 8.x
+type: module
+package: Testing
+
+dependencies:
+  - oe_translation:oe_translation
