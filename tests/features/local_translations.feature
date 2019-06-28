@@ -40,3 +40,16 @@ Feature: Local translations
     When I click "Bulgarian title" in the "Bulgarian" row
     Then I should see "Bulgarian title"
     And I should see "Bulgarian body"
+
+  Scenario: Preview translations
+    Given a translatable node with the "My title" title and "My body" body
+    And I am logged in as a user with the "translator" role
+    When I visit "the content administration page"
+    And I click "My title"
+    And I click "Translate"
+    And I click "Translate locally" in the "French" row
+    And I fill in the translation form element for the "Title" field with "Bulgarian title"
+    And I fill in the translation form element for the "Body" field with "Bulgarian body"
+    And I press "Preview"
+    Then I should see "Bulgarian title" in the "title" region
+    And I should see "Bulgarian body" in the "node content" region

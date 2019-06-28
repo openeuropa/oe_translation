@@ -21,5 +21,8 @@ default:
       api_driver: "drupal"
       drupal:
         drupal_root: "build"
+      region_map:
+        title: ".page-title"
+        node content: ".node--view-mode-full"
   formatters:
     progress: ~
