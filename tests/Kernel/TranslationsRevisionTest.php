@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Tests that whenever a new translation is saved, no revision is created.
@@ -17,6 +18,7 @@ use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 class TranslationsRevisionTest extends KernelTestBase {
 
   use ContentModerationTestTrait;
+  use UserCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -59,6 +61,7 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->installEntitySchema('content_moderation_state');
 
     $this->installSchema('node', 'node_access');
+    $this->installSchema('system', 'sequences');
 
     $node_type = $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'name' => 'Test node type',
@@ -115,6 +118,79 @@ class TranslationsRevisionTest extends KernelTestBase {
     $node->set('title', 'Revisions 2');
     $node->save();
     $this->assertCount(4, $storage->revisionIds($node));
+  }
+
+  /**
+   * Tests that the moderation state is not translatable.
+   *
+   * When moving the moderation state of a language, ensure that the moderation
+   * state of all other languages follow suit.
+   */
+  public function testNonTranslatableModerationState(): void {
+    /** @var \Drupal\node\NodeStorageInterface $storage */
+    $storage = $this->container->get('entity_type.manager')->getStorage('node');
+    foreach (['oe_translation_disabled', 'oe_translation_enabled'] as $status) {
+      // Before enabling oe_translation, the moderation state will differ
+      // per language. After enabling, all translations should have the same
+      // moderation state regardless which translation was updated.
+      if ($status === 'oe_translation_enabled') {
+        $this->enableModules(['tmgmt', 'oe_translation']);
+        $this->installConfig(['tmgmt', 'oe_translation']);
+      }
+
+      /** @var \Drupal\node\NodeInterface $node */
+      $node = $storage->create([
+        'type' => 'test_node_type',
+        'title' => 'Test node EN',
+      ]);
+      $node->save();
+      $this->assertEquals('draft', $node->moderation_state->value);
+
+      $translation = $node->addTranslation('fr', ['title' => 'Test node FR']);
+      $translation->save();
+      $this->assertEquals('draft', $translation->moderation_state->value);
+
+      $translation->set('moderation_state', 'published');
+      $translation->save();
+      $this->assertEquals('published', $translation->moderation_state->value);
+      $node = $storage->load($node->id());
+      $this->assertEquals($status === 'oe_translation_enabled' ? 'published' : 'draft', $node->moderation_state->value);
+    }
+  }
+
+  /**
+   * Tests that there is no access to update directly node translations.
+   */
+  public function testNoTranslationUpdateAccess(): void {
+    /** @var \Drupal\node\NodeStorageInterface $storage */
+    $storage = $this->container->get('entity_type.manager')->getStorage('node');
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $storage->create([
+      'type' => 'test_node_type',
+      'title' => 'Test node',
+      'moderation_state' => 'draft',
+    ]);
+
+    $node->save();
+
+    $this->setUpCurrentUser([], [
+      'access content',
+      'edit any test_node_type content',
+      'use editorial transition create_new_draft',
+    ]);
+
+    $translation = $node->addTranslation('fr', ['title' => 'Test node FR']);
+    $translation->save();
+    // Before installing oe_translation, both can be updated.
+    $this->assertTrue($node->access('update'));
+    $this->assertTrue($translation->access('update'));
+
+    $this->enableModules(['tmgmt', 'oe_translation']);
+    $this->installConfig(['tmgmt', 'oe_translation']);
+
+    // Now only the source language can be updated.
+    $this->assertTrue($node->access('update'));
+    $this->assertFalse($translation->access('update'));
   }
 
 }

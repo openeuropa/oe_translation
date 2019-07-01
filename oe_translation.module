@@ -7,6 +7,7 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Access\AccessResult;
@@ -138,4 +139,33 @@ function oe_translation_preprocess_node(&$variables) {
   }
 
   $variables['page'] = TRUE;
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function oe_translation_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  // We don't want different translations to have different moderation states
+  // so we make the moderation state field untranslatable.
+  if ($entity_type->id() === 'content_moderation_state') {
+    $fields['moderation_state']->setTranslatable(FALSE);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for the Node entity type.
+ */
+function oe_translation_node_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if (!in_array($operation, ['update'])) {
+    // @todo, see if we should allow the deletion of translations.
+    return AccessResult::neutral();
+  }
+
+  // We do not want node translations to be manually edited.
+  // They need to be controlled from TMGMT.
+  if (!$entity->isDefaultTranslation()) {
+    return AccessResult::forbidden()->addCacheableDependency($entity);
+  }
+
+  return AccessResult::neutral();
 }
