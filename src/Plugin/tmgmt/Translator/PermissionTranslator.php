@@ -252,6 +252,9 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
       $form['actions']['save_as_completed']['#value'] = t('Save and finish translation');
     }
     if (isset($form['actions']['save'])) {
+      // @todo re-enable this until we have a handling for source language
+      // updates.
+      $form['actions']['save']['#access'] = FALSE;
       $form['actions']['save']['#value'] = t('Save and come back later');
     }
 
