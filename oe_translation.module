@@ -19,6 +19,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\LocalTranslatorInterface;
 use Drupal\oe_translation\TranslationModerationHandler;
+use Drupal\tmgmt_content\DefaultFieldProcessor;
 
 /**
  * Implements hook_form_FORM_ID_alter() for the Local Task item edit form.
@@ -168,4 +169,32 @@ function oe_translation_node_access(EntityInterface $entity, $operation, Account
   }
 
   return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function oe_translation_module_implements_alter(&$implementations, $hook) {
+  if ($hook !== 'field_info_alter') {
+    return;
+  }
+
+  // Make sure that our hook_field_info_alter() fires before TMGMT's.
+  if (!isset($implementations['oe_translation'])) {
+    return;
+  }
+
+  unset($implementations['oe_translation']);
+  $implementations['oe_translation'] = FALSE;
+}
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function oe_translation_field_info_alter(&$info) {
+  if (isset($info['link'])) {
+    // For the link field use the default field processor instead of the
+    // specific Link one which doesn't allow the translation of the URI.
+    $info['link']['tmgmt_field_processor'] = DefaultFieldProcessor::class;
+  }
 }
