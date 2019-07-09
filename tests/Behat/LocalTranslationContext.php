@@ -4,12 +4,40 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Behat;
 
+use Behat\Behat\Hook\Scope\AfterFeatureScope;
+use Behat\Behat\Hook\Scope\BeforeFeatureScope;
+use Behat\Mink\Element\NodeElement;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
+use PHPUnit\Framework\Assert;
 
 /**
  * Context specific to TMGMT-based local translation.
  */
 class LocalTranslationContext extends RawDrupalContext {
+
+  /**
+   * Installs the test module.
+   *
+   * @param \Behat\Behat\Hook\Scope\BeforeFeatureScope $scope
+   *   The scope.
+   *
+   * @BeforeFeature @translation
+   */
+  public static function installTestModule(BeforeFeatureScope $scope) {
+    \Drupal::service('module_installer')->install(['oe_translation_test']);
+  }
+
+  /**
+   * Uninstalls the test module.
+   *
+   * @param \Behat\Behat\Hook\Scope\AfterFeatureScope $scope
+   *   The scope.
+   *
+   * @AfterFeature @translation
+   */
+  public static function uninstallTestModule(AfterFeatureScope $scope) {
+    \Drupal::service('module_installer')->uninstall(['oe_translation_test']);
+  }
 
   /**
    * Create a translatable node.
@@ -19,16 +47,17 @@ class LocalTranslationContext extends RawDrupalContext {
    * @param string $body
    *   The body.
    *
-   * @Given a translatable node with the :title title and :body body
+   * @Given a translatable node with the :title title and :body body and multiple links
    */
-  public function aTranslatableNodeWithTheTitleAndBody(string $title, string $body): void {
-    $node = (object) [
+  public function translatableNodeWithTitleAndBody(string $title, string $body): void {
+    $values = [
       'type' => 'oe_demo_translatable_page',
       'title' => $title,
       'field_oe_demo_translatable_body' => $body,
+      'demo_link_field' => 'Example - https://example.com, Node - /node',
     ];
 
-    $this->nodeCreate($node);
+    $this->nodeCreate((object) $values);
   }
 
   /**
@@ -42,8 +71,8 @@ class LocalTranslationContext extends RawDrupalContext {
    * @Then the translation form element for the :field field should contain :value
    */
   public function translationElementForFieldContains(string $field, string $value): void {
-    $selector = $this->getElementSelectorForField($field);
-    $this->assertSession()->elementContains('css', $selector, $value);
+    $element = $this->getTranslationElementForField($field);
+    Assert::assertEquals($value, $element->getText());
   }
 
   /**
@@ -57,8 +86,7 @@ class LocalTranslationContext extends RawDrupalContext {
    * @When I fill in the translation form element for the :field field with :value
    */
   public function fillInTranslationFormElement(string $field, string $value) {
-    $selector = $this->getElementSelectorForField($field);
-    $element = $this->getSession()->getPage()->find('css', $selector);
+    $element = $this->getTranslationElementForField($field);
     if (!$element) {
       throw new \Exception('Field not found on the page.');
     }
@@ -72,40 +100,30 @@ class LocalTranslationContext extends RawDrupalContext {
    * @param string $field
    *   The field.
    *
-   * @return string
+   * @return \Behat\Mink\Element\NodeElement
    *   The selector.
    */
-  protected function getElementSelectorForField(string $field): string {
-    /** @var \Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource $plugin */
-    $plugin = \Drupal::service('plugin.manager.tmgmt.source')->createInstance('content');
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = \Drupal::entityTypeManager()->getStorage('node')->create([
-      'type' => 'oe_demo_translatable_page',
-      'title' => 'Dummy',
-      'field_oe_demo_translatable_body' => 'Dummy',
-    ]);
+  protected function getTranslationElementForField(string $field): ?NodeElement {
+    /** @var \Behat\Mink\Element\NodeElement[] $table_headers */
+    $table_headers = $this->getSession()->getPage()->findAll('css', 'th');
+    if (!$table_headers) {
+      throw new \Exception('There are no table headers to check in.');
+    }
 
-    $field_name = NULL;
-    foreach ($node->getFieldDefinitions() as $name => $definition) {
-      if ((string) $definition->getLabel() === $field) {
-        $field_name = $name;
-        break;
+    $found_table_header = NULL;
+    foreach ($table_headers as $table_header) {
+      if ($table_header->getText() === $field) {
+        $found_table_header = $table_header;
       }
     }
 
-    if (!$field_name) {
-      throw new \Exception('Field not found.');
+    if (!$found_table_header) {
+      throw new \Exception(sprintf('Translation field element %s not found', $field));
     }
 
-    $translatable_data = $plugin->extractTranslatableData($node);
-    if (!isset($translatable_data[$field_name])) {
-      throw new \Exception('Field not found.');
-    }
+    $table = $found_table_header->getParent()->getParent()->getParent();
 
-    $flat = \Drupal::service('tmgmt.data')->flatten($translatable_data[$field_name]);
-    $key = $field_name . '|' . str_replace('][', '|', key($flat)) . '[translation]';
-
-    return 'textarea[name*="' . $key . '"]';
+    return $table->findField('Translation');
   }
 
 }

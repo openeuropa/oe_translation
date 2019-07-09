@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation test install file.
+ */
+
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_uninstall().
+ */
+function oe_translation_test_uninstall() {
+  $storage = FieldStorageConfig::load('node.demo_link_field');
+  if ($storage) {
+    $storage->delete();
+  }
+}
