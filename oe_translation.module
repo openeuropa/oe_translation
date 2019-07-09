@@ -22,6 +22,17 @@ use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
 
 /**
+ * Implements hook_theme().
+ */
+function oe_translation_theme($existing, $type, $theme, $path) {
+  return [
+    'local_translation_form_element_group' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for the Local Task item edit form.
  */
 function oe_translation_form_tmgmt_local_task_item_edit_form_alter(&$form, FormStateInterface $form_state) {
@@ -197,4 +208,52 @@ function oe_translation_field_info_alter(&$info) {
     // specific Link one which doesn't allow the translation of the URI.
     $info['link']['tmgmt_field_processor'] = DefaultFieldProcessor::class;
   }
+}
+
+/**
+ * Implements template_preprocess_local_translation_form_element_group().
+ *
+ * Template responsible for rendering the local translation form elements.
+ */
+function oe_translation_preprocess_local_translation_form_element_group(&$variables) {
+  $element = $variables['element'];
+
+  $header_title = $element['#field_name'];
+
+  $variables['status_message_field'] = strtolower((string) $element['#parent_label'][0]);
+
+  $table = [
+    '#type' => 'table',
+    '#attributes' => [
+      'id' => $element['#ajaxid'],
+      'class' => [$element['#zebra']],
+    ],
+    '#header' => [
+      [
+        'data' => $header_title,
+        'colspan' => 4,
+      ],
+    ],
+    '#rows' => [],
+  ];
+
+  $rows = [];
+  $rows[] = [
+    [
+      'data' => $element['status'],
+    ],
+    [
+      'data' => $element['source'],
+    ],
+    [
+      'data' => $element['translation'],
+    ],
+    [
+      'data' => $element['actions'],
+    ],
+  ];
+
+  $table['#rows'] = $rows;
+
+  $variables['element'] = $table;
 }

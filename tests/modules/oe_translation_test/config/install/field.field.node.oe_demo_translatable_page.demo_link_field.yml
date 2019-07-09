@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.demo_link_field
+    - node.type.oe_demo_translatable_page
+  module:
+    - link
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.oe_demo_translatable_page.demo_link_field
+field_name: demo_link_field
+entity_type: node
+bundle: oe_demo_translatable_page
+label: Link
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 1
+field_type: link

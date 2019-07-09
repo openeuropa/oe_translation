@@ -211,6 +211,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
   public function localTaskItemFormAlter(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\tmgmt_local\LocalTaskItemInterface $task_item */
     $task_item = $form_state->getBuildInfo()['callback_object']->getEntity();
+    $data = $task_item->getData();
     $job = $task_item->getJobItem()->getJob();
     /** @var \Drupal\node\NodeInterface $node */
     $node = $this->entityTypeManager->getStorage('node')->load($task_item->getJobItem()->getItemId());
@@ -220,6 +221,25 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
     foreach (Element::children($form['translation']) as $field_name) {
       foreach (Element::children($form['translation'][$field_name]) as $field_path) {
         $field = &$form['translation'][$field_name][$field_path];
+        // Clean up the translation form element.
+        $field['#theme'] = 'local_translation_form_element_group';
+        $definition = $node->getFieldDefinition($field_name);
+        $field['#field_name'] = $definition->getLabel();
+
+        list($field_name, $delta, $column) = explode('|', $field_path);
+
+        // In case the field has multiple columns, append the column name. The
+        // only exception is the fields which have a format for which we don't
+        // have a separate translation field.
+        if (count(Element::children($data[$field_name][0])) > 1 && !isset($data[$field_name][0]['format'])) {
+          $field['#field_name'] .= ' ' . ucfirst($column);
+        }
+
+        // Append the delta in case there are multiple field values.
+        if (count(Element::children($data[$field_name])) > 1) {
+          $field['#field_name'] .= ' (' . ($delta + 1) . ')';
+        }
+
         $bracket_based_field_path = str_replace('|', '][', $field_path);
 
         // Hide the translation tick button.
