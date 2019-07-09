@@ -249,7 +249,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
 
     // Improve the button labels.
     if (isset($form['actions']['save_as_completed'])) {
-      $form['actions']['save_as_completed']['#value'] = t('Save and finish translation');
+      $form['actions']['save_as_completed']['#value'] = t('Save and complete translation');
     }
     if (isset($form['actions']['save'])) {
       // @todo re-enable this until we have a handling for source language

@@ -33,7 +33,7 @@ Feature: Local translations
     # Then the translation form element for the "Title" field should contain "Bulgarian title"
     # And the translation form element for the "Body" field should contain "Bulgarian body"
 
-    When I press "Save and finish translation"
+    When I press "Save and complete translation"
     Then I should see "Translations of My title"
     And I should not see "Not translated" in the "Bulgarian" row
     And I should see "Published" in the "Bulgarian" row

@@ -4,7 +4,7 @@ dependencies:
   module:
     - oe_translation
 name: permission
-label: 'Permission'
+label: 'Permission-based'
 description: 'Allows users with a certain permission to create translations.'
 auto_accept: true
 weight: null

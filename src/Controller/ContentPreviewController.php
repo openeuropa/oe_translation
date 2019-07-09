@@ -25,6 +25,7 @@ class ContentPreviewController extends ContentTranslationPreviewController {
     // Populate preview with target translation data.
     $preview = $this->makePreview($entity, $data, $target_language->getId());
 
+    // Show the translated title on the translation preview page.
     return $preview->label();
   }
 

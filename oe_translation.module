@@ -12,7 +12,6 @@ use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Breadcrumb\Breadcrumb;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -69,15 +68,6 @@ function oe_translation_entity_type_alter(array &$entity_types) {
     }
 
     $entity_type->setHandlerClass('moderation', TranslationModerationHandler::class);
-  }
-}
-
-/**
- * Implements hook_tmgmt_translatable_fields_alter().
- */
-function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $entity, &$translatable_fields) {
-  if (isset($translatable_fields['moderation_state'])) {
-    unset($translatable_fields['moderation_state']);
   }
 }
 
