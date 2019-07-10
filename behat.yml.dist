@@ -6,6 +6,10 @@ default:
       contexts:
         - Drupal\DrupalExtension\Context\MinkContext
         - Drupal\DrupalExtension\Context\DrupalContext
+        - Drupal\Tests\oe_translation\Behat\LocalTranslationContext
+        - OpenEuropa\Behat\TransformationContext:
+            pages:
+              content administration: 'en/admin/content'
   extensions:
     Drupal\MinkExtension:
       goutte: ~
@@ -17,5 +21,8 @@ default:
       api_driver: "drupal"
       drupal:
         drupal_root: "build"
+      region_map:
+        title: ".page-title"
+        node content: ".node--view-mode-full"
   formatters:
     progress: ~

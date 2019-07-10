@@ -1,0 +1,7 @@
+tmgmt.translator.settings.permission:
+  type: mapping
+  label: Settings for the Permission translator
+  mapping:
+    permission:
+      type: string
+      label: The permission needed for this translator
