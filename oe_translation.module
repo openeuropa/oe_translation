@@ -7,7 +7,10 @@
 
 declare(strict_types = 1);
 
+use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Access\AccessResult;
@@ -16,6 +19,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\ContentEntitySource;
 use Drupal\oe_translation\LocalTranslatorInterface;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
@@ -74,6 +78,12 @@ function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInt
  */
 function oe_translation_entity_type_alter(array &$entity_types) {
   foreach ($entity_types as $entity_type_id => $entity_type) {
+    // Change the Job Item class with our own override.
+    if ($entity_type_id === 'tmgmt_job_item') {
+      $entity_type->setClass(JobItem::class);
+    }
+
+    // Change the moderation handler if set to our own override.
     if (!$entity_type->hasHandlerClass('moderation')) {
       continue;
     }
@@ -141,6 +151,26 @@ function oe_translation_preprocess_node(&$variables) {
   }
 
   $variables['page'] = TRUE;
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function oe_translation_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'tmgmt_job_item') {
+    $fields = [];
+    // Add a field to the Job item to store the entity revision at the moment of
+    // creation.
+    $fields['item_rid'] = BaseFieldDefinition::create('integer')
+      ->setLabel(new TranslatableMarkup('Item revision ID'))
+      ->setSetting('unsigned', TRUE);
+    // Add a field to the Job item to store the entity bundle being translated.
+    // This is needed to be able to inspect field related info if the entity
+    // itself gets deleted.
+    $fields['item_bundle'] = BaseFieldDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('Item bundle'));
+    return $fields;
+  }
 }
 
 /**
@@ -246,4 +276,32 @@ function oe_translation_preprocess_local_translation_form_element_group(&$variab
   $table['#rows'] = $rows;
 
   $variables['element'] = $table;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for the TMGMT job item.
+ */
+function oe_translation_tmgmt_job_item_presave(EntityInterface $entity) {
+  if (!$entity->isNew()) {
+    return;
+  }
+
+  // Whenever a new job item is created, store the item ID and bundle so that
+  // we can keep track of it later.
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = \Drupal::entityTypeManager()->getStorage($entity->getItemType())->load($entity->getItemId());
+  $entity->set('item_rid', $node->getRevisionId());
+  $entity->set('item_bundle', $node->bundle());
+}
+
+/**
+ * Implements tmgmt_source_plugin_info_alter().
+ */
+function oe_translation_tmgmt_source_plugin_info_alter(&$definitions) {
+  if (isset($definitions['content'])) {
+    // Override the plugin class with ours.
+    $definitions['content']['class'] = ContentEntitySource::class;
+    // Set the service to be used for determining the entity translation info.
+    $definitions['content']['entity_translation_info'] = 'oe_translation.content_entity_source_translation_info';
+  }
 }

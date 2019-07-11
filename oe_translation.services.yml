@@ -6,3 +6,11 @@ services:
   oe_translation.translation_provider_routes:
     class: Drupal\oe_translation\Routing\TranslationProviderRoutes
     arguments: ['@plugin.manager.tmgmt.translator']
+  oe_translation.content_entity_source_translation_info:
+    class: Drupal\oe_translation\ContentEntitySourceTranslationInfo
+    arguments: ['@event_dispatcher']
+  oe_translation.content_entity_source_entity_subscriber.default:
+    class: Drupal\oe_translation\EventSubscriber\DefaultContentEntitySourceEntitySubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
