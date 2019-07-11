@@ -5,6 +5,8 @@ Feature: Local translations
   I need to be able to translate content
 
   Scenario: Translate content.
+    # Create a translatable node which also has some dummy links to example.com
+    # and /node.
     Given a translatable node with the "My title" title and "My body" body and multiple links
     And I am logged in as a user with the "translator" role
     When I visit "the content administration page"
@@ -60,7 +62,7 @@ Feature: Local translations
     And the translation form element for the "Link Title (2)" field should contain "Node BG"
 
     When I fill in the translation form element for the "Title" field with "Bulgarian title 2"
-    And I press "Save and finish translation"
+    And I press "Save and complete translation"
     Then I should see "Translations of Bulgarian title 2"
     When I click "Bulgarian title 2" in the "Bulgarian" row
     Then I should see "Bulgarian title 2"
