@@ -319,3 +319,14 @@ function oe_translation_tmgmt_source_plugin_info_alter(&$definitions) {
     $definitions['content']['entity_translation_info'] = 'oe_translation.content_entity_source_translation_info';
   }
 }
+
+/**
+ * Implements hook_tmgmt_translatable_fields_alter().
+ */
+function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $entity, &$translatable_fields) {
+  // Prevent the moderation state to show up as a translatable field. It seems
+  // it does even if we mark the base field as non-translatable.
+  if (isset($translatable_fields['moderation_state'])) {
+    unset($translatable_fields['moderation_state']);
+  }
+}
