@@ -15,7 +15,6 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -86,13 +85,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
   protected $entityTypeManager;
 
   /**
-   * The form builder.
-   *
-   * @var \Drupal\Core\Form\FormBuilderInterface
-   */
-  protected $formBuilder;
-
-  /**
    * The current request.
    *
    * @var \Symfony\Component\HttpFoundation\Request
@@ -122,8 +114,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
    * @param \Drupal\Core\Access\AccessManagerInterface $access_manager
    *   The access manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
@@ -132,13 +122,12 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, FormBuilderInterface $form_builder, RequestStack $request_stack, EntityFieldManagerInterface $entity_field_manager) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, EntityFieldManagerInterface $entity_field_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->languageManager = $language_manager;
     $this->accessManager = $access_manager;
     $this->entityTypeManager = $entity_type_manager;
-    $this->formBuilder = $form_builder;
     $this->request = $request_stack->getCurrentRequest();
     $this->entityFieldManager = $entity_field_manager;
   }
@@ -155,7 +144,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
       $container->get('language_manager'),
       $container->get('access_manager'),
       $container->get('entity_type.manager'),
-      $container->get('form_builder'),
       $container->get('request_stack'),
       $container->get('entity_field.manager')
     );
@@ -440,12 +428,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
           'title' => $this->t('Translate locally'),
         ];
       }
-    }
-
-    // Wrap the form with the multiple translations request form.
-    // @see \Drupal\tmgmt_content\Controller\ContentTranslationControllerOverride
-    if ($this->entityTypeManager->getAccessControlHandler('tmgmt_job')->createAccess()) {
-      $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
     }
   }
 

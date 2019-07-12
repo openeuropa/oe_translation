@@ -1,6 +1,7 @@
 services:
   oe_translation.route_subscriber:
     class: Drupal\oe_translation\Routing\RouteSubscriber
+    arguments: ['@content_translation.manager']
     tags:
       - { name: event_subscriber }
   oe_translation.translation_provider_routes:
@@ -14,3 +15,7 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: event_subscriber }
+  oe_translation.route_access_checker:
+    class: Drupal\oe_translation\Access\TranslationRouteAccess
+    tags:
+      - { name: access_check, applies_to: _access_oe_translation }
