@@ -7,6 +7,7 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -286,12 +287,25 @@ function oe_translation_tmgmt_job_item_presave(EntityInterface $entity) {
     return;
   }
 
-  // Whenever a new job item is created, store the item ID and bundle so that
-  // we can keep track of it later.
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = \Drupal::entityTypeManager()->getStorage($entity->getItemType())->load($entity->getItemId());
-  $entity->set('item_rid', $node->getRevisionId());
-  $entity->set('item_bundle', $node->bundle());
+  // Whenever a new job item is created, store the item revision ID and bundle
+  // so that we can keep track of them later.
+  try {
+    $storage = \Drupal::entityTypeManager()->getStorage($entity->getItemType());
+  }
+  catch (\Exception $exception) {
+    // This means the item type is not something we support here so we don't
+    // store this info.
+    return;
+  }
+
+  $item = $storage->load($entity->getItemId());
+  if (!$item instanceof ContentEntityInterface) {
+    // We only support content entities for things like revisions and bundle.
+    return;
+  }
+  $entity->set('item_rid', $item->getRevisionId());
+  $entity->set('item_bundle', $item->bundle());
+
 }
 
 /**
