@@ -303,9 +303,13 @@ function oe_translation_tmgmt_job_item_presave(EntityInterface $entity) {
     // We only support content entities for things like revisions and bundle.
     return;
   }
-  $entity->set('item_rid', $item->getRevisionId());
-  $entity->set('item_bundle', $item->bundle());
 
+  // We use the latest revision ID because we assume that the translation is
+  // already being started from the latest version of the content. Meaning
+  // that if we use the regular entity load it will load the latest published
+  // revision instead and we don't want that.
+  $entity->set('item_rid', $storage->getLatestRevisionId($entity->getItemId()));
+  $entity->set('item_bundle', $item->bundle());
 }
 
 /**
