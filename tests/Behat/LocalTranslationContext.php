@@ -40,27 +40,6 @@ class LocalTranslationContext extends RawDrupalContext {
   }
 
   /**
-   * Create a translatable node.
-   *
-   * @param string $title
-   *   The title.
-   * @param string $body
-   *   The body.
-   *
-   * @Given a translatable node with the :title title and :body body and multiple links
-   */
-  public function translatableNodeWithTitleAndBody(string $title, string $body): void {
-    $values = [
-      'type' => 'oe_demo_translatable_page',
-      'title' => $title,
-      'field_oe_demo_translatable_body' => $body,
-      'demo_link_field' => 'Example - https://example.com, Node - /node',
-    ];
-
-    $this->nodeCreate((object) $values);
-  }
-
-  /**
    * Checks that a translation form element contains a value.
    *
    * @param string $field

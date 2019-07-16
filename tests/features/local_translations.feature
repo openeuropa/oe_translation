@@ -5,9 +5,9 @@ Feature: Local translations
   I need to be able to translate content
 
   Scenario: Translate content.
-    # Create a translatable node which also has some dummy links to example.com
-    # and /node.
-    Given a translatable node with the "My title" title and "My body" body and multiple links
+    Given oe_demo_translatable_page content:
+      | title    | field_oe_demo_translatable_body | demo_link_field                             |
+      | My title | My body                         | Example - https://example.com, Node - /node |
     And I am logged in as a user with the "translator" role
     When I visit "the content administration page"
     And I click "My title"
@@ -69,7 +69,9 @@ Feature: Local translations
     And I should see "Bulgarian body"
 
   Scenario: Preview translations
-    Given a translatable node with the "My title" title and "My body" body and multiple links
+    Given oe_demo_translatable_page content:
+      | title    | field_oe_demo_translatable_body |
+      | My title | My body                         |
     And I am logged in as a user with the "translator" role
     When I visit "the content administration page"
     And I click "My title"
