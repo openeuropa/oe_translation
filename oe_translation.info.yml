@@ -5,9 +5,10 @@ package: OpenEuropa
 type: module
 core: 8.x
 dependencies:
-  - tmgmt
-  - tmgmt_content
-  - tmgmt_local
+  - tmgmt:tmgmt
+  - tmgmt:tmgmt_content
+  - tmgmt:tmgmt_local
+  - drupal:content_translation
 
 config_devel:
   install:

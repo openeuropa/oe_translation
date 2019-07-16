@@ -29,6 +29,7 @@ class LinkFieldProcessorTest extends KernelTestBase {
     'language',
     'oe_multilingual',
     'tmgmt',
+    'content_translation',
     'oe_translation',
     'views',
   ];
