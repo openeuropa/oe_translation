@@ -334,3 +334,34 @@ function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $
     unset($translatable_fields['moderation_state']);
   }
 }
+
+/**
+ * Implements hook_block_view_BASE_BLOCK_ID_alter() for the Page Header block.
+ */
+function oe_translation_block_view_oe_theme_helper_page_header_alter(array &$build, $block) {
+  $build['#pre_render'][] = 'oe_translation_page_header_pre_render';
+}
+
+/**
+ * Pre-render callback for the Page Header block alteration.
+ *
+ * This block is shipped by OpenEuropa Theme and we use this to remove the
+ * language switcher from the page header on the entity preview page.
+ *
+ * @param array $build
+ *   The built render array of the block.
+ *
+ * @return array
+ *   The built render array of the block.
+ */
+function oe_translation_page_header_pre_render(array $build): array {
+  if (\Drupal::service('current_route_match')->getRouteName() !== 'tmgmt_content.job_item_preview') {
+    return $build;
+  }
+
+  if (isset($build['content']['#language_switcher'])) {
+    unset($build['content']['#language_switcher']);
+  }
+
+  return $build;
+}
