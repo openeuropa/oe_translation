@@ -280,39 +280,6 @@ function oe_translation_preprocess_local_translation_form_element_group(&$variab
 }
 
 /**
- * Implements hook_ENTITY_TYPE_presave() for the TMGMT job item.
- */
-function oe_translation_tmgmt_job_item_presave(EntityInterface $entity) {
-  if (!$entity->isNew()) {
-    return;
-  }
-
-  // Whenever a new job item is created, store the item revision ID and bundle
-  // so that we can keep track of them later.
-  try {
-    $storage = \Drupal::entityTypeManager()->getStorage($entity->getItemType());
-  }
-  catch (\Exception $exception) {
-    // This means the item type is not something we support here so we don't
-    // store this info.
-    return;
-  }
-
-  $item = $storage->load($entity->getItemId());
-  if (!$item instanceof ContentEntityInterface) {
-    // We only support content entities for things like revisions and bundle.
-    return;
-  }
-
-  // We use the latest revision ID because we assume that the translation is
-  // already being started from the latest version of the content. Meaning
-  // that if we use the regular entity load it will load the latest published
-  // revision instead and we don't want that.
-  $entity->set('item_rid', $storage->getLatestRevisionId($entity->getItemId()));
-  $entity->set('item_bundle', $item->bundle());
-}
-
-/**
  * Implements tmgmt_source_plugin_info_alter().
  */
 function oe_translation_tmgmt_source_plugin_info_alter(&$definitions) {

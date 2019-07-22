@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Entity;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\tmgmt\Entity\JobItem as OriginalJobItem;
@@ -12,6 +14,50 @@ use Drupal\tmgmt\Entity\JobItem as OriginalJobItem;
  * Override of the original TMGMT Job Item entity class.
  */
 class JobItem extends OriginalJobItem {
+
+  /**
+   * {@inheritdoc}
+   *
+   * Overriding in order to ensure we can set the content entity revision ID
+   * at the earliest possible moment so that it can be taken into account in the
+   * initial data calculation.
+   *
+   * @see JobItem::recalculateStatistics()
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    if (!$this->isNew()) {
+      parent::preSave($storage);
+      return;
+    }
+
+    // Whenever a new job item is created, store the item revision ID and bundle
+    // so that we can keep track of them later.
+    try {
+      $item_storage = \Drupal::entityTypeManager()->getStorage($this->getItemType());
+    }
+    catch (\Exception $exception) {
+      // This means the item type is not something we support here so we don't
+      // store this info.
+      parent::preSave($storage);
+      return;
+    }
+
+    $item = $item_storage->load($this->getItemId());
+    if (!$item instanceof ContentEntityInterface) {
+      // We only support content entities for things like revisions and bundle.
+      parent::preSave($storage);
+      return;
+    }
+
+    // We use the latest revision ID because we assume that the translation is
+    // already being started from the latest version of the content. Meaning
+    // that if we use the regular entity load it will load the latest published
+    // revision instead and we don't want that.
+    $this->set('item_rid', $item_storage->getLatestRevisionId($this->getItemId()));
+    $this->set('item_bundle', $item->bundle());
+
+    parent::preSave($storage);
+  }
 
   /**
    * {@inheritdoc}
