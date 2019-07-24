@@ -13,10 +13,12 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorManager;
 use Drupal\tmgmt_local\LocalTaskInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -40,6 +42,13 @@ class LocalTasksController extends ControllerBase {
   protected $request;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Initializes the content translation controller.
    *
    * @param \Drupal\content_translation\ContentTranslationManagerInterface $manager
@@ -52,12 +61,15 @@ class LocalTasksController extends ControllerBase {
    *   The current user.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(ContentTranslationManagerInterface $manager, EntityTypeManagerInterface $entity_type_manager, TranslatorManager $translator_manager, AccountProxyInterface $current_user, RequestStack $request_stack) {
+  public function __construct(ContentTranslationManagerInterface $manager, EntityTypeManagerInterface $entity_type_manager, TranslatorManager $translator_manager, AccountProxyInterface $current_user, RequestStack $request_stack, EventDispatcherInterface $eventDispatcher) {
     $this->entityTypeManager = $entity_type_manager;
     $this->translatorManager = $translator_manager;
     $this->currentUser = $current_user;
     $this->request = $request_stack->getCurrentRequest();
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -69,7 +81,8 @@ class LocalTasksController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.tmgmt.translator'),
       $container->get('current_user'),
-      $container->get('request_stack')
+      $container->get('request_stack'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -167,6 +180,11 @@ class LocalTasksController extends ControllerBase {
 
     $job_item_definition = $this->entityTypeManager->getDefinition('tmgmt_job_item');
     $result->addCacheTags($job_item_definition->getListCacheTags());
+
+    // Allow others to have a say in the access result.
+    $event = new TranslationAccessEvent($entity, $source, $target, $account, 'permission');
+    $this->eventDispatcher->dispatch(TranslationAccessEvent::EVENT, $event);
+    $result = $result->orIf($event->getAccess());
 
     return $result;
   }

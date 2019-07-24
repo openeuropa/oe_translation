@@ -61,6 +61,19 @@ class ContentTranslationController extends BaseContentTranslationController {
   public function overview(RouteMatchInterface $route_match, $entity_type_id = NULL): array {
     $build = parent::overview($route_match, $entity_type_id);
 
+    // Remove all the default operation links.
+    foreach ($build['content_translation_overview']['#rows'] as $row_key => &$row) {
+      end($row);
+      $pos = key($row);
+      if (!isset($row[$pos]['data']['#links'])) {
+        continue;
+      }
+
+      foreach ($row[$pos]['data']['#links'] as $link_key => $link) {
+        unset($build['content_translation_overview']['#rows'][$row_key][$pos]['data']['#links'][$link_key]);
+      }
+    }
+
     /** @var \Drupal\tmgmt\TranslatorInterface[] $translators */
     $translators = $this->entityTypeManager->getStorage('tmgmt_translator')->loadMultiple();
     foreach ($translators as $translator) {

@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implements hook_install().
@@ -22,4 +24,27 @@ function oe_translation_install() {
       $form_display->save();
     }
   }
+}
+
+/**
+ * Creates the revision ID field on the TMGMT job item entity.
+ */
+function oe_translation_update_8001(&$sandbox) {
+  $field = BaseFieldDefinition::create('integer')
+    ->setLabel(new TranslatableMarkup('Item revision ID'))
+    ->setSetting('unsigned', TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('item_rid', 'tmgmt_job_item', 'oe_translation', $field);
+}
+
+/**
+ * Creates the Item bundle field on the TMGMT job item entity.
+ */
+function oe_translation_update_8002(&$sandbox) {
+  $field = BaseFieldDefinition::create('string')
+    ->setLabel(new TranslatableMarkup('Item bundle'));
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('item_bundle', 'tmgmt_job_item', 'oe_translation', $field);
 }

@@ -36,6 +36,7 @@ class TranslationsRevisionTest extends KernelTestBase {
     'language',
     'oe_multilingual',
     'content_moderation',
+    'content_translation',
     'views',
   ];
 

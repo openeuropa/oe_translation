@@ -7,7 +7,11 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Access\AccessResult;
@@ -16,6 +20,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\ContentEntitySource;
 use Drupal\oe_translation\LocalTranslatorInterface;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
@@ -74,6 +79,12 @@ function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInt
  */
 function oe_translation_entity_type_alter(array &$entity_types) {
   foreach ($entity_types as $entity_type_id => $entity_type) {
+    // Change the Job Item class with our own override.
+    if ($entity_type_id === 'tmgmt_job_item') {
+      $entity_type->setClass(JobItem::class);
+    }
+
+    // Change the moderation handler if set to our own override.
     if (!$entity_type->hasHandlerClass('moderation')) {
       continue;
     }
@@ -141,6 +152,26 @@ function oe_translation_preprocess_node(&$variables) {
   }
 
   $variables['page'] = TRUE;
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function oe_translation_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'tmgmt_job_item') {
+    $fields = [];
+    // Add a field to the Job item to store the entity revision at the moment of
+    // creation.
+    $fields['item_rid'] = BaseFieldDefinition::create('integer')
+      ->setLabel(new TranslatableMarkup('Item revision ID'))
+      ->setSetting('unsigned', TRUE);
+    // Add a field to the Job item to store the entity bundle being translated.
+    // This is needed to be able to inspect field related info if the entity
+    // itself gets deleted.
+    $fields['item_bundle'] = BaseFieldDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('Item bundle'));
+    return $fields;
+  }
 }
 
 /**
@@ -246,4 +277,58 @@ function oe_translation_preprocess_local_translation_form_element_group(&$variab
   $table['#rows'] = $rows;
 
   $variables['element'] = $table;
+}
+
+/**
+ * Implements tmgmt_source_plugin_info_alter().
+ */
+function oe_translation_tmgmt_source_plugin_info_alter(&$definitions) {
+  if (isset($definitions['content'])) {
+    // Override the plugin class with ours.
+    $definitions['content']['class'] = ContentEntitySource::class;
+    // Set the service to be used for determining the entity translation info.
+    $definitions['content']['entity_translation_info'] = 'oe_translation.content_entity_source_translation_info';
+  }
+}
+
+/**
+ * Implements hook_tmgmt_translatable_fields_alter().
+ */
+function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $entity, &$translatable_fields) {
+  // Prevent the moderation state to show up as a translatable field. It seems
+  // it does even if we mark the base field as non-translatable.
+  if (isset($translatable_fields['moderation_state'])) {
+    unset($translatable_fields['moderation_state']);
+  }
+}
+
+/**
+ * Implements hook_block_view_BASE_BLOCK_ID_alter() for the Page Header block.
+ */
+function oe_translation_block_view_oe_theme_helper_page_header_alter(array &$build, $block) {
+  $build['#pre_render'][] = 'oe_translation_page_header_pre_render';
+}
+
+/**
+ * Pre-render callback for the Page Header block alteration.
+ *
+ * This block is shipped by OpenEuropa Theme and we use this to remove the
+ * language switcher from the page header on the entity preview page.
+ *
+ * @param array $build
+ *   The built render array of the block.
+ *
+ * @return array
+ *   The built render array of the block.
+ */
+function oe_translation_page_header_pre_render(array $build): array {
+  if (\Drupal::service('current_route_match')->getRouteName() !== 'tmgmt_content.job_item_preview') {
+    return $build;
+  }
+
+  if (isset($build['content']['#language_switcher'])) {
+    unset($build['content']['#language_switcher']);
+  }
+
+  return $build;
 }

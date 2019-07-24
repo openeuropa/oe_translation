@@ -4,6 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Plugin\tmgmt\Translator;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessManagerInterface;
@@ -12,7 +15,6 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -83,18 +85,18 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
   protected $entityTypeManager;
 
   /**
-   * The form builder.
-   *
-   * @var \Drupal\Core\Form\FormBuilderInterface
-   */
-  protected $formBuilder;
-
-  /**
    * The current request.
    *
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
 
   /**
    * PermissionTranslator constructor.
@@ -112,20 +114,22 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
    * @param \Drupal\Core\Access\AccessManagerInterface $access_manager
    *   The access manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
+   *
+   * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, FormBuilderInterface $form_builder, RequestStack $requestStack) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, EntityFieldManagerInterface $entity_field_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->languageManager = $language_manager;
     $this->accessManager = $access_manager;
     $this->entityTypeManager = $entity_type_manager;
-    $this->formBuilder = $form_builder;
-    $this->request = $requestStack->getCurrentRequest();
+    $this->request = $request_stack->getCurrentRequest();
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -140,8 +144,8 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
       $container->get('language_manager'),
       $container->get('access_manager'),
       $container->get('entity_type.manager'),
-      $container->get('form_builder'),
-      $container->get('request_stack')
+      $container->get('request_stack'),
+      $container->get('entity_field.manager')
     );
   }
 
@@ -212,18 +216,51 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
     /** @var \Drupal\tmgmt_local\LocalTaskItemInterface $task_item */
     $task_item = $form_state->getBuildInfo()['callback_object']->getEntity();
     $data = $task_item->getData();
-    $job = $task_item->getJobItem()->getJob();
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $this->entityTypeManager->getStorage('node')->load($task_item->getJobItem()->getItemId());
-    $existing_translation = $node->hasTranslation($job->getTargetLangcode()) ? $node->getTranslation($job->getTargetLangcode()) : NULL;
-    $existing_translation_data = $existing_translation ? $this->createSourceData($existing_translation, $task_item) : [];
+    $job_item = $task_item->getJobItem();
+    $job = $job_item->getJob();
+    $existing_translation_data = [];
+
+    // For the moment, we only support these alterations for content entities.
+    // And we need to ensure that it works for any kind of translatable content
+    // entity.
+    try {
+      $entity_type = $this->entityTypeManager->getDefinition($job_item->getItemType());
+      if (!$entity_type instanceof ContentEntityTypeInterface) {
+        // We don't do anything for config entity translations.
+        return;
+      }
+    }
+    catch (PluginNotFoundException $exception) {
+      // We don't do anything for non-entity translations.
+      return;
+    }
+
+    // Query for the latest revision of the entity in the target language to see
+    // if there are any existing translation values we can pre-fill the form
+    // with.
+    $results = $this->entityTypeManager->getStorage($job_item->getItemType())->getQuery()
+      ->condition($entity_type->getKey('id'), $job_item->getItemId())
+      ->condition('langcode', $job->getTargetLangcode())
+      ->allRevisions()
+      ->execute();
+
+    if ($results) {
+      end($results);
+      $vid = key($results);
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+      $entity = $this->entityTypeManager->getStorage($job_item->getItemType())->loadRevision($vid);
+      $existing_translation = $entity instanceof NodeInterface && $entity->hasTranslation($job->getTargetLangcode()) ? $entity->getTranslation($job->getTargetLangcode()) : NULL;
+      $existing_translation_data = $existing_translation ? $this->createSourceData($existing_translation, $task_item) : [];
+    }
+
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions($job_item->getItemType(), $job_item->get('item_bundle')->value);
 
     foreach (Element::children($form['translation']) as $field_name) {
       foreach (Element::children($form['translation'][$field_name]) as $field_path) {
         $field = &$form['translation'][$field_name][$field_path];
         // Clean up the translation form element.
         $field['#theme'] = 'local_translation_form_element_group';
-        $definition = $node->getFieldDefinition($field_name);
+        $definition = $field_definitions[$field_name];
         $field['#field_name'] = $definition->getLabel();
 
         list($field_name, $delta, $column) = explode('|', $field_path);
@@ -391,12 +428,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
           'title' => $this->t('Translate locally'),
         ];
       }
-    }
-
-    // Wrap the form with the multiple translations request form.
-    // @see \Drupal\tmgmt_content\Controller\ContentTranslationControllerOverride
-    if ($this->entityTypeManager->getAccessControlHandler('tmgmt_job')->createAccess()) {
-      $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
     }
   }
 
