@@ -1,0 +1,7 @@
+oe_translation_poetry.settings:
+  type: config_object
+  label: 'OpenEuropa Translation Poetry settings'
+  mapping:
+    service_wsdl:
+      type: string
+      label: 'The URL to the Poetry WSDL'

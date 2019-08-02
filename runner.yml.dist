@@ -21,7 +21,7 @@ drupal:
     # Enable the modules.
     - "./vendor/bin/drush en oe_multilingual -y"
     - "./vendor/bin/drush en oe_multilingual_demo -y"
-    - "./vendor/bin/drush en oe_translation -y"
+    - "./vendor/bin/drush en oe_translation oe_translation_poetry oe_translation_poetry_mock -y"
     - "./vendor/bin/drush cr"
   settings:
     settings:
@@ -39,6 +39,26 @@ commands:
     - { task: "run", command: "drupal:settings-setup" }
     - { task: "run", command: "setup:phpunit" }
     - { task: "run", command: "setup:behat" }
+    - task: "append"
+      file: "build/sites/default/settings.override.php"
+      text: |
+        $settings["poetry.identifier.code"] = getenv('POETRY_IDENTIFIER_CODE');
+        $settings["poetry.identifier.sequence"] = getenv('POETRY_IDENTIFIER_SEQUENCE');
+        $settings["poetry.service.username"] = getenv('POETRY_SERVICE_USERNAME');
+        $settings["poetry.service.password"] = getenv('POETRY_SERVICE_PASSWORD');
+        $settings["poetry.notification.username"] = getenv('POETRY_NOTIFICATION_USERNAME');
+        $settings["poetry.notification.password"] = getenv('POETRY_NOTIFICATION_PASSWORD');
+        $config['oe_translation_poetry.settings']['service_wsdl'] = 'http://localhost:8080/build/modules/custom/oe_translation/modules/oe_translation_poetry/modules/oe_translation_poetry_mock/poetry_mock.wsdl.xml';
+   # Generate settings.testing.php, it will be used when running functional tests.
+    - task: "append"
+      file: "build/sites/default/settings.testing.php"
+      text: |
+        $settings["poetry.identifier.code"] = getenv('POETRY_IDENTIFIER_CODE');
+        $settings["poetry.identifier.sequence"] = getenv('POETRY_IDENTIFIER_SEQUENCE');
+        $settings["poetry.service.username"] = getenv('POETRY_SERVICE_USERNAME');
+        $settings["poetry.service.password"] = getenv('POETRY_SERVICE_PASSWORD');
+        $settings["poetry.notification.username"] = getenv('POETRY_NOTIFICATION_USERNAME');
+        $settings["poetry.notification.password"] = getenv('POETRY_NOTIFICATION_PASSWORD');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }
   setup:behat:

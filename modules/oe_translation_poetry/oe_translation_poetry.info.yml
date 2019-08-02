@@ -1,0 +1,8 @@
+name: OpenEuropa Translation Poetry
+description: Integration of the Poetry service into the OpenEuropa translation framework
+package: OpenEuropa
+
+type: module
+core: 8.x
+dependencies:
+  - oe_translation:oe_translation
