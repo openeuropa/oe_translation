@@ -46,6 +46,7 @@ class PoetryMockTest extends BrowserTestBase {
     // Assert that the Poetry service gets properly instantiated.
     $expected_settings = [];
     $expected_settings['identifier.code'] = 'WEB';
+    $expected_settings['identifier.sequence'] = 'EWCMS_SEQUENCE';
     $expected_settings['identifier.year'] = date('Y');
     $expected_settings['service.wsdl'] = PoetryMock::getWsdlUrl($this->container->get('request_stack')->getCurrentRequest());
     $expected_settings['service.username'] = 'admin';
