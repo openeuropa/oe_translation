@@ -10,6 +10,7 @@ use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Zend\Diactoros\Response\XmlResponse;
 
 /**
  * Controller for running the Poetry mock server.
@@ -43,13 +44,30 @@ class PoetryMockController extends ControllerBase {
   }
 
   /**
+   * Returns the WSDL page.
+   *
+   * @return \Zend\Diactoros\Response\XmlResponse
+   *   The XML response.
+   */
+  public function wsdl(): XmlResponse {
+    $path = drupal_get_path('module', 'oe_translation_poetry_mock') . '/poetry_mock.wsdl.xml';
+    $wsdl = file_get_contents($path);
+    $base_path = $this->request->getSchemeAndHttpHost();
+    if ($this->request->getBasePath() !== "/") {
+      $base_path .= $this->request->getBasePath();
+    }
+    $wsdl = str_replace('@base_path', $base_path, $wsdl);
+    return new XmlResponse($wsdl);
+  }
+
+  /**
    * Runs the soap server.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   An empty response.
    */
   public function server(): Response {
-    $wsdl = PoetryMock::getWsdlUrl($this->request);
+    $wsdl = PoetryMock::getWsdlUrl();
     $url = Url::fromRoute('oe_translation_poetry_mock.server')->toString();
     $options = ['uri' => $url];
     $server = new \SoapServer($wsdl, $options);

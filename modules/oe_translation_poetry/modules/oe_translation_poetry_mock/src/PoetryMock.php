@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry_mock;
 
-use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Url;
 
 /**
  * SoapServer class for mocking the Poetry service.
@@ -49,15 +49,8 @@ class PoetryMock {
    * @return string
    *   The URL.
    */
-  public static  function getWsdlUrl(Request $request): string {
-    $path = drupal_get_path('module', 'oe_translation_poetry_mock') . '/poetry_mock.wsdl.xml';
-    $url = $request->getSchemeAndHttpHost();
-    if ($request->getBasePath() !== "/") {
-      $url .= $request->getBasePath();
-    }
-    $url .= '/' . $path;
-
-    return $url;
+  public static  function getWsdlUrl(): string {
+    return Url::fromRoute('oe_translation_poetry_mock.wsdl')->setAbsolute()->toString();
   }
 
 }

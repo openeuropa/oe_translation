@@ -30,9 +30,8 @@ class PoetryMockTest extends BrowserTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $request = $this->container->get('request_stack')->getCurrentRequest();
     $this->container->get('config.factory')->getEditable('oe_translation_poetry.settings')
-      ->set('service_wsdl', PoetryMock::getWsdlUrl($request))
+      ->set('service_wsdl', PoetryMock::getWsdlUrl())
       ->save();
   }
 
@@ -48,7 +47,7 @@ class PoetryMockTest extends BrowserTestBase {
     $expected_settings['identifier.code'] = 'WEB';
     $expected_settings['identifier.sequence'] = 'EWCMS_SEQUENCE';
     $expected_settings['identifier.year'] = date('Y');
-    $expected_settings['service.wsdl'] = PoetryMock::getWsdlUrl($this->container->get('request_stack')->getCurrentRequest());
+    $expected_settings['service.wsdl'] = PoetryMock::getWsdlUrl();
     $expected_settings['service.username'] = 'admin';
     $expected_settings['service.password'] = 'admin';
     $expected_settings['notification.username'] = 'admin';
