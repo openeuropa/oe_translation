@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Module file of the OpenEuropa DGT Html formatter.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function oe_translation_poetry_html_formatter_theme() {
+  return [
+    'poetry_html_template' => [
+      'path' => drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/templates',
+      'template' => 'poetry_html_template',
+      'variables' => [
+        'tjid' => NULL,
+        'source_language' => NULL,
+        'target_language' => NULL,
+        'items' => NULL,
+      ],
+    ],
+  ];
+}
