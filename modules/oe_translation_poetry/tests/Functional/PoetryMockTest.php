@@ -104,6 +104,14 @@ class PoetryMockTest extends BrowserTestBase {
     $response = $client->send($message);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
     $this->assertEqual($expected, $response->getRaw());
+
+    // Assert that using the wrong credentials returns an error.
+    $poetry->getSettings()->set('service.username', 'user');
+    $poetry->getSettings()->set('service.password', 'user');
+    $client = $poetry->getClient();
+    $response = $client->send($message);
+    $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/authentication-error.xml');
+    $this->assertEqual($expected, $response->getRaw());
   }
 
 }

@@ -28,7 +28,8 @@ class PoetryMock {
    */
   public function requestService(string $username, string $password, string $message): string {
     if ($username !== 'admin' || $password !== 'admin') {
-      return 'Invalid userName/Logon, access denied.';
+      return file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/authentication-error.xml');
+
     }
 
     $xml = simplexml_load_string($message);
