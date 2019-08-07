@@ -93,6 +93,7 @@ class PoetryMockTest extends BrowserTestBase {
 
     $client = $poetry->getClient();
     $response = $client->send($message);
+    $this->assertInstanceOf('EC\Poetry\Messages\MessageInterface', $response);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $test_id . '.xml');
     $this->assertEqual($expected, $response->getRaw());
 
@@ -102,6 +103,7 @@ class PoetryMockTest extends BrowserTestBase {
     $message->setDetails($details);
 
     $response = $client->send($message);
+    $this->assertInstanceOf('EC\Poetry\Messages\MessageInterface', $response);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
     $this->assertEqual($expected, $response->getRaw());
 
@@ -110,8 +112,8 @@ class PoetryMockTest extends BrowserTestBase {
     $poetry->getSettings()->set('service.password', 'user');
     $client = $poetry->getClient();
     $response = $client->send($message);
-    $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/authentication-error.xml');
-    $this->assertEqual($expected, $response->getRaw());
+    $this->assertInternalType('string', $response);
+    $this->assertEqual('Invalid userName/Logon, access denied.', $response);
   }
 
 }
