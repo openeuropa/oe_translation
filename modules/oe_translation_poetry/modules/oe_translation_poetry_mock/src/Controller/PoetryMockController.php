@@ -73,8 +73,14 @@ class PoetryMockController extends ControllerBase {
     $server = new \SoapServer($wsdl, $options);
     $server->setClass(PoetryMock::class);
 
+    ob_start();
     $server->handle();
-    return new Response();
+    $result = ob_get_contents();
+    ob_end_clean();
+
+    $response = new Response($result);
+    $response->headers->set('Content-type', 'application/xml; charset=utf-8');
+    return $response;
   }
 
   /**

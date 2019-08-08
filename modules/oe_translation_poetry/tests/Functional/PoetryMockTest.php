@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\BrowserTestBase;
+use EC\Poetry\Messages\MessageInterface;
 
 /**
  * Tests the poetry mock.
@@ -93,7 +94,7 @@ class PoetryMockTest extends BrowserTestBase {
 
     $client = $poetry->getClient();
     $response = $client->send($message);
-    $this->assertInstanceOf('EC\Poetry\Messages\MessageInterface', $response);
+    $this->assertInstanceOf(MessageInterface::class, $response);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $test_id . '.xml');
     $this->assertEqual($expected, $response->getRaw());
 
@@ -103,17 +104,9 @@ class PoetryMockTest extends BrowserTestBase {
     $message->setDetails($details);
 
     $response = $client->send($message);
-    $this->assertInstanceOf('EC\Poetry\Messages\MessageInterface', $response);
+    $this->assertInstanceOf(MessageInterface::class, $response);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
     $this->assertEqual($expected, $response->getRaw());
-
-    // Assert that using the wrong credentials returns an error.
-    $poetry->getSettings()->set('service.username', 'user');
-    $poetry->getSettings()->set('service.password', 'user');
-    $client = $poetry->getClient();
-    $response = $client->send($message);
-    $this->assertInternalType('string', $response);
-    $this->assertEqual('Invalid userName/Logon, access denied.', $response);
   }
 
 }

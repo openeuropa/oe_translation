@@ -27,15 +27,17 @@ class PoetryMock {
    *   The XML string response.
    */
   public function requestService(string $username, string $password, string $message): string {
-    if ($username !== 'admin' || $password !== 'admin') {
-      return 'Invalid userName/Logon, access denied.';
-    }
-
     $xml = simplexml_load_string($message);
     $request = $xml->request;
     $details = (array) $request->demande;
     $id = (string) $details['userReference'];
-    $response = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $id . '.xml');
+
+    $path = drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $id . '.xml';
+    if (!file_exists($path)) {
+      return file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
+    }
+
+    $response = file_get_contents($path);
     if ($response) {
       return $response;
     }
