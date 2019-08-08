@@ -1,0 +1,4 @@
+services:
+  oe_translation_poetry.client:
+    class: Drupal\oe_translation_poetry\Poetry
+    arguments: ['@config.factory', '@logger.factory']

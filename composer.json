@@ -24,11 +24,14 @@
         "openeuropa/drupal-core-require-dev": "^8.7",
         "openeuropa/task-runner": "~1.0.0-beta6",
         "phpunit/phpunit": "~6.0",
-        "symfony/browser-kit": "~4.0"
+        "symfony/browser-kit": "~4.0",
+        "ec-europa/oe-poetry-client": "dev-master",
+        "zendframework/zend-diactoros": "~1.8"
     },
     "_readme": [
         "We explicitly require consolidation/robo to allow lower 'composer update --prefer-lowest' to complete successfully.",
-        "We explicitly require consolidation/annotated-command to allow lower 'composer update --prefer-lowest' to complete successfully."
+        "We explicitly require consolidation/annotated-command to allow lower 'composer update --prefer-lowest' to complete successfully.",
+        "We use a high version of Zend Diactoros for the XMLResponse class"
     ],
     "scripts": {
         "drupal-scaffold": "DrupalComposer\\DrupalScaffold\\Plugin::scaffold",

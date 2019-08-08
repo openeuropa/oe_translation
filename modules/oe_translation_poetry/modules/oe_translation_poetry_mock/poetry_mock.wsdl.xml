@@ -1,0 +1,37 @@
+<definitions name="PoetryTestServer" targetNamespace="@base_path/poetry-mock/server" xmlns:tns="@base_path/poetry-mock/server" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:ns="@base_path/poetry-mock/server/types">
+  <types>
+    <xsd:schema targetNamespace="@base_path/poetry-mock/server/types" xmlns="@base_path/poetry-mock/server/types"/>
+  </types>
+  <message name="requestServiceRequest">
+    <part name="user" type="xsd:string"/>
+    <part name="password" type="xsd:string"/>
+    <part name="msg" type="xsd:string"/>
+  </message>
+  <message name="requestServiceResponse">
+    <part name="requestServiceReturn" type="xsd:string">
+    </part>
+  </message>
+  <portType name="PoetryTestServerPortType">
+    <operation name="requestService">
+      <input message="tns:requestServiceRequest"/>
+      <output message="tns:requestServiceResponse"/>
+    </operation>
+  </portType>
+  <binding name="PoetryTestServerBinding" type="tns:PoetryTestServerPortType">
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="requestService">
+      <soap:operation soapAction="@base_path/poetry-mock/server/#requestService"/>
+      <input>
+      <soap:body use="literal" namespace="@base_path/poetry-mock/server"/>
+      </input>
+      <output>
+        <soap:body use="literal" namespace="@base_path/poetry-mock/server"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="PoetryTestServerService">
+    <port name="PoetryTestServerPort" binding="tns:PoetryTestServerBinding">
+      <soap:address location="@base_path/poetry-mock/server"/>
+    </port>
+  </service>
+</definitions>
