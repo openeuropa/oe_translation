@@ -5,8 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
-use Drupal\Core\Field\FieldItemInterface;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 
@@ -124,8 +122,10 @@ class PoetryRequestIdItem extends FieldItemBase {
    * Builds a reference string of all the values in this field type.
    *
    * @param array $values
+   *   The values in this field.
    *
    * @return string
+   *   The reference string.
    */
   public static function toReference(array $values): string {
     return implode('/', $values);

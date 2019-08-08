@@ -33,7 +33,7 @@ class PoetryRequestIdFormatter extends FormatterBase {
       }
 
       $element[$delta] = [
-        '#markup' => PoetryRequestIdItem::toReference($values)
+        '#markup' => PoetryRequestIdItem::toReference($values),
       ];
     }
 

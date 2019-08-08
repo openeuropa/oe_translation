@@ -30,40 +30,40 @@ class PoetryRequestIdWidget extends WidgetBase {
     ];
 
     $element['poetry_request_id']['code'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Code'),
-        '#default_value' => isset($items[$delta]->code) ? $items[$delta]->code : NULL,
-      ];
+      '#type' => 'textfield',
+      '#title' => $this->t('Code'),
+      '#default_value' => isset($items[$delta]->code) ? $items[$delta]->code : NULL,
+    ];
 
     $element['poetry_request_id']['year'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('year'),
-        '#default_value' => isset($items[$delta]->year) ? $items[$delta]->year : NULL,
-      ];
+      '#type' => 'textfield',
+      '#title' => $this->t('year'),
+      '#default_value' => isset($items[$delta]->year) ? $items[$delta]->year : NULL,
+    ];
 
     $element['poetry_request_id']['number'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Number'),
-        '#default_value' => isset($items[$delta]->number) ? $items[$delta]->number : NULL,
-      ];
+      '#type' => 'number',
+      '#title' => $this->t('Number'),
+      '#default_value' => isset($items[$delta]->number) ? $items[$delta]->number : NULL,
+    ];
 
     $element['poetry_request_id']['version'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Version'),
-        '#default_value' => isset($items[$delta]->version) ? $items[$delta]->version : NULL,
-      ];
+      '#type' => 'number',
+      '#title' => $this->t('Version'),
+      '#default_value' => isset($items[$delta]->version) ? $items[$delta]->version : NULL,
+    ];
 
     $element['poetry_request_id']['part'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Part'),
-        '#default_value' => isset($items[$delta]->part) ? $items[$delta]->part : NULL,
-      ];
+      '#type' => 'number',
+      '#title' => $this->t('Part'),
+      '#default_value' => isset($items[$delta]->part) ? $items[$delta]->part : NULL,
+    ];
 
     $element['poetry_request_id']['product'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Product'),
-        '#default_value' => isset($items[$delta]->product) ? $items[$delta]->product : NULL,
-      ];
+      '#type' => 'textfield',
+      '#title' => $this->t('Product'),
+      '#default_value' => isset($items[$delta]->product) ? $items[$delta]->product : NULL,
+    ];
 
     return $element;
   }

@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
 
 /**

@@ -31,7 +31,7 @@ class PoetryRequestIdFieldTest extends TranslationKernelTestBase {
     $this->installEntitySchema('user');
     $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'type' => 'page',
-      'name' => 'Page'
+      'name' => 'Page',
     ])->save();
 
     FieldStorageConfig::create([
@@ -59,7 +59,7 @@ class PoetryRequestIdFieldTest extends TranslationKernelTestBase {
       'number' => 122,
       'version' => 1,
       'part' => 1,
-      'product' => 'TRA'
+      'product' => 'TRA',
     ];
 
     $node = $node_storage->create([

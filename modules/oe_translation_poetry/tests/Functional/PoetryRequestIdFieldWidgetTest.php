@@ -81,7 +81,7 @@ class PoetryRequestIdFieldWidgetTest extends TranslationTestBase {
       'number' => 102,
       'version' => 1,
       'part' => 1,
-      'product' => 'TRA'
+      'product' => 'TRA',
     ], $node->get('poetry_request_id')->first()->getValue());
   }
 
