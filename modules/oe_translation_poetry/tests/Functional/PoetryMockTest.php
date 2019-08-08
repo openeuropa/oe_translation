@@ -98,6 +98,19 @@ class PoetryMockTest extends BrowserTestBase {
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $test_id . '.xml');
     $this->assertEqual($expected, $response->getRaw());
 
+    // Check the request and response have been logged.
+    $result = $this->container->get('database')
+      ->select('watchdog', 'w')
+      ->range(0, 1)
+      ->fields('w', ['variables'])
+      ->condition('message', 'Poetry event <strong>@name</strong>: <br /><br />Username: <strong>@username</strong> <br /><br />Password: <strong>@password</strong> \n\n<pre>@message</pre>')
+      ->execute()
+      ->fetchCol(0);
+    $this->assertCount(1, $result);
+    $logged_message = trim(unserialize(reset($result))['@message'], "'");
+    $logged_message_id = (string) simplexml_load_string($logged_message)->request->attributes()['id'];
+    $this->assertEqual($logged_message_id, 'WEB/2019/40012/0/33/TRA');
+
     $test_id = 2;
     $details = $message->getDetails();
     $details->setClientId($test_id);
