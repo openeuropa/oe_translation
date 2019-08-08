@@ -13,44 +13,7 @@ use Drupal\tmgmt_content\DefaultFieldProcessor;
  * This is needed to ensure that we can translate also the URI column of the
  * link field type.
  */
-class LinkFieldProcessorTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'system',
-    'node',
-    'field',
-    'link',
-    'text',
-    'options',
-    'user',
-    'language',
-    'oe_multilingual',
-    'tmgmt',
-    'content_translation',
-    'oe_translation',
-    'views',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setUp() {
-    parent::setUp();
-
-    $this->installConfig([
-      'node',
-      'field',
-      'link',
-      'language',
-      'oe_multilingual',
-      'tmgmt',
-      'oe_translation',
-      'views',
-    ]);
-  }
+class LinkFieldProcessorTest extends TranslationKernelTestBase {
 
   /**
    * Tests that the default field processor on the link field type is used.

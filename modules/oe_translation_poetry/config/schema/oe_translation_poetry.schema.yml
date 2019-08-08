@@ -5,3 +5,26 @@ oe_translation_poetry.settings:
     service_wsdl:
       type: string
       label: 'The URL to the Poetry WSDL'
+
+field.value.poetry_request_id:
+  type: mapping
+  label: Default value
+  mapping:
+    code:
+      type: string
+      label: Code
+    year:
+      type: string
+      label: Year
+    number:
+      type: integer
+      label: Year
+    version:
+      type: integer
+      label: Version
+    part:
+      type: integer
+      label: Part
+    product:
+      type: string
+      label: Product
