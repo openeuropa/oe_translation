@@ -59,7 +59,7 @@ class PoetryMockTest extends BrowserTestBase {
 
     $settings = $poetry->getSettings();
     foreach ($expected_settings as $name => $setting) {
-      $this->assertEqual($setting, $settings[$name]);
+      $this->assertEqual($settings[$name], $setting);
     }
 
     // Create a test message and check that Mocked responses are returned.

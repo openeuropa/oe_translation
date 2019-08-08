@@ -1,14 +1,14 @@
 oe_translation_poetry_mock.server:
   path: '/poetry-mock/server'
   defaults:
-    _controller: 'Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::server'
+    _controller: Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::server
   requirements:
     _permission: 'access content'
 
 oe_translation_poetry_mock.server_types:
   path: '/poetry-mock/server/types'
   defaults:
-    _controller: 'Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::serverTypes'
+    _controller: Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::serverTypes
   requirements:
     _permission: 'access content'
 

@@ -12,15 +12,20 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\oe_translation_poetry\Poetry;
+use Drupal\oe_translation_poetry\PoetryJobQueue;
+use Drupal\tmgmt\JobCheckoutManager;
 use Drupal\tmgmt\JobInterface;
+use Drupal\tmgmt\JobQueue;
+use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Drupal current user provider.
+ * DGT Translator using the Poetry service.
  *
  * @TranslatorPlugin(
  *   id = "poetry",
@@ -36,8 +41,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface {
 
   /**
-   * Poetry client.
-   *
    * @var \Drupal\oe_translation_poetry\Poetry
    */
   protected $poetry;
@@ -78,15 +81,16 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   protected $request;
 
   /**
-   * The form builder.
-   *
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
 
   /**
-   * The route match.
-   *
+   * @var PoetryJobQueue
+   */
+  protected $jobQueue;
+
+  /**
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
   protected $currentRouteMatch;
@@ -101,7 +105,6 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
-   *   The Poetry client.
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
    *   The Poetry service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
@@ -113,13 +116,12 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
-   *   The form builder.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The route match.
    *
+   * @param \Drupal\oe_translation_poetry\PoetryJobQueue $job_queue
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, RouteMatchInterface $route_match) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, PoetryJobQueue $job_queue, RouteMatchInterface $route_match) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->poetry = $poetry;
@@ -128,6 +130,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $this->entityTypeManager = $entity_type_manager;
     $this->request = $request_stack->getCurrentRequest();
     $this->formBuilder = $form_builder;
+    $this->jobQueue = $job_queue;
     $this->currentRouteMatch = $route_match;
   }
 
@@ -146,6 +149,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $container->get('entity_type.manager'),
       $container->get('request_stack'),
       $container->get('form_builder'),
+      $container->get('oe_translation_poetry.job_queue'),
       $container->get('current_route_match')
     );
   }
@@ -158,13 +162,13 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    */
   public function defaultSettings() {
     // @todo: remove this and put the default settings in the plugin definition.
-    return [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
+    return;
   }
 
   /**
@@ -184,6 +188,52 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   }
 
   /**
+   * Submit handler for the TMGMT content translation overview form.
+   *
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @see oe_translation_poetry_form_tmgmt_content_translate_form_alter()
+   */
+  public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $form_state->get('entity');
+    $values = $form_state->getValues();
+
+    $this->jobQueue->reset();
+    $this->jobQueue->setEntityId($entity->getEntityTypeId(), $entity->getRevisionId());
+
+    foreach (array_keys(array_filter($values['languages'])) as $langcode) {
+      $job = tmgmt_job_create($entity->language()->getId(), $langcode, $this->currentUser->id());
+      // Set the Poetry translator on it.
+      $job->translator = 'poetry';
+      try {
+        $job->addItem('content', $entity->getEntityTypeId(), $entity->id());
+        $job->save();
+        $this->jobQueue->addJob($job);
+      }
+      catch (TMGMTException $e) {
+        watchdog_exception('tmgmt', $e);
+        $target_lang_name = $this->languageManager->getLanguage($langcode)->getName();
+        $this->messenger()->addError(t('Unable to add job item for target language %name. Make sure the source content is not empty.', ['%name' => $target_lang_name]));
+      }
+    }
+
+    $url = Url::fromRoute($this->currentRouteMatch->getRouteName(), $this->currentRouteMatch->getRawParameters()->all());
+    $this->jobQueue->setDestination($url);
+
+    // Remove the destination so that we can redirect to the checkout form.
+    if ($this->request->query->has('destination')) {
+      $this->request->query->remove('destination');
+    }
+
+    $redirect = Url::fromRoute('oe_translation_poetry.job_queue_checkout');
+
+    // Redirect to the checkout form.
+    $form_state->setRedirectUrl($redirect);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function requestTranslation(JobInterface $job) {
@@ -199,5 +249,4 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     // For the moment we don't have any checkout settings.
     return FALSE;
   }
-
 }

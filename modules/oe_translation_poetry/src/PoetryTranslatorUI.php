@@ -1,13 +1,14 @@
 <?php
 
 declare(strict_types = 1);
+
 namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\tmgmt\TranslatorPluginUiBase;
 
 /**
- * Form Provider for the Poetry Translator.
+ * UI class for the Poetry translator.
  */
 class PoetryTranslatorUI extends TranslatorPluginUiBase {
 

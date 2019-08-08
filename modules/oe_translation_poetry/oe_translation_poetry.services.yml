@@ -1,7 +1,10 @@
 services:
   oe_translation_poetry.client:
     class: Drupal\oe_translation_poetry\Poetry
-    arguments: ['@config.factory', '@oe_translation_poetry.logger.channel.poetry', '@logger.dblog']
+    arguments: ['@config.factory', '@oe_translation_poetry.logger.channel.poetry', '@logger.dblog', '@state', '@entity_type.manager']
   oe_translation_poetry.logger.channel.poetry:
     class: Drupal\oe_translation_poetry\Logger\PoetryLoggerChannel
     arguments: ['poetry']
+  oe_translation_poetry.job_queue:
+    class: Drupal\oe_translation_poetry\PoetryJobQueue
+    arguments: ['@tempstore.private', '@entity_type.manager']
