@@ -7,7 +7,6 @@ namespace Drupal\oe_translation_poetry;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\Url;
 use EC\Poetry\Poetry as PoetryLibrary;
 
 /**
@@ -29,11 +28,9 @@ class Poetry extends PoetryLibrary {
       'identifier.code' => Settings::get('poetry.identifier.code'),
       'identifier.sequence' => Settings::get('poetry.identifier.sequence'),
       'identifier.year' => date('Y'),
-      'client.wsdl' => Url::fromRoute('<front>')->setAbsolute()->toString(),
       'service.wsdl' => $configFactory->get('oe_translation_poetry.settings')->get('service_wsdl'),
       'service.username' => Settings::get('poetry.service.username'),
       'service.password' => Settings::get('poetry.service.password'),
-      'notification.endpoint' => Url::fromRoute('<front>')->setAbsolute()->toString(),
       'notification.username' => Settings::get('poetry.notification.username'),
       'notification.password' => Settings::get('poetry.notification.password'),
       'logger' => $loggerChannelFactory->get('oe_translation_poetry'),
