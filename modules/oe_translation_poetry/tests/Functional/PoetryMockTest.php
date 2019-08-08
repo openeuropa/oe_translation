@@ -34,6 +34,10 @@ class PoetryMockTest extends BrowserTestBase {
     $this->container->get('config.factory')->getEditable('oe_translation_poetry.settings')
       ->set('service_wsdl', PoetryMock::getWsdlUrl())
       ->save();
+
+    // Reset the service since we changed configuration that is needed for the
+    // service constructor.
+    $this->container->set('oe_translation_poetry.client', NULL);
   }
 
   /**
@@ -46,7 +50,6 @@ class PoetryMockTest extends BrowserTestBase {
     // Assert that the Poetry service gets properly instantiated.
     $expected_settings = [];
     $expected_settings['identifier.code'] = 'WEB';
-    $expected_settings['identifier.sequence'] = 'EWCMS_SEQUENCE';
     $expected_settings['identifier.year'] = date('Y');
     $expected_settings['service.wsdl'] = PoetryMock::getWsdlUrl();
     $expected_settings['service.username'] = 'admin';

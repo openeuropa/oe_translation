@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation_poetry
+name: poetry
+label: Poetry
+description: ''
+auto_accept: false
+weight: null
+plugin: poetry
+settings: {  }
+remote_languages_mappings: {  }
