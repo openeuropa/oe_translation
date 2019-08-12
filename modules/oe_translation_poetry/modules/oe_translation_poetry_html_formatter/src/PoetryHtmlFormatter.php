@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry_html_formatter;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\tmgmt\Data;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
 
@@ -18,6 +20,33 @@ use Drupal\tmgmt\JobInterface;
  * @see \Drupal\tmgmt_file\Plugin\tmgmt_file\Format\Html
  */
 class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
+
+  /**
+   * The TMGMT Data manager service.
+   *
+   * @var \Drupal\tmgmt\Data
+   */
+  private $tmgmtData;
+
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  private $renderer;
+
+  /**
+   * Poetry constructor.
+   *
+   * @param \Drupal\tmgmt\Data $tmgmt_data
+   *   The TMGMT Data service.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   */
+  public function __construct(Data $tmgmt_data, RendererInterface $renderer) {
+    $this->tmgmtData = $tmgmt_data;
+    $this->renderer = $renderer;
+  }
 
   /**
    * Returns base64 encoded data that is safe for use in xml ids.
@@ -54,7 +83,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
   public function export(JobInterface $job, array $conditions = []): MarkupInterface {
     $items = [];
     foreach ($job->getItems($conditions) as $item) {
-      $data = \Drupal::service('tmgmt.data')->filterTranslatable($item->getData());
+      $data = $this->tmgmtData->filterTranslatable($item->getData());
       foreach ($data as $key => $value) {
         $value['#key'] = '[' . $item->id() . '][' . $key . ']';
         $items[$item->id()][$this->encodeIdSafeBase64($item->id() . '][' . $key)] = $value;
@@ -67,7 +96,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
       '#target_language' => $job->getRemoteTargetLanguage(),
       '#items' => $items,
     ];
-    return \Drupal::service('renderer')->renderPlain($elements);
+    return $this->renderer->renderPlain($elements);
   }
 
   /**
@@ -84,7 +113,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
       $key = $this->decodeIdSafeBase64((string) $atom['id']);
       $data[$key]['#text'] = (string) $atom;
     }
-    return \Drupal::service('tmgmt.data')->unflatten($data);
+    return $this->tmgmtData->unflatten($data);
   }
 
   /**
