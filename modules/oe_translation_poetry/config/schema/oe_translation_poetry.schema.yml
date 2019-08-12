@@ -1,11 +1,3 @@
-oe_translation_poetry.settings:
-  type: config_object
-  label: 'OpenEuropa Translation Poetry settings'
-  mapping:
-    service_wsdl:
-      type: string
-      label: 'The URL to the Poetry WSDL'
-
 field.value.poetry_request_id:
   type: mapping
   label: Default value
@@ -28,3 +20,48 @@ field.value.poetry_request_id:
     product:
       type: string
       label: Product
+
+tmgmt.translator.settings.poetry:
+  type: mapping
+  mapping:
+    service_wsdl:
+      type: string
+      label: The URL to the Poetry WSDL
+    identifier_code:
+      type: string
+      label: Identifier code
+    title_prefix:
+      type: string
+      label: Request title prefix
+    application_reference:
+      type: string
+      label: Application reference code
+    contact:
+      type: mapping
+      label: Contact information
+      mapping:
+        author:
+          type: string
+          label: Author
+        secretary:
+          type: string
+          label: Secretary
+        contact:
+          type: string
+          label: Contact
+        responsible:
+          type: string
+          label: Responsible
+    organisation:
+      type: mapping
+      label: Organisation information
+      mapping:
+        responsible:
+          type: string
+          label: Responsible
+        author:
+          type: string
+          label: Author
+        requester:
+          type: string
+          label: Requester

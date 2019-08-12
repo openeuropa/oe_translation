@@ -32,7 +32,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *   label = @Translation("Poetry"),
  *   description = @Translation("Allows the users to send translation requests to Poetry."),
  *   ui = "\Drupal\oe_translation_poetry\PoetryTranslatorUI",
- *   default_settings = {},
+ *   default_settings = {
+ *     "identifier_code" = "WEB",
+ *     "title_prefix" = "EWCMS",
+ *     "application_reference" = "FPFIS"
+ *   },
  *   map_remote_languages = FALSE
  * )
  *
@@ -152,16 +156,6 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $container->get('oe_translation_poetry.job_queue'),
       $container->get('current_route_match')
     );
-  }
-
-  /**
-   * Defines default settings.
-   *
-   * @return array
-   *   An array of default settings.
-   */
-  public function defaultSettings() {
-    // @todo: remove this and put the default settings in the plugin definition.
   }
 
   /**

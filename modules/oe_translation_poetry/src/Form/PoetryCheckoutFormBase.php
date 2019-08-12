@@ -10,6 +10,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
+use Drupal\oe_translation_poetry\PoetryTranslatorUI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -75,7 +76,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       '#title' => $this->t('Contact information'),
     ];
 
-    foreach ($this->getContactFieldNames('contact') as $name => $label) {
+    foreach (PoetryTranslatorUI::getContactFieldNames('contact') as $name => $label) {
       $form['details']['contact'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
@@ -87,7 +88,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       '#title' => $this->t('Organisation information'),
     ];
 
-    foreach ($this->getContactFieldNames('organisation') as $name => $label) {
+    foreach (PoetryTranslatorUI::getContactFieldNames('organisation') as $name => $label) {
       $form['details']['organisation'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
@@ -181,14 +182,14 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $message->setDetails($details);
 
     // Build the contact information.
-    foreach ($this->getContactFieldNames('contact') as $name => $label) {
+    foreach (PoetryTranslatorUI::getContactFieldNames('contact') as $name => $label) {
       $message->withContact()
         ->setType($name)
         ->setNickname($form_state->getValue($name));
     }
 
     // Build the organisation information.
-    foreach ($this->getContactFieldNames('organisation') as $name => $label) {
+    foreach (PoetryTranslatorUI::getContactFieldNames('organisation') as $name => $label) {
       $message->withContact()
         ->setType($name)
         ->setNickname($form_state->getValue($name));
@@ -250,28 +251,4 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $this->messenger->addStatus($this->t('The translation request has been cancelled and the corresponding jobs deleted.'));
   }
 
-  /**
-   * Returns the field names for a given type of contact field set.
-   *
-   * @param string $type
-   *
-   * @return array
-   */
-  protected function getContactFieldNames(string $type = 'contact'): array {
-    $map = [
-      'contact' => [
-        'author' => $this->t('Author'),
-        'secretary' => $this->t('Secretary'),
-        'contact' => $this->t('Contact'),
-        'responsible' => $this->t('Responsible'),
-      ],
-      'organisation' => [
-        'responsible' => $this->t('Responsible'),
-        'author' => $this->t('Author'),
-        'requester' => $this->t('Requester'),
-      ],
-    ];
-
-    return $map[$type] ?? [];
-  }
 }

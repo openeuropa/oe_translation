@@ -49,14 +49,14 @@ class Poetry extends PoetryLibrary {
     // @todo improve this in case we need alternative logging mechanisms.
     $loggerChannel->addLogger($logger);
     $values = [
-      // @todo  Make it config in the translator.
-      'identifier.code' => Settings::get('poetry.identifier.code'),
+      // @todo Use the correct identifier code.
+      'identifier.code' => 'WEB',
       // The default version will always start from 0.
       'identifier.version' => 0,
       // The default part will always start from 0.
       'identifier.part' => 0,
+      'identifier.sequence' => Settings::get('poetry.identifier.sequence'),
       'identifier.year' => date('Y'),
-      'service.wsdl' => $configFactory->get('oe_translation_poetry.settings')->get('service_wsdl'),
       'service.username' => Settings::get('poetry.service.username'),
       'service.password' => Settings::get('poetry.service.password'),
       'notification.username' => Settings::get('poetry.notification.username'),
