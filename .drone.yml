@@ -7,7 +7,6 @@ services:
     image: fpfis/httpd-php-ci:7.1
     environment: &web-environment
       - DOCUMENT_ROOT=/test/oe_translation
-      - POETRY_IDENTIFIER_CODE=WEB
       - POETRY_IDENTIFIER_SEQUENCE=EWCMS_SEQUENCE
       - POETRY_SERVICE_USERNAME=admin
       - POETRY_SERVICE_PASSWORD=admin

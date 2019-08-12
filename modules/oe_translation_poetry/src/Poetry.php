@@ -29,10 +29,10 @@ class Poetry extends PoetryLibrary {
   public function __construct(ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger) {
     $loggerChannel->addLogger($logger);
     $values = [
-      'identifier.code' => Settings::get('poetry.identifier.code'),
+      // @todo Use the correct identifier code.
+      'identifier.code' => 'WEB',
       'identifier.sequence' => Settings::get('poetry.identifier.sequence'),
       'identifier.year' => date('Y'),
-      'service.wsdl' => $configFactory->get('oe_translation_poetry.settings')->get('service_wsdl'),
       'service.username' => Settings::get('poetry.service.username'),
       'service.password' => Settings::get('poetry.service.password'),
       'notification.username' => Settings::get('poetry.notification.username'),
