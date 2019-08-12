@@ -17,8 +17,8 @@ class PoetryRequestIdFieldTest extends TranslationKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'dblog',
     'oe_translation_poetry',
-    'user',
   ];
 
   /**
@@ -27,8 +27,6 @@ class PoetryRequestIdFieldTest extends TranslationKernelTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->installEntitySchema('node');
-    $this->installEntitySchema('user');
     $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'type' => 'page',
       'name' => 'Page',

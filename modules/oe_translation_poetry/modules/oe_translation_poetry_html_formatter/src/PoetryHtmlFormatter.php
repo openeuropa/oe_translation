@@ -5,76 +5,58 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry_html_formatter;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\tmgmt\Data;
-use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
 
 /**
  * Poetry HTML formatter.
  *
- * This service processes the content to be sent to the Poetry translation
- * service to comply with the requirements set by the DGT. It reuses many
- * functionalities from the TMGMT File module's HTML formatter plugin.
+ * Responsible for the formatting of translation job data into an HTML version
+ * that complies with the requirements of DGT using the Poetry service.
+ *
+ * Inspired heavily from the TMGMT File translator plugin HTML formatter.
  *
  * @see \Drupal\tmgmt_file\Plugin\tmgmt_file\Format\Html
  */
 class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
 
   /**
-   * The TMGMT Data manager service.
+   * The TMGMT Data manager.
    *
    * @var \Drupal\tmgmt\Data
    */
-  private $tmgmtData;
+  protected $tmgmtData;
 
   /**
-   * The renderer service.
+   * The renderer.
    *
    * @var \Drupal\Core\Render\RendererInterface
    */
-  private $renderer;
+  protected $renderer;
 
   /**
-   * Poetry constructor.
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * PoetryHtmlFormatter constructor.
    *
    * @param \Drupal\tmgmt\Data $tmgmt_data
-   *   The TMGMT Data service.
+   *   The TMGMT Data.
    * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
+   *   The renderer.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(Data $tmgmt_data, RendererInterface $renderer) {
+  public function __construct(Data $tmgmt_data, RendererInterface $renderer, EntityTypeManagerInterface $entityTypeManager) {
     $this->tmgmtData = $tmgmt_data;
     $this->renderer = $renderer;
-  }
-
-  /**
-   * Returns base64 encoded data that is safe for use in xml ids.
-   *
-   * @param string $data
-   *   The string to be encoded.
-   *
-   * @return string
-   *   The encoded string.
-   */
-  protected function encodeIdSafeBase64(string $data): string {
-    // Prefix with a b to enforce that the first character is a letter.
-    return 'b' . rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-  }
-
-  /**
-   * Returns decoded id safe base64 data.
-   *
-   * @param string $data
-   *   The string to be decoded.
-   *
-   * @return string
-   *   The decoded string.
-   */
-  protected function decodeIdSafeBase64(string $data): string {
-    // Remove prefixed b.
-    $data = substr($data, 1);
-    return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -140,18 +122,46 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
       }
     }
 
-    // Attempt to load the job.
-    if (!$job = Job::load($meta['JobID'])) {
+    $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($meta['JobID']);
+    if (!$job instanceof JobInterface) {
       return FALSE;
     }
 
-    // Check language.
-    if ($meta['languageSource'] !== $job->getRemoteSourceLanguage() ||
-      $meta['languageTarget'] !== $job->getRemoteTargetLanguage()) {
+    // Check if the languages match.
+    if ($meta['languageSource'] !== $job->getRemoteSourceLanguage() || $meta['languageTarget'] !== $job->getRemoteTargetLanguage()) {
       return FALSE;
     }
 
     return TRUE;
+  }
+
+  /**
+   * Returns base64 encoded data that is safe for use in xml ids.
+   *
+   * @param string $data
+   *   The string to be encoded.
+   *
+   * @return string
+   *   The encoded string.
+   */
+  protected function encodeIdSafeBase64(string $data): string {
+    // Prefix with a b to enforce that the first character is a letter.
+    return 'b' . rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+  }
+
+  /**
+   * Returns decoded id safe base64 data.
+   *
+   * @param string $data
+   *   The string to be decoded.
+   *
+   * @return string
+   *   The decoded string.
+   */
+  protected function decodeIdSafeBase64(string $data): string {
+    // Remove prefixed b.
+    $data = substr($data, 1);
+    return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
   }
 
 }

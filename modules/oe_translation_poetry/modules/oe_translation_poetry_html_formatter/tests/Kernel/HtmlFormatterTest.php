@@ -15,15 +15,6 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   use UserCreationTrait;
 
   /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'tmgmt_content',
-    'tmgmt_test',
-    'oe_translation_poetry_html_formatter',
-  ];
-
-  /**
    * The job to test.
    *
    * @var \Drupal\tmgmt\JobInterface
@@ -40,20 +31,18 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $modules = [
+    'tmgmt_content',
+    'tmgmt_test',
+    'oe_translation_poetry_html_formatter',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
-    $this->installConfig([
-      'system',
-      'node',
-      'field',
-      'user',
-      'language',
-      'oe_multilingual',
-    ]);
-
-    $this->installEntitySchema('node');
-    $this->installEntitySchema('user');
     $this->installEntitySchema('tmgmt_job');
     $this->installEntitySchema('tmgmt_job_item');
 
@@ -79,6 +68,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $node->save();
 
     $storage = $this->container->get('entity_type.manager')->getStorage('tmgmt_job');
+    /** @var \Drupal\tmgmt\JobInterface $job */
     $job = $storage->create([
       'source_language' => 'en',
       'target_language' => 'de',
@@ -122,7 +112,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
       '#parent_label',
     ];
     foreach ($excluded_fields as $excluded_field) {
-      unset($unflattened_data["title"][0]['value'][$excluded_field]);
+      unset($unflattened_data['title'][0]['value'][$excluded_field]);
     }
     $expected_data = [$this->jobItem->id() => $unflattened_data];
     $this->assertEqual($processed_data, $expected_data);
