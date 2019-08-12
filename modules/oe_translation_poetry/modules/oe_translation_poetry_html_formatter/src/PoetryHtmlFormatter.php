@@ -21,16 +21,28 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
 
   /**
    * Returns base64 encoded data that is safe for use in xml ids.
+   *
+   * @param string $data
+   *   The string to be encoded.
+   *
+   * @return string
+   *   The encoded string.
    */
-  protected function encodeIdSafeBase64($data): string {
+  protected function encodeIdSafeBase64(string $data): string {
     // Prefix with a b to enforce that the first character is a letter.
     return 'b' . rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
   }
 
   /**
    * Returns decoded id safe base64 data.
+   *
+   * @param string $data
+   *   The string to be decoded.
+   *
+   * @return string
+   *   The decoded string.
    */
-  protected function decodeIdSafeBase64($data): string {
+  protected function decodeIdSafeBase64(string $data): string {
     // Remove prefixed b.
     $data = substr($data, 1);
     return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
