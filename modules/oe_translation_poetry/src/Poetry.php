@@ -7,7 +7,6 @@ namespace Drupal\oe_translation_poetry;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\tmgmt\TranslatorManager;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -26,14 +25,12 @@ class Poetry extends PoetryLibrary {
    *   The logger channel.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
-   * @param \Drupal\tmgmt\TranslatorManager $translatorManager
-   *   The translator plugin manager.
    */
-  public function __construct(ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, TranslatorManager $translatorManager) {
+  public function __construct(ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger) {
     $loggerChannel->addLogger($logger);
-    $poetry_translator_definition = $translatorManager->getDefinition('poetry');
     $values = [
-      'identifier.code' => $poetry_translator_definition['default_settings']['identifier_code'],
+      // @todo Use the correct identifier code.
+      'identifier.code' => 'WEB',
       'identifier.sequence' => Settings::get('poetry.identifier.sequence'),
       'identifier.year' => date('Y'),
       'service.username' => Settings::get('poetry.service.username'),

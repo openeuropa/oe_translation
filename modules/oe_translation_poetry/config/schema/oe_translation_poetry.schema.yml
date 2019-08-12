@@ -20,6 +20,7 @@ field.value.poetry_request_id:
     product:
       type: string
       label: Product
+
 tmgmt.translator.settings.poetry:
   type: mapping
   mapping:

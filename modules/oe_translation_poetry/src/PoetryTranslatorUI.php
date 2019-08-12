@@ -1,13 +1,14 @@
 <?php
 
 declare(strict_types = 1);
+
 namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\tmgmt\TranslatorPluginUiBase;
 
 /**
- * Form Provider for the Poetry Translator.
+ * UI provider for the Poetry Translator.
  */
 class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
@@ -23,32 +24,32 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#type' => 'textfield',
       '#title' => $this->t('Poetry Service URL'),
       '#default_value' => $translator->getSetting('service_wsdl'),
-      '#description' => t('The url to the Poetry service WSDL.'),
+      '#description' => $this->t('The url to the Poetry service WSDL.'),
     ];
     $form['identifier_code'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Identifier code'),
       '#default_value' => $translator->getSetting('identifier_code'),
-      '#description' => t('The default identifier code for any request. It should be WEB by default and should only be changed in very specific scenarios.'),
+      '#description' => $this->t('The default identifier code for any request. It is WEB by default and should only be changed in very specific scenarios.'),
     ];
     $form['title_prefix'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Request title prefix'),
       '#default_value' => $translator->getSetting('title_prefix'),
-      '#description' => t('This string will be prefixed to the title of every request sent. It should help identify the origin of the request.'),
+      '#description' => $this->t('This string will be prefixed to the title of every request sent. It should help identify the origin of the request.'),
     ];
     $form['application_reference'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Application reference code'),
       '#default_value' => $translator->getSetting('application_reference'),
-      '#description' => t('The application reference code identifies which type of application sent the request.'),
+      '#description' => $this->t('The application reference code identifies which type of application sent the request.'),
     ];
     $form['contact'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Contact information'),
     ];
     $contact_defaults = $translator->getSetting('contact');
-    foreach ($this->getContactFieldNames('contact') as $name => $label) {
+    foreach (static::getContactFieldNames('contact') as $name => $label) {
       $form['contact'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
@@ -60,7 +61,7 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#title' => $this->t('Organisation information'),
     ];
     $organisation_defaults = $translator->getSetting('organisation');
-    foreach ($this->getContactFieldNames('organisation') as $name => $label) {
+    foreach (static::getContactFieldNames('organisation') as $name => $label) {
       $form['organisation'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
@@ -72,7 +73,7 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
   }
 
   /**
-   * Returns the field names for a given type of contact field set.
+   * Returns the field names for a given type of contact fieldset.
    *
    * @param string $type
    *   The field type.
@@ -80,22 +81,22 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
    * @return array
    *   Array with the machine names and readable names of the fields.
    */
-  protected function getContactFieldNames(string $type = 'contact'): array {
+  public static function getContactFieldNames(string $type = 'contact'): array {
     $map = [
       'contact' => [
-        'author' => $this->t('Author'),
-        'secretary' => $this->t('Secretary'),
-        'contact' => $this->t('Contact'),
-        'responsible' => $this->t('Responsible'),
+        'author' => t('Author'),
+        'secretary' => t('Secretary'),
+        'contact' => t('Contact'),
+        'responsible' => t('Responsible'),
       ],
       'organisation' => [
-        'responsible' => $this->t('Responsible'),
-        'author' => $this->t('Author'),
-        'requester' => $this->t('Requester'),
+        'responsible' => t('Responsible'),
+        'author' => t('Author'),
+        'requester' => t('Requester'),
       ],
     ];
-    return $map[$type] ?? [];
 
+    return $map[$type] ?? [];
   }
 
 }
