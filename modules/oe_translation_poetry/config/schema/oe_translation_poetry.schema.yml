@@ -1,10 +1,3 @@
-oe_translation_poetry.settings:
-  type: config_object
-  label: 'OpenEuropa Translation Poetry settings'
-  mapping:
-    service_wsdl:
-      type: string
-      label: 'The URL to the Poetry WSDL'
 field.value.poetry_request_id:
   type: mapping
   label: Default value
@@ -28,9 +21,12 @@ field.value.poetry_request_id:
       type: string
       label: Product
 tmgmt.translator.settings.poetry:
-  type: tmgmt.translator_base
+  type: mapping
   mapping:
-    identifier:
+    service_wsdl:
+      type: string
+      label: The URL to the Poetry WSDL
+    identifier_code:
       type: string
       label: Identifier code
     title_prefix:

@@ -31,10 +31,6 @@ class PoetryMockTest extends BrowserTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->container->get('config.factory')->getEditable('oe_translation_poetry.settings')
-      ->set('service_wsdl', PoetryMock::getWsdlUrl())
-      ->save();
-
     // Reset the service since we changed configuration that is needed for the
     // service constructor.
     $this->container->set('oe_translation_poetry.client', NULL);
@@ -51,7 +47,6 @@ class PoetryMockTest extends BrowserTestBase {
     $expected_settings = [];
     $expected_settings['identifier.code'] = 'WEB';
     $expected_settings['identifier.year'] = date('Y');
-    $expected_settings['service.wsdl'] = PoetryMock::getWsdlUrl();
     $expected_settings['service.username'] = 'admin';
     $expected_settings['service.password'] = 'admin';
     $expected_settings['notification.username'] = 'admin';
@@ -62,6 +57,7 @@ class PoetryMockTest extends BrowserTestBase {
       $this->assertEqual($setting, $settings[$name]);
     }
 
+    $settings->set('service.wsdl', PoetryMock::getWsdlUrl());
     // Create a test message and check that Mocked responses are returned.
     /** @var \EC\Poetry\Messages\Requests\CreateTranslationRequest $message */
     $message = $poetry->get('request.create_translation_request');

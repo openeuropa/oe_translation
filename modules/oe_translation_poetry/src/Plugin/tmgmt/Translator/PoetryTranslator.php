@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *   description = @Translation("Allows the users to send translation requests to Poetry."),
  *   ui = "\Drupal\oe_translation_poetry\PoetryTranslatorUI",
  *   default_settings = {
- *     "identifier" = "WEB",
+ *     "identifier_code" = "WEB",
  *     "title_prefix" = "EWCMS",
  *     "application_reference" = "FPFIS"
  *   },

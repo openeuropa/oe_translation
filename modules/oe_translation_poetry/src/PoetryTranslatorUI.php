@@ -19,10 +19,16 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
     $translator = $form_state->getFormObject()->getEntity();
-    $form['identifier'] = [
+    $form['service_wsdl'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Poetry Service URL'),
+      '#default_value' => $translator->getSetting('service_wsdl'),
+      '#description' => t('The url to the Poetry service WSDL.'),
+    ];
+    $form['identifier_code'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Identifier code'),
-      '#default_value' => $translator->getSetting('identifier'),
+      '#default_value' => $translator->getSetting('identifier_code'),
       '#description' => t('The default identifier code for any request. It should be WEB by default and should only be changed in very specific scenarios.'),
     ];
     $form['title_prefix'] = [

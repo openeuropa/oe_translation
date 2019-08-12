@@ -33,10 +33,9 @@ class Poetry extends PoetryLibrary {
     $loggerChannel->addLogger($logger);
     $poetry_translator_definition = $translatorManager->getDefinition('poetry');
     $values = [
-      'identifier.code' => $poetry_translator_definition['default_settings']['identifier'],
+      'identifier.code' => $poetry_translator_definition['default_settings']['identifier_code'],
       'identifier.sequence' => Settings::get('poetry.identifier.sequence'),
       'identifier.year' => date('Y'),
-      'service.wsdl' => $configFactory->get('oe_translation_poetry.settings')->get('service_wsdl'),
       'service.username' => Settings::get('poetry.service.username'),
       'service.password' => Settings::get('poetry.service.password'),
       'notification.username' => Settings::get('poetry.notification.username'),
