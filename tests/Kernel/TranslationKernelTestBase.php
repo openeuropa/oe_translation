@@ -37,6 +37,7 @@ class TranslationKernelTestBase extends KernelTestBase {
     parent::setUp();
 
     $this->installConfig([
+      'system',
       'node',
       'field',
       'link',
@@ -45,7 +46,11 @@ class TranslationKernelTestBase extends KernelTestBase {
       'tmgmt',
       'oe_translation',
       'views',
+      'user',
     ]);
+
+    $this->installEntitySchema('node');
+    $this->installEntitySchema('user');
   }
 
 }
