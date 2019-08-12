@@ -53,7 +53,7 @@ class HtmlFormatterTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp() {
     parent::setUp();
 
     $this->installConfig([
@@ -80,7 +80,8 @@ class HtmlFormatterTest extends KernelTestBase {
 
     $node_type->save();
 
-    tmgmt_translator_auto_create(\Drupal::service('plugin.manager.tmgmt.translator')->getDefinition('test_translator'));
+    // Create a test translator.
+    tmgmt_translator_auto_create($this->container->get('plugin.manager.tmgmt.translator')->getDefinition('test_translator'));
     /** @var \Drupal\node\NodeStorageInterface $storage */
     $storage = $this->container->get('entity_type.manager')->getStorage('node');
     /** @var \Drupal\node\NodeInterface $node */
@@ -90,17 +91,20 @@ class HtmlFormatterTest extends KernelTestBase {
     ]);
     $node->save();
 
-    $job = tmgmt_job_create('en', 'de');
+    $storage = $this->container->get('entity_type.manager')->getStorage('tmgmt_job');
+    $job = $storage->create([
+      'source_language' => 'en',
+      'target_language' => 'de',
+      'uid' => 0,
+    ]);
     $job->translator = 'test_translator';
     $job->save();
     $this->job = $job;
-    $job_item = tmgmt_job_item_create('content', $node->getEntityTypeId(), $node->id(), ['tjid' => $job->id()]);
-    $job_item->save();
-    $this->jobItem = $job_item;
+    $this->jobItem = $job->addItem('content', $node->getEntityTypeId(), $node->id());
   }
 
   /**
-   * Tests that the formatter exports a correctly formatter Poetry html.
+   * Tests that the formatter exports a correctly formatted Poetry html.
    */
   public function testHtmlFormatterExport() {
     /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
@@ -113,7 +117,7 @@ class HtmlFormatterTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the formatter can import a correctly formatter Poetry html.
+   * Tests that the formatter can import a correctly formatted Poetry html.
    */
   public function testHtmlFormatterImport() {
     /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
@@ -122,12 +126,17 @@ class HtmlFormatterTest extends KernelTestBase {
 
     // Let's get the data from the job_item and remove all the information that
     // doesn't get send to DGT.
-    $data = \Drupal::service('tmgmt.data')->filterTranslatable($this->jobItem->getData());
-    $unflattened_data = \Drupal::service('tmgmt.data')->unflatten($data);
-    unset($unflattened_data["title"][0]["value"]["#translate"]);
-    unset($unflattened_data["title"][0]["value"]["#max_length"]);
-    unset($unflattened_data["title"][0]["value"]["#status"]);
-    unset($unflattened_data["title"][0]["value"]["#parent_label"]);
+    $data = $this->container->get('tmgmt.data')->filterTranslatable($this->jobItem->getData());
+    $unflattened_data = $this->container->get('tmgmt.data')->unflatten($data);
+    $excluded_fields = [
+      '#translate',
+      '#max_length',
+      '#status',
+      '#parent_label',
+    ];
+    foreach ($excluded_fields as $excluded_field) {
+      unset($unflattened_data["title"][0]['value'][$excluded_field]);
+    }
     $expected_data = [$this->jobItem->id() => $unflattened_data];
     $this->assertEqual($processed_data, $expected_data);
   }
