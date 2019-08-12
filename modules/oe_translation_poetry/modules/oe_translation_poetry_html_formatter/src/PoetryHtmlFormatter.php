@@ -1,14 +1,23 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation_poetry_html_formatter;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
 
 /**
- * Poetry Html formatter.
+ * Poetry HTML formatter.
+ *
+ * This service processes the content to be sent to the Poetry translation
+ * service to comply with the requirements set by the DGT. It reuses many
+ * functionalities from the TMGMT File module's HTML formatter plugin.
+ *
+ * @see \Drupal\tmgmt_file\Plugin\tmgmt_file\Format\Html
  */
-class PoetryHtmlFormatter {
+class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
 
   /**
    * Returns base64 encoded data that is safe for use in xml ids.
@@ -28,17 +37,9 @@ class PoetryHtmlFormatter {
   }
 
   /**
-   * Return the file content for the job data.
-   *
-   * @param \Drupal\tmgmt\JobInterface $job
-   *   The translation job object to be exported.
-   * @param array $conditions
-   *   (optional) An array containing list of conditions.
-   *
-   * @return string
-   *   String with the file content.
+   * {@inheritdoc}
    */
-  public function export(JobInterface $job, array $conditions = []): string {
+  public function export(JobInterface $job, array $conditions = []): MarkupInterface {
     $items = [];
     foreach ($job->getItems($conditions) as $item) {
       $data = \Drupal::service('tmgmt.data')->filterTranslatable($item->getData());
@@ -58,15 +59,7 @@ class PoetryHtmlFormatter {
   }
 
   /**
-   * Converts an exported file content back to the translated data.
-   *
-   * @param string $imported_file
-   *   Path to a file or an XML string to import.
-   * @param bool $is_file
-   *   (optional) Whether $imported_file is the path to a file or not.
-   *
-   * @return array
-   *   Translated data array.
+   * {@inheritdoc}
    */
   public function import(string $imported_file, bool $is_file = TRUE): array {
     $dom = new \DOMDocument();
@@ -83,16 +76,7 @@ class PoetryHtmlFormatter {
   }
 
   /**
-   * Validates that the given file is valid and can be imported.
-   *
-   * @param string $imported_file
-   *   File path to the file to be imported.
-   * @param bool $is_file
-   *   (optional) Whether $imported_file is the path to a file or not.
-   *
-   * @return \Drupal\tmgmt\JobInterface|bool
-   *   Returns the corresponding translation job entity if the import file is
-   *   valid, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function validateImport(string $imported_file, bool $is_file = TRUE) {
     $dom = new \DOMDocument();

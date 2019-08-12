@@ -1,5 +1,5 @@
-name: OpenEuropa Translation Poetry Html Formatter
-description: Custom Html formatter to comply with DGT standards.
+name: OpenEuropa Translation Poetry HTML Formatter
+description: Custom HTML formatter to comply with DGT standards.
 package: OpenEuropa
 
 type: module

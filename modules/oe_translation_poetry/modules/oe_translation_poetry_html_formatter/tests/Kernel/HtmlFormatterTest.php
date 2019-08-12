@@ -8,7 +8,7 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
- * Tests the Poetry Html Formatter.
+ * Tests the Poetry HTML Formatter.
  */
 class HtmlFormatterTest extends KernelTestBase {
 
@@ -122,13 +122,13 @@ class HtmlFormatterTest extends KernelTestBase {
 
     // Let's get the data from the job_item and remove all the information that
     // doesn't get send to DGT.
-    $data = \Drupal::service('tmgmt.data')->filterTranslatable($this->job_item->getData());
+    $data = \Drupal::service('tmgmt.data')->filterTranslatable($this->jobItem->getData());
     $unflattened_data = \Drupal::service('tmgmt.data')->unflatten($data);
     unset($unflattened_data["title"][0]["value"]["#translate"]);
     unset($unflattened_data["title"][0]["value"]["#max_length"]);
     unset($unflattened_data["title"][0]["value"]["#status"]);
     unset($unflattened_data["title"][0]["value"]["#parent_label"]);
-    $expected_data = [$this->job_item->id() => $unflattened_data];
+    $expected_data = [$this->jobItem->id() => $unflattened_data];
     $this->assertEqual($processed_data, $expected_data);
   }
 
