@@ -119,7 +119,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
   /**
    * {@inheritdoc}
    */
-  public function validateImport(string $imported_file, bool $is_file = TRUE) {
+  public function validateImport(string $imported_file, bool $is_file = TRUE): bool {
     $dom = new \DOMDocument();
     if (!$dom->loadHTMLFile($imported_file)) {
       return FALSE;
@@ -142,20 +142,16 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
 
     // Attempt to load the job.
     if (!$job = Job::load($meta['JobID'])) {
-      \Drupal::messenger()->addError(t('The imported file job id @file_id is not available.', [
-        '@file_id' => $meta['JobID'],
-      ]));
       return FALSE;
     }
 
     // Check language.
-    if ($meta['languageSource'] != $job->getRemoteSourceLanguage() ||
-      $meta['languageTarget'] != $job->getRemoteTargetLanguage()) {
+    if ($meta['languageSource'] !== $job->getRemoteSourceLanguage() ||
+      $meta['languageTarget'] !== $job->getRemoteTargetLanguage()) {
       return FALSE;
     }
 
-    // Validation successful.
-    return $job;
+    return TRUE;
   }
 
 }

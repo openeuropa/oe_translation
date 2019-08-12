@@ -50,10 +50,9 @@ interface PoetryContentFormatterInterface {
    * @param bool $is_file
    *   (optional) Whether $imported_file is the path to a file or not.
    *
-   * @return \Drupal\tmgmt\JobInterface|bool
-   *   Returns the corresponding translation job entity if the import file is
-   *   valid, FALSE otherwise.
+   * @return bool
+   *   Returns whether the import is valid or not.
    */
-  public function validateImport(string $imported_file, bool $is_file = TRUE);
+  public function validateImport(string $imported_file, bool $is_file = TRUE): bool;
 
 }
