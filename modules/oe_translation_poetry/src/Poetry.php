@@ -13,6 +13,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
 use Drupal\Core\Url;
 use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\TranslatorInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LoggerInterface;
@@ -36,6 +37,8 @@ class Poetry extends PoetryLibrary {
   /**
    * Poetry constructor.
    *
+   * @param array $settings
+   *   The translator config.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel
@@ -45,12 +48,14 @@ class Poetry extends PoetryLibrary {
    * @param \Drupal\Core\State\State $state
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    */
-  public function __construct(ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager) {
     // @todo improve this in case we need alternative logging mechanisms.
     $loggerChannel->addLogger($logger);
+    // Cannot rely on the translator getSetting() method because that might
+    // instantiate the corresponding plugin which results in a circular
+    // reference error.
     $values = [
-      // @todo Use the correct identifier code.
-      'identifier.code' => 'WEB',
+      'identifier.code' => $settings['identifier_code'] ?? 'WEB',
       // The default version will always start from 0.
       'identifier.version' => 0,
       // The default part will always start from 0.
@@ -64,6 +69,10 @@ class Poetry extends PoetryLibrary {
       'logger' => $loggerChannel,
       'log_level' => LogLevel::INFO,
     ];
+
+    if (isset($settings['service_wsdl'])) {
+      $values['service.wsdl'] = $settings['service_wsdl'];
+    }
 
     parent::__construct($values);
     $this->state = $state;

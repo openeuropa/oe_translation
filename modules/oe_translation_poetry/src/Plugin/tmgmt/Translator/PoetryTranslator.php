@@ -32,11 +32,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *   label = @Translation("Poetry"),
  *   description = @Translation("Allows the users to send translation requests to Poetry."),
  *   ui = "\Drupal\oe_translation_poetry\PoetryTranslatorUI",
- *   default_settings = {
- *     "identifier_code" = "WEB",
- *     "title_prefix" = "EWCMS",
- *     "application_reference" = "FPFIS"
- *   },
+ *   default_settings = {},
  *   map_remote_languages = FALSE
  * )
  *
@@ -147,7 +143,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $plugin_id,
       $plugin_definition,
       $container->get('current_user'),
-      $container->get('oe_translation_poetry.client'),
+      $container->get('oe_translation_poetry.client.default'),
       $container->get('language_manager'),
       $container->get('access_manager'),
       $container->get('entity_type.manager'),

@@ -47,7 +47,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('oe_translation_poetry.job_queue'),
-      $container->get('oe_translation_poetry.client'),
+      $container->get('oe_translation_poetry.client.default'),
       $container->get('messenger')
     );
   }

@@ -41,7 +41,7 @@ class PoetryMockTest extends BrowserTestBase {
    */
   public function testRequestResponse(): void {
     /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
-    $poetry = $this->container->get('oe_translation_poetry.client');
+    $poetry = $this->container->get('oe_translation_poetry.client.default');
 
     // Assert that the Poetry service gets properly instantiated.
     $expected_settings = [];
