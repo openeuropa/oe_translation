@@ -1,4 +1,7 @@
 services:
   oe_translation_poetry.client:
     class: Drupal\oe_translation_poetry\Poetry
-    arguments: ['@config.factory', '@logger.factory']
+    arguments: ['@config.factory', '@oe_translation_poetry.logger.channel.poetry', '@logger.dblog']
+  oe_translation_poetry.logger.channel.poetry:
+     class: Drupal\oe_translation_poetry\Logger\PoetryLoggerChannel
+     arguments: ['poetry']
