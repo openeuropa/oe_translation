@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry_html_formatter\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Tests the Poetry HTML Formatter.
  */
-class HtmlFormatterTest extends KernelTestBase {
+class HtmlFormatterTest extends TranslationKernelTestBase {
 
   use UserCreationTrait;
 
@@ -18,19 +18,6 @@ class HtmlFormatterTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'path',
-    'field',
-    'options',
-    'text',
-    'node',
-    'user',
-    'system',
-    'filter',
-    'language',
-    'oe_multilingual',
-    'content_translation',
-    'views',
-    'tmgmt',
     'tmgmt_content',
     'tmgmt_test',
     'oe_translation_poetry_html_formatter',
