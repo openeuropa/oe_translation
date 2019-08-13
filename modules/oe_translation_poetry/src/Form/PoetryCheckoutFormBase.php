@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry\Form;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -11,6 +12,8 @@ use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
 use Drupal\oe_translation_poetry\PoetryTranslatorUI;
+use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
+use EC\Poetry\Messages\Responses\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -19,26 +22,50 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class PoetryCheckoutFormBase extends FormBase {
 
   /**
-   * @var PoetryJobQueue
+   * The type of request (the product). Usually a translation request.
+   *
+   * @var string
+   */
+  protected $requestType = 'TRA';
+
+  /**
+   * The job queue.
+   *
+   * @var \Drupal\oe_translation_poetry\PoetryJobQueue
    */
   protected $queue;
 
   /**
+   * The Poetry client.
+   *
    * @var \Drupal\oe_translation_poetry\Poetry
    */
   protected $poetry;
 
   /**
+   * The content formatter.
+   *
+   * @var \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface
+   */
+  protected $contentFormatter;
+
+  /**
    * PoetryCheckoutForm constructor.
    *
    * @param \Drupal\oe_translation_poetry\PoetryJobQueue $queue
+   *   The job queue.
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
+   *   The Poetry client.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   * @param \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface $contentFormatter
+   *   The content formatter.
    */
-  public function __construct(PoetryJobQueue $queue, Poetry $poetry, MessengerInterface $messenger) {
+  public function __construct(PoetryJobQueue $queue, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter) {
     $this->queue = $queue;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
+    $this->contentFormatter = $contentFormatter;
   }
 
   /**
@@ -48,20 +75,30 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     return new static(
       $container->get('oe_translation_poetry.job_queue'),
       $container->get('oe_translation_poetry.client.default'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('oe_translation_poetry.html_formatter')
     );
   }
+
+  /**
+   * The operation of the request: CREATE, UPDATE, DELETE.
+   *
+   * @return string
+   *   The operation.
+   */
+  abstract protected function getRequestOperation(): string;
 
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // @todo create access control checker that denies access if there are no jobs in the queue.
+    // @todo create access control checker that denies access if there are no
+    // jobs in the queue.
+    $translator_settings = $this->poetry->getTranslatorSettings();
 
     $form['details'] = [
       '#type' => 'details',
       '#title' => $this->t('Request details'),
-      // @todo determine if we can have a sensible default.
       '#open' => TRUE,
     ];
 
@@ -71,6 +108,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       '#required' => TRUE,
     ];
 
+    $default_contact = $translator_settings['contact'] ?? [];
     $form['details']['contact'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Contact information'),
@@ -80,9 +118,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $form['details']['contact'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
+        '#default_value' => $default_contact[$name] ?? '',
       ];
     }
 
+    $default_organisation = $translator_settings['organisation'] ?? [];
     $form['details']['organisation'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Organisation information'),
@@ -92,6 +132,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $form['details']['organisation'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
+        '#default_value' => $default_organisation[$name] ?? '',
       ];
     }
 
@@ -128,27 +169,19 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   }
 
   /**
-   * The type of request form: CREATE, UPDATE, DELETE.
-   *
-   * @return mixed
-   */
-  abstract protected function getRequestType();
-
-  /**
-   * Submits the request to poetry.
-   *
-   * @todo refactor to allow subclasses to handle different types of requests.
+   * Submits the request to Poetry.
    *
    * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *
-   * @throws \Exception
+   *   The form state.
    */
   public function submitRequest(array &$form, FormStateInterface $form_state): void {
+    $translator_settings = $this->poetry->getTranslatorSettings();
     $jobs = $this->queue->getAllJobs();
     $entity = $this->queue->getEntity();
     $identifier = $this->poetry->getIdentifierForContent($entity);
-    $identifier->setProduct('TRA');
+    $identifier->setProduct($this->requestType);
 
     $date = new \DateTime($form_state->getValue('date'));
     $formatted_date = $date->format('d/m/Y');
@@ -167,12 +200,9 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     // We use the formatted identifier as the user reference.
     $details->setClientId($identifier->getFormattedIdentifier());
-    // @todo load the prefix and site name from configuration.
-    $title = 'EWCMS: SITE-NAME . ' . reset($jobs)->label();
+    $title = $this->createRequestTitle();
     $details->setTitle($title);
-    //@ todo load the application ID from config.
-    $application_id = 'FPFIS';
-    $details->setApplicationId($application_id);
+    $details->setApplicationId($translator_settings['application_reference']);
     $details->setReferenceFilesRemark($entity->toUrl()->setAbsolute()->toString());
     $details
       ->setProcedure('NEANT')
@@ -197,18 +227,23 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     // Build the return endpoint information.
     // @todo update once we implemented the notification handling.
-    $return = $message->getReturnAddress();
+    $return = $message->withReturnAddress();
     $return->setUser('test');
     $return->setPassword('test');
+    // The notification endpoint WSDL.
     $return->setAddress(Url::fromRoute('<front>')->setAbsolute()->toString());
+    // The notification endpoint WSDL action method.
     $return->setPath('handle');
+    // The return is a webservice and not an email.
+    $return->setType('webService');
+    $return->setAction($this->getRequestOperation());
     $message->setReturnAddress($return);
 
-    // @todo for the source, OPENEUROPA-2156
     $source = $message->withSource();
     $source->setFormat('HTML');
     $source->setName('content.html');
-    $source->setFile(base64_encode('test value'));
+    $formatted_content = $this->contentFormatter->export(reset($jobs));
+    $source->setFile(base64_encode($formatted_content->__toString()));
     $source->setLegiswriteFormat('No');
     $source->withSourceLanguage()
       ->setCode($entity->language()->getId())
@@ -219,36 +254,154 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $message->withTarget()
         ->setLanguage($job->getTargetLangcode())
         ->setFormat('HTML')
-        // @todo change to UPDATE if it's an update of the same request.
-        ->setAction($this->getRequestType())
+        ->setAction($this->getRequestOperation())
         ->setDelay($formatted_date);
     }
 
     $client = $this->poetry->getClient();
-    $client->send($message);
+    try {
+      /** @var \EC\Poetry\Messages\Responses\ResponseInterface $response */
+      $response = $client->send($message);
+      $this->handlePoetryResponse($response);
+
+      // If we request a new number by setting a sequence, update the global
+      // identifier number with the new number that came for future requests.
+      if ($identifier->getSequence()) {
+        $this->poetry->setGlobalIdentifierNumber($response->getIdentifier()->getNumber());
+      }
+
+      $this->redirectBack($form_state);
+      $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
+    }
+    catch (\Exception $exception) {
+      $this->messenger->addError($this->t('There was a error making the request to DGT.'));
+      $this->cancelAndRedirect($form_state);
+    }
   }
 
   /**
    * Cancels the request and deletes the jobs that had been created.
    *
    * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *
-   * @throws \Exception
+   *   The form state.
    */
   public function cancelRequest(array &$form, FormStateInterface $form_state): void {
+    $this->cancelAndRedirect($form_state);
+    $this->messenger->addStatus($this->t('The translation request has been cancelled and the corresponding jobs deleted.'));
+  }
+
+  /**
+   * Deletes the jobs and redirects the user back.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  protected function cancelAndRedirect(FormStateInterface $form_state): void {
+    $this->redirectBack($form_state);
     $jobs = $this->queue->getAllJobs();
     foreach ($jobs as $job) {
       $job->delete();
     }
 
+    $this->queue->reset();
+  }
+
+  /**
+   * Sets the redirect back to the content onto the form state.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  protected function redirectBack(FormStateInterface $form_state): void {
     $destination = $this->queue->getDestination();
     if ($destination) {
       $form_state->setRedirectUrl($destination);
     }
+  }
 
-    $this->queue->reset();
-    $this->messenger->addStatus($this->t('The translation request has been cancelled and the corresponding jobs deleted.'));
+  /**
+   * Creates the title of the request.
+   *
+   * It uses the configured prefix, site ID and the title of the Job (on of the
+   * jobs as they are identical).
+   *
+   * @return string
+   *   The title.
+   */
+  protected function createRequestTitle(): string {
+    $jobs = reset($this->queue->getAllJobs());
+    $settings = $this->poetry->getTranslatorSettings();
+    return (string) new FormattableMarkup('@prefix: @site_id - @title', [
+      '@prefix' => $settings['title_prefix'],
+      '@site_id' => $settings['site_id'],
+      '@title' => reset($jobs)->label(),
+    ]);
+  }
+
+  /**
+   * Handles a response that comes from Poetry.
+   *
+   * @param \EC\Poetry\Messages\Responses\ResponseInterface $response
+   *   The response.
+   */
+  protected function handlePoetryResponse(ResponseInterface $response): void {
+    if (!$response->isSuccessful()) {
+      $this->rejectJobs($response);
+      return;
+    }
+
+    $jobs = $this->queue->getAllJobs();
+
+    /** @var \EC\Poetry\Messages\Components\Identifier $identifier */
+    $identifier = $response->getIdentifier();
+    $identifier_values = [
+      'code' => $identifier->getCode(),
+      'year' => $identifier->getYear(),
+      'number' => $identifier->getNumber(),
+      'version' => $identifier->getVersion(),
+      'part' => $identifier->getPart(),
+      'product' => $identifier->getProduct(),
+    ];
+
+    // Update all the jobs with the resulting identifier.
+    foreach ($jobs as $job) {
+      $job->set('poetry_request_id', $identifier_values);
+    }
+
+    // Submit all the job entities. This will also save them.
+    foreach ($this->queue->getAllJobs() as $job) {
+      $job->submitted();
+    }
+  }
+
+  /**
+   * Rejects the jobs after a request failure.
+   *
+   * Sets the response warnings and error messages onto the jobs.
+   *
+   * @param \EC\Poetry\Messages\Responses\ResponseInterface $response
+   *   The response.
+   */
+  protected function rejectJobs(ResponseInterface $response): void {
+    $warnings = $response->getWarnings() ? implode('. ', $response->getWarnings()) : NULL;
+    $errors = $response->getErrors() ? implode('. ', $response->getErrors()) : NULL;
+    $job_ids = [];
+
+    foreach ($this->queue->getAllJobs() as $job) {
+      if ($warnings) {
+        $job->addMessage(new FormattableMarkup('There were warnings with this request: @warnings', ['@warnings' => $warnings]));
+      }
+      if ($errors) {
+        $job->addMessage(new FormattableMarkup('There were errors with this request: @errors', ['@errors' => $errors]));
+      }
+
+      $job->rejected();
+      $job_ids[] = $job->id();
+    }
+
+    $this->messenger->addError('The DGT request with the following jobs has been rejected upon submission: @jobs The messages have been saved in the jobs.', ['@jobs' => implode(', ', $job_ids)]);
   }
 
 }

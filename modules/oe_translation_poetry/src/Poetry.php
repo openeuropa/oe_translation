@@ -5,15 +5,13 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
-use Drupal\Core\Url;
 use Drupal\tmgmt\Entity\Job;
-use Drupal\tmgmt\TranslatorInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LoggerInterface;
@@ -21,24 +19,44 @@ use Psr\Log\LogLevel;
 
 /**
  * Poetry client.
+ *
+ * Integrates the Poetry client library with Drupal.
  */
 class Poetry extends PoetryLibrary {
 
   /**
+   * The settings provided by the translator config.
+   *
+   * @var array
+   */
+  protected $translatorSettings;
+
+  /**
+   * The state.
+   *
    * @var \Drupal\Core\State\State
    */
   protected $state;
 
   /**
+   * The entity type manager.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
   /**
-   * Poetry constructor.
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $database;
+
+  /**
+   * Constructs a Poetry instance.
    *
    * @param array $settings
-   *   The translator config.
+   *   The settings provided by the translator config.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel
@@ -46,9 +64,13 @@ class Poetry extends PoetryLibrary {
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    * @param \Drupal\Core\State\State $state
+   *   The state.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
    */
-  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database) {
     // @todo improve this in case we need alternative logging mechanisms.
     $loggerChannel->addLogger($logger);
     // Cannot rely on the translator getSetting() method because that might
@@ -60,7 +82,6 @@ class Poetry extends PoetryLibrary {
       'identifier.version' => 0,
       // The default part will always start from 0.
       'identifier.part' => 0,
-      'identifier.sequence' => Settings::get('poetry.identifier.sequence'),
       'identifier.year' => date('Y'),
       'service.username' => Settings::get('poetry.service.username'),
       'service.password' => Settings::get('poetry.service.password'),
@@ -74,24 +95,34 @@ class Poetry extends PoetryLibrary {
       $values['service.wsdl'] = $settings['service_wsdl'];
     }
 
+    if (!isset($settings['site_id'])) {
+      $settings['site_id'] = $configFactory->get('system.site')->get('name');
+    }
+
     parent::__construct($values);
+    $this->translatorSettings = $settings;
     $this->state = $state;
     $this->entityTypeManager = $entityTypeManager;
+    $this->database = $database;
   }
 
   /**
    * Gets the global identification number.
    *
-   * @return int
+   * @return string|null
+   *   The number.
    */
-  public function getGlobalIdentifierNumber() {
+  public function getGlobalIdentifierNumber(): ?string {
     return $this->state->get('oe_translation_poetry_id_number');
   }
 
   /**
    * Sets the global identification number.
+   *
+   * @param string $number
+   *   The number.
    */
-  public function setGlobalIdentifierNumber(int $number) {
+  public function setGlobalIdentifierNumber(string $number): void {
     $this->state->set('oe_translation_poetry_id_number', $number);
   }
 
@@ -99,8 +130,10 @@ class Poetry extends PoetryLibrary {
    * Returns the identifier for making a translation request for a content.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
    *
-   * @return \EC\Poetry\Messages\Components\Identifier|null
+   * @return \EC\Poetry\Messages\Components\Identifier
+   *   The identifier.
    */
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
@@ -125,8 +158,8 @@ class Poetry extends PoetryLibrary {
     // If we have a global number, we can maybe use it. However, we first to
     // determine the part. And for this we need to check the jobs.
     $part = $this->getLastPartForNumber($number);
-    if ($part > 0) {
-      // We check if the part came back as 0 in case jobs were missing from
+    if ($part > -1) {
+      // We check if the part came back as -1 in case jobs were missing from
       // the system, we increment only if we know where to increment from.
       $part++;
     }
@@ -145,14 +178,26 @@ class Poetry extends PoetryLibrary {
   }
 
   /**
+   * Returns the settings configured in the translator.
+   *
+   * @return array
+   *   The settings.
+   */
+  public function getTranslatorSettings(): array {
+    return $this->translatorSettings;
+  }
+
+  /**
    * Locates the last identifier that was used for a given content entity.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
    *
-   * @return \EC\Poetry\Messages\Components\Identifier|null
+   * @return \EC\Poetry\Messages\Components\Identifier
+   *   The identifier.
    */
-  protected function getLastIdentifierForContent(ContentEntityInterface $entity) {
-    $query = \Drupal::database()->select('tmgmt_job', 'job');
+  protected function getLastIdentifierForContent(ContentEntityInterface $entity): Identifier {
+    $query = $this->database->select('tmgmt_job', 'job');
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job');
     $query->condition('job_item.item_id', $entity->id());
@@ -175,11 +220,13 @@ class Poetry extends PoetryLibrary {
   /**
    * Gets the next part to use for a global number.
    *
-   * @param $number
+   * @param string $number
+   *   The number.
    *
    * @return int
+   *   The part.
    */
-  protected function getLastPartForNumber($number) {
+  protected function getLastPartForNumber(string $number): int {
     $job_ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
       ->condition('poetry_request_id__number', $number)
       ->sort('poetry_request_id.part', 'DESC')
@@ -189,7 +236,7 @@ class Poetry extends PoetryLibrary {
     if (!$job_ids) {
       // Normally we should get a value since the number must have been used
       // on previous jobs.
-      return 0;
+      return -1;
     }
 
     /** @var \Drupal\tmgmt\JobInterface $job */

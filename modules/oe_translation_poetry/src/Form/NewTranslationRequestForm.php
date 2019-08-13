@@ -4,6 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry\Form;
 
+/**
+ * Form for requesting new translations.
+ */
 class NewTranslationRequestForm extends PoetryCheckoutFormBase {
 
   /**
@@ -16,7 +19,8 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getRequestType() {
+  protected function getRequestOperation(): string {
     return 'INSERT';
   }
+
 }

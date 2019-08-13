@@ -33,6 +33,9 @@ tmgmt.translator.settings.poetry:
     title_prefix:
       type: string
       label: Request title prefix
+    site_id:
+      type: string
+      label: The ID of the site
     application_reference:
       type: string
       label: Application reference code
