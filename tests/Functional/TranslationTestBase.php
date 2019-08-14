@@ -22,6 +22,7 @@ class TranslationTestBase extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'system',
     'tmgmt',
     'tmgmt_local',
     'tmgmt_content',

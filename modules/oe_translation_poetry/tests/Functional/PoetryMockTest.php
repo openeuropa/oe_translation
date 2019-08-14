@@ -26,17 +26,6 @@ class PoetryMockTest extends BrowserTestBase {
   ];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-
-    // Reset the service since we changed configuration that is needed for the
-    // service constructor.
-    $this->container->set('oe_translation_poetry.client', NULL);
-  }
-
-  /**
    * Tests that requests to Poetry are being mocked.
    */
   public function testRequestResponse(): void {

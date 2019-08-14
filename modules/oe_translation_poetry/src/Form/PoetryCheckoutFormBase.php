@@ -96,6 +96,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     // jobs in the queue.
     $translator_settings = $this->poetry->getTranslatorSettings();
 
+    $form['#tree'] = TRUE;
+
     $form['details'] = [
       '#type' => 'details',
       '#title' => $this->t('Request details'),
@@ -183,7 +185,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $identifier = $this->poetry->getIdentifierForContent($entity);
     $identifier->setProduct($this->requestType);
 
-    $date = new \DateTime($form_state->getValue('date'));
+    $date = new \DateTime($form_state->getValue('details')['date']);
     $formatted_date = $date->format('d/m/Y');
 
     /** @var \EC\Poetry\Messages\Requests\CreateTranslationRequest $message */
@@ -194,8 +196,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $details = $message->withDetails();
     $details->setDelay($formatted_date);
 
-    if ($form_state->getValue('comment')) {
-      $details->setRemark($form_state->getValue('comment'));
+    if ($form_state->getValue('details')['comment']) {
+      $details->setRemark($form_state->getValue('details')['comment']);
     }
 
     // We use the formatted identifier as the user reference.
@@ -215,14 +217,14 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     foreach (PoetryTranslatorUI::getContactFieldNames('contact') as $name => $label) {
       $message->withContact()
         ->setType($name)
-        ->setNickname($form_state->getValue($name));
+        ->setNickname($form_state->getValue('details')['contact'][$name]);
     }
 
     // Build the organisation information.
     foreach (PoetryTranslatorUI::getContactFieldNames('organisation') as $name => $label) {
       $message->withContact()
         ->setType($name)
-        ->setNickname($form_state->getValue($name));
+        ->setNickname($form_state->getValue('details')['organisation'][$name]);
     }
 
     // Build the return endpoint information.
@@ -372,7 +374,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     }
 
     // Submit all the job entities. This will also save them.
-    foreach ($this->queue->getAllJobs() as $job) {
+    foreach ($jobs as $job) {
       $job->submitted();
     }
   }

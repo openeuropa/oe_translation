@@ -165,7 +165,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * {@inheritdoc}
    */
   public function contentTranslationOverviewAlter(array &$build, RouteMatchInterface $route_match, $entity_type_id): void {
-    if ($this->entityTypeManager->getAccessControlHandler('tmgmt_job')->createAccess()) {
+    if ($this->currentUser->hasPermission('translate any entity')) {
       $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
       if (isset($build['actions']['add_to_cart'])) {
         $build['actions']['add_to_cart']['#access'] = FALSE;
