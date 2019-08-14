@@ -172,7 +172,11 @@ class Poetry extends PoetryLibrary {
     }
 
     $identifier->setNumber($number);
-    $identifier->setPart($part);
+
+    if ($part > -1) {
+      // In case we return a -1, we don't want to set that.
+      $identifier->setPart($part);
+    }
 
     return $identifier;
   }
@@ -196,7 +200,7 @@ class Poetry extends PoetryLibrary {
    * @return \EC\Poetry\Messages\Components\Identifier
    *   The identifier.
    */
-  protected function getLastIdentifierForContent(ContentEntityInterface $entity): Identifier {
+  protected function getLastIdentifierForContent(ContentEntityInterface $entity): ?Identifier {
     $query = $this->database->select('tmgmt_job', 'job');
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job');

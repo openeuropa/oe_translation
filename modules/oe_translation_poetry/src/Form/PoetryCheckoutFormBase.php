@@ -331,12 +331,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The title.
    */
   protected function createRequestTitle(): string {
-    $jobs = reset($this->queue->getAllJobs());
+    $jobs = $this->queue->getAllJobs();
+    $job = reset($jobs);
     $settings = $this->poetry->getTranslatorSettings();
     return (string) new FormattableMarkup('@prefix: @site_id - @title', [
       '@prefix' => $settings['title_prefix'],
       '@site_id' => $settings['site_id'],
-      '@title' => reset($jobs)->label(),
+      '@title' => $job->label(),
     ]);
   }
 
