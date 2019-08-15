@@ -11,6 +11,7 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\State\State;
 use Drupal\tmgmt\TranslatorInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Factory class for the Poetry service.
@@ -60,6 +61,13 @@ class PoetryFactory {
   protected $database;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * PoetryFactory constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -74,14 +82,17 @@ class PoetryFactory {
    *   The Drupal state.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, Connection $database) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, Connection $database, RequestStack $requestStack) {
     $this->entityTypeManager = $entityTypeManager;
     $this->configFactory = $configFactory;
     $this->loggerChannel = $loggerChannel;
     $this->logger = $logger;
     $this->state = $state;
     $this->database = $database;
+    $this->requestStack = $requestStack;
   }
 
   /**
@@ -100,7 +111,7 @@ class PoetryFactory {
       $settings = $entity->get('settings');
     }
 
-    return new Poetry($settings, $this->configFactory, $this->loggerChannel, $this->logger, $this->state, $this->entityTypeManager, $this->database);
+    return new Poetry($settings, $this->configFactory, $this->loggerChannel, $this->logger, $this->state, $this->entityTypeManager, $this->database, $this->requestStack);
   }
 
 }

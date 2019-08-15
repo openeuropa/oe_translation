@@ -66,7 +66,7 @@ class PoetryMockFixturesGenerator {
    * @return string
    *   The XML response.
    */
-  public function responseFromMessage(MessageInterface $message) {
+  public function responseFromMessage(MessageInterface $message): string {
     $identifier = $message->getIdentifier();
     $variables = $this->prepareIdentifierVariables($identifier);
 
@@ -88,8 +88,8 @@ class PoetryMockFixturesGenerator {
    */
   protected function prepareIdentifierVariables(Identifier $identifier): array {
     if ($identifier->getSequence()) {
-      $new_number = PoetryMock::START_NUMBER;
-      $previous_number = (int) $this->poetry->getGlobalIdentifierNumber();
+      $new_number = 1000;
+      $previous_number = $this->poetry->getGlobalIdentifierNumber();
       if ($previous_number) {
         $new_number = $previous_number + 1;
       }

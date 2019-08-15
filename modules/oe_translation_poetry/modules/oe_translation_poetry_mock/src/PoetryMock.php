@@ -14,9 +14,21 @@ use Drupal\Core\Url;
 class PoetryMock {
 
   /**
-   * The initial number.
+   * The mock fixtures generator.
+   *
+   * @var \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator
    */
-  const START_NUMBER = 1000;
+  protected $fixturesGenerator;
+
+  /**
+   * PoetryMock constructor.
+   *
+   * @param \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $fixturesGenerator
+   *   The mock fixtures generator.
+   */
+  public function __construct(PoetryMockFixturesGenerator $fixturesGenerator) {
+    $this->fixturesGenerator = $fixturesGenerator;
+  }
 
   /**
    * The main entry point.
@@ -32,9 +44,7 @@ class PoetryMock {
    *   The XML string response.
    */
   public function requestService(string $username, string $password, string $message): string {
-    /** @var \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $generator */
-    $generator = \Drupal::service('oe_translation_poetry_mock.fixture_generator');
-    return $generator->responseFromXml($message);
+    return $this->fixturesGenerator->responseFromXml($message);
   }
 
   /**
@@ -43,7 +53,7 @@ class PoetryMock {
    * @return string
    *   The URL.
    */
-  public static  function getWsdlUrl(): string {
+  public static function getWsdlUrl(): string {
     return Url::fromRoute('oe_translation_poetry_mock.wsdl')->setAbsolute()->toString();
   }
 

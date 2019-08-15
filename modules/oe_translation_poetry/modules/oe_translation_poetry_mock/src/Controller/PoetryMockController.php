@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_poetry_mock\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
+use Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,13 +26,23 @@ class PoetryMockController extends ControllerBase {
   protected $request;
 
   /**
+   * The mock fixtures generator.
+   *
+   * @var \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator
+   */
+  protected $fixturesGenerator;
+
+  /**
    * Poetry constructor.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
+   * @param \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $fixturesGenerator
+   *   The mock fixtures generator.
    */
-  public function __construct(RequestStack $requestStack) {
+  public function __construct(RequestStack $requestStack, PoetryMockFixturesGenerator $fixturesGenerator) {
     $this->request = $requestStack->getCurrentRequest();
+    $this->fixturesGenerator = $fixturesGenerator;
   }
 
   /**
@@ -39,7 +50,8 @@ class PoetryMockController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('request_stack')
+      $container->get('request_stack'),
+      $container->get('oe_translation_poetry_mock.fixture_generator')
     );
   }
 
@@ -71,7 +83,8 @@ class PoetryMockController extends ControllerBase {
     $url = Url::fromRoute('oe_translation_poetry_mock.server')->toString();
     $options = ['uri' => $url];
     $server = new \SoapServer($wsdl, $options);
-    $server->setClass(PoetryMock::class);
+    $mock = new PoetryMock($this->fixturesGenerator);
+    $server->setObject($mock);
 
     ob_start();
     $server->handle();

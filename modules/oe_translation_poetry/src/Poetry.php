@@ -16,6 +16,7 @@ use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Poetry client.
@@ -69,8 +70,10 @@ class Poetry extends PoetryLibrary {
    *   The entity type manager.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database) {
+  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack) {
     // @todo improve this in case we need alternative logging mechanisms.
     $loggerChannel->addLogger($logger);
     // Cannot rely on the translator getSetting() method because that might
@@ -100,6 +103,12 @@ class Poetry extends PoetryLibrary {
     }
 
     parent::__construct($values);
+
+    // Register our own service provider to override the SOAP client. We need
+    // to pass the current cookies to that the SOAP client uses them in its
+    // requests. This is critical for ensuring the tests work.
+    $this->register(new PoetrySoapProvider($requestStack->getCurrentRequest()->cookies->all()));
+
     $this->translatorSettings = $settings;
     $this->state = $state;
     $this->entityTypeManager = $entityTypeManager;

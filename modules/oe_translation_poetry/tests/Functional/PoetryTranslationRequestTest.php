@@ -33,7 +33,9 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $translator->setSetting('service_wsdl', PoetryMock::getWsdlUrl());
     $translator->save();
 
+    // Unset some services from the container to force a rebuild.
     $this->container->set('oe_translation_poetry.client.default', NULL);
+    $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
   }
 
   /**
@@ -109,13 +111,11 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     ];
 
     foreach ($jobs as $lang => $job) {
-      /** @var JobInterface $job */
+      /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $job_storage->load($job->id());
       $this->assertEqual($job->getState(), JobInterface::STATE_ACTIVE);
       $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $expected_poetry_request_id);
     }
-
-    file_put_contents('/var/www/html/print.html', $this->getSession()->getPage()->getContent());
   }
 
 }
