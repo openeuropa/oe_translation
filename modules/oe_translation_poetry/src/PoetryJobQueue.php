@@ -16,11 +16,15 @@ use Drupal\tmgmt\JobInterface;
 class PoetryJobQueue {
 
   /**
+   * The private temp store.
+   *
    * @var \Drupal\Core\TempStore\PrivateTempStore
    */
   protected $store;
 
   /**
+   * The entity type manager.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
@@ -29,7 +33,9 @@ class PoetryJobQueue {
    * PoetryJobQueue constructor.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $privateTempStoreFactory
+   *   The private temp store.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
   public function __construct(PrivateTempStoreFactory $privateTempStoreFactory, EntityTypeManagerInterface $entityTypeManager) {
     $this->store = $privateTempStoreFactory->get('oe_translation_poetry');
@@ -40,6 +46,7 @@ class PoetryJobQueue {
    * Adds a job to the queue.
    *
    * @param \Drupal\tmgmt\JobInterface $job
+   *   The job.
    */
   public function addJob(JobInterface $job): void {
     $queue = $this->initializeQueue();
@@ -55,9 +62,9 @@ class PoetryJobQueue {
    * Sets the entity type and ID of the entity being translated.
    *
    * @param string $entity_type
+   *   The entity type.
    * @param string $id
-   *
-   * @throws \Drupal\Core\TempStore\TempStoreException
+   *   The entity ID.
    */
   public function setEntityId(string $entity_type, string $id): void {
     $queue = $this->initializeQueue();
@@ -70,6 +77,7 @@ class PoetryJobQueue {
    * Returns the entity being translated.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The entity.
    */
   public function getEntity(): ContentEntityInterface {
     $queue = $this->initializeQueue();
@@ -83,7 +91,8 @@ class PoetryJobQueue {
   /**
    * Returns all the jobs in the queue.
    *
-   * @return JobInterface[]
+   * @return \Drupal\tmgmt\JobInterface[]
+   *   The jobs.
    */
   public function getAllJobs(): array {
     $queue = $this->initializeQueue();
@@ -137,11 +146,12 @@ class PoetryJobQueue {
         'jobs' => [],
         'entity_revision_id' => NULL,
         'entity_type' => NULL,
-        'destination' => NULL
+        'destination' => NULL,
       ];
       $this->store->set('queue', $queue);
     }
 
     return $queue;
   }
+
 }

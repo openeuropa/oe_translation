@@ -16,9 +16,7 @@ use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
-use Drupal\tmgmt\JobCheckoutManager;
 use Drupal\tmgmt\JobInterface;
-use Drupal\tmgmt\JobQueue;
 use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -41,16 +39,18 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface {
 
   /**
-   * @var \Drupal\oe_translation_poetry\Poetry
-   */
-  protected $poetry;
-
-  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
   protected $currentUser;
+
+  /**
+   * The Poetry client.
+   *
+   * @var \Drupal\oe_translation_poetry\Poetry
+   */
+  protected $poetry;
 
   /**
    * The language manager.
@@ -81,16 +81,22 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   protected $request;
 
   /**
+   * The form builder.
+   *
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
 
   /**
-   * @var PoetryJobQueue
+   * The current user job queue.
+   *
+   * @var \Drupal\oe_translation_poetry\PoetryJobQueue
    */
   protected $jobQueue;
 
   /**
+   * The current route match.
+   *
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
   protected $currentRouteMatch;
@@ -105,8 +111,9 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
-   *   The Poetry service.
+   *   The Poetry client.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\Core\Access\AccessManagerInterface $access_manager
@@ -116,9 +123,12 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
-   *
+   *   The form builder.
    * @param \Drupal\oe_translation_poetry\PoetryJobQueue $job_queue
+   *   The current user job queue.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The current route match.
+   *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
   public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, PoetryJobQueue $job_queue, RouteMatchInterface $route_match) {
@@ -158,7 +168,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * {@inheritdoc}
    */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
-    return;
+    // We don't need to alter anything here yet.
   }
 
   /**
@@ -181,11 +191,13 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * Submit handler for the TMGMT content translation overview form.
    *
    * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    *
    * @see oe_translation_poetry_form_tmgmt_content_translate_form_alter()
    */
-  public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state) {
+  public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $form_state->get('entity');
     $values = $form_state->getValues();
@@ -239,4 +251,5 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     // For the moment we don't have any checkout settings.
     return FALSE;
   }
+
 }
