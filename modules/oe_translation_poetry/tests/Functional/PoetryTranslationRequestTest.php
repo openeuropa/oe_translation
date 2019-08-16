@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
+use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\tmgmt\JobInterface;
@@ -12,6 +13,13 @@ use Drupal\tmgmt\JobInterface;
  * Tests the requests made to Poetry for translations.
  */
 class PoetryTranslationRequestTest extends TranslationTestBase {
+
+  /**
+   * The job storage.
+   *
+   * @var \Drupal\Core\Entity\Sql\SqlEntityStorageInterface
+   */
+  protected $jobStorage;
 
   /**
    * {@inheritdoc}
@@ -36,6 +44,8 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     // Unset some services from the container to force a rebuild.
     $this->container->set('oe_translation_poetry.client.default', NULL);
     $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
+
+    $this->jobStorage = $this->entityTypeManager->getStorage('tmgmt_job');
   }
 
   /**
@@ -45,30 +55,20 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->entityTypeManager->getStorage('node');
 
-    /** @var \Drupal\Core\Entity\Sql\SqlEntityStorageInterface $job_storage */
-    $job_storage = $this->entityTypeManager->getStorage('tmgmt_job');
-
     /** @var \Drupal\node\NodeInterface $node */
     $node = $node_storage->create([
       'type' => 'page',
-      'title' => 'My node',
+      'title' => 'My first node',
     ]);
     $node->save();
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->pageTextContains('Translations of My node');
 
-    // Select Bulgarian and Czech languages and submit the form.
-    $values = [
-      'languages[bg]' => '1',
-      'languages[cs]' => '1',
-    ];
-    $this->drupalPostForm($node->toUrl('drupal:content-translation-overview'), $values, 'Request DGT translation for the selected languages');
-    $this->assertSession()->pageTextContains('Send request to DG Translation');
-
-    // Check that two jobs have been created for the two languages.
+    // Select some languages to translate.
+    $this->createInitialTranslationJobs($node, ['bg', 'cs']);
+    // Check that two jobs have been created for the two languages and that
+    // their status is unprocessed.
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
-    $jobs['bg'] = $job_storage->load(1);
-    $jobs['cs'] = $job_storage->load(2);
+    $jobs['bg'] = $this->jobStorage->load(1);
+    $jobs['cs'] = $this->jobStorage->load(2);
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
@@ -76,6 +76,175 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
       $this->assertEqual($job->getTargetLangcode(), $lang);
     }
 
+    // Submit the request to Poetry for the two jobs.
+    $this->submitTranslationRequestForQueue($node);
+    $this->jobStorage->resetCache();
+
+    // The jobs should have gotten submitted and the identification numbers
+    // set.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      // The number is the first number because it's the first request we are
+      // making.
+      'number' => '1000',
+      // We always start with version and part 0 in the first request.
+      'version' => '0',
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+
+    // Make a new request for the same node to check that the version increases.
+    $this->createInitialTranslationJobs($node, ['de', 'fr']);
+    $jobs = [];
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs['de'] = $this->jobStorage->load(3);
+    $jobs['fr'] = $this->jobStorage->load(4);
+    $this->assertCount(2, $jobs);
+    foreach ($jobs as $lang => $job) {
+      // The jobs should still be unprocessed at this stage.
+      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
+      $this->assertEqual($job->getTargetLangcode(), $lang);
+    }
+
+    // Submit the request to Poetry for the two new jobs in the queue.
+    $this->submitTranslationRequestForQueue($node);
+    $this->jobStorage->resetCache();
+
+    // The jobs should have gotten submitted and the identification numbers
+    // set.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      'number' => '1000',
+      // The version should increase.
+      'version' => '1',
+      // The part should stay the same.
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+
+    // Create a new node to increase the part and reset the version for that
+    // number.
+    /** @var \Drupal\node\NodeInterface $node_two */
+    $node_two = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My second node',
+    ]);
+    $node_two->save();
+
+    $this->createInitialTranslationJobs($node_two, ['bg', 'cs']);
+    // Check that two jobs have been created for the two languages and that
+    // their status is unprocessed.
+    $jobs = [];
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs['bg'] = $this->jobStorage->load(5);
+    $jobs['cs'] = $this->jobStorage->load(6);
+    $this->assertCount(2, $jobs);
+    foreach ($jobs as $lang => $job) {
+      // The jobs should still be unprocessed at this stage.
+      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
+      $this->assertEqual($job->getTargetLangcode(), $lang);
+    }
+
+    // Submit the request to Poetry for the two jobs.
+    $this->submitTranslationRequestForQueue($node_two);
+    $this->jobStorage->resetCache();
+
+    // The jobs should have gotten submitted and the identification numbers
+    // set.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      'number' => '1000',
+      // Version is reset to 0 because it's a new node.
+      'version' => '0',
+      // The part increases because it's a request for a new node.
+      'part' => '1',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+
+    // Update programmatically the part of the last two jobs to 99 to mimic
+    // that the Poetry service needs to give us a new number.
+    $fake_poetry_request_id = [
+      'part' => '99',
+    ] + $expected_poetry_request_id;
+
+    foreach ($jobs as $job) {
+      $job->set('poetry_request_id', $fake_poetry_request_id);
+      $job->save();
+    }
+
+    // Create a new node which would require an increment in the part.
+    /** @var \Drupal\node\NodeInterface $node_three */
+    $node_three = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My third node',
+    ]);
+    $node_three->save();
+
+    $this->createInitialTranslationJobs($node_three, ['bg', 'cs']);
+    // Check that two jobs have been created for the two languages and that
+    // their status is unprocessed.
+    $jobs = [];
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs['bg'] = $this->jobStorage->load(7);
+    $jobs['cs'] = $this->jobStorage->load(8);
+    $this->assertCount(2, $jobs);
+    foreach ($jobs as $lang => $job) {
+      // The jobs should still be unprocessed at this stage.
+      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
+      $this->assertEqual($job->getTargetLangcode(), $lang);
+    }
+
+    // Submit the request to Poetry for the two jobs.
+    $this->submitTranslationRequestForQueue($node_three);
+    $this->jobStorage->resetCache();
+
+    // The jobs should have gotten submitted and the identification numbers
+    // set.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      'number' => '1001',
+      'version' => '0',
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+  }
+
+  /**
+   * Chooses the languages to translate from the overview page.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   * @param array $languages
+   *   The language codes.
+   */
+  protected function createInitialTranslationJobs(NodeInterface $node, array $languages): void {
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->pageTextContains('Translations of ' . $node->label());
+
+    $values = [];
+    foreach ($languages as $language) {
+      $values["languages[$language]"] = 1;
+    }
+
+    $this->drupalPostForm($node->toUrl('drupal:content-translation-overview'), $values, 'Request DGT translation for the selected languages');
+    $this->assertSession()->pageTextContains('Send request to DG Translation');
+  }
+
+  /**
+   * Submits the translation request on the current page with default values.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   */
+  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
     // Submit the request form.
     $date = new \DateTime();
     $date->modify('+ 7 days');
@@ -92,29 +261,25 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     ];
     $this->drupalPostForm(NULL, $values, 'Send request');
     $this->assertSession()->pageTextContains('The request has been sent to DGT.');
-    $this->assertSession()->addressEquals('/en/node/1/translations');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
+  }
 
-    $job_storage->resetCache();
-
-    // The jobs should have gotten submitted and the identification numbers
-    // set.
-    $expected_poetry_request_id = [
-      'code' => 'WEB',
-      'year' => date('Y'),
-      // The number is the first number because it's the first request we are
-      // making.
-      'number' => '1000',
-      // We always start with version and part 0 in the first request.
-      'version' => '0',
-      'part' => '0',
-      'product' => 'TRA',
-    ];
-
+  /**
+   * Asserts that the given jobs have the correct poetry request ID values.
+   *
+   * Also ensures that the state is active.
+   *
+   * @param array $jobs
+   *   The jobs.
+   * @param array $values
+   *   The poetry request ID values.
+   */
+  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
     foreach ($jobs as $lang => $job) {
       /** @var \Drupal\tmgmt\JobInterface $job */
-      $job = $job_storage->load($job->id());
+      $job = $this->jobStorage->load($job->id());
       $this->assertEqual($job->getState(), JobInterface::STATE_ACTIVE);
-      $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $expected_poetry_request_id);
+      $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $values);
     }
   }
 
