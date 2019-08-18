@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
+use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
@@ -46,6 +47,26 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
 
     $this->jobStorage = $this->entityTypeManager->getStorage('tmgmt_job');
+  }
+
+  /**
+   * Check access permission to the checkout form.
+   */
+  public function checkoutFormAccess(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My first node',
+    ]);
+    $node->save();
+
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout'));
+    $this->assertSession()->statusCodeEquals(403);
+    $this->createInitialTranslationJobs($node, ['bg', 'cs']);
+    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**
