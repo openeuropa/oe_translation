@@ -44,6 +44,14 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
         'weight' => 20,
       ]);
 
+    $fields['poetry_request_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('The Poetry request date'))
+      ->setDescription(t('The date when the translations are expected at the moment of the request.'));
+
+    $fields['poetry_request_date_updated'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('The Poetry updated request date'))
+      ->setDescription(t('The updated date when the translations are expected. Poetry can choose to update the request with a new expected delivery date.'));
+
     return $fields;
   }
 }

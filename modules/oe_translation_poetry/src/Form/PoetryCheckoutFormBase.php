@@ -292,7 +292,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $client = $this->poetry->getClient();
       /** @var \EC\Poetry\Messages\Responses\ResponseInterface $response */
       $response = $client->send($message);
-      $this->handlePoetryResponse($response);
+      $this->handlePoetryResponse($response, $form_state);
 
       // If we request a new number by setting a sequence, update the global
       // identifier number with the new number that came for future requests.
@@ -378,8 +378,10 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *
    * @param \EC\Poetry\Messages\Responses\ResponseInterface $response
    *   The response.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
-  protected function handlePoetryResponse(ResponseInterface $response): void {
+  protected function handlePoetryResponse(ResponseInterface $response, FormStateInterface $form_state): void {
     if (!$response->isSuccessful()) {
       $this->rejectJobs($response);
     }
@@ -397,9 +399,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       'product' => $identifier->getProduct(),
     ];
 
+    $date = new \DateTime($form_state->getValue('details')['date']);
+
     foreach ($jobs as $job) {
-      // Update the job with the resulting identifier.
       $job->set('poetry_request_id', $identifier_values);
+      $job->set('poetry_request_date', $date->format('Y-m-d\TH:i:s'));
       // Submit the job. This will also save it.
       $job->submitted();
     }
