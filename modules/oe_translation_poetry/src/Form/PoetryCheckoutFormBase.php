@@ -433,7 +433,9 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   public function access(AccountInterface $account) {
     $current_jobs = $this->queue->getAllJobs();
     // Deny access if there are no jobs in the queue.
-    return AccessResult::allowedIf(!empty($current_jobs));
+    return AccessResult::allowedIf(!empty($current_jobs))
+      ->cachePerUser()
+      ->addCacheTags(['tmgmt_job_list']);
   }
 
 }
