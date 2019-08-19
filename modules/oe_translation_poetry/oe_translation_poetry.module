@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\oe_translation_poetry\Access\JobAccessHandler;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 
 /**
  * Implements hook_poetry_entity_type_alter().
@@ -42,6 +43,14 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
       ->setDisplayOptions('form', [
         'type' => 'poetry_request_id_widget',
         'weight' => 20,
+      ]);
+
+    $fields['poetry_state'] = BaseFieldDefinition::create('list_integer')
+      ->setLabel(t('Poetry state'))
+      ->setDescription(t('The poetry job state while the job is active.'))
+      ->setSetting('allowed_values', [
+        PoetryTranslator::POETRY_STATUS_ONGOING => t('Ongoing'),
+        PoetryTranslator::POETRY_STATUS_TRANSLATED => t('Translated'),
       ]);
 
     $fields['poetry_request_date'] = BaseFieldDefinition::create('datetime')

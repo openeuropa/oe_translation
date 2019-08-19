@@ -42,6 +42,16 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface {
 
   /**
+   * Status indicating that the translation is ongoing in Poetry.
+   */
+  const POETRY_STATUS_ONGOING = 'ongoing';
+
+  /**
+   * Status indicating that the translation has been received from Poetry.
+   */
+  const POETRY_STATUS_TRANSLATED = 'translated';
+
+  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
