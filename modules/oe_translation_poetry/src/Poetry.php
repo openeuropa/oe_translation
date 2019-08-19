@@ -180,12 +180,15 @@ class Poetry extends PoetryLibrary {
       return $identifier;
     }
 
-    $identifier->setNumber($number);
-
-    if ($part > -1) {
-      // In case we return a -1, we don't want to set that.
-      $identifier->setPart($part);
+    if ($part === -1) {
+      // In case we lost track of the jobs we need to reset and request a new
+      // number.
+      $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
+      return $identifier;
     }
+
+    $identifier->setPart($part);
+    $identifier->setNumber($number);
 
     return $identifier;
   }

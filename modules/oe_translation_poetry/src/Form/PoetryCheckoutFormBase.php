@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_poetry\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
@@ -50,6 +51,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   protected $contentFormatter;
 
   /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * PoetryCheckoutForm constructor.
    *
    * @param \Drupal\oe_translation_poetry\PoetryJobQueue $queue
@@ -60,12 +68,15 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The messenger service.
    * @param \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface $contentFormatter
    *   The content formatter.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory.
    */
-  public function __construct(PoetryJobQueue $queue, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter) {
+  public function __construct(PoetryJobQueue $queue, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->queue = $queue;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
     $this->contentFormatter = $contentFormatter;
+    $this->logger = $loggerChannelFactory->get('oe_translation_poetry');
   }
 
   /**
@@ -76,7 +87,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $container->get('oe_translation_poetry.job_queue'),
       $container->get('oe_translation_poetry.client.default'),
       $container->get('messenger'),
-      $container->get('oe_translation_poetry.html_formatter')
+      $container->get('oe_translation_poetry.html_formatter'),
+      $container->get('logger.factory')
     );
   }
 
@@ -262,8 +274,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
         ->setDelay($formatted_date);
     }
 
-    $client = $this->poetry->getClient();
     try {
+      $client = $this->poetry->getClient();
       /** @var \EC\Poetry\Messages\Responses\ResponseInterface $response */
       $response = $client->send($message);
       $this->handlePoetryResponse($response);
@@ -278,6 +290,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
     }
     catch (\Exception $exception) {
+      $this->logger->error($exception->getMessage());
       $this->messenger->addError($this->t('There was a error making the request to DGT.'));
       $this->cancelAndRedirect($form_state);
     }
@@ -328,7 +341,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   /**
    * Creates the title of the request.
    *
-   * It uses the configured prefix, site ID and the title of the Job (on of the
+   * It uses the configured prefix, site ID and the title of the Job (one of the
    * jobs as they are identical).
    *
    * @return string
@@ -354,7 +367,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   protected function handlePoetryResponse(ResponseInterface $response): void {
     if (!$response->isSuccessful()) {
       $this->rejectJobs($response);
-      return;
     }
 
     $jobs = $this->queue->getAllJobs();
@@ -370,13 +382,10 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       'product' => $identifier->getProduct(),
     ];
 
-    // Update all the jobs with the resulting identifier.
     foreach ($jobs as $job) {
+      // Update the job with the resulting identifier.
       $job->set('poetry_request_id', $identifier_values);
-    }
-
-    // Submit all the job entities. This will also save them.
-    foreach ($jobs as $job) {
+      // Submit the job. This will also save it.
       $job->submitted();
     }
   }
@@ -406,7 +415,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $job_ids[] = $job->id();
     }
 
-    $this->messenger->addError('The DGT request with the following jobs has been rejected upon submission: @jobs The messages have been saved in the jobs.', ['@jobs' => implode(', ', $job_ids)]);
+    $message = new FormattableMarkup('The DGT request with the following jobs has been rejected upon submission: @jobs The messages have been saved in the jobs.', ['@jobs' => implode(', ', $job_ids)]);
+    throw new \Exception($message->__toString());
   }
 
 }
