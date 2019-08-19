@@ -50,26 +50,6 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
   }
 
   /**
-   * Check access permission to the checkout form.
-   */
-  public function checkoutFormAccess(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My first node',
-    ]);
-    $node->save();
-
-    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout'));
-    $this->assertSession()->statusCodeEquals(403);
-    $this->createInitialTranslationJobs($node, ['bg', 'cs']);
-    $this->assertSession()->statusCodeEquals(200);
-  }
-
-  /**
    * Tests new translation requests.
    */
   public function testNewTranslationRequest(): void {
@@ -83,8 +63,13 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     ]);
     $node->save();
 
+    // Assert we can't access the checkout route without jobs in the queue.
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout'));
+    $this->assertSession()->statusCodeEquals(403);
+
     // Select some languages to translate.
     $this->createInitialTranslationJobs($node, ['bg', 'cs']);
+    $this->assertSession()->statusCodeEquals(200);
     // Check that two jobs have been created for the two languages and that
     // their status is unprocessed.
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
