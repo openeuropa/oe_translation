@@ -5,12 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
@@ -419,23 +417,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     $message = new FormattableMarkup('The DGT request with the following jobs has been rejected upon submission: @jobs The messages have been saved in the jobs.', ['@jobs' => implode(', ', $job_ids)]);
     throw new \Exception($message->__toString());
-  }
-
-  /**
-   * Checks access for a checkout form.
-   *
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   Run access checks for this account.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The access result.
-   */
-  public function access(AccountInterface $account) {
-    $current_jobs = $this->queue->getAllJobs();
-    // Deny access if there are no jobs in the queue.
-    return AccessResult::allowedIf(!empty($current_jobs))
-      ->cachePerUser()
-      ->addCacheTags(['tmgmt_job_list']);
   }
 
 }

@@ -4,8 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\tmgmt\JobInterface;
@@ -131,6 +133,21 @@ class PoetryJobQueue {
    */
   public function reset(): void {
     $this->store->delete('queue');
+  }
+
+  /**
+   * Access handler for routes that depend on the job queue.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  public function access(AccountInterface $account) {
+    return AccessResult::allowedIf(!empty($this->getAllJobs()))
+      ->cachePerUser()
+      ->addCacheTags(['tmgmt_job_list']);
   }
 
   /**
