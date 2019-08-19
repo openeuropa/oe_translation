@@ -1,0 +1,7 @@
+oe_translation_poetry.job_queue_checkout:
+  path: '/admin/content/dgt/send-request'
+  defaults:
+    _form: Drupal\oe_translation_poetry\Form\NewTranslationRequestForm
+    _title: 'Send request to DG Translation'
+  requirements:
+    _permission: 'translate any entity'

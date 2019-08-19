@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\tmgmt\TranslatorPluginUiBase;
 
 /**
- * UI provider for the Poetry Translator.
+ * UI class for the Poetry translator.
  */
 class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
@@ -37,6 +37,12 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#title' => $this->t('Request title prefix'),
       '#default_value' => $translator->getSetting('title_prefix'),
       '#description' => $this->t('This string will be prefixed to the title of every request sent. It should help identify the origin of the request.'),
+    ];
+    $form['site_id'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Site ID'),
+      '#default_value' => $translator->getSetting('site_id'),
+      '#description' => $this->t('This site ID used in the title of translation requests. Defaults to the Drupal site name.'),
     ];
     $form['application_reference'] = [
       '#type' => 'textfield',

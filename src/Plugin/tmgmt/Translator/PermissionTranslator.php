@@ -412,6 +412,13 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
         continue;
       }
 
+      if (isset($job_items[$language->getId()])) {
+        // If there are job items for this content in jobs that are ongoing
+        // (unprocessed, active or continuous), we don't want to show the link
+        // to create local translations.
+        continue;
+      }
+
       $create_url = Url::fromRoute('oe_translation.permission_translator.create_local_task', [
         'entity_type' => $entity->getEntityTypeId(),
         'entity' => $entity->id(),

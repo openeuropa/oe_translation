@@ -26,22 +26,13 @@ class PoetryMockTest extends BrowserTestBase {
   ];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-
-    // Reset the service since we changed configuration that is needed for the
-    // service constructor.
-    $this->container->set('oe_translation_poetry.client', NULL);
-  }
-
-  /**
    * Tests that requests to Poetry are being mocked.
    */
   public function testRequestResponse(): void {
     /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
-    $poetry = $this->container->get('oe_translation_poetry.client');
+    $poetry = $this->container->get('oe_translation_poetry.client.default');
+    /** @var \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $fixture_generator */
+    $fixture_generator = $this->container->get('oe_translation_poetry_mock.fixture_generator');
 
     // Assert that the Poetry service gets properly instantiated.
     $expected_settings = [];
@@ -54,7 +45,7 @@ class PoetryMockTest extends BrowserTestBase {
 
     $settings = $poetry->getSettings();
     foreach ($expected_settings as $name => $setting) {
-      $this->assertEqual($setting, $settings[$name]);
+      $this->assertEqual($settings[$name], $setting);
     }
 
     $settings->set('service.wsdl', PoetryMock::getWsdlUrl());
@@ -62,14 +53,13 @@ class PoetryMockTest extends BrowserTestBase {
     /** @var \EC\Poetry\Messages\Requests\CreateTranslationRequest $message */
     $message = $poetry->get('request.create_translation_request');
 
-    $test_id = 1;
     $id = $message->getIdentifier();
     $id->setNumber('40012');
     $id->setVersion('0');
     $id->setPart(33);
     $message->setIdentifier($id);
     $message->withDetails()
-      ->setClientId($test_id)
+      ->setClientId($id->getFormattedIdentifier())
       ->setTitle('Translation title');
 
     $message->withContact()
@@ -94,7 +84,8 @@ class PoetryMockTest extends BrowserTestBase {
     $client = $poetry->getClient();
     $response = $client->send($message);
     $this->assertInstanceOf(MessageInterface::class, $response);
-    $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $test_id . '.xml');
+
+    $expected = $fixture_generator->responseFromMessage($message);
     $this->assertEqual($expected, $response->getRaw());
 
     // Check the request and response have been logged.
@@ -109,16 +100,6 @@ class PoetryMockTest extends BrowserTestBase {
     $logged_message = trim(unserialize(reset($result))['@message'], "'");
     $logged_message_id = (string) simplexml_load_string($logged_message)->request->attributes()['id'];
     $this->assertEqual($logged_message_id, 'WEB/2019/40012/0/33/TRA');
-
-    $test_id = 2;
-    $details = $message->getDetails();
-    $details->setClientId($test_id);
-    $message->setDetails($details);
-
-    $response = $client->send($message);
-    $this->assertInstanceOf(MessageInterface::class, $response);
-    $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
-    $this->assertEqual($expected, $response->getRaw());
   }
 
 }

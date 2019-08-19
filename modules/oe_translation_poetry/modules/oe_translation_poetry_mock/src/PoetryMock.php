@@ -14,6 +14,23 @@ use Drupal\Core\Url;
 class PoetryMock {
 
   /**
+   * The mock fixtures generator.
+   *
+   * @var \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator
+   */
+  protected $fixturesGenerator;
+
+  /**
+   * PoetryMock constructor.
+   *
+   * @param \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $fixturesGenerator
+   *   The mock fixtures generator.
+   */
+  public function __construct(PoetryMockFixturesGenerator $fixturesGenerator) {
+    $this->fixturesGenerator = $fixturesGenerator;
+  }
+
+  /**
    * The main entry point.
    *
    * @param string $username
@@ -27,22 +44,7 @@ class PoetryMock {
    *   The XML string response.
    */
   public function requestService(string $username, string $password, string $message): string {
-    $xml = simplexml_load_string($message);
-    $request = $xml->request;
-    $details = (array) $request->demande;
-    $id = (string) $details['userReference'];
-
-    $path = drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/' . $id . '.xml';
-    if (!file_exists($path)) {
-      return file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
-    }
-
-    $response = file_get_contents($path);
-    if ($response) {
-      return $response;
-    }
-
-    return file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error.xml');
+    return $this->fixturesGenerator->responseFromXml($message);
   }
 
   /**
@@ -51,7 +53,7 @@ class PoetryMock {
    * @return string
    *   The URL.
    */
-  public static  function getWsdlUrl(): string {
+  public static function getWsdlUrl(): string {
     return Url::fromRoute('oe_translation_poetry_mock.wsdl')->setAbsolute()->toString();
   }
 
