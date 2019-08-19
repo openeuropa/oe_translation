@@ -121,6 +121,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
         '#type' => 'textfield',
         '#title' => $label,
         '#default_value' => $default_contact[$name] ?? '',
+        '#required' => TRUE,
       ];
     }
 
@@ -135,6 +136,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
         '#type' => 'textfield',
         '#title' => $label,
         '#default_value' => $default_organisation[$name] ?? '',
+        '#required' => TRUE,
       ];
     }
 
