@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
+use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
@@ -62,8 +63,13 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     ]);
     $node->save();
 
+    // Assert we can't access the checkout route without jobs in the queue.
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout'));
+    $this->assertSession()->statusCodeEquals(403);
+
     // Select some languages to translate.
     $this->createInitialTranslationJobs($node, ['bg', 'cs']);
+    $this->assertSession()->statusCodeEquals(200);
     // Check that two jobs have been created for the two languages and that
     // their status is unprocessed.
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
