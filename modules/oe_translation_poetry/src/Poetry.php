@@ -220,6 +220,7 @@ class Poetry extends PoetryLibrary {
     // Do not include unprocessed Jobs. These are the ones which have not been
     // ever sent to Poetry.
     $query->condition('job.state', Job::STATE_UNPROCESSED, '!=');
+    $query->range(0, 1);
     $query->orderBy('job.poetry_request_id__version', 'DESC');
     $result = $query->execute()->fetchCol('poetry_request_id__version');
     if (!$result) {
