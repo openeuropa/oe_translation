@@ -22,8 +22,17 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Poetry client.
  *
  * Integrates the Poetry client library with Drupal.
+ *
+ * @method Identifier getIdentifier()
  */
-class Poetry extends PoetryLibrary {
+class Poetry {
+
+  /**
+   * The Poetry client library.
+   *
+   * @var \EC\Poetry\Poetry
+   */
+  protected $poetryClient;
 
   /**
    * The settings provided by the translator config.
@@ -54,6 +63,27 @@ class Poetry extends PoetryLibrary {
   protected $database;
 
   /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $loggerChannel;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * Constructs a Poetry instance.
    *
    * @param array $settings
@@ -74,13 +104,31 @@ class Poetry extends PoetryLibrary {
    *   The request stack.
    */
   public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack) {
+    $this->translatorSettings = $settings;
+    $this->state = $state;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->database = $database;
     // @todo improve this in case we need alternative logging mechanisms.
-    $loggerChannel->addLogger($logger);
-    // Cannot rely on the translator getSetting() method because that might
-    // instantiate the corresponding plugin which results in a circular
-    // reference error.
+    $this->loggerChannel = $loggerChannel;
+    $this->loggerChannel->addLogger($logger);
+    $this->requestStack = $requestStack;
+    $this->configFactory = $configFactory;
+
+    if (!isset($this->translatorSettings['site_id'])) {
+      $this->translatorSettings['site_id'] = $this->configFactory->get('system.site')->get('name');
+    }
+  }
+
+  /**
+   * Initializes the Poetry instance.
+   */
+  public function initialize() {
+    if ($this->poetryClient instanceof PoetryLibrary) {
+      return;
+    }
+
     $values = [
-      'identifier.code' => $settings['identifier_code'] ?? 'WEB',
+      'identifier.code' => $this->translatorSettings['identifier_code'] ?? 'WEB',
       // The default version will always start from 0.
       'identifier.version' => 0,
       // The default part will always start from 0.
@@ -90,29 +138,32 @@ class Poetry extends PoetryLibrary {
       'service.password' => Settings::get('poetry.service.password'),
       'notification.username' => Settings::get('poetry.notification.username'),
       'notification.password' => Settings::get('poetry.notification.password'),
-      'logger' => $loggerChannel,
+      'logger' => $this->loggerChannel,
       'log_level' => LogLevel::INFO,
     ];
 
-    if (isset($settings['service_wsdl'])) {
-      $values['service.wsdl'] = $settings['service_wsdl'];
+    if (isset($this->translatorSettings['service_wsdl'])) {
+      $values['service.wsdl'] = $this->translatorSettings['service_wsdl'];
     }
 
-    if (!isset($settings['site_id'])) {
-      $settings['site_id'] = $configFactory->get('system.site')->get('name');
-    }
-
-    parent::__construct($values);
+    $this->poetryClient = new PoetryLibrary($values);
 
     // Register our own service provider to override the SOAP client. We need
     // to pass the current cookies to that the SOAP client uses them in its
     // requests. This is critical for ensuring the tests work.
-    $this->register(new PoetrySoapProvider($requestStack->getCurrentRequest()->cookies->all()));
+    $this->poetryClient->register(new PoetrySoapProvider($this->requestStack->getCurrentRequest()->cookies->all()));
+  }
 
-    $this->translatorSettings = $settings;
-    $this->state = $state;
-    $this->entityTypeManager = $entityTypeManager;
-    $this->database = $database;
+  /**
+   * Delegates to the Poetry library all calls made to this service.
+   *
+   * {@inheritdoc}
+   */
+  public function __call($name, $arguments) {
+    $this->initialize();
+    if (method_exists($this->poetryClient, $name)) {
+      return call_user_func_array([$this->poetryClient, $name], $arguments);
+    }
   }
 
   /**
