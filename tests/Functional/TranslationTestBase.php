@@ -56,7 +56,9 @@ class TranslationTestBase extends BrowserTestBase {
 
     /** @var \Drupal\user\RoleInterface $role */
     $role = $this->entityTypeManager->getStorage('user_role')->load('translator');
-    $user = $this->drupalCreateUser($role->getPermissions());
+    $permissions = $role->getPermissions();
+    $permissions[] =
+    $user = $this->drupalCreateUser($permissions);
 
     $this->drupalLogin($user);
   }

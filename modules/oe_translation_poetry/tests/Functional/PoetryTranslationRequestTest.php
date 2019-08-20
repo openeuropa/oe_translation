@@ -47,6 +47,12 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
 
     $this->jobStorage = $this->entityTypeManager->getStorage('tmgmt_job');
+
+    $role = $this->entityTypeManager->getStorage('user_role')->load('translator');
+    $permissions = $role->getPermissions();
+    $permissions[] = 'administer tmgmt';
+    $user = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($user);
   }
 
   /**
@@ -70,8 +76,11 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     // Select some languages to translate.
     $this->createInitialTranslationJobs($node, ['bg', 'cs']);
     $this->assertSession()->statusCodeEquals(200);
+
     // Check that two jobs have been created for the two languages and that
     // their status is unprocessed.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->drupalPostForm(NULL, [], 'Finish translation request to DGT (bg, cs)');
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs['bg'] = $this->jobStorage->load(1);
     $jobs['cs'] = $this->jobStorage->load(2);
@@ -132,6 +141,29 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     ];
     $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
 
+    // Make a new request for the same node and remove unprocessed jobs.
+    $this->createInitialTranslationJobs($node, ['es', 'it']);
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->drupalPostForm(NULL, [], 'Finish translation request to DGT (es, it)');
+    $this->assertSession()->pageTextContains('Send request to DG Translation (es, it)');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Delete unprocessed job');
+    $hello = $this->getSession()->getPage()->getHtml();
+    $this->drupalPostForm(NULL, [], 'Delete');
+    $this->drupalPostForm(NULL, [], 'Finish translation request to DGT (it)');
+    $this->assertSession()->pageTextContains('Send request to DG Translation (it)');
+    $deleted_job = $this->jobStorage->load(5);
+    $this->assertEmpty($deleted_job);
+    $remaining_job = $this->jobStorage->load(6);
+    $this->assertNotEmpty($remaining_job);
+    // The jobs should still be unprocessed at this stage.
+    $this->assertEqual($remaining_job->getState(), JobInterface::STATE_UNPROCESSED);
+    $this->assertEqual($remaining_job->getTargetLangcode(), 'it');
+
+    // Submit the request to Poetry for the two new jobs in the queue.
+    $this->submitTranslationRequestForQueue($node);
+    $this->jobStorage->resetCache();
+
     // Create a new node to increase the part and reset the version for that
     // number.
     /** @var \Drupal\node\NodeInterface $node_two */
@@ -146,8 +178,8 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     // their status is unprocessed.
     $jobs = [];
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
-    $jobs['bg'] = $this->jobStorage->load(5);
-    $jobs['cs'] = $this->jobStorage->load(6);
+    $jobs['bg'] = $this->jobStorage->load(7);
+    $jobs['cs'] = $this->jobStorage->load(8);
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
@@ -197,8 +229,8 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     // their status is unprocessed.
     $jobs = [];
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
-    $jobs['bg'] = $this->jobStorage->load(7);
-    $jobs['cs'] = $this->jobStorage->load(8);
+    $jobs['bg'] = $this->jobStorage->load(9);
+    $jobs['cs'] = $this->jobStorage->load(10);
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
