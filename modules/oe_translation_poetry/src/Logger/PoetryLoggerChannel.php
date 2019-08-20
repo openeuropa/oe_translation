@@ -17,9 +17,6 @@ use EC\Poetry\Events\ParseResponseEvent;
 /**
  * Custom logger channel for Poetry events.
  *
- * This is instantiated as a service inside the Poetry service and not using
- * the regular factory. It is meant to use only the DB Logger for the moment.
- *
  * @see \Drupal\oe_translation_poetry\Poetry
  */
 class PoetryLoggerChannel extends LoggerChannel {
