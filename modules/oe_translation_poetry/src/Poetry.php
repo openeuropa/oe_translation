@@ -6,7 +6,7 @@ namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Site\Settings;
@@ -14,7 +14,6 @@ use Drupal\Core\State\State;
 use Drupal\tmgmt\Entity\Job;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
-use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -90,10 +89,8 @@ class Poetry {
    *   The settings provided by the translator config.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel
-   *   The logger channel.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The logger.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger channel factory.
    * @param \Drupal\Core\State\State $state
    *   The state.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -103,14 +100,13 @@ class Poetry {
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
    */
-  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, LoggerInterface $logger, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack) {
+  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelFactoryInterface $loggerFactory, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack) {
     $this->translatorSettings = $settings;
     $this->state = $state;
     $this->entityTypeManager = $entityTypeManager;
     $this->database = $database;
     // @todo improve this in case we need alternative logging mechanisms.
-    $this->loggerChannel = $loggerChannel;
-    $this->loggerChannel->addLogger($logger);
+    $this->loggerChannel = $loggerFactory->get('poetry');
     $this->requestStack = $requestStack;
     $this->configFactory = $configFactory;
 

@@ -1,14 +1,16 @@
 services:
   oe_translation_poetry.client_factory:
     class: Drupal\oe_translation_poetry\PoetryFactory
-    arguments: ['@entity_type.manager', '@config.factory', '@oe_translation_poetry.logger.channel.poetry', '@logger.dblog', '@state', '@database', '@request_stack']
+    arguments: ['@entity_type.manager', '@config.factory', '@oe_translation.logger.factory', '@state', '@database', '@request_stack']
   oe_translation_poetry.client.default:
     class: Drupal\oe_translation_poetry\Poetry
     factory: oe_translation_poetry.client_factory:get
     arguments: ['poetry']
-  oe_translation_poetry.logger.channel.poetry:
-    class: Drupal\oe_translation_poetry\Logger\PoetryLoggerChannel
-    arguments: ['poetry']
+  oe_translation.logger.factory:
+    class: Drupal\oe_translation_poetry\Logger\PoetryLoggerChannelFactory
+    parent: container.trait
+    tags:
+      - { name: service_collector, tag: logger, call: addLogger }
   oe_translation_poetry.job_queue:
     class: Drupal\oe_translation_poetry\PoetryJobQueue
     arguments: ['@tempstore.private', '@entity_type.manager']
