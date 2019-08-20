@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
+use Drupal\Core\Url;
 use Drupal\tmgmt\Entity\Job;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
@@ -23,6 +24,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Integrates the Poetry client library with Drupal.
  *
  * @method Identifier getIdentifier()
+ * @method Server getServer()
+ * @method EventDispatcherInterface getEventDispatcher()
  */
 class Poetry {
 
@@ -133,6 +136,7 @@ class Poetry {
       'service.password' => Settings::get('poetry.service.password'),
       'notification.username' => Settings::get('poetry.notification.username'),
       'notification.password' => Settings::get('poetry.notification.password'),
+      'notification.endpoint' => Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString(),
       'logger' => $this->loggerChannel,
       'log_level' => LogLevel::INFO,
     ];

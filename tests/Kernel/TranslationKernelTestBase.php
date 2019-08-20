@@ -28,6 +28,7 @@ class TranslationKernelTestBase extends KernelTestBase {
     'content_translation',
     'oe_translation',
     'views',
+    'datetime',
   ];
 
   /**

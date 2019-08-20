@@ -1,3 +1,4 @@
+# @todo Move to translator plugin
 oe_translation_poetry.job_queue_checkout:
   path: '/admin/content/dgt/send-request'
   defaults:
@@ -6,3 +7,10 @@ oe_translation_poetry.job_queue_checkout:
   requirements:
     _permission: 'translate any entity'
     _custom_access: oe_translation_poetry.job_queue::access
+
+oe_translation_poetry.notifications:
+  path: '/poetry/notifications'
+  defaults:
+    _controller: Drupal\oe_translation_poetry\Controller\NotificationsController::handle
+  requirements:
+    _access: 'TRUE'
