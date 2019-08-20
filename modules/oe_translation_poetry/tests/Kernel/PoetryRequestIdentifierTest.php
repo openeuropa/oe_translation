@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
-use Drupal\Core\Site\Settings;
 use Drupal\tmgmt\Entity\Job;
 
 /**
  * Tests identifiers generation.
  */
-class IdentifierTest extends TranslationKernelTestBase {
+class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
+
   /**
    * {@inheritdoc}
    */
@@ -30,52 +30,52 @@ class IdentifierTest extends TranslationKernelTestBase {
 
     $this->installEntitySchema('tmgmt_job');
     $this->installEntitySchema('tmgmt_job_item');
+    $this->installEntitySchema('tmgmt_message');
+    $this->installEntitySchema('tmgmt_remote');
 
     $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'type' => 'page',
       'name' => 'Page',
     ])->save();
-
   }
 
   /**
-   * Tests identifier generation.
+   * Tests the identifier generation.
    */
   public function testIdentifier(): void {
+    // Define the sequence setting.
+    $this->setSetting('poetry.identifier.sequence', 'SEQUENCE');
 
-    // Define sequence setting.
-    $settings = Settings::getAll();
-    $settings['poetry.identifier.sequence'] = 'SEQUENCE';
-    $new_settings = new Settings($settings);
-
-    // Define two nodes for later use.
+    // Create two nodes for later use.
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $node_1 = $node_storage->create([
+    /** @var \Drupal\node\NodeInterface $node_one */
+    $node_one = $node_storage->create([
       'type' => 'page',
       'title' => 'Test page',
     ]);
-    $node_1->save();
-    $node_2 = $node_storage->create([
+    $node_one->save();
+    /** @var \Drupal\node\NodeInterface $node_two */
+    $node_two = $node_storage->create([
       'type' => 'page',
       'title' => 'Test page 2',
     ]);
-    $node_2->save();
-    $node_storage->resetCache();
-    /** @var \Drupal\node\NodeInterface $node */
-    $node_1 = $node_storage->load($node_1->id());
-    $node_2 = $node_storage->load($node_2->id());
+    $node_two->save();
 
     /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
     $poetry = $this->container->get('oe_translation_poetry.client.default');
 
     // Test initial identifier.
-    $identifier = $poetry->getIdentifierForContent($node_1);
+    $identifier = $poetry->getIdentifierForContent($node_one);
+    // The identifier needs to contain a sequence as it's the first request.
     $this->assertEqual($identifier->getSequence(), 'SEQUENCE');
+    // There should be no number as it's the first request.
     $this->assertEqual($identifier->getNumber(), '');
     $this->assertEqual($identifier->getCode(), 'WEB');
     $this->assertEqual($identifier->getPart(), 0);
     $this->assertEqual($identifier->getVersion(), 0);
+    // The date is generated dynamically.
+    $this->assertEqual($identifier->getYear(), date('Y'));
 
     // Simulate a previous translation for node 1.
     $job = tmgmt_job_create('en', 'de', 0, [
@@ -90,27 +90,50 @@ class IdentifierTest extends TranslationKernelTestBase {
       ],
     ]);
     $job->save();
-    $jobItem = $job->addItem('content', $node_1->getEntityTypeId(), $node_1->id());
+    $job->addItem('content', $node_one->getEntityTypeId(), $node_one->id());
+    // With this translation simulation we also simulate having received a
+    // new number from Poetry and we set it globally.
     $poetry->setGlobalIdentifierNumber('11111');
 
-    // Test identifier for node having already a job.
-    $identifier = $poetry->getIdentifierForContent($node_1);
+    // Test identifier for node having already a job and assert that its values
+    // are the same as the previous job with just the version incremented.
+    $identifier = $poetry->getIdentifierForContent($node_one);
     $this->assertEqual($identifier->getSequence(), '');
     $this->assertEqual($identifier->getNumber(), '11111');
     $this->assertEqual($identifier->getPart(), '0');
     $this->assertEqual($identifier->getVersion(), '1');
     $this->assertEqual($identifier->getYear(), '2018');
 
-    // Test identifier for node not having a job with
-    // initialized number.
-    $identifier = $poetry->getIdentifierForContent($node_2);
+    // Test identifier for another node.
+    $identifier = $poetry->getIdentifierForContent($node_two);
     $this->assertEqual($identifier->getSequence(), '');
+    // The number is set globally from the previous request.
     $this->assertEqual($identifier->getNumber(), '11111');
+    // The part is increased by one from the previous request.
     $this->assertEqual($identifier->getPart(), '1');
+    $this->assertEqual($identifier->getVersion(), '0');
+    // The date is generated dynamically.
+    $this->assertEqual($identifier->getYear(), date('Y'));
+
+    // Delete the jobs from the system to mimic a data loss and ensure a new
+    // number is requested in this case to start over.
+    $jobs = $this->container->get('entity_type.manager')->getStorage('tmgmt_job')->loadMultiple();
+    foreach ($jobs as $job) {
+      $job->delete();
+    }
+
+    // We should not be sending a number to Poetry, even though we have it
+    // already because the jobs were lost. So the sequence should be sent.
+    $identifier = $poetry->getIdentifierForContent($node_one);
+    $this->assertEqual($identifier->getSequence(), 'SEQUENCE');
+    $this->assertEqual($identifier->getNumber(), '');
+    $this->assertEqual($identifier->getPart(), '0');
     $this->assertEqual($identifier->getVersion(), '0');
     $this->assertEqual($identifier->getYear(), date('Y'));
 
-    // Simulate a previous translation for node 1.
+    // Create another finished translation for the first node but increase the
+    // part to 99 to mimic the end of the number. In this case we again need
+    // to not be sending a number but the sequence.
     $job = tmgmt_job_create('en', 'de', 0, [
       'state' => Job::STATE_FINISHED,
       'poetry_request_id' => [
@@ -118,17 +141,16 @@ class IdentifierTest extends TranslationKernelTestBase {
         'part' => '99',
         'version' => '0',
         'product' => 'TRA',
-        'number' => 11113,
+        'number' => 11111,
         'year' => 2018,
       ],
     ]);
     $job->save();
-    $jobItem = $job->addItem('content', $node_1->getEntityTypeId(), $node_1->id());
-    $poetry->setGlobalIdentifierNumber('11113');
+    $job->addItem('content', $node_one->getEntityTypeId(), $node_one->id());
 
-    // Test identifier for node not having a job with
-    // initialized number that is already exhausted.
-    $identifier = $poetry->getIdentifierForContent($node_2);
+    $identifier = $poetry->getIdentifierForContent($node_two);
+    // The identifier needs to again contain the sequence to request a new
+    // number as 99 was reached.
     $this->assertEqual($identifier->getSequence(), 'SEQUENCE');
     $this->assertEqual($identifier->getNumber(), '');
     $this->assertEqual($identifier->getPart(), '0');
