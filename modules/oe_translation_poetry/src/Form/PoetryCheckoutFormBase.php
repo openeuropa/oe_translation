@@ -185,6 +185,25 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   }
 
   /**
+   * Returns the title of the form page.
+   *
+   * @return string
+   *   The title for the form page.
+   */
+  public function getPageTitle(): string {
+    $title = 'Send request to DG Translation';
+    if (!empty($current_jobs = $this->queue->getAllJobs())) {
+      $target_languages = [];
+      foreach ($current_jobs as $job) {
+        $target_languages[] = $job->getTargetLangcode();
+      }
+      $target_languages = count($target_languages) > 1 ? implode(', ', $target_languages) : array_shift($target_languages);
+      $title .= ' (' . $target_languages . ')';
+    }
+    return $title;
+  }
+
+  /**
    * Submits the request to Poetry.
    *
    * @param array $form
@@ -287,6 +306,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       }
 
       $this->redirectBack($form_state);
+      $this->queue->reset();
       $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
     }
     catch (\Exception $exception) {
