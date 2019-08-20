@@ -100,7 +100,7 @@ class PoetryFactory {
       $settings = $entity->get('settings');
     }
 
-    return new Poetry($settings, $this->configFactory, $this->loggerFactory, $this->state, $this->entityTypeManager, $this->database, $this->requestStack);
+    return new Poetry($settings, $this->configFactory, $this->loggerFactory->get('poetry'), $this->state, $this->entityTypeManager, $this->database, $this->requestStack);
   }
 
 }

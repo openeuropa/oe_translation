@@ -20,10 +20,6 @@ class PoetryLoggerChannelFactory extends LoggerChannelFactory {
    * {@inheritdoc}
    */
   public function get($channel) {
-    if ($channel !== 'poetry') {
-      return parent::get($channel);
-    }
-
     if (!isset($this->channels[$channel])) {
       $instance = new PoetryLoggerChannel($channel);
 
