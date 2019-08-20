@@ -9,7 +9,10 @@ use Drupal\Core\Logger\LoggerChannelFactory;
  *
  * Since we need a custom logger channel class to process Poetry messages
  * we also need a custom logger channel factory that will instantiate said
- * custom logger when prompted.
+ * custom logger when needed.
+ *
+ * We are extending from the core channel factory to inherit the service
+ * collection of the logger implementations.
  *
  * @see \Drupal\oe_translation_poetry\Poetry
  * @see \Drupal\oe_translation_poetry\Logger\PoetryLoggerChannel

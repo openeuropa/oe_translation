@@ -105,7 +105,6 @@ class Poetry {
     $this->state = $state;
     $this->entityTypeManager = $entityTypeManager;
     $this->database = $database;
-    // @todo improve this in case we need alternative logging mechanisms.
     $this->loggerChannel = $loggerChannel;
     $this->requestStack = $requestStack;
     $this->configFactory = $configFactory;
