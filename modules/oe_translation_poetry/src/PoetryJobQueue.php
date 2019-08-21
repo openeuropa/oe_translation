@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_poetry;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
@@ -32,16 +33,26 @@ class PoetryJobQueue {
   protected $entityTypeManager;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * PoetryJobQueue constructor.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $privateTempStoreFactory
    *   The private temp store.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
    */
-  public function __construct(PrivateTempStoreFactory $privateTempStoreFactory, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(PrivateTempStoreFactory $privateTempStoreFactory, EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
     $this->store = $privateTempStoreFactory->get('oe_translation_poetry');
     $this->entityTypeManager = $entityTypeManager;
+    $this->languageManager = $languageManager;
   }
 
   /**
@@ -133,6 +144,21 @@ class PoetryJobQueue {
    */
   public function reset(): void {
     $this->store->delete('queue');
+  }
+
+  /**
+   * Returns an array of the job target languages keyed by language code.
+   *
+   * @return array
+   *   The languages.
+   */
+  public function getTargetLanguages(): array {
+    $target_languages = [];
+    foreach ($this->getAllJobs() as $job) {
+      $target_languages[$job->getTargetLangcode()] = $this->languageManager->getLanguage($job->getTargetLangcode())->getName();
+    }
+
+    return $target_languages;
   }
 
   /**

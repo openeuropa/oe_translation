@@ -197,21 +197,22 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       // Add a link to delete any unprocessed job for this entity.
       $languages = $this->languageManager->getLanguages();
       $unprocessed_languages = $this->getUnprocessedJobLanguages($entity);
-      if ($unprocessed_languages) {
-        foreach (array_values($languages) as $i => $language) {
-          if (!array_key_exists($language->getId(), $unprocessed_languages)) {
-            continue;
-          }
-          $links = &$build['content_translation_overview']['#rows'][$i][3]['data']['#links'];
-          $url_options = [
-            'language' => $language,
-            'query' => ['destination' => $destination->toString()],
-          ];
-          $delete_url = Url::fromRoute(
-            'entity.tmgmt_job.delete_form',
-            ['tmgmt_job' => $unprocessed_languages[$language->getId()]->tjid],
-            $url_options
-          );
+      foreach (array_values($languages) as $key => $language) {
+        if (!array_key_exists($language->getId(), $unprocessed_languages)) {
+          continue;
+        }
+        $links = &$build['content_translation_overview']['#rows'][$key][3]['data']['#links'];
+        $url_options = [
+          'language' => $language,
+          'query' => ['destination' => $destination->toString()],
+        ];
+        $delete_url = Url::fromRoute(
+          'entity.tmgmt_job.delete_form',
+          ['tmgmt_job' => $unprocessed_languages[$language->getId()]->tjid],
+          $url_options
+        );
+
+        if ($delete_url->access()) {
           $links['tmgmt.poetry.delete'] = [
             'url' => $delete_url,
             'title' => $this->t('Delete unprocessed job'),
@@ -219,24 +220,24 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
         }
       }
 
-      // Build the form in order to customize the available actions.
+      // Build the TMGMT translation request form.
       $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
       if (isset($build['actions']['add_to_cart'])) {
         $build['actions']['add_to_cart']['#access'] = FALSE;
       }
+
       if (isset($build['actions']['request'])) {
         /** @var \Drupal\tmgmt\Entity\JobInterface[] $current_jobs */
         $current_jobs = $this->jobQueue->getAllJobs();
         if (empty($current_jobs)) {
+          // If there are no jobs in the queue, it means the user can select
+          // the languages it wants to translate.
           $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
         }
         else {
-          $current_target_languages = [];
-          foreach ($current_jobs as $current_job) {
-            $current_target_languages[] = $current_job->getTargetLangcode();
-          }
+          $current_target_languages = $this->jobQueue->getTargetLanguages();
           $language_list = count($current_target_languages) > 1 ? implode(', ', $current_target_languages) : array_shift($current_target_languages);
-          $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT (@language_list)', ['@language_list' => $language_list]);
+          $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
         }
       }
     }
@@ -309,13 +310,16 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   /**
    * Get a list of unprocessed Poetry jobs for a given entity.
    *
+   * These are the jobs which have been created when the user started the
+   * translation request but has not submitted it.
+   *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to look jobs for.
    *
    * @return array
-   *   An array of unprocessed job keys, keyed by the target language.
+   *   An array of unprocessed job IDs, keyed by the target language.
    */
-  protected function getUnprocessedJobLanguages(ContentEntityInterface $entity) {
+  protected function getUnprocessedJobLanguages(ContentEntityInterface $entity): array {
     $query = $this->database->select('tmgmt_job', 'job');
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job', ['tjid', 'target_language']);
@@ -324,10 +328,8 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $query->condition('job.state', Job::STATE_UNPROCESSED, '=');
     $query->condition('job.translator', 'poetry', '=');
     $result = $query->execute()->fetchAllAssoc('target_language');
-    if (!$result) {
-      return NULL;
-    }
-    return $result;
+    return $result ?? [];
+
   }
 
 }
