@@ -10,6 +10,21 @@ declare(strict_types = 1);
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\oe_translation_poetry\Access\JobAccessHandler;
+
+/**
+ * Implements hook_poetry_entity_type_alter().
+ */
+function oe_translation_poetry_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
+  $entity_type = $entity_types['tmgmt_job'] ?? NULL;
+  if (!$entity_type) {
+    return;
+  }
+
+  // Changing the access handler class for the TMGTM job entity.
+  $entity_type->setHandlerClass('access', JobAccessHandler::class);
+}
 
 /**
  * Implements hook_entity_base_field_info().
@@ -40,4 +55,22 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
   $poetry = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance('poetry');
   $form['actions']['request']['#submit'] = [];
   $form['actions']['request']['#submit'][] = [$poetry, 'submitPoetryTranslationRequest'];
+
+  // If we have jobs in the current job queue, we want to disable all the
+  // checkboxes for choosing languages to translate. The user should first
+  // either clear the existing jobs or finalize the request.
+  /** @var \Drupal\tmgmt\JobQueue $job_gueue */
+  $job_gueue = \Drupal::service('oe_translation_poetry.job_queue');
+  if (!empty($job_gueue->getAllJobs())) {
+    // Remove validation since we just need to be redirected to the checkout
+    // form regardless.
+    $form['#validate'] = [];
+    // Disable the checkboxes in the tableselect.
+    foreach ($form['languages']['#options'] as $langcode => $option) {
+      $form['languages'][$langcode] = [
+        '#type' => 'checkbox',
+        '#disabled' => TRUE,
+      ];
+    }
+  }
 }

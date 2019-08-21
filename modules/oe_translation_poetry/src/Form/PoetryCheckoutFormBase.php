@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
@@ -185,6 +186,19 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   }
 
   /**
+   * Returns the title of the form page.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The title for the form page.
+   */
+  public function getPageTitle(): TranslatableMarkup {
+    $target_languages = $this->queue->getTargetLanguages();
+    $entity = $this->queue->getEntity();
+    $target_languages = count($target_languages) > 1 ? implode(', ', $target_languages) : array_shift($target_languages);
+    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+  }
+
+  /**
    * Submits the request to Poetry.
    *
    * @param array $form
@@ -287,6 +301,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       }
 
       $this->redirectBack($form_state);
+      $this->queue->reset();
       $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
     }
     catch (\Exception $exception) {
