@@ -1,4 +1,4 @@
 services:
   oe_translation_poetry_mock.fixture_generator:
     class: Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator
-    arguments: ['@oe_translation_poetry.client.default']
+    arguments: ['@oe_translation_poetry.client.default', '@renderer']

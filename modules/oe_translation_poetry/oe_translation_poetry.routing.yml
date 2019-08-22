@@ -13,4 +13,5 @@ oe_translation_poetry.notifications:
   defaults:
     _controller: Drupal\oe_translation_poetry\Controller\NotificationsController::handle
   requirements:
+  # Add access checking
     _access: 'TRUE'

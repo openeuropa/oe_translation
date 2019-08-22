@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
+use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
 
 /**
@@ -24,11 +25,19 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
   protected $jobStorage;
 
   /**
+   * The fixture generator.
+   *
+   * @var \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator
+   */
+  protected $fixtureGenerator;
+
+  /**
    * {@inheritdoc}
    */
   protected static $modules = [
     'oe_translation_poetry',
     'oe_translation_poetry_mock',
+    'oe_translation_poetry_html_formatter',
   ];
 
   /**
@@ -48,6 +57,7 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
 
     $this->jobStorage = $this->entityTypeManager->getStorage('tmgmt_job');
+    $this->fixtureGenerator = $this->container->get('oe_translation_poetry_mock.fixture_generator');
   }
 
   /**
@@ -273,6 +283,120 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     ];
 
     $this->assertJobsPoetryRequestIdValues($this->jobStorage->loadMultiple(), $expected_poetry_request_id);
+  }
+
+  /**
+   * Tests the handling of Poetry status notifications.
+   */
+  public function testStatusNotifications(): void {
+    $this->prepareRequestedJobs([
+      'title' => 'My node title',
+      'field_oe_demo_translatable_body' => 'My node body',
+    ], ['fr', 'de']);
+
+    // Send a status update accepting the translation.
+    $status_notification = $this->fixtureGenerator->statusNotification([
+      'code' => 'WEB',
+      'part' => '0',
+      'version' => '0',
+      'product' => 'TRA',
+      'number' => 3234,
+      'year' => 2010,
+    ], 'ONG', [
+      [
+        'code' => 'FR',
+        'date' => '30/08/2019 23:59',
+        'accepted_date' => '30/09/2019 23:59',
+      ],
+      [
+        'code' => 'DE',
+        'date' => '30/08/2019 23:59',
+        'accepted_date' => '30/09/2019 23:59',
+      ],
+    ]);
+
+    $this->performNotification($status_notification);
+
+    // Check that the jobs have been correctly updated.
+    $this->jobStorage->resetCache();
+    /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertEqual($job->get('poetry_state')->value, 'ongoing');
+      $date = $job->get('poetry_request_date_updated')->date;
+      $this->assertEqual($date->format('d/m/Y'), '30/09/2019');
+      // Two messages are set on the job: date update and marking it as ongoing.
+      $this->assertCount(2, $job->getMessages());
+    }
+  }
+
+  /**
+   * Creates jobs that mimic a request having been made to Poetry.
+   *
+   * @param array $values
+   *   The content values.
+   * @param array $languages
+   *   The job languages.
+   */
+  protected function prepareRequestedJobs(array $values, array $languages = []): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+    ] + $values);
+    $node->save();
+
+    $test_poetry_request_id = [
+      'code' => 'WEB',
+      'part' => '0',
+      'version' => '0',
+      'product' => 'TRA',
+      'number' => 3234,
+      'year' => 2010,
+    ];
+
+    // Create a job for French and German to mimic that the request has been
+    // made to Poetry.
+    foreach ($languages as $language) {
+      $job = tmgmt_job_create('en', $language, 0);
+      $job->translator = 'poetry';
+      $job->addItem('content', 'node', $node->id());
+      $job->set('poetry_request_id', $test_poetry_request_id);
+      $job->set('state', Job::STATE_ACTIVE);
+      $date = new \DateTime('05/04/2019');
+      $job->set('poetry_request_date', $date->format('Y-m-d\TH:i:s'));
+      $job->save();
+    }
+
+    // Ensure the jobs do not contain any info related to Poetry status.
+    $this->jobStorage->resetCache();
+    /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
+      $this->assertTrue($job->get('poetry_state')->isEmpty());
+    }
+  }
+
+  /**
+   * Calls the notification endpoint with a message.
+   *
+   * This mimics notification requests sent by Poetry.
+   *
+   * @param string $message
+   *   The message.
+   *
+   * @return string
+   *   The response XML.
+   */
+  protected function performNotification(string $message): string {
+    $url = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString();
+    $client = new \SoapClient($url . '?wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
+    $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua($this->databasePrefix));
+    // @todo test access control on the endpoint.
+    return $client->__soapCall('handle', ['admin', 'admin', $message]);
   }
 
   /**

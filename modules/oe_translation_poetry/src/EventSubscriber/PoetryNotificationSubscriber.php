@@ -147,8 +147,10 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     }
 
     // Update the accepted date for each language.
+    $targets = [];
     foreach ($message->getTargets() as $target) {
       $language = strtolower($target->getLanguage());
+      $targets[$language] = $target;
       /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $jobs[$language] ?? NULL;
       if (!$job) {
@@ -164,6 +166,11 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     // or not.
     $status = $message->getDemandStatus();
     foreach ($jobs as $language => $job) {
+      if (!isset($targets[$language])) {
+        $this->logger->error('Missing target but encountered job for language @lang and request ID @id', ['@lang' => $language, '@id' => $identifier->getFormattedIdentifier()]);
+        continue;
+      }
+
       // The request has been accepted.
       if ($status->getCode() === 'ONG') {
         // The entire request details (demande) status can be accepted at once
@@ -284,7 +291,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
 
     $job->set('poetry_request_date_updated', $date->format('Y-m-d\TH:i:s'));
     if ($existing_date !== $date->getTimestamp()) {
-      $job->addMessage('Poetry has updated the date on the job to @date.', ['@date' => $target->getDelay()]);
+      $job->addMessage('Poetry has updated the date on the job to @date.', ['@date' => $target->getAcceptedDelay()]);
     }
   }
 
