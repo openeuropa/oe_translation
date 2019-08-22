@@ -89,17 +89,20 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
     $is_file ? $dom->loadHTMLFile($imported_file) : $dom->loadHTML($imported_file);
     $xml = simplexml_import_dom($dom);
 
+    if (!$xml) {
+      return [];
+    }
+
     $data = [];
     foreach ($xml->xpath("//div[@class='atom']") as $atom) {
-      // Assets are our strings (eq fields in nodes).
       $key = $this->decodeIdSafeBase64((string) $atom['id']);
       $dom->loadXML($atom->asXML());
       $node = $dom->getElementsByTagName('div')->item(0);
 
-      // Get all node childs even text node elements.
-      $data[$key] = array("#text" => "");
+      // Get all node children, even text node elements.
+      $data[$key] = ['#text' => ''];
       foreach ($node->childNodes as $child) {
-        if ($child->nodeType == XML_TEXT_NODE) {
+        if ($child->nodeType === XML_TEXT_NODE) {
           $data[$key]['#text'] .= $child->nodeValue;
         }
         else {
