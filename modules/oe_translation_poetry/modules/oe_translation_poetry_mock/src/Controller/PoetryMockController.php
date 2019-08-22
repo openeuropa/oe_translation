@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_poetry_mock\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,16 +34,26 @@ class PoetryMockController extends ControllerBase {
   protected $fixturesGenerator;
 
   /**
+   * The Poetry service.
+   *
+   * @var \Drupal\oe_translation_poetry\Poetry
+   */
+  protected $poetry;
+
+  /**
    * Poetry constructor.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
    * @param \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $fixturesGenerator
    *   The mock fixtures generator.
+   * @param \Drupal\oe_translation_poetry\Poetry $poetry
+   *   The Poetry service.
    */
-  public function __construct(RequestStack $requestStack, PoetryMockFixturesGenerator $fixturesGenerator) {
+  public function __construct(RequestStack $requestStack, PoetryMockFixturesGenerator $fixturesGenerator, Poetry $poetry) {
     $this->request = $requestStack->getCurrentRequest();
     $this->fixturesGenerator = $fixturesGenerator;
+    $this->poetry = $poetry;
   }
 
   /**
@@ -51,7 +62,8 @@ class PoetryMockController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack'),
-      $container->get('oe_translation_poetry_mock.fixture_generator')
+      $container->get('oe_translation_poetry_mock.fixture_generator'),
+      $container->get('oe_translation_poetry.client.default')
     );
   }
 
@@ -83,7 +95,7 @@ class PoetryMockController extends ControllerBase {
     $url = Url::fromRoute('oe_translation_poetry_mock.server')->toString();
     $options = ['uri' => $url];
     $server = new \SoapServer($wsdl, $options);
-    $mock = new PoetryMock($this->fixturesGenerator);
+    $mock = new PoetryMock($this->fixturesGenerator, $this->poetry);
     $server->setObject($mock);
 
     ob_start();

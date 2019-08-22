@@ -32,6 +32,55 @@ class PoetryMockFixturesGenerator {
   }
 
   /**
+   * Returns an XML error from a request XML.
+   *
+   * @param string $request_xml
+   *   The XML request.
+   * @param string $error_message
+   *   The error message.
+   *
+   * @return string
+   *   The XML response.
+   */
+  public function errorFromXml(string $request_xml, $error_message): string {
+    $xml = simplexml_load_string($request_xml);
+    $request = $xml->request;
+    /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
+    $identifier = $this->poetry->getIdentifier();
+    $identifier->fromXml($request->children()->asXML());
+    // The client library doesn't parse the sequence.
+    $identifier->setSequence((string) $request->demandeId->sequence);
+    $variables = $this->prepareIdentifierVariables($identifier, FALSE);
+    $variables['@message'] = $error_message;
+
+    $template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error_template.xml');
+
+    $response = new FormattableMarkup($template, $variables);
+    return (string) $response;
+  }
+
+  /**
+   * Returns an XML error from a request XML.
+   *
+   * @param \EC\Poetry\Messages\MessageInterface $message
+   *   The message.
+   * @param string $error_message
+   *   The error message.
+   *
+   * @return string
+   *   The XML response.
+   */
+  public function errorFromMessage(MessageInterface $message, $error_message): string {
+    $identifier = $message->getIdentifier();
+    $variables = $this->prepareIdentifierVariables($identifier, FALSE);
+    $variables['@message'] = $error_message;
+
+    $template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error_template.xml');
+    $response = new FormattableMarkup($template, $variables);
+    return (string) $response;
+  }
+
+  /**
    * Returns an XML response from a request XML.
    *
    * @param string $request_xml
@@ -50,8 +99,6 @@ class PoetryMockFixturesGenerator {
     $identifier->setSequence((string) $request->demandeId->sequence);
     $variables = $this->prepareIdentifierVariables($identifier);
 
-    // @todo allow also for error responses.
-    // - no counter (sequence) registered with poetry
     $template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/successful_response_template.xml');
     $response = new FormattableMarkup($template, $variables);
     return (string) $response;
@@ -82,12 +129,14 @@ class PoetryMockFixturesGenerator {
    *
    * @param \EC\Poetry\Messages\Components\Identifier $identifier
    *   The identifier.
+   * @param bool $generate_number
+   *   Whether the number needs to be generated or not.
    *
    * @return array
    *   The variables.
    */
-  protected function prepareIdentifierVariables(Identifier $identifier): array {
-    if ($identifier->getSequence()) {
+  protected function prepareIdentifierVariables(Identifier $identifier, bool $generate_number = TRUE): array {
+    if ($generate_number && $identifier->getSequence()) {
       $new_number = 1000;
       $previous_number = $this->poetry->getGlobalIdentifierNumber();
       if ($previous_number) {
