@@ -10,7 +10,7 @@
   </head>
   <body>
     {% for item_key, item in items %}
-      <div class="asset" id="{{ item_key }}">
+      <div class="asset" id="item-{{ item_key }}">
         {% for field_key, field in item %}
           <!--
           label="{{ field['#parent_label']|first }}"

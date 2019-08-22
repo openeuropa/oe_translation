@@ -7,10 +7,13 @@ namespace Drupal\oe_translation_poetry\EventSubscriber;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
+use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
+use Drupal\tmgmt\JobItemInterface;
 use EC\Poetry\Events\Notifications\StatusUpdatedEvent;
 use EC\Poetry\Events\Notifications\TranslationReceivedEvent;
+use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Messages\Components\Status;
 use EC\Poetry\Messages\Components\Target;
 use EC\Poetry\Messages\Notifications\StatusUpdated;
@@ -39,16 +42,26 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
   protected $logger;
 
   /**
+   * The content formatter.
+   *
+   * @var \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface
+   */
+  protected $contentFormatter;
+
+  /**
    * Constructs a PoetryNotificationSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger.
+   * @param \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface $contentFormatter
+   *   The content formatter.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LoggerChannelFactoryInterface $loggerChannelFactory, PoetryContentFormatterInterface $contentFormatter) {
     $this->entityTypeManager = $entityTypeManager;
     $this->logger = $loggerChannelFactory->get('poetry');
+    $this->contentFormatter = $contentFormatter;
   }
 
   /**
@@ -68,7 +81,47 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
    *   Event object.
    */
   public function onTranslationReceivedEvent(TranslationReceivedEvent $event): void {
+    /** @var \EC\Poetry\Messages\Notifications\TranslationReceived $message */
+    $message = $event->getMessage();
+    $identifier = $message->getIdentifier();
 
+    // Load the jobs of the identifier.
+    $jobs = $this->getJobsForIdentifier($identifier);
+    if (!$jobs) {
+      $this->logger->error('Translation notification received but no corresponding jobs found: @id', ['@id' => $identifier->getFormattedIdentifier()]);
+      return;
+    }
+
+    foreach ($message->getTargets() as $target) {
+      $language = strtolower($target->getLanguage());
+      $job = $jobs[$language] ?? NULL;
+
+      if (!$job) {
+        $this->logger->error('Translation to @language received for job but job cannot be found: @id', ['@language' => $language, '@id' => $identifier->getFormattedIdentifier()]);
+        continue;
+      }
+
+      $data = $target->getTranslatedFile();
+      $decoded = base64_decode($data);
+      $values = $this->contentFormatter->import($decoded, FALSE);
+      if (!$values) {
+        $this->logger->error('Translation notification received but the values could not be read: @id', ['@id' => $identifier->getFormattedIdentifier()]);
+        return;
+      }
+
+      // We expect only one job item (entity) values to be translated.
+      $item_values = reset($values);
+      $job_item_id = key($values);
+      $items = $job->getItems();
+      $item = $items[$job_item_id] ?? NULL;
+      if (!$item instanceof JobItemInterface) {
+        $this->logger->error('Translation notification received but the job ID could not be retrieved: @id. Job Item ID: @job_item.', ['@id' => $identifier->getFormattedIdentifier(), '@job_item_id' => $job_item_id]);
+        return;
+      }
+
+      $item->addTranslatedData($item_values, [], TMGMT_DATA_ITEM_STATE_TRANSLATED);
+      $job->addMessage('The translation has been received from Poetry and saved on the Job.');
+    }
   }
 
   /**
@@ -81,31 +134,16 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function onStatusUpdatedEvent(StatusUpdatedEvent $event): void {
-    /** @var \EC\Poetry\Messages\Components\StatusUpdated $message */
+    /** @var \EC\Poetry\Messages\Notifications\StatusUpdated $message */
     $message = $event->getMessage();
     $identifier = $message->getIdentifier();
 
     // Load the jobs of the identifier.
-    $ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
-      ->condition('poetry_request_id.code', $identifier->getCode())
-      ->condition('poetry_request_id.year', $identifier->getYear())
-      ->condition('poetry_request_id.number', $identifier->getNumber())
-      ->condition('poetry_request_id.version', $identifier->getVersion())
-      ->condition('poetry_request_id.part', $identifier->getPart())
-      ->condition('poetry_request_id.product', $identifier->getProduct())
-      ->condition('state', Job::STATE_ACTIVE)
-      ->execute();
+    $jobs = $this->getJobsForIdentifier($identifier);
 
-    if (!$ids) {
+    if (!$jobs) {
       $this->logger->error('Status update notification received but no corresponding jobs found: @id', ['@id' => $identifier->getFormattedIdentifier()]);
       return;
-    }
-
-    $jobs = [];
-    /** @var \Drupal\tmgmt\JobInterface[] $entities */
-    $entities = $this->entityTypeManager->getStorage('tmgmt_job')->loadMultiple($ids);
-    foreach ($entities as $entity) {
-      $jobs[$entity->getTargetLangcode()] = $entity;
     }
 
     // Update the accepted date for each language.
@@ -165,6 +203,40 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     foreach ($jobs as $job) {
       $job->save();
     }
+  }
+
+  /**
+   * Queries and returns the jobs for a given identifier, keyed by language.
+   *
+   * @param \EC\Poetry\Messages\Components\Identifier $identifier
+   *   The identifier.
+   *
+   * @return \Drupal\tmgmt\Entity\JobInterface[]
+   *   The jobs.
+   */
+  protected function getJobsForIdentifier(Identifier $identifier): array {
+    $ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
+      ->condition('poetry_request_id.code', $identifier->getCode())
+      ->condition('poetry_request_id.year', $identifier->getYear())
+      ->condition('poetry_request_id.number', $identifier->getNumber())
+      ->condition('poetry_request_id.version', $identifier->getVersion())
+      ->condition('poetry_request_id.part', $identifier->getPart())
+      ->condition('poetry_request_id.product', $identifier->getProduct())
+      ->condition('state', Job::STATE_ACTIVE)
+      ->execute();
+
+    if (!$ids) {
+      return [];
+    }
+
+    $jobs = [];
+    /** @var \Drupal\tmgmt\JobInterface[] $entities */
+    $entities = $this->entityTypeManager->getStorage('tmgmt_job')->loadMultiple($ids);
+    foreach ($entities as $entity) {
+      $jobs[$entity->getTargetLangcode()] = $entity;
+    }
+
+    return $jobs;
   }
 
   /**

@@ -88,6 +88,37 @@ class PoetryMockFixturesGenerator {
   }
 
   /**
+   * Generates a translation notification fixture.
+   *
+   * @param string $language
+   *   The target language.
+   * @param array $data
+   *   The translated data values.
+   * @param int $item_id
+   *   The job item ID.
+   * @param int $job_id
+   *   The job ID.
+   *
+   * @return string
+   *   The XML response.
+   */
+  public function translationNotification(string $language, array $data, int $item_id = 1, int $job_id = 1): string {
+    $template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
+    $variables = [
+      '@job_id' => $job_id,
+      '@item_id' => $item_id,
+      '@language' => $language,
+    ];
+
+    foreach ($data as $key => $value) {
+      $variables['@' . $key] = $value['#text'];
+    }
+
+    $response = new FormattableMarkup($template, $variables);
+    return (string) $response;
+  }
+
+  /**
    * Prepares the identifier variables to replace in the template.
    *
    * @param \EC\Poetry\Messages\Components\Identifier $identifier

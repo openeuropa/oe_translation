@@ -45,7 +45,7 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
         'weight' => 20,
       ]);
 
-    $fields['poetry_state'] = BaseFieldDefinition::create('list_integer')
+    $fields['poetry_state'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Poetry state'))
       ->setDescription(t('The poetry job state while the job is active.'))
       ->setSetting('allowed_values', [
