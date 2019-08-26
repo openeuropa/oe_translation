@@ -119,8 +119,10 @@ class PoetryMockFixturesGenerator {
     $vars = [
       '#theme' => 'status_notification',
       '#request_identifier' => $request_identifier,
-      '#request_status' => 'ONG',
+      '#request_status' => $status,
       '#accepted_languages' => $accepted_languages,
+      '#refused_languages' => $refused_languages,
+      '#cancelled_languages' => $cancelled_languages,
     ];
 
     return (string) $this->renderer->renderRoot($vars);
@@ -129,6 +131,8 @@ class PoetryMockFixturesGenerator {
   /**
    * Generates a translation notification fixture.
    *
+   * @param \EC\Poetry\Messages\Components\Identifier $identifier
+   *   The request identifier.
    * @param string $language
    *   The target language.
    * @param array $data
@@ -141,8 +145,9 @@ class PoetryMockFixturesGenerator {
    * @return string
    *   The XML response.
    */
-  public function translationNotification(string $language, array $data, int $item_id = 1, int $job_id = 1): string {
-    $template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
+  public function translationNotification(Identifier $identifier, string $language, array $data, int $item_id = 1, int $job_id = 1): string {
+    $translation_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_template.xml');
+    $translation_notification_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
     $variables = [
       '@job_id' => $job_id,
       '@item_id' => $item_id,
@@ -153,8 +158,12 @@ class PoetryMockFixturesGenerator {
       $variables['@' . $key] = $value['#text'];
     }
 
-    $response = new FormattableMarkup($template, $variables);
-    return (string) $response;
+    $translation = new FormattableMarkup($translation_template, $variables);
+    $variables = $this->prepareIdentifierVariables($identifier);
+    $variables['@translation'] = base64_encode((string) $translation);
+    $variables['@language'] = strtoupper($language);
+    $notification = new FormattableMarkup($translation_notification_template, $variables);
+    return (string) $notification;
   }
 
   /**

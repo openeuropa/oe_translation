@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="de-CH" lang="de-CH" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="JobID" content="@job_id" />
+    <meta name="languageSource" content="en" />
+    <meta name="languageTarget" content="@language" />
+
+    <title>Job ID @job_id</title>
+  </head>
+  <body>
+    <div class="asset" id="item-@item_id">
+      <!--
+  label="Title"
+  context="[@item_id][title][0][value]"
+  -->
+      <div class="atom" id="bMV1bdGl0bGVdWzBdW3ZhbHVl">@title][0][value</div>
+      <!--
+  label="Body"
+  context="[@item_id][field_oe_demo_translatable_body][0][value]"
+  -->
+      <div class="atom" id="bMV1bZmllbGRfb2VfZGVtb190cmFuc2xhdGFibGVfYm9keV1bMF1bdmFsdWU">@field_oe_demo_translatable_body][0][value</div>
+    </div>
+  </body>
+</html>

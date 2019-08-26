@@ -7,6 +7,8 @@
 
 declare(strict_types = 1);
 
+use Drupal\tmgmt\Entity\Job;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -89,5 +91,17 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
         '#disabled' => TRUE,
       ];
     }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for the Job entity.
+ */
+function oe_translation_poetry_tmgmt_job_presave(EntityInterface $entity) {
+  // If the state of the job is not active, we should not have any value in the
+  // custom Poetry state field.
+  /** @var \Drupal\tmgmt\JobInterface $entity */
+  if ((int) $entity->getState() !== Job::STATE_ACTIVE) {
+    $entity->set('poetry_state', NULL);
   }
 }

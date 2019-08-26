@@ -120,7 +120,9 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       }
 
       $item->addTranslatedData($item_values, [], TMGMT_DATA_ITEM_STATE_TRANSLATED);
-      $job->addMessage('The translation has been received from Poetry and saved on the Job.');
+
+      $this->changeJobState($job, PoetryTranslator::POETRY_STATUS_TRANSLATED, 'poetry_state', 'Poetry has translated this job.');
+      $job->save();
     }
   }
 
@@ -147,10 +149,8 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     }
 
     // Update the accepted date for each language.
-    $targets = [];
     foreach ($message->getTargets() as $target) {
       $language = strtolower($target->getLanguage());
-      $targets[$language] = $target;
       /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $jobs[$language] ?? NULL;
       if (!$job) {
@@ -166,40 +166,28 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     // or not.
     $status = $message->getDemandStatus();
     foreach ($jobs as $language => $job) {
-      if (!isset($targets[$language])) {
-        $this->logger->error('Missing target but encountered job for language @lang and request ID @id', ['@lang' => $language, '@id' => $identifier->getFormattedIdentifier()]);
-        continue;
-      }
-
-      // The request has been accepted.
-      if ($status->getCode() === 'ONG') {
-        // The entire request details (demande) status can be accepted at once
-        // so we update all the jobs.
-        $this->changeJobState($job, PoetryTranslator::POETRY_STATUS_ONGOING, 'poetry_state', 'Poetry has marked this job as ongoing.');
-
-        // However, for each individual language, we get a separate status
-        // update (attribution) to cancel the translation job.
-        $attribution_status = $this->getAttributionStatusForLanguage($language, $message);
-        if (!$attribution_status) {
-          continue;
-        }
-
-        if ($attribution_status->getCode() === 'ONG') {
-          // We already set this job as ongoing so we don't have to do anything.
-          continue;
-        }
-
-        // Otherwise, we check to see if we need to reject this individual job.
-        if (in_array($attribution_status->getCode(), ['CNL', 'REF'])) {
-          $this->changeJobState($job, Job::STATE_REJECTED, 'state', 'Poetry has rejected the translation job for this language: @message', ['@message' => $attribution_status->getMessage()]);
-        }
-
-        continue;
-      }
-
       // The entire request has been rejected or cancelled.
       if (in_array($status->getCode(), ['CNL', 'REF'])) {
-        $this->changeJobState($job, Job::STATE_REJECTED, 'state', 'Poetry has rejected the entire translation request: @message', ['@message' => $status->getMessage()]);
+        $this->rejectJob($job, 'Poetry has rejected the entire translation request: @message', ['@message' => $status->getMessage()]);
+        continue;
+      }
+
+      // By default, the job gets the status from the main request.
+      $job_status_code = $status->getCode();
+      $attribution_status = $this->getAttributionStatusForLanguage($language, $message);
+      if ($attribution_status) {
+        // However, individual languages within an accepted request can be
+        // refused.
+        $job_status_code = $attribution_status->getCode();
+      }
+
+      if ($job_status_code === 'ONG') {
+        $this->changeJobState($job, PoetryTranslator::POETRY_STATUS_ONGOING, 'poetry_state', 'Poetry has marked this job as ongoing.');
+        continue;
+      }
+
+      if (in_array($job_status_code, ['CNL', 'REF'])) {
+        $this->rejectJob($job, 'Poetry has rejected the translation job for this language: @message', ['@message' => $attribution_status->getMessage()]);
         continue;
       }
 
@@ -271,6 +259,22 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     if ($existing_state !== $state) {
       $job->addMessage($message, $variables);
     }
+  }
+
+  /**
+   * Rejects a job.
+   *
+   * @param \Drupal\tmgmt\JobInterface $job
+   *   The job.
+   * @param string $message
+   *   The message to log.
+   * @param array $variables
+   *   The message variables.
+   */
+  protected function rejectJob(JobInterface $job, string $message = '', array $variables = []): void {
+    $job->set('poetry_state', NULL);
+    $job->set('poetry_request_date_updated', NULL);
+    $this->changeJobState($job, Job::STATE_REJECTED, 'state', $message, $variables);
   }
 
   /**

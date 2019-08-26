@@ -7,10 +7,12 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
+use EC\Poetry\Messages\Components\Identifier;
 
 /**
  * Tests the requests made to Poetry for translations.
@@ -292,41 +294,154 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $this->prepareRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
-    ], ['fr', 'de']);
+    ], ['fr', 'de', 'it']);
 
-    // Send a status update accepting the translation.
-    $status_notification = $this->fixtureGenerator->statusNotification([
+    $identifier_info = [
       'code' => 'WEB',
       'part' => '0',
       'version' => '0',
       'product' => 'TRA',
       'number' => 3234,
       'year' => 2010,
-    ], 'ONG', [
+    ];
+
+    // Send a status update accepting the translation for two languages but
+    // refusing for one.
+    $status_notification = $this->fixtureGenerator->statusNotification($identifier_info, 'ONG',
       [
-        'code' => 'FR',
-        'date' => '30/08/2019 23:59',
-        'accepted_date' => '30/09/2019 23:59',
+        [
+          'code' => 'FR',
+          'date' => '30/08/2019 23:59',
+          'accepted_date' => '30/09/2019 23:59',
+        ],
+        [
+          'code' => 'DE',
+          'date' => '30/08/2019 23:59',
+          'accepted_date' => '30/09/2019 23:59',
+        ],
       ],
       [
+        [
+          'code' => 'IT',
+        ],
+      ]);
+
+    $this->performNotification($status_notification);
+    // Check that the jobs have been correctly updated.
+    $this->jobStorage->resetCache();
+    /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
+    $jobs = $this->groupJobsByLanguage($this->jobStorage->loadMultiple());
+
+    foreach ($jobs as $langcode => $job) {
+      if ($langcode === 'it') {
+        // Italian was refused.
+        $this->assertTrue($job->get('poetry_state')->isEmpty());
+        $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
+        $this->assertEqual($job->getState(), Job::STATE_REJECTED);
+        $this->assertCount(1, $job->getMessages());
+        continue;
+      }
+
+      // The others were accepted.
+      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+      $date = $job->get('poetry_request_date_updated')->date;
+      $this->assertEqual($date->format('d/m/Y'), '30/09/2019');
+      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+      // Two messages are set on the job: date update and marking it as ongoing.
+      $this->assertCount(2, $job->getMessages());
+    }
+
+    // Send a notification cancelling one of the languages that were accepted.
+    $status_notification = $this->fixtureGenerator->statusNotification($identifier_info, 'ONG', [], [], [
+      [
         'code' => 'DE',
-        'date' => '30/08/2019 23:59',
-        'accepted_date' => '30/09/2019 23:59',
       ],
     ]);
 
     $this->performNotification($status_notification);
 
-    // Check that the jobs have been correctly updated.
     $this->jobStorage->resetCache();
     /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
-    $jobs = $this->jobStorage->loadMultiple();
+    $jobs = $this->groupJobsByLanguage($this->jobStorage->loadMultiple());
+    foreach ($jobs as $langcode => $job) {
+      if ($langcode === 'fr') {
+        // French remained accepted.
+        $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+        $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+        continue;
+      }
+
+      // The others were cancelled.
+      $this->assertTrue($job->get('poetry_state')->isEmpty());
+      $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
+      $this->assertEqual($job->getState(), Job::STATE_REJECTED);
+    }
+  }
+
+  /**
+   * Tests the handling of Poetry translation notifications.
+   */
+  public function testTranslationNotifications(): void {
+    $this->prepareRequestedJobs([
+      'title' => 'My node title',
+      'field_oe_demo_translatable_body' => 'My node body',
+    ], ['fr']);
+
+    $identifier_info = [
+      'code' => 'WEB',
+      'part' => '0',
+      'version' => '0',
+      'product' => 'TRA',
+      'number' => 3234,
+      'year' => 2010,
+    ];
+    $identifier = new Identifier();
+    foreach ($identifier_info as $name => $value) {
+      $identifier->offsetSet($name, $value);
+    }
+
+    // Accept the translations.
+    $status_notification = $this->fixtureGenerator->statusNotification($identifier_info, 'ONG',
+      [
+        [
+          'code' => 'FR',
+          'date' => '30/08/2019 23:59',
+          'accepted_date' => '30/09/2019 23:59',
+        ],
+      ]);
+
+    $this->performNotification($status_notification);
+
+    // Send the translations for each job.
+    $jobs = $this->groupJobsByLanguage($this->jobStorage->loadMultiple());
+
     foreach ($jobs as $job) {
-      $this->assertEqual($job->get('poetry_state')->value, 'ongoing');
-      $date = $job->get('poetry_request_date_updated')->date;
-      $this->assertEqual($date->format('d/m/Y'), '30/09/2019');
-      // Two messages are set on the job: date update and marking it as ongoing.
-      $this->assertCount(2, $job->getMessages());
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => &$info) {
+        $info['#text'] .= ' - ' . $job->getTargetLangcode();
+      }
+
+      $generator = $this->container->get('oe_translation_poetry_mock.fixture_generator');
+      $translation_notification = $generator->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $item->id(), (int) $job->id());
+      $this->performNotification($translation_notification);
+    }
+
+    $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
+    $jobs = $this->groupJobsByLanguage($this->jobStorage->loadMultiple());
+    foreach ($jobs as $job) {
+      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode());
+      }
     }
   }
 
@@ -466,6 +581,24 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
       $this->assertEqual($job->getState(), JobInterface::STATE_ACTIVE);
       $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $values);
     }
+  }
+
+  /**
+   * Groups the jobs by their target language.
+   *
+   * @param \Drupal\tmgmt\Entity\JobInterface[] $jobs
+   *   The jobs.
+   *
+   * @return \Drupal\tmgmt\Entity\JobInterface[]
+   *   The jobs.
+   */
+  protected function groupJobsByLanguage(array $jobs): array {
+    $grouped = [];
+    foreach ($jobs as $job) {
+      $grouped[$job->getTargetLangcode()] = $job;
+    }
+
+    return $grouped;
   }
 
 }

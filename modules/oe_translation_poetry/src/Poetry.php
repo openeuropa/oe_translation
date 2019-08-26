@@ -25,7 +25,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * @method Identifier getIdentifier()
  * @method Server getServer()
+ * @method Client getClient()
+ * @method \EC\Poetry\Services\Settings getSettings()
  * @method EventDispatcherInterface getEventDispatcher()
+ * @method get()
  */
 class Poetry {
 
