@@ -13,6 +13,9 @@ use Drupal\Core\Url;
  */
 class PoetryMock {
 
+  const USERNAME = 'admin';
+  const PASSWORD = 'admin';
+
   /**
    * The mock fixtures generator.
    *
@@ -44,6 +47,9 @@ class PoetryMock {
    *   The XML string response.
    */
   public function requestService(string $username, string $password, string $message): string {
+    if ($username !== self::USERNAME || $password !== self::PASSWORD) {
+      return 'ERROR: Authentication failed.';
+    }
     return $this->fixturesGenerator->responseFromXml($message);
   }
 
