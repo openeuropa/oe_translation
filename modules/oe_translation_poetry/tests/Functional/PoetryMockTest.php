@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\BrowserTestBase;
 use EC\Poetry\Exceptions\ParsingException;
+use EC\Poetry\Messages\MessageInterface;
 use EC\Poetry\Messages\Responses\Status;
 
 /**
@@ -126,7 +127,6 @@ class PoetryMockTest extends BrowserTestBase {
     $client = $poetry->getClient();
     try {
       $response = $client->send($message);
-
     }
     catch (ParsingException $exception) {
       $this->assertEqual($exception->getMessage(), "XML message could not be parsed: ERROR: Authentication failed.");
@@ -145,6 +145,12 @@ class PoetryMockTest extends BrowserTestBase {
     $response = $client->send($message);
     $this->assertInstanceOf(Status::class, $response);
     $this->assertEqual($response->getRequestStatus()->getMessage(), 'Error in xmlActions:newRequest: A request with the same references if already in preparation another product exists for this reference.');
+
+    $this->container->set('oe_translation_poetry.client.default', NULL);
+    /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
+    $poetry = $this->container->get('oe_translation_poetry.client.default');
+    $settings = $poetry->getSettings();
+    $settings->set('service.wsdl', PoetryMock::getWsdlUrl());
 
     // Generate an identifier with a wrong number.
     $id->setNumber('0');

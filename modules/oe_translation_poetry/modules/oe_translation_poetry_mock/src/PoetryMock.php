@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry_mock;
 
 use Drupal\Core\Url;
-use Drupal\oe_translation_poetry\Poetry;
 
 /**
  * SoapServer class for mocking the Poetry service.
@@ -16,7 +15,6 @@ class PoetryMock {
 
   const USERNAME = 'admin';
   const PASSWORD = 'admin';
-  const EXISTING_REFERENCE = 'WEB/2019/9999/0/0/TRA';
 
   /**
    * The mock fixtures generator.
@@ -26,23 +24,13 @@ class PoetryMock {
   protected $fixturesGenerator;
 
   /**
-   * The Poetry service.
-   *
-   * @var \Drupal\oe_translation_poetry\Poetry
-   */
-  protected $poetry;
-
-  /**
    * PoetryMock constructor.
    *
    * @param \Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator $fixturesGenerator
    *   The mock fixtures generator.
-   * @param \Drupal\oe_translation_poetry\Poetry $poetry
-   *   The Poetry service.
    */
-  public function __construct(PoetryMockFixturesGenerator $fixturesGenerator, Poetry $poetry) {
+  public function __construct(PoetryMockFixturesGenerator $fixturesGenerator) {
     $this->fixturesGenerator = $fixturesGenerator;
-    $this->poetry = $poetry;
   }
 
   /**
@@ -61,20 +49,6 @@ class PoetryMock {
   public function requestService(string $username, string $password, string $message): string {
     if ($username !== self::USERNAME || $password !== self::PASSWORD) {
       return 'ERROR: Authentication failed.';
-    }
-    $xml = simplexml_load_string($message);
-    $request = $xml->request;
-    /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
-    $identifier = $this->poetry->getIdentifier();
-    $identifier->fromXml($request->children()->asXML());
-    // The client library doesn't parse the sequence.
-    $identifier->setSequence((string) $request->demandeId->sequence);
-
-    if ((empty($identifier->getNumber()) && empty($identifier->getSequence())) || $identifier->getNumber() === '0') {
-      return $this->fixturesGenerator->errorFromXml($message, 'Error in xmlActions:newRequest: Application general error : Element DEMANDEID.NUMERO.XMLTEXT is undefined in REQ_ROOT.,');
-    }
-    if ($identifier->getFormattedIdentifier() === self::EXISTING_REFERENCE) {
-      return $this->fixturesGenerator->errorFromXml($message, 'Error in xmlActions:newRequest: A request with the same references if already in preparation another product exists for this reference.');
     }
     return $this->fixturesGenerator->responseFromXml($message);
   }
