@@ -256,10 +256,12 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     }
 
     // Build the return endpoint information.
-    // @todo update once we implemented the notification handling.
+    $settings = $this->poetry->getSettings();
+    $username = $settings['notification.username'] ?? NULL;
+    $password = $settings['notification.password'] ?? NULL;
     $return = $message->withReturnAddress();
-    $return->setUser('test');
-    $return->setPassword('test');
+    $return->setUser($username);
+    $return->setPassword($password);
     // The notification endpoint WSDL.
     $return->setAddress(Url::fromRoute('<front>')->setAbsolute()->toString());
     // The notification endpoint WSDL action method.

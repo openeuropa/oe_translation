@@ -329,7 +329,7 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $this->performNotification($status_notification);
     // Check that the jobs have been correctly updated.
     $this->jobStorage->resetCache();
-    /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs = $this->groupJobsByLanguage($this->jobStorage->loadMultiple());
 
     foreach ($jobs as $langcode => $job) {
@@ -343,7 +343,7 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
       }
 
       // The others were accepted.
-      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_ONGOING);
       $date = $job->get('poetry_request_date_updated')->date;
       $this->assertEqual($date->format('d/m/Y'), '30/09/2019');
       $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
@@ -361,12 +361,12 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
     $this->performNotification($status_notification);
 
     $this->jobStorage->resetCache();
-    /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs = $this->groupJobsByLanguage($this->jobStorage->loadMultiple());
     foreach ($jobs as $langcode => $job) {
       if ($langcode === 'fr') {
         // French remained accepted.
-        $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+        $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_ONGOING);
         $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
         continue;
       }
@@ -446,6 +446,64 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
   }
 
   /**
+   * Tests the access on the notification endpoint.
+   */
+  public function testNotificationEndpointAccess() {
+    $this->prepareRequestedJobs([
+      'title' => 'My node title',
+      'field_oe_demo_translatable_body' => 'My node body',
+    ], ['fr', 'de', 'it']);
+
+    $identifier_info = [
+      'code' => 'WEB',
+      'part' => '0',
+      'version' => '0',
+      'product' => 'TRA',
+      'number' => 3234,
+      'year' => 2010,
+    ];
+
+    // Send a status update accepting the translation for two languages but
+    // refusing for one.
+    $status_notification = $this->fixtureGenerator->statusNotification($identifier_info, 'ONG',
+      [
+        [
+          'code' => 'FR',
+          'date' => '30/08/2019 23:59',
+          'accepted_date' => '30/09/2019 23:59',
+        ],
+        [
+          'code' => 'DE',
+          'date' => '30/08/2019 23:59',
+          'accepted_date' => '30/09/2019 23:59',
+        ],
+      ],
+      [
+        [
+          'code' => 'IT',
+        ],
+      ]);
+
+    $credentials = [
+      'username' => 'dummy',
+      'password' => 'incorrect',
+    ];
+    $response = $this->performNotification($status_notification, $credentials);
+    $xml = simplexml_load_string($response);
+    $this->assertEqual((string) $xml->request->status->statusMessage, 'Poetry service cannot authenticate on notification callback: username or password not valid.');
+
+    // Load the jobs and assert that nothing happened because the access was
+    // denied.
+    $this->jobStorage->resetCache();
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
+      $this->assertTrue($job->get('poetry_state')->isEmpty());
+    }
+  }
+
+  /**
    * Creates jobs that mimic a request having been made to Poetry.
    *
    * @param array $values
@@ -487,7 +545,7 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
 
     // Ensure the jobs do not contain any info related to Poetry status.
     $this->jobStorage->resetCache();
-    /** @var \Drupal\tmgmt\Entity\JobInterface[] $jobs */
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs = $this->jobStorage->loadMultiple();
     foreach ($jobs as $job) {
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
@@ -502,16 +560,27 @@ class PoetryTranslationRequestTest extends TranslationTestBase {
    *
    * @param string $message
    *   The message.
+   * @param array $credentials
+   *   The endpoint credentials.
    *
    * @return string
    *   The response XML.
    */
-  protected function performNotification(string $message): string {
+  protected function performNotification(string $message, array $credentials = []): string {
+    if (!$credentials) {
+      $settings = $this->container->get('oe_translation_poetry.client.default')->getSettings();
+      $credentials['username'] = $settings['notification.username'];
+      $credentials['password'] = $settings['notification.password'];
+    }
+
     $url = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString();
     $client = new \SoapClient($url . '?wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
     $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua($this->databasePrefix));
-    // @todo test access control on the endpoint.
-    return $client->__soapCall('handle', ['admin', 'admin', $message]);
+    return $client->__soapCall('handle', [
+      $credentials['username'],
+      $credentials['password'],
+      $message,
+    ]);
   }
 
   /**

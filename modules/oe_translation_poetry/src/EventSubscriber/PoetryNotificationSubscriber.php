@@ -206,7 +206,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
    * @param \EC\Poetry\Messages\Components\Identifier $identifier
    *   The identifier.
    *
-   * @return \Drupal\tmgmt\Entity\JobInterface[]
+   * @return \Drupal\tmgmt\JobInterface[]
    *   The jobs.
    */
   protected function getJobsForIdentifier(Identifier $identifier): array {
