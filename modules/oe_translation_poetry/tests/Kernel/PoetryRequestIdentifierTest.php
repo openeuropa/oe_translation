@@ -16,6 +16,7 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
    */
   protected static $modules = [
     'dblog',
+    'oe_translation_poetry_html_formatter',
     'oe_translation_poetry',
     'system',
     'tmgmt',
