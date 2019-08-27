@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry_html_formatter;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\tmgmt\Data;
@@ -62,7 +63,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
   /**
    * {@inheritdoc}
    */
-  public function export(JobInterface $job, array $conditions = []): MarkupInterface {
+  public function export(EntityInterface $entity, JobInterface $job, array $conditions = []): MarkupInterface {
     $items = [];
     foreach ($job->getItems($conditions) as $item) {
       $data = $this->tmgmtData->filterTranslatable($item->getData());
@@ -73,7 +74,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
     }
     $elements = [
       '#theme' => 'poetry_html_template',
-      '#tjid' => $job->id(),
+      '#entity_id' => $entity->id(),
       '#source_language' => $job->getRemoteSourceLanguage(),
       '#target_language' => $job->getRemoteTargetLanguage(),
       '#items' => $items,
