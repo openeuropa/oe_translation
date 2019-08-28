@@ -14,12 +14,12 @@
   label="Title"
   context="[@item_id][title][0][value]"
   -->
-      <div class="atom" id="bMV1bdGl0bGVdWzBdW3ZhbHVl">@title][0][value</div>
+      <div class="atom" id="b@encoded_title][0][value">@title][0][value</div>
       <!--
   label="Body"
   context="[@item_id][field_oe_demo_translatable_body][0][value]"
   -->
-      <div class="atom" id="bMV1bZmllbGRfb2VfZGVtb190cmFuc2xhdGFibGVfYm9keV1bMF1bdmFsdWU">@field_oe_demo_translatable_body][0][value</div>
+      <div class="atom" id="b@encoded_field_oe_demo_translatable_body][0][value">@field_oe_demo_translatable_body][0][value</div>
     </div>
   </body>
 </html>

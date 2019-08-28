@@ -156,6 +156,7 @@ class PoetryMockFixturesGenerator {
 
     foreach ($data as $key => $value) {
       $variables['@' . $key] = $value['#text'];
+      $variables['@encoded_' . $key] = base64_encode($item_id . '][' . $key);
     }
 
     $translation = new FormattableMarkup($translation_template, $variables);
