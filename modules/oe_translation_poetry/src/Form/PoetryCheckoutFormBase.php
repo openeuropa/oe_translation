@@ -105,8 +105,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // @todo create access control checker that denies access if there are no
-    // jobs in the queue.
     $translator_settings = $this->poetry->getTranslatorSettings();
 
     $form['#tree'] = TRUE;
