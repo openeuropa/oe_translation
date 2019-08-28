@@ -16,6 +16,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
+use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
 use Drupal\tmgmt\Entity\Job;
@@ -24,6 +25,8 @@ use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * DGT Translator using the Poetry service.
@@ -39,7 +42,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface {
+class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface {
 
   /**
    * Status indicating that the translation is ongoing in Poetry.
@@ -186,6 +189,40 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $container->get('current_route_match'),
       $container->get('database')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRoutes(): RouteCollection {
+    $collection = new RouteCollection();
+
+    $route = new Route(
+      '/admin/content/dgt/send-request',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
+        '_title_callback' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm::getPageTitle',
+      ],
+      [
+        '_permission' => 'translate any entity',
+        '_custom_access' => 'oe_translation_poetry.job_queue::access',
+      ]
+    );
+
+    $collection->add('oe_translation_poetry.job_queue_checkout', $route);
+
+    $route = new Route(
+      '/poetry/notifications',
+      [
+        '_controller' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::handle',
+      ],
+      [
+        '_custom_access' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::access',
+      ]
+    );
+
+    $collection->add('oe_translation_poetry.notifications', $route);
+    return $collection;
   }
 
   /**
