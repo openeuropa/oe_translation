@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_poetry_mock\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Render\RenderContext;
+use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
@@ -46,6 +47,13 @@ class PoetryMockController extends ControllerBase {
   protected $poetry;
 
   /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\Renderer
+   */
+  protected $renderer;
+
+  /**
    * Poetry constructor.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
@@ -56,12 +64,15 @@ class PoetryMockController extends ControllerBase {
    *   The Poetry service.
    * @param \Drupal\Core\Messenger\Messenger $messenger
    *   The messenger.
+   * @param \Drupal\Core\Render\Renderer $renderer
+   *   The renderer.
    */
-  public function __construct(RequestStack $requestStack, PoetryMockFixturesGenerator $fixturesGenerator, Poetry $poetry, Messenger $messenger) {
+  public function __construct(RequestStack $requestStack, PoetryMockFixturesGenerator $fixturesGenerator, Poetry $poetry, Messenger $messenger, Renderer $renderer) {
     $this->request = $requestStack->getCurrentRequest();
     $this->fixturesGenerator = $fixturesGenerator;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -72,7 +83,8 @@ class PoetryMockController extends ControllerBase {
       $container->get('request_stack'),
       $container->get('oe_translation_poetry_mock.fixture_generator'),
       $container->get('oe_translation_poetry.client.default'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('renderer')
     );
   }
 
@@ -152,7 +164,8 @@ class PoetryMockController extends ControllerBase {
       $rejected_languages[] = $language;
     }
 
-    \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($identifier_info, $status, $accepted_languages, $rejected_languages, $cancelled_languages) {
+    // We need to render this in a new context to prevent cache leaks.
+    $this->renderer->executeInRenderContext(new RenderContext(), function () use ($identifier_info, $status, $accepted_languages, $rejected_languages, $cancelled_languages) {
       $status_notification = $this->fixturesGenerator->statusNotification($identifier_info, $status, $accepted_languages, $rejected_languages, $cancelled_languages);
       $this->performNotification($status_notification);
     });
@@ -193,7 +206,8 @@ class PoetryMockController extends ControllerBase {
       $info['#text'] .= ' - ' . $tmgmt_job->getTargetLangcode();
     }
 
-    \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($identifier_info, $identifier, $tmgmt_job, $data, $item) {
+    // We need to render this in a new context to prevent cache leaks.
+    $this->renderer->executeInRenderContext(new RenderContext(), function () use ($identifier_info, $identifier, $tmgmt_job, $data, $item) {
       $translation_notification = $this->fixturesGenerator->translationNotification($identifier, $tmgmt_job->getTargetLangcode(), $data, (int) $item->id(), (int) $tmgmt_job->id());
       $this->performNotification($translation_notification);
     });
