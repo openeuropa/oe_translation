@@ -23,7 +23,7 @@ class JobAccessHandler extends JobAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
-    /** @var \Drupal\tmgmt\Entity\JobInterface $entity */
+    /** @var \Drupal\tmgmt\JobInterface $entity */
     if ($operation !== 'delete') {
       return parent::checkAccess($entity, $operation, $account);
     }

@@ -274,7 +274,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       }
 
       if (isset($build['actions']['request'])) {
-        /** @var \Drupal\tmgmt\Entity\JobInterface[] $current_jobs */
+        /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
         $current_jobs = $this->jobQueue->getAllJobs();
         if (empty($current_jobs)) {
           // If there are no jobs in the queue, it means the user can select
