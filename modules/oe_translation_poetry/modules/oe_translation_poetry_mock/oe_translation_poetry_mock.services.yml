@@ -2,3 +2,8 @@ services:
   oe_translation_poetry_mock.fixture_generator:
     class: Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator
     arguments: ['@oe_translation_poetry.client.default', '@renderer']
+  oe_translation_poetry_mock.content_translation_overview_alter_susbcriber:
+    class: Drupal\oe_translation_poetry_mock\EventSubscriber\ContentTranslationOverviewAlterSubscriber
+    arguments: ['@entity_type.manager', '@database', '@language_manager']
+    tags:
+      - { name: event_subscriber }

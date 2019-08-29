@@ -63,7 +63,7 @@ Feature: Local translations
 
     When I fill in the translation form element for the "Title" field with "Bulgarian title 2"
     And I press "Save and complete translation"
-    Then I should see "Translations of Bulgarian title 2"
+    Then I should see "Translations of My title"
     When I click "Bulgarian title 2" in the "Bulgarian" row
     Then I should see "Bulgarian title 2"
     And I should see "Bulgarian body"

@@ -18,3 +18,17 @@ oe_translation_poetry_mock.wsdl:
     _controller: 'Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::wsdl'
   requirements:
     _permission: 'access content'
+
+oe_translation_poetry_mock.send_status_notification:
+  path: '/poetry-mock/server/send-status-notification/{tmgmt_job}/{status}'
+  defaults:
+    _controller: Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::sendStatusNotification
+  requirements:
+    _access: 'TRUE'
+
+oe_translation_poetry_mock.send_translation_notification:
+  path: '/poetry-mock/server/send-translation-notification/{tmgmt_job}'
+  defaults:
+    _controller: Drupal\oe_translation_poetry_mock\Controller\PoetryMockController::sendTranslationNotification
+  requirements:
+    _access: 'TRUE'

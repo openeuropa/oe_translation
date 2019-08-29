@@ -162,10 +162,24 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       $this->updateJobDate($job, $target);
     }
 
+    $statuses = $message->getStatuses();
+    $attributions = [];
+    foreach ($statuses as $status) {
+      if ($status->getType() === 'attribution') {
+        $attributions[strtolower($status->getLanguage())] = $status;
+      }
+    }
+
     // Get the demand status and see if we should accept the translation jobs
     // or not.
     $status = $message->getDemandStatus();
     foreach ($jobs as $language => $job) {
+      if (!isset($attributions[$language])) {
+        // In case a notification comes about only some of the jobs with the
+        // same identifier, we do nothing for the jobs not included.
+        continue;
+      }
+
       // The entire request has been rejected or cancelled.
       if (in_array($status->getCode(), ['CNL', 'REF'])) {
         $this->rejectJob($job, 'Poetry has rejected the entire translation request: @message', ['@message' => $status->getMessage()]);
