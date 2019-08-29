@@ -7,10 +7,13 @@
 
 declare(strict_types = 1);
 
+use Drupal\tmgmt\Entity\Job;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\oe_translation_poetry\Access\JobAccessHandler;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 
 /**
  * Implements hook_poetry_entity_type_alter().
@@ -44,6 +47,22 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
         'weight' => 20,
       ]);
 
+    $fields['poetry_state'] = BaseFieldDefinition::create('list_string')
+      ->setLabel(t('Poetry state'))
+      ->setDescription(t('The poetry job state while the job is active.'))
+      ->setSetting('allowed_values', [
+        PoetryTranslator::POETRY_STATUS_ONGOING => t('Ongoing'),
+        PoetryTranslator::POETRY_STATUS_TRANSLATED => t('Translated'),
+      ]);
+
+    $fields['poetry_request_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('The Poetry request date'))
+      ->setDescription(t('The date when the translations are expected at the moment of the request.'));
+
+    $fields['poetry_request_date_updated'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('The Poetry updated request date'))
+      ->setDescription(t('The updated date when the translations are expected. Poetry can choose to update the request with a new expected delivery date.'));
+
     return $fields;
   }
 }
@@ -72,5 +91,17 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
         '#disabled' => TRUE,
       ];
     }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for the Job entity.
+ */
+function oe_translation_poetry_tmgmt_job_presave(EntityInterface $entity) {
+  // If the state of the job is not active, we should not have any value in the
+  // custom Poetry state field.
+  /** @var \Drupal\tmgmt\JobInterface $entity */
+  if ((int) $entity->getState() !== Job::STATE_ACTIVE) {
+    $entity->set('poetry_state', NULL);
   }
 }

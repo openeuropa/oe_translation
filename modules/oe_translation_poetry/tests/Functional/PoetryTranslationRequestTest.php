@@ -7,48 +7,12 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
-use Drupal\oe_translation_poetry_mock\PoetryMock;
-use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\tmgmt\JobInterface;
 
 /**
  * Tests the requests made to Poetry for translations.
  */
-class PoetryTranslationRequestTest extends TranslationTestBase {
-
-  /**
-   * The job storage.
-   *
-   * @var \Drupal\Core\Entity\Sql\SqlEntityStorageInterface
-   */
-  protected $jobStorage;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'oe_translation_poetry',
-    'oe_translation_poetry_mock',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-
-    // Configure the translator.
-    /** @var \Drupal\tmgmt\TranslatorInterface $translator */
-    $translator = $this->container->get('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
-    $translator->setSetting('service_wsdl', PoetryMock::getWsdlUrl());
-    $translator->save();
-
-    // Unset some services from the container to force a rebuild.
-    $this->container->set('oe_translation_poetry.client.default', NULL);
-    $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
-
-    $this->jobStorage = $this->entityTypeManager->getStorage('tmgmt_job');
-  }
+class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
   /**
    * Tests new translation requests.

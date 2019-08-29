@@ -51,7 +51,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Drupal\\Tests\\oe_translation\\": "./tests/"
+            "Drupal\\Tests\\oe_translation\\": "./tests/",
+            "Drupal\\Tests\\oe_translation_poetry\\": "./modules/oe_translation_poetry/tests/"
         }
     },
     "extra": {

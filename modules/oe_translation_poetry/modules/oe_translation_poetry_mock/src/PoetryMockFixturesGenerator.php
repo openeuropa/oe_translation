@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry_mock;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Render\Renderer;
 use Drupal\oe_translation_poetry\Poetry;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Messages\MessageInterface;
@@ -27,13 +28,23 @@ class PoetryMockFixturesGenerator {
   protected $poetry;
 
   /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\Renderer
+   */
+  protected $renderer;
+
+  /**
    * PoetryMockFixturesGenerator constructor.
    *
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
    *   The Poetry service.
+   * @param \Drupal\Core\Render\Renderer $renderer
+   *   The renderer.
    */
-  public function __construct(Poetry $poetry) {
+  public function __construct(Poetry $poetry, Renderer $renderer) {
     $this->poetry = $poetry;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -85,6 +96,74 @@ class PoetryMockFixturesGenerator {
   public function responseFromMessage(MessageInterface $message): string {
     $xml = $this->poetry->get('renderer')->render($message);
     return $this->responseFromXml($xml);
+  }
+
+  /**
+   * Creates a status notification fixture.
+   *
+   * @param array $request_identifier
+   *   The request identifier data.
+   * @param string $status
+   *   The full request (demand) status.
+   * @param array $accepted_languages
+   *   The data for the accepted languages.
+   * @param array $refused_languages
+   *   The data for the refused languages.
+   * @param array $cancelled_languages
+   *   The data for the cancelled languages.
+   *
+   * @return string
+   *   The XML response.
+   */
+  public function statusNotification(array $request_identifier, string $status, array $accepted_languages, array $refused_languages = [], array $cancelled_languages = []): string {
+    $vars = [
+      '#theme' => 'status_notification',
+      '#request_identifier' => $request_identifier,
+      '#request_status' => $status,
+      '#accepted_languages' => $accepted_languages,
+      '#refused_languages' => $refused_languages,
+      '#cancelled_languages' => $cancelled_languages,
+    ];
+
+    return (string) $this->renderer->renderRoot($vars);
+  }
+
+  /**
+   * Generates a translation notification fixture.
+   *
+   * @param \EC\Poetry\Messages\Components\Identifier $identifier
+   *   The request identifier.
+   * @param string $language
+   *   The target language.
+   * @param array $data
+   *   The translated data values.
+   * @param int $item_id
+   *   The job item ID.
+   * @param int $job_id
+   *   The job ID.
+   *
+   * @return string
+   *   The XML response.
+   */
+  public function translationNotification(Identifier $identifier, string $language, array $data, int $item_id = 1, int $job_id = 1): string {
+    $translation_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_template.xml');
+    $translation_notification_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
+    $variables = [
+      '@job_id' => $job_id,
+      '@item_id' => $item_id,
+      '@language' => $language,
+    ];
+
+    foreach ($data as $key => $value) {
+      $variables['@' . $key] = $value['#text'];
+    }
+
+    $translation = new FormattableMarkup($translation_template, $variables);
+    $variables = $this->prepareIdentifierVariables($identifier);
+    $variables['@translation'] = base64_encode((string) $translation);
+    $variables['@language'] = strtoupper($language);
+    $notification = new FormattableMarkup($translation_notification_template, $variables);
+    return (string) $notification;
   }
 
   /**

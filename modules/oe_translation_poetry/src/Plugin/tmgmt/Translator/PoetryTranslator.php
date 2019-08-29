@@ -16,6 +16,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
+use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
 use Drupal\tmgmt\Entity\Job;
@@ -24,6 +25,8 @@ use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * DGT Translator using the Poetry service.
@@ -39,7 +42,17 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface {
+class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface {
+
+  /**
+   * Status indicating that the translation is ongoing in Poetry.
+   */
+  const POETRY_STATUS_ONGOING = 'ongoing';
+
+  /**
+   * Status indicating that the translation has been received from Poetry.
+   */
+  const POETRY_STATUS_TRANSLATED = 'translated';
 
   /**
    * The current user.
@@ -181,6 +194,40 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   /**
    * {@inheritdoc}
    */
+  public function getRoutes(): RouteCollection {
+    $collection = new RouteCollection();
+
+    $route = new Route(
+      '/admin/content/dgt/send-request',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
+        '_title_callback' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm::getPageTitle',
+      ],
+      [
+        '_permission' => 'translate any entity',
+        '_custom_access' => 'oe_translation_poetry.job_queue::access',
+      ]
+    );
+
+    $collection->add('oe_translation_poetry.job_queue_checkout', $route);
+
+    $route = new Route(
+      '/poetry/notifications',
+      [
+        '_controller' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::handle',
+      ],
+      [
+        '_custom_access' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::access',
+      ]
+    );
+
+    $collection->add('oe_translation_poetry.notifications', $route);
+    return $collection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
     // We don't need to alter anything here yet.
   }
@@ -227,7 +274,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       }
 
       if (isset($build['actions']['request'])) {
-        /** @var \Drupal\tmgmt\Entity\JobInterface[] $current_jobs */
+        /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
         $current_jobs = $this->jobQueue->getAllJobs();
         if (empty($current_jobs)) {
           // If there are no jobs in the queue, it means the user can select
