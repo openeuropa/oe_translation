@@ -6,12 +6,14 @@ namespace Drupal\oe_translation_poetry\Plugin\tmgmt\Translator;
 
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
@@ -227,9 +229,44 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
 
   /**
    * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
-    // We don't need to alter anything here yet.
+    // Improve the button labels.
+    if (isset($form['actions']['accept'])) {
+      $form['actions']['accept']['#value'] = t('Accept translation');
+    }
+
+    if (isset($form['actions']['save'])) {
+      $form['actions']['save']['#value'] = t('Update translation');
+    }
+
+    if (isset($form['actions']['validate'])) {
+      $form['actions']['validate']['#access'] = FALSE;
+    }
+
+    if (isset($form['actions']['validate_html'])) {
+      $form['actions']['validate_html']['#access'] = FALSE;
+    }
+
+    if (isset($form['actions']['abort_job_item'])) {
+      unset($form['actions']['abort_job_item']);
+    }
+
+    // Hide the validation checkmarks.
+    foreach (Element::children($form['review']) as $child_key) {
+      $child = &$form['review'][$child_key];
+      foreach (Element::children($child) as $grandchild_key) {
+        $grandchild = &$child[$grandchild_key];
+        foreach (Element::children($grandchild) as $great_grandchild_key) {
+          $great_grandchild = &$grandchild[$great_grandchild_key];
+          if (isset($great_grandchild['actions'])) {
+            $great_grandchild['actions']['#access'] = FALSE;
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -245,6 +282,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $languages = $this->languageManager->getLanguages();
       $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
       $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+      $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
 
       // Build the TMGMT translation request form.
       $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
@@ -274,10 +312,12 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
           }
         }
 
-        // Show a label instead of link to the job if the job is ongoing in
-        // Poetry.
+        // Show a label instead of link for certain jobs.
         if (array_key_exists($langcode, $accepted_languages)) {
           $build['languages']['#options'][$langcode][3] = $this->t('Ongoing in Poetry');
+        }
+        if (array_key_exists($langcode, $submitted_languages)) {
+          $build['languages']['#options'][$langcode][3] = $this->t('Submitted to Poetry');
         }
       }
 
@@ -376,13 +416,8 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    *   An array of unprocessed job IDs, keyed by the target language.
    */
   protected function getUnprocessedJobsByLanguage(ContentEntityInterface $entity): array {
-    $query = $this->database->select('tmgmt_job', 'job');
-    $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
-    $query->fields('job', ['tjid', 'target_language']);
-    $query->condition('job_item.item_id', $entity->id());
-    // Only look for unprocessed jobs.
+    $query = $this->getEntityJobsQuery($entity);
     $query->condition('job.state', Job::STATE_UNPROCESSED, '=');
-    $query->condition('job.translator', 'poetry', '=');
     $result = $query->execute()->fetchAllAssoc('target_language');
     return $result ?? [];
   }
@@ -399,16 +434,48 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    *   An array of unprocessed job IDs, keyed by the target language.
    */
   protected function getAcceptedJobsByLanguage(ContentEntityInterface $entity): array {
+    $query = $this->getEntityJobsQuery($entity);
+    $query->condition('job.state', Job::STATE_ACTIVE, '=');
+    $query->condition('job.poetry_state', static::POETRY_STATUS_ONGOING, '=');
+    $result = $query->execute()->fetchAllAssoc('target_language');
+    return $result ?? [];
+  }
+
+  /**
+   * Get a list of Poetry jobs that have been accepted for a given entity.
+   *
+   * These are the jobs which have been accepted by Poetry for translation.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to look jobs for.
+   *
+   * @return array
+   *   An array of unprocessed job IDs, keyed by the target language.
+   */
+  protected function getSubmittedJobsByLanguage(ContentEntityInterface $entity): array {
+    $query = $this->getEntityJobsQuery($entity);
+    $query->condition('job.state', Job::STATE_ACTIVE, '=');
+    $query->isNull('job.poetry_state');
+    $result = $query->execute()->fetchAllAssoc('target_language');
+    return $result ?? [];
+  }
+
+  /**
+   * Prepares and returns a query for the jobs of a given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return \Drupal\Core\Database\Query\SelectInterface
+   *   The query.
+   */
+  protected function getEntityJobsQuery(ContentEntityInterface $entity): SelectInterface {
     $query = $this->database->select('tmgmt_job', 'job');
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job', ['tjid', 'target_language']);
     $query->condition('job_item.item_id', $entity->id());
-    // Only look for unprocessed jobs.
-    $query->condition('job.state', Job::STATE_ACTIVE, '=');
-    $query->condition('job.poetry_state', static::POETRY_STATUS_ONGOING, '=');
     $query->condition('job.translator', 'poetry', '=');
-    $result = $query->execute()->fetchAllAssoc('target_language');
-    return $result ?? [];
+    return $query;
   }
 
 }

@@ -11,4 +11,5 @@ permissions:
   - 'access content overview'
   - 'access toolbar'
   - 'translate any entity'
+  - 'accept translation jobs'
   - 'view the administration theme'

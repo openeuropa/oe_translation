@@ -5,6 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
+use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\JobInterface;
 use Drupal\tmgmt\TranslatorPluginUiBase;
 
 /**
@@ -76,6 +80,46 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
     }
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkoutInfo(JobInterface $job) {
+    $build = [];
+
+    $request_id = $job->get('poetry_request_id')->first()->getValue();
+    $build[] = [
+      '#markup' => $this->t('Request reference: @ref', ['@ref' => PoetryRequestIdItem::toReference($request_id)]) . '<br />',
+    ];
+
+    $poetry_state = $job->get('poetry_state')->value;
+
+    if ($poetry_state === PoetryTranslator::POETRY_STATUS_ONGOING) {
+      $build[] = [
+        '#markup' => $this->t('This job is being translated in Poetry'),
+      ];
+    }
+
+    if ($poetry_state === PoetryTranslator::POETRY_STATUS_TRANSLATED) {
+      $build[] = [
+        '#markup' => $this->t('This job is has been translated by Poetry and needs to be reviewed.'),
+      ];
+    }
+
+    if ((int) $job->getState() === Job::STATE_UNPROCESSED) {
+      $build[] = [
+        '#markup' => $this->t('This job is not yet processed, meaning it has not been yet sent to Poetry.'),
+      ];
+    }
+
+    if ((int) $job->getState() === Job::STATE_ACTIVE) {
+      $build[] = [
+        '#markup' => $this->t('This job is has been submitted to Poetry but no response has come yet.'),
+      ];
+    }
+
+    return $build;
   }
 
   /**
