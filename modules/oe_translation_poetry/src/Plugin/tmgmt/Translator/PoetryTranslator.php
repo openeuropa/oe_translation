@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -273,6 +274,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function contentTranslationOverviewAlter(array &$build, RouteMatchInterface $route_match, $entity_type_id): void {
     if ($this->currentUser->hasPermission('translate any entity')) {
@@ -283,6 +285,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
       $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
       $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
+      $translated_languages = $this->getTranslatedJobsByLanguage($entity);
 
       // Build the TMGMT translation request form.
       $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
@@ -318,6 +321,10 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
         }
         if (array_key_exists($langcode, $submitted_languages)) {
           $build['languages']['#options'][$langcode][3] = $this->t('Submitted to Poetry');
+        }
+        if (array_key_exists($langcode, $translated_languages)) {
+          $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->load($translated_languages[$language->getId()]->tjiid);
+          $build['languages']['#options'][$langcode][3] = Link::fromTextAndUrl($this->t('Review translation'), $job_item->toUrl());
         }
       }
 
@@ -442,9 +449,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   }
 
   /**
-   * Get a list of Poetry jobs that have been accepted for a given entity.
-   *
-   * These are the jobs which have been accepted by Poetry for translation.
+   * Get a list of Poetry jobs that have been submitted for a given entity.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to look jobs for.
@@ -456,6 +461,26 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $query = $this->getEntityJobsQuery($entity);
     $query->condition('job.state', Job::STATE_ACTIVE, '=');
     $query->isNull('job.poetry_state');
+    $result = $query->execute()->fetchAllAssoc('target_language');
+    return $result ?? [];
+  }
+
+  /**
+   * Get a list of Poetry jobs that have been translated for a given entity.
+   *
+   * These are the jobs which have been translated by Poetry and need to be
+   * reviewed.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to look jobs for.
+   *
+   * @return array
+   *   An array of unprocessed job IDs, keyed by the target language.
+   */
+  protected function getTranslatedJobsByLanguage(ContentEntityInterface $entity): array {
+    $query = $this->getEntityJobsQuery($entity);
+    $query->condition('job.state', Job::STATE_ACTIVE, '=');
+    $query->condition('poetry_state', static::POETRY_STATUS_TRANSLATED);
     $result = $query->execute()->fetchAllAssoc('target_language');
     return $result ?? [];
   }
@@ -473,6 +498,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $query = $this->database->select('tmgmt_job', 'job');
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job', ['tjid', 'target_language']);
+    $query->fields('job_item', ['tjiid']);
     $query->condition('job_item.item_id', $entity->id());
     $query->condition('job.translator', 'poetry', '=');
     return $query;
