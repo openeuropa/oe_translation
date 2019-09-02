@@ -10,13 +10,17 @@ use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 use Drupal\tmgmt\Entity\Job;
-use EC\Poetry\Messages\Components\Identifier;
 
 /**
  * Context specific to TMGMT-based poetry translation.
  */
 class PoetryTranslationContext extends RawDrupalContext {
+
+  use PoetryTestTrait {
+    performNotification as behatPerformNotification;
+  }
 
   /**
    * Installs the mock module.
@@ -141,24 +145,7 @@ class PoetryTranslationContext extends RawDrupalContext {
     $query->condition('job.target_language', array_keys($languages), 'IN');
     $result = $query->execute()->fetchAllAssoc('tjid');
     $jobs = Job::loadMultiple(array_keys($result));
-
-    /** @var \Drupal\tmgmt\JobInterface $job */
-    foreach ($jobs as $job) {
-      $items = $job->getItems();
-      $item = reset($items);
-
-      $data = \Drupal::service('tmgmt.data')->filterTranslatable($item->getData());
-      foreach ($data as $field => &$info) {
-        $info['#text'] .= ' - ' . $job->getTargetLangcode();
-      }
-
-      $identifier = new Identifier();
-      foreach ($job->get('poetry_request_id')->first()->getValue() as $name => $value) {
-        $identifier->offsetSet($name, $value);
-      }
-      $translation_notification = \Drupal::service('oe_translation_poetry_mock.fixture_generator')->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $item->id(), (int) $job->id());
-      $this->performNotification($translation_notification);
-    }
+    $this->notifyWithDummyTranslations($jobs);
   }
 
   /**
@@ -255,17 +242,8 @@ class PoetryTranslationContext extends RawDrupalContext {
    *   The response XML.
    */
   protected function performNotification(string $message): string {
-    $settings = \Drupal::service('oe_translation_poetry.client.default')->getSettings();
-    $credentials['username'] = $settings['notification.username'];
-    $credentials['password'] = $settings['notification.password'];
-
-    $url = $this->locatePath('poetry/notifications');
-    $client = new \SoapClient($url . '?wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
-    return $client->__soapCall('handle', [
-      $settings['notification.username'],
-      $settings['notification.password'],
-      $message,
-    ]);
+    $path = $this->locatePath('poetry/notifications');
+    return $this->behatPerformNotification($message, $path);
   }
 
 }
