@@ -237,6 +237,16 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       ->setDestination('PUBLIC')
       ->setType('INTER');
 
+    // Add the organisation information.
+    $organisation_information = [
+      'setResponsible' => 'responsible',
+      'setAuthor' => 'author',
+      'setRequester' => 'requester',
+    ];
+    foreach ($organisation_information as $method => $name) {
+      $details->$method($form_state->getValue('details')['organisation'][$name]);
+    }
+
     $message->setDetails($details);
 
     // Build the contact information.
@@ -244,13 +254,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $message->withContact()
         ->setType($name)
         ->setNickname($form_state->getValue('details')['contact'][$name]);
-    }
-
-    // Build the organisation information.
-    foreach (PoetryTranslatorUI::getContactFieldNames('organisation') as $name => $label) {
-      $message->withContact()
-        ->setType($name)
-        ->setNickname($form_state->getValue('details')['organisation'][$name]);
     }
 
     // Build the return endpoint information.
