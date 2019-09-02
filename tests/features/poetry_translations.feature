@@ -1,10 +1,10 @@
-@api @translation @poetry @run
+@api @translation
 Feature: Poetry translations
   In order to easily have multilingual content
   As a translator
   I need to be able to translate content using the Poetry service
 
-  @cleanup:tmgmt_job @cleanup:tmgmt_job_item
+  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
   Scenario: Translate content.
     Given oe_demo_translatable_page content:
       | title    | field_oe_demo_translatable_body |

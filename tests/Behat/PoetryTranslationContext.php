@@ -4,8 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Behat;
 
-use Behat\Behat\Hook\Scope\AfterFeatureScope;
-use Behat\Behat\Hook\Scope\BeforeFeatureScope;
+use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
@@ -23,27 +22,35 @@ class PoetryTranslationContext extends RawDrupalContext {
   }
 
   /**
-   * Installs the mock module.
+   * The config context.
    *
-   * @param \Behat\Behat\Hook\Scope\BeforeFeatureScope $scope
-   *   The scope.
-   *
-   * @BeforeFeature @poetry
+   * @var \Drupal\DrupalExtension\Context\ConfigContext
    */
-  public static function installMockModule(BeforeFeatureScope $scope) {
-    \Drupal::service('module_installer')->install(['oe_translation_poetry_mock']);
+  protected $configContext;
+
+  /**
+   * Gathers some other contexts.
+   *
+   * @param \Behat\Behat\Hook\Scope\BeforeScenarioScope $scope
+   *   The before scenario scope.
+   *
+   * @BeforeScenario
+   */
+  public function gatherContexts(BeforeScenarioScope $scope) {
+    $environment = $scope->getEnvironment();
+    $this->configContext = $environment->getContext('Drupal\DrupalExtension\Context\ConfigContext');
   }
 
   /**
-   * Uninstalls the mock module.
+   * Configures the Poetry mock WSDL.
    *
-   * @param \Behat\Behat\Hook\Scope\AfterFeatureScope $scope
+   * @param \Behat\Behat\Hook\Scope\BeforeScenarioScope $scope
    *   The scope.
    *
-   * @AfterFeature @poetry
+   * @BeforeScenario @poetry
    */
-  public static function uninstallMockModule(AfterFeatureScope $scope) {
-    // \Drupal::service('module_installer')->uninstall(['oe_translation_poetry_mock']);
+  public function installMockModule(BeforeScenarioScope $scope) {
+    $this->configContext->setBasicConfig('tmgmt.translator.poetry', 'settings.service_wsdl', $this->locatePath('poetry-mock/wsdl'));
   }
 
   /**
