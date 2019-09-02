@@ -14,30 +14,14 @@ use Drupal\oe_translation_poetry_mock\PoetryMock;
 class PoetryConfigurationTest extends PoetryTranslationTestBase {
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-
-    /** @var \Drupal\user\RoleInterface $role */
-    $role = $this->entityTypeManager->getStorage('user_role')->load('translator');
-    $permissions = $role->getPermissions();
-    $permissions[] = 'administer tmgmt';
-    /** @var \Drupal\user\RoleInterface $role */
-    $user = $this->drupalCreateUser($permissions);
-    $this->drupalLogin($user);
-  }
-
-  /**
    * Tests the configuration of the Poetry translator plugin.
-   *
-   * @throws \Behat\Mink\Exception\ExpectationException
-   * @throws \Behat\Mink\Exception\ResponseTextException
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testTranslatorConfiguration() {
+    // Log in with a TMGMT administrator user to edit the Poetry translator.
+    /** @var \Drupal\user\RoleInterface $role */
+    $user = $this->drupalCreateUser(['administer tmgmt']);
+    $this->drupalLogin($user);
+
     $contact_values = [
       'author' => 'contactAuthor',
       'secretary' => 'contactSecretary',
@@ -72,6 +56,12 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
       $form_values,
       'Save');
     $this->assertSession()->pageTextContains($translator->label() . " configuration has been updated.");
+
+    // Log in with a translator user to finalize the translation process.
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = $this->entityTypeManager->getStorage('user_role')->load('translator');
+    $user = $this->drupalCreateUser($role->getPermissions());
+    $this->drupalLogin($user);
 
     // Create a node to translate.
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
