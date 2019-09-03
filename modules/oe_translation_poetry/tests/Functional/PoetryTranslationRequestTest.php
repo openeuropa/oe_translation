@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\tmgmt\JobInterface;
@@ -237,30 +236,6 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     ];
 
     $this->assertJobsPoetryRequestIdValues($this->jobStorage->loadMultiple(), $expected_poetry_request_id);
-  }
-
-  /**
-   * Chooses the languages to translate from the overview page.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node.
-   * @param array $languages
-   *   The language codes.
-   */
-  protected function createInitialTranslationJobs(NodeInterface $node, array $languages): void {
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->pageTextContains('Translations of ' . $node->label());
-
-    $values = [];
-    foreach (array_keys($languages) as $language) {
-      $values["languages[$language]"] = 1;
-    }
-
-    $target_languages = count($languages) > 1 ? implode(', ', $languages) : array_shift($languages);
-    $expected_title = new FormattableMarkup('Send request to DG Translation for @entity in @target_languages', ['@entity' => $node->label(), '@target_languages' => $target_languages]);
-
-    $this->drupalPostForm($node->toUrl('drupal:content-translation-overview'), $values, 'Request DGT translation for the selected languages');
-    $this->assertSession()->pageTextContains($expected_title->__toString());
   }
 
   /**
