@@ -36,7 +36,7 @@ Feature: Poetry translations
     And I should see "None" in the "Danish" row
 
     # The translation gets accepted in Poetry
-    Given the Poetry translation request of "My title" in "Bulgarian, German" gets accepted
+    When the Poetry translation request of "My title" in "Bulgarian, German" gets accepted
     And I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
@@ -45,12 +45,13 @@ Feature: Poetry translations
     And I should see "None" in the "Danish" row
 
     # The translation gets sent from Poetry
-    Given the Poetry translations of "My title" in "Bulgarian, German" get sent by Poetry
+    When the Poetry translations of "My title" in "Bulgarian" are received from Poetry
 
     # Accept a translation job
     When I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
+    And I should see "Ongoing in Poetry" in the "German" row
     And I click "Review translation" in the "Bulgarian" row
     Then I should see "Job item My title"
     When I press "Accept translation"

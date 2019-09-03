@@ -142,7 +142,7 @@ class PoetryTranslationContext extends RawDrupalContext {
    * @param string $languages
    *   The languages.
    *
-   * @Given the Poetry translation(s) of :title in :languages get sent by Poetry
+   * @Given the Poetry translation(s) of :title in :languages are received from Poetry
    */
   public function thePoetryTranslationRequestGetSent(string $title, string $languages): void {
     $languages = $this->getLanguagesFromNames($languages);

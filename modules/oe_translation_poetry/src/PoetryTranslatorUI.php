@@ -103,7 +103,7 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
     if ($poetry_state === PoetryTranslator::POETRY_STATUS_TRANSLATED) {
       $build[] = [
-        '#markup' => $this->t('This job is has been translated by Poetry and needs to be reviewed.'),
+        '#markup' => $this->t('This job has been translated by Poetry and needs to be reviewed.'),
       ];
     }
 
@@ -115,7 +115,7 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
     if ((int) $job->getState() === Job::STATE_ACTIVE) {
       $build[] = [
-        '#markup' => $this->t('This job is has been submitted to Poetry but no response has come yet.'),
+        '#markup' => $this->t('This job has been submitted to Poetry but no response has come yet.'),
       ];
     }
 
