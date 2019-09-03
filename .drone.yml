@@ -60,6 +60,7 @@ pipeline:
   behat:
     group: test
     image: fpfis/httpd-php-ci:7.1
+    environment: *web-environment
     commands:
       - ./vendor/bin/behat --strict
 
