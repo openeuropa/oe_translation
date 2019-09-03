@@ -23,11 +23,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * Integrates the Poetry client library with Drupal.
  *
- * @method Identifier getIdentifier()
- * @method Server getServer()
- * @method Client getClient()
+ * @method \EC\Poetry\Messages\Components\Identifier getIdentifier()
+ * @method \EC\Poetry\Server getServer()
+ * @method \EC\Poetry\Client getClient()
  * @method \EC\Poetry\Services\Settings getSettings()
- * @method EventDispatcherInterface getEventDispatcher()
+ * @method \Symfony\Component\EventDispatcher\EventDispatcherInterface getEventDispatcher()
  * @method get()
  */
 class Poetry {

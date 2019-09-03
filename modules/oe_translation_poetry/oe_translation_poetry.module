@@ -7,6 +7,9 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation_poetry\JobItemListBuilder;
+use Drupal\Core\Access\AccessResult;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -21,12 +24,17 @@ use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 function oe_translation_poetry_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['tmgmt_job'] ?? NULL;
-  if (!$entity_type) {
-    return;
+  if ($entity_type) {
+    // Changing the access handler class for the TMGTM job entity.
+    $entity_type->setHandlerClass('access', JobAccessHandler::class);
   }
 
-  // Changing the access handler class for the TMGTM job entity.
-  $entity_type->setHandlerClass('access', JobAccessHandler::class);
+  /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
+  $entity_type = $entity_types['tmgmt_job_item'] ?? NULL;
+  if ($entity_type) {
+    $entity_type->setHandlerClass('list_builder', JobItemListBuilder::class);
+  }
+
 }
 
 /**
@@ -40,10 +48,6 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'poetry_request_id_formatter',
-        'weight' => 20,
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'poetry_request_id_widget',
         'weight' => 20,
       ]);
 
@@ -104,4 +108,32 @@ function oe_translation_poetry_tmgmt_job_presave(EntityInterface $entity) {
   if ((int) $entity->getState() !== Job::STATE_ACTIVE) {
     $entity->set('poetry_state', NULL);
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for the TMGMT job items.
+ */
+function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  /** @var \Drupal\tmgmt\JobItemInterface $entity */
+  $job = $entity->getJob();
+  if (!$job->getTranslatorPlugin() instanceof PoetryTranslator) {
+    return AccessResult::neutral();
+  }
+
+  if ($operation === 'abort') {
+    // We don't want to abort jobs items.
+    return AccessResult::forbidden();
+  }
+
+  if ($operation !== 'update') {
+    return AccessResult::neutral();
+  }
+
+  if ($job->get('poetry_state')->value !== PoetryTranslator::POETRY_STATUS_TRANSLATED) {
+    // Forbid access to job item updates if they have not been translated by
+    // Poetry.
+    return AccessResult::forbidden();
+  }
+
+  return AccessResult::neutral();
 }

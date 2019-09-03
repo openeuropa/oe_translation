@@ -4,10 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
-use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
-use EC\Poetry\Messages\Components\Identifier;
 
 /**
  * Tests the Poetry notifications.
@@ -105,11 +103,6 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
       'field_oe_demo_translatable_body' => 'My node body',
     ], ['fr']);
 
-    $identifier = new Identifier();
-    foreach ($this->defaultIdentifierInfo as $name => $value) {
-      $identifier->offsetSet($name, $value);
-    }
-
     // Accept the translations.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
       [
@@ -124,16 +117,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
 
     // Send the translations for each job.
     $jobs = $this->jobStorage->loadMultiple();
-    $job = reset($jobs);
-    $items = $job->getItems();
-    $item = reset($items);
-    $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
-    foreach ($data as $field => &$info) {
-      $info['#text'] .= ' - ' . $job->getTargetLangcode();
-    }
-
-    $translation_notification = $this->fixtureGenerator->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $item->id(), (int) $job->id());
-    $this->performNotification($translation_notification);
+    $this->notifyWithDummyTranslations($jobs);
 
     $this->jobStorage->resetCache();
     $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
@@ -185,7 +169,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
       'username' => 'dummy',
       'password' => 'incorrect',
     ];
-    $response = $this->performNotification($status_notification, $credentials);
+    $response = $this->performNotification($status_notification, '', $credentials);
     $xml = simplexml_load_string($response);
     $this->assertEqual((string) $xml->request->status->statusMessage, 'Poetry service cannot authenticate on notification callback: username or password not valid.');
 
@@ -239,36 +223,6 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
       $this->assertTrue($job->get('poetry_state')->isEmpty());
     }
-  }
-
-  /**
-   * Calls the notification endpoint with a message.
-   *
-   * This mimics notification requests sent by Poetry.
-   *
-   * @param string $message
-   *   The message.
-   * @param array $credentials
-   *   The endpoint credentials.
-   *
-   * @return string
-   *   The response XML.
-   */
-  protected function performNotification(string $message, array $credentials = []): string {
-    if (!$credentials) {
-      $settings = $this->container->get('oe_translation_poetry.client.default')->getSettings();
-      $credentials['username'] = $settings['notification.username'];
-      $credentials['password'] = $settings['notification.password'];
-    }
-
-    $url = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString();
-    $client = new \SoapClient($url . '?wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
-    $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua($this->databasePrefix));
-    return $client->__soapCall('handle', [
-      $credentials['username'],
-      $credentials['password'],
-      $message,
-    ]);
   }
 
 }

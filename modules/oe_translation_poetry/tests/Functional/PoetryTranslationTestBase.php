@@ -8,11 +8,14 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
+use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 
 /**
  * Base class for functional tests of the Poetry integration.
  */
 class PoetryTranslationTestBase extends TranslationTestBase {
+
+  use PoetryTestTrait;
 
   /**
    * The job storage.
