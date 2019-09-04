@@ -89,6 +89,7 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
         'number' => 11111,
         'year' => 2018,
       ],
+      'translator' => 'poetry',
     ]);
     $job->save();
     $job->addItem('content', $node_one->getEntityTypeId(), $node_one->id());
