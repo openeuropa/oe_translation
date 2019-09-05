@@ -310,7 +310,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     catch (\Exception $exception) {
       $this->logger->error($exception->getMessage());
       $this->messenger->addError($this->t('There was a error making the request to DGT.'));
-      $this->cancelAndRedirect($form_state);
+      $this->redirectBack($form_state);
+      $this->queue->reset();
     }
   }
 
