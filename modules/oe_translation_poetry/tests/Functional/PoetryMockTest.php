@@ -65,7 +65,7 @@ class PoetryMockTest extends BrowserTestBase {
       ->setTitle('Translation title');
 
     $message->withContact()
-      ->setType('author')
+      ->setType('auteur')
       ->setNickname('Test');
 
     $message->withSource()

@@ -250,10 +250,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $date->modify('+ 7 days');
     $values = [
       'details[date]' => $date->format('Y-m-d'),
-      'details[contact][author]' => 'author name',
-      'details[contact][secretary]' => 'secretary name',
+      'details[contact][auteur]' => 'author name',
+      'details[contact][secretaire]' => 'secretary name',
       'details[contact][contact]' => 'contact name',
-      'details[contact][responsible]' => 'responsible name',
+      'details[contact][responsable]' => 'responsible name',
       'details[organisation][responsible]' => 'responsible organisation name',
       'details[organisation][author]' => 'responsible author name',
       'details[organisation][requester]' => 'responsible requester name',

@@ -23,10 +23,10 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     $this->drupalLogin($user);
 
     $contact_values = [
-      'author' => 'contactAuthor',
-      'secretary' => 'contactSecretary',
+      'auteur' => 'contactAuthor',
+      'secretaire' => 'contactSecretary',
       'contact' => 'contactContact',
-      'responsible' => 'contactResponsible',
+      'responsable' => 'contactResponsible',
     ];
 
     $organisation_values = [
