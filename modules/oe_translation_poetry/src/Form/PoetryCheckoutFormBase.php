@@ -279,13 +279,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $source->setFile(base64_encode($formatted_content->__toString()));
     $source->setLegiswriteFormat('No');
     $source->withSourceLanguage()
-      ->setCode($entity->language()->getId())
+      ->setCode(strtoupper($entity->language()->getId()))
       ->setPages(1);
     $message->setSource($source);
 
     foreach ($jobs as $job) {
       $message->withTarget()
-        ->setLanguage($job->getTargetLangcode())
+        ->setLanguage(strtoupper($job->getTargetLangcode()))
         ->setFormat('HTML')
         ->setAction($this->getRequestOperation())
         ->setDelay($formatted_date);
