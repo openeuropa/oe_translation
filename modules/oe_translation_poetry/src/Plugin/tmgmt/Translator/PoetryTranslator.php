@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry\Plugin\tmgmt\Translator;
 
 use Drupal\Core\Access\AccessManagerInterface;
+use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -19,6 +20,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
+use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
@@ -27,6 +29,7 @@ use Drupal\tmgmt\JobInterface;
 use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -128,6 +131,13 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   protected $database;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * PermissionTranslator constructor.
    *
    * @param array $configuration
@@ -156,10 +166,12 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    *   The current route match.
    * @param \Drupal\Core\Database\Connection $database
    *   The current route match.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, PoetryJobQueue $job_queue, RouteMatchInterface $route_match, Connection $database) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, PoetryJobQueue $job_queue, RouteMatchInterface $route_match, Connection $database, EventDispatcherInterface $eventDispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->poetry = $poetry;
@@ -171,6 +183,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $this->jobQueue = $job_queue;
     $this->currentRouteMatch = $route_match;
     $this->database = $database;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -190,7 +203,8 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $container->get('form_builder'),
       $container->get('oe_translation_poetry.job_queue'),
       $container->get('current_route_match'),
-      $container->get('database')
+      $container->get('database'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -277,70 +291,81 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function contentTranslationOverviewAlter(array &$build, RouteMatchInterface $route_match, $entity_type_id): void {
-    if ($this->currentUser->hasPermission('translate any entity')) {
-      $entity = $build['#entity'];
-      $destination = $entity->toUrl('drupal:content-translation-overview');
-      // Add a link to delete any unprocessed job for this entity.
-      $languages = $this->languageManager->getLanguages();
-      $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
-      $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
-      $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
-      $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+    if (!$this->currentUser->hasPermission('translate any entity')) {
+      return;
+    }
 
-      // Build the TMGMT translation request form.
-      $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
-      if (isset($build['actions']['add_to_cart'])) {
-        $build['actions']['add_to_cart']['#access'] = FALSE;
-      }
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $build['#entity'];
 
-      foreach ($languages as $langcode => $language) {
-        // Add links for unprocessed jobs to delete the delete.
-        if (array_key_exists($langcode, $unprocessed_languages)) {
-          $links = &$build['languages']['#options'][$langcode][4]['data']['#links'];
-          $url_options = [
-            'language' => $language,
-            'query' => ['destination' => $destination->toString()],
+    $event = new TranslationAccessEvent($entity, 'poetry', $this->currentUser, $entity->language());
+    $this->eventDispatcher->dispatch(TranslationAccessEvent::EVENT, $event);
+    if ($event->getAccess() instanceof AccessResultForbidden) {
+      return;
+    }
+
+    $entity = $build['#entity'];
+    $destination = $entity->toUrl('drupal:content-translation-overview');
+    // Add a link to delete any unprocessed job for this entity.
+    $languages = $this->languageManager->getLanguages();
+    $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
+    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+    $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
+    $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+
+    // Build the TMGMT translation request form.
+    $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
+    if (isset($build['actions']['add_to_cart'])) {
+      $build['actions']['add_to_cart']['#access'] = FALSE;
+    }
+
+    foreach ($languages as $langcode => $language) {
+      // Add links for unprocessed jobs to delete the delete.
+      if (array_key_exists($langcode, $unprocessed_languages)) {
+        $links = &$build['languages']['#options'][$langcode][4]['data']['#links'];
+        $url_options = [
+          'language' => $language,
+          'query' => ['destination' => $destination->toString()],
+        ];
+        $delete_url = Url::fromRoute(
+          'entity.tmgmt_job.delete_form',
+          ['tmgmt_job' => $unprocessed_languages[$language->getId()]->tjid],
+          $url_options
+        );
+
+        if ($delete_url->access()) {
+          $links['tmgmt.poetry.delete'] = [
+            'url' => $delete_url,
+            'title' => $this->t('Delete unprocessed job'),
           ];
-          $delete_url = Url::fromRoute(
-            'entity.tmgmt_job.delete_form',
-            ['tmgmt_job' => $unprocessed_languages[$language->getId()]->tjid],
-            $url_options
-          );
-
-          if ($delete_url->access()) {
-            $links['tmgmt.poetry.delete'] = [
-              'url' => $delete_url,
-              'title' => $this->t('Delete unprocessed job'),
-            ];
-          }
-        }
-
-        // Show a label instead of link for certain jobs.
-        if (array_key_exists($langcode, $accepted_languages)) {
-          $build['languages']['#options'][$langcode][3] = $this->t('Ongoing in Poetry');
-        }
-        if (array_key_exists($langcode, $submitted_languages)) {
-          $build['languages']['#options'][$langcode][3] = $this->t('Submitted to Poetry');
-        }
-        if (array_key_exists($langcode, $translated_languages)) {
-          $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->load($translated_languages[$language->getId()]->tjiid);
-          $build['languages']['#options'][$langcode][3] = Link::fromTextAndUrl($this->t('Review translation'), $job_item->toUrl());
         }
       }
 
-      if (isset($build['actions']['request'])) {
-        /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
-        $current_jobs = $this->jobQueue->getAllJobs();
-        if (empty($current_jobs)) {
-          // If there are no jobs in the queue, it means the user can select
-          // the languages it wants to translate.
-          $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
-        }
-        else {
-          $current_target_languages = $this->jobQueue->getTargetLanguages();
-          $language_list = count($current_target_languages) > 1 ? implode(', ', $current_target_languages) : array_shift($current_target_languages);
-          $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
-        }
+      // Show a label instead of link for certain jobs.
+      if (array_key_exists($langcode, $accepted_languages)) {
+        $build['languages']['#options'][$langcode][3] = $this->t('Ongoing in Poetry');
+      }
+      if (array_key_exists($langcode, $submitted_languages)) {
+        $build['languages']['#options'][$langcode][3] = $this->t('Submitted to Poetry');
+      }
+      if (array_key_exists($langcode, $translated_languages)) {
+        $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->load($translated_languages[$language->getId()]->tjiid);
+        $build['languages']['#options'][$langcode][3] = Link::fromTextAndUrl($this->t('Review translation'), $job_item->toUrl());
+      }
+    }
+
+    if (isset($build['actions']['request'])) {
+      /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
+      $current_jobs = $this->jobQueue->getAllJobs();
+      if (empty($current_jobs)) {
+        // If there are no jobs in the queue, it means the user can select
+        // the languages it wants to translate.
+        $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
+      }
+      else {
+        $current_target_languages = $this->jobQueue->getTargetLanguages();
+        $language_list = count($current_target_languages) > 1 ? implode(', ', $current_target_languages) : array_shift($current_target_languages);
+        $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
       }
     }
   }
