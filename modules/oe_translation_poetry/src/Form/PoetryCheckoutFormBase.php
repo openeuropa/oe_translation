@@ -264,7 +264,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $return->setUser($username);
     $return->setPassword($password);
     // The notification endpoint WSDL.
-    $return->setAddress(Url::fromRoute('<front>')->setAbsolute()->toString());
+    $return->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
     // The notification endpoint WSDL action method.
     $return->setPath('handle');
     // The return is a webservice and not an email.
