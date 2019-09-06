@@ -11,6 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -33,16 +34,26 @@ class NotificationsController extends ControllerBase {
   protected $notificationSubscriber;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * NotificationsController constructor.
    *
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
    *   The Poetry service.
    * @param \Symfony\Component\EventDispatcher\EventSubscriberInterface $notificationSubscriber
    *   The notification subscriber.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(Poetry $poetry, EventSubscriberInterface $notificationSubscriber) {
+  public function __construct(Poetry $poetry, EventSubscriberInterface $notificationSubscriber, RequestStack $requestStack) {
     $this->poetry = $poetry;
     $this->notificationSubscriber = $notificationSubscriber;
+    $this->requestStack = $requestStack;
   }
 
   /**
@@ -51,7 +62,8 @@ class NotificationsController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('oe_translation_poetry.client.default'),
-      $container->get('oe_translation_poetry.notification_subscriber')
+      $container->get('oe_translation_poetry.notification_subscriber'),
+      $container->get('request_stack')
     );
   }
 
@@ -82,18 +94,23 @@ class NotificationsController extends ControllerBase {
    *   The access.
    */
   public function access(AccountInterface $account): AccessResultInterface {
+    $request = $this->requestStack->getCurrentRequest();
+    if (array_key_exists('wsdl', $request->query->all())) {
+      return AccessResult::allowed()->addCacheContexts(['url']);
+    }
+
     $settings = $this->poetry->getSettings();
     $username = $settings['notification.username'] ?? NULL;
     $password = $settings['notification.password'] ?? NULL;
     if (!$username || !$password) {
-      return AccessResult::forbidden('Credentials for the notifications have not been configured.');
+      return AccessResult::forbidden('Credentials for the notifications have not been configured.')->addCacheContexts(['url']);
     }
 
-    if ($username !== \Drupal::request()->server->get('POETRY_SERVICE_USERNAME') || $password !== \Drupal::request()->server->get('POETRY_NOTIFICATION_PASSWORD')) {
-      return AccessResult::forbidden('Invalid credentials specified.');
+    if ($username !== $request->server->get('POETRY_SERVICE_USERNAME') || $password !== $request->server->get('POETRY_NOTIFICATION_PASSWORD')) {
+      return AccessResult::forbidden('Invalid credentials specified.')->addCacheContexts(['url']);
     }
 
-    return AccessResult::allowed();
+    return AccessResult::allowed()->addCacheContexts(['url']);
   }
 
 }
