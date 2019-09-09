@@ -350,7 +350,15 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       }
       if (array_key_exists($langcode, $translated_languages)) {
         $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->load($translated_languages[$language->getId()]->tjiid);
-        $build['languages']['#options'][$langcode][3] = Link::fromTextAndUrl($this->t('Review translation'), $job_item->toUrl());
+        $build['languages']['#options'][$langcode][3] = $this->t('Ready for review');
+
+        $review_url = $job_item->toUrl();
+        if ($review_url->access()) {
+          $build['languages']['#options'][$langcode][4]['data']['#links']['tmgmt.poetry.review'] = [
+            'url' => $review_url,
+            'title' => $this->t('Review translation'),
+          ];
+        }
       }
     }
 
