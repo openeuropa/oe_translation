@@ -116,7 +116,7 @@ class PoetryMockFixturesGenerator {
    *   The XML response.
    */
   public function statusNotification(array $request_identifier, string $status, array $accepted_languages, array $refused_languages = [], array $cancelled_languages = []): string {
-    $vars = [
+    $build = [
       '#theme' => 'status_notification',
       '#request_identifier' => $request_identifier,
       '#request_status' => $status,
@@ -125,7 +125,7 @@ class PoetryMockFixturesGenerator {
       '#cancelled_languages' => $cancelled_languages,
     ];
 
-    return (string) $this->renderer->renderRoot($vars);
+    return (string) $this->renderer->renderRoot($build);
   }
 
   /**
@@ -146,23 +146,31 @@ class PoetryMockFixturesGenerator {
    *   The XML response.
    */
   public function translationNotification(Identifier $identifier, string $language, array $data, int $item_id = 1, int $job_id = 1): string {
-    $translation_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_template.xml');
-    $translation_notification_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
-    $variables = [
-      '@job_id' => $job_id,
-      '@item_id' => $item_id,
-      '@language' => $language,
+    $build = [
+      '#theme' => 'translation_template',
+      '#language' => $language,
+      '#job_id' => $job_id,
+      '#item_id' => $item_id,
     ];
 
+    $fields = [];
+
     foreach ($data as $key => $value) {
-      $variables['@' . $key] = $value['#text'];
-      $variables['@encoded_' . $key] = base64_encode($item_id . '][' . $key);
+      $fields[] = [
+        'label' => $value['#parent_label'] ? reset($value['#parent_label']) : 'Missing label',
+        'field_path' => $key,
+        'encoded_field_path' => base64_encode($item_id . '][' . $key),
+        'field_value' => $value['#text'],
+      ];
     }
 
-    $translation = new FormattableMarkup($translation_template, $variables);
+    $build['#fields'] = $fields;
+
+    $translation = (string) $this->renderer->renderRoot($build);
     $variables = $this->prepareIdentifierVariables($identifier);
     $variables['@translation'] = base64_encode((string) $translation);
     $variables['@language'] = strtoupper($language);
+    $translation_notification_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
     $notification = new FormattableMarkup($translation_notification_template, $variables);
     return (string) $notification;
   }
