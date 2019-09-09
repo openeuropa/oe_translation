@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Behat;
 
+use Behat\Behat\Hook\Scope\AfterFeatureScope;
+use Behat\Behat\Hook\Scope\BeforeFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -49,8 +51,32 @@ class PoetryTranslationContext extends RawDrupalContext {
    *
    * @BeforeScenario @poetry
    */
-  public function installMockModule(BeforeScenarioScope $scope) {
+  public function configureMock(BeforeScenarioScope $scope) {
     $this->configContext->setBasicConfig('tmgmt.translator.poetry', 'settings.service_wsdl', $this->locatePath('poetry-mock/wsdl'));
+  }
+
+  /**
+   * Installs the mock.
+   *
+   * @param \Behat\Behat\Hook\Scope\BeforeFeatureScope $scope
+   *   The scope.
+   *
+   * @BeforeFeature @poetry_mock
+   */
+  public static function installMock(BeforeFeatureScope $scope) {
+    \Drupal::service('module_installer')->install(['oe_translation_poetry_mock']);
+  }
+
+  /**
+   * Uninstalls the mock.
+   *
+   * @param \Behat\Behat\Hook\Scope\AfterFeatureScope $scope
+   *   The scope.
+   *
+   * @AfterFeature @poetry_mock
+   */
+  public static function uninstallMock(AfterFeatureScope $scope) {
+    \Drupal::service('module_installer')->uninstall(['oe_translation_poetry_mock']);
   }
 
   /**
