@@ -134,10 +134,10 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
   public static function getContactFieldNames(string $type = 'contact'): array {
     $map = [
       'contact' => [
-        'author' => t('Author'),
-        'secretary' => t('Secretary'),
+        'auteur' => t('Author'),
+        'secretaire' => t('Secretary'),
         'contact' => t('Contact'),
-        'responsible' => t('Responsible'),
+        'responsable' => t('Responsible'),
       ],
       'organisation' => [
         'responsible' => t('Responsible'),

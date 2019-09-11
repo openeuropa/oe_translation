@@ -21,5 +21,13 @@ function oe_translation_poetry_mock_theme($existing, $type, $theme, $path) {
         'cancelled_languages' => [],
       ],
     ],
+    'translation_template' => [
+      'variables' => [
+        'language' => NULL,
+        'job_id' => NULL,
+        'item_id' => NULL,
+        'fields' => [],
+      ],
+    ],
   ];
 }

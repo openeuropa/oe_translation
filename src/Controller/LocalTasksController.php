@@ -182,7 +182,7 @@ class LocalTasksController extends ControllerBase {
     $result->addCacheTags($job_item_definition->getListCacheTags());
 
     // Allow others to have a say in the access result.
-    $event = new TranslationAccessEvent($entity, $source, $target, $account, 'permission');
+    $event = new TranslationAccessEvent($entity, 'permission', $account);
     $this->eventDispatcher->dispatch(TranslationAccessEvent::EVENT, $event);
     $result = $result->orIf($event->getAccess());
 

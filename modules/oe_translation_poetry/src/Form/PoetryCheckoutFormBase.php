@@ -264,7 +264,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $return->setUser($username);
     $return->setPassword($password);
     // The notification endpoint WSDL.
-    $return->setAddress(Url::fromRoute('<front>')->setAbsolute()->toString());
+    $return->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
     // The notification endpoint WSDL action method.
     $return->setPath('handle');
     // The return is a webservice and not an email.
@@ -279,13 +279,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $source->setFile(base64_encode($formatted_content->__toString()));
     $source->setLegiswriteFormat('No');
     $source->withSourceLanguage()
-      ->setCode($entity->language()->getId())
+      ->setCode(strtoupper($entity->language()->getId()))
       ->setPages(1);
     $message->setSource($source);
 
     foreach ($jobs as $job) {
       $message->withTarget()
-        ->setLanguage($job->getTargetLangcode())
+        ->setLanguage(strtoupper($job->getTargetLangcode()))
         ->setFormat('HTML')
         ->setAction($this->getRequestOperation())
         ->setDelay($formatted_date);
@@ -310,7 +310,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     catch (\Exception $exception) {
       $this->logger->error($exception->getMessage());
       $this->messenger->addError($this->t('There was a error making the request to DGT.'));
-      $this->cancelAndRedirect($form_state);
+      $this->redirectBack($form_state);
+      $this->queue->reset();
     }
   }
 

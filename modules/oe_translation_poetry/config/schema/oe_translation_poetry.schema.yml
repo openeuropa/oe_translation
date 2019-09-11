@@ -43,16 +43,16 @@ tmgmt.translator.settings.poetry:
       type: mapping
       label: Contact information
       mapping:
-        author:
+        auteur:
           type: string
           label: Author
-        secretary:
+        secretaire:
           type: string
           label: Secretary
         contact:
           type: string
           label: Contact
-        responsible:
+        responsable:
           type: string
           label: Responsible
     organisation:
