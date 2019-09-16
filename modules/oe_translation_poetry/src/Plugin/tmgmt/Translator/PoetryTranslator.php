@@ -233,7 +233,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
         '_controller' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::handle',
       ],
       [
-        '_custom_access' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::access',
+        '_access' => 'TRUE',
       ]
     );
 
