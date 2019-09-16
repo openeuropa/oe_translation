@@ -294,6 +294,10 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       return;
     }
 
+    if (!$this->poetry->isAvailable()) {
+      return;
+    }
+
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $build['#entity'];
 

@@ -257,6 +257,50 @@ class Poetry {
   }
 
   /**
+   * Checks if the Poetry service is configured properly to be used.
+   *
+   * If there are missing settings or configuration, Poetry cannot be used
+   * so we use this method to determine this.
+   *
+   * @return bool
+   *   Whether it's available or not.
+   */
+  public function isAvailable(): bool {
+    // Poetry is not available if configuration is missing.
+    $required = [
+      'identifier_code',
+      'title_prefix',
+      'application_reference',
+      'site_id',
+      'service_wsdl',
+    ];
+    $translator_settings = $this->getTranslatorSettings();
+    foreach ($required as $setting) {
+      if (!isset($translator_settings[$setting]) || !$translator_settings[$setting] || $translator_settings[$setting] === "") {
+        return FALSE;
+      }
+    }
+
+    // Poetry is not available if environment variables are missing.
+    $required = [
+      'poetry.service.username',
+      'poetry.service.password',
+      'poetry.notification.username',
+      'poetry.notification.password',
+      'poetry.identifier.sequence',
+    ];
+
+    foreach ($required as $setting) {
+      $value = Settings::get($setting);
+      if (!$value || $value === "") {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
    * Locates the last identifier that was used for a given content entity.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity

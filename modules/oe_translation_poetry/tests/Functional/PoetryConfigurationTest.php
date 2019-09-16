@@ -16,7 +16,7 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
   /**
    * Tests the configuration of the Poetry translator plugin.
    */
-  public function testTranslatorConfiguration() {
+  public function testTranslatorConfiguration() : void {
     // Log in with a TMGMT administrator user to edit the Poetry translator.
     /** @var \Drupal\user\RoleInterface $role */
     $user = $this->drupalCreateUser(['administer tmgmt']);
@@ -131,6 +131,33 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     foreach ($contacts as $contact) {
       $this->assertEquals($contact_values[(string) $contact->attributes()['type']], (string) $contact->contactNickname);
     }
+  }
+
+  /**
+   * Tests that we cannot make Poetry translations requests without config.
+   */
+  public function testRequiredConfiguration(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My test node',
+    ]);
+    $node->save();
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->buttonExists('Request DGT translation for the selected languages');
+
+    // Unset the service WSDL as an example of required configuration.
+    /** @var \Drupal\tmgmt\TranslatorInterface $translator */
+    $translator = $this->container->get('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
+    $translator->setSetting('service_wsdl', NULL);
+    $translator->save();
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');
   }
 
 }
