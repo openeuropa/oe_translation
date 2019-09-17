@@ -276,7 +276,7 @@ class Poetry {
     ];
     $translator_settings = $this->getTranslatorSettings();
     foreach ($required as $setting) {
-      if (!isset($translator_settings[$setting]) || !$translator_settings[$setting] || $translator_settings[$setting] === "") {
+      if (!isset($translator_settings[$setting]) || !$translator_settings[$setting]) {
         return FALSE;
       }
     }
