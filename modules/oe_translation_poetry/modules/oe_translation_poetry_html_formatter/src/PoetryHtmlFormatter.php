@@ -74,7 +74,7 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
     }
     $elements = [
       '#theme' => 'poetry_html_template',
-      '#entity_id' => $entity->id(),
+      '#entity_id' => $entity->getEntityTypeId() . ' ' . $entity->id(),
       '#source_language' => $job->getRemoteSourceLanguage(),
       '#target_language' => $job->getRemoteTargetLanguage(),
       '#items' => $items,
