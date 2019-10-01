@@ -279,7 +279,7 @@ class Poetry implements PoetryInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
-   *protected
+   *
    * @return \EC\Poetry\Messages\Components\Identifier
    *   The identifier.
    */
