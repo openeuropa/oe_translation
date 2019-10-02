@@ -34,43 +34,6 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $form['#tree'] = TRUE;
-
-    $form['details'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Request details'),
-      '#open' => TRUE,
-    ];
-
-    $form['details']['date'] = [
-      '#type' => 'date',
-      '#title' => $this->t('Requested delivery date'),
-      '#required' => TRUE,
-    ];
-
-    $form['actions'] = ['#type' => 'actions'];
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Send request'),
-      '#button_type' => 'primary',
-      '#submit' => ['::submitRequest'],
-    ];
-
-    $form['actions']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Cancel and delete job'),
-      '#button_type' => 'secondary',
-      '#submit' => ['::cancelRequest'],
-      '#limit_validation_errors' => [],
-    ];
-
-    return $form;
-  }
-
-  /**
    * Submits the request to Poetry.
    *
    * @param array $form
