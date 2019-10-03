@@ -9,7 +9,7 @@
         "php": "^7.1",
         "drupal/core": "^8.7",
         "drupal/tmgmt": "^1.8",
-        "ec-europa/oe-poetry-client": "dev-OPENEUROPA-2251"
+        "ec-europa/oe-poetry-client": "dev-OPENEUROPA-2251#d2df603"
     },
     "require-dev": {
         "composer/installers": "~1.5",

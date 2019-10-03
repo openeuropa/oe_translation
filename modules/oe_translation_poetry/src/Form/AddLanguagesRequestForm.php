@@ -57,25 +57,16 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
     // Build the return endpoint information.
     $settings = $this->poetry->getSettings();
     $username = $settings['notification.username'] ?? NULL;
-    $password = $settings['notification.password'] ?? NULL;
-    $return = $message->withReturnAddress();
-    $return->setUser($username);
-    $return->setPassword($password);
-    // The notification endpoint WSDL.
-    $return->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
-    // The notification endpoint WSDL action method.
-    $return->setPath('handle');
-    // The return is a webservice and not an email.
-    $return->setType('webService');
-    $return->setAction($this->getRequestOperation());
-    $message->setReturnAddress($return);
 
     foreach ($jobs as $job) {
       $message->withTarget()
         ->setLanguage(strtoupper($job->getTargetLangcode()))
         ->setFormat('HTML')
-        ->setAction($this->getRequestOperation())
-        ->setDelay($formatted_date);
+        ->setDelay($formatted_date)
+        ->withReturnAddress()
+        ->setType('webService')
+        ->setUser($username)
+        ->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
     }
 
     try {
