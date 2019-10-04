@@ -64,7 +64,7 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
         ->setFormat('HTML')
         ->setDelay($formatted_date)
         ->withReturnAddress()
-        ->setType('webService')
+        ->setType('smtp')
         ->setUser($username)
         ->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
     }
