@@ -50,7 +50,7 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
     $date = new \DateTime($form_state->getValue('details')['date']);
     $formatted_date = $date->format('d/m/Y');
 
-    /** @var \EC\Poetry\Messages\Requests\CreateTranslationRequest $message */
+    /** @var \EC\Poetry\Messages\Requests\AddLanguagesRequest $message */
     $message = $this->poetry->get('request.add_languages_request');
     $message->setIdentifier($identifier);
 
@@ -62,9 +62,10 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
       $message->withTarget()
         ->setLanguage(strtoupper($job->getTargetLangcode()))
         ->setFormat('HTML')
+        ->setAction('INSERT')
         ->setDelay($formatted_date)
         ->withReturnAddress()
-        ->setType('smtp')
+        ->setType('webService')
         ->setUser($username)
         ->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
     }
