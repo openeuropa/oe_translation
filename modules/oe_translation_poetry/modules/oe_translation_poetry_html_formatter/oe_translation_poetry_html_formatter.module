@@ -14,7 +14,7 @@ function oe_translation_poetry_html_formatter_theme() {
   return [
     'poetry_html_template' => [
       'variables' => [
-        'entity_id' => NULL,
+        'tjid' => NULL,
         'source_language' => NULL,
         'target_language' => NULL,
         'items' => NULL,

@@ -275,7 +275,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $source = $message->withSource();
     $source->setFormat('HTML');
     $source->setName('content.html');
-    $formatted_content = $this->contentFormatter->export($entity, reset($jobs));
+    $formatted_content = $this->contentFormatter->export(reset($jobs));
     $source->setFile(base64_encode($formatted_content->__toString()));
     $source->setLegiswriteFormat('No');
     $source->withSourceLanguage()

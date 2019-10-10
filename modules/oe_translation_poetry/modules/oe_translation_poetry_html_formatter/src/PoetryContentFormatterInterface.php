@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry_html_formatter;
 
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\tmgmt\JobInterface;
 
 /**
@@ -20,8 +19,6 @@ interface PoetryContentFormatterInterface {
   /**
    * Return the file content for the job data.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to be exported.
    * @param \Drupal\tmgmt\JobInterface $job
    *   The translation job object to be exported.
    * @param array $conditions
@@ -30,7 +27,7 @@ interface PoetryContentFormatterInterface {
    * @return \Drupal\Component\Render\MarkupInterface
    *   String with the file content.
    */
-  public function export(EntityInterface $entity, JobInterface $job, array $conditions = []): MarkupInterface;
+  public function export(JobInterface $job, array $conditions = []): MarkupInterface;
 
   /**
    * Converts an exported file content back to the translated data.
