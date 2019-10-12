@@ -95,7 +95,6 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     foreach ($message->getTargets() as $target) {
       $language = strtolower($target->getLanguage());
       $job = $jobs[$language] ?? NULL;
-
       if (!$job) {
         $this->logger->error('Translation to @language received for job but job cannot be found: @id', ['@language' => $language, '@id' => $identifier->getFormattedIdentifier()]);
         continue;
@@ -151,7 +150,6 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     // Update the accepted date for each language.
     foreach ($message->getTargets() as $target) {
       $language = strtolower($target->getLanguage());
-      /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $jobs[$language] ?? NULL;
       if (!$job) {
         $this->logger->error('There is a missing job for the language @lang and request ID @id', ['@lang' => $language, '@id' => $identifier->getFormattedIdentifier()]);
@@ -215,7 +213,9 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Queries and returns the jobs for a given identifier, keyed by language.
+   * Queries and returns the jobs for a given identifier.
+   *
+   * Return array is keyed by remote mapped language.
    *
    * @param \EC\Poetry\Messages\Components\Identifier $identifier
    *   The identifier.
@@ -242,7 +242,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\tmgmt\JobInterface[] $entities */
     $entities = $this->entityTypeManager->getStorage('tmgmt_job')->loadMultiple($ids);
     foreach ($entities as $entity) {
-      $jobs[$entity->getTargetLangcode()] = $entity;
+      $jobs[$entity->getRemoteTargetLanguage()] = $entity;
     }
 
     return $jobs;

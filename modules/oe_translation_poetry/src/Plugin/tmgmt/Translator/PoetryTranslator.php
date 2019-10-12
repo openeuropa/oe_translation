@@ -42,7 +42,7 @@ use Symfony\Component\Routing\RouteCollection;
  *   description = @Translation("Allows the users to send translation requests to Poetry."),
  *   ui = "\Drupal\oe_translation_poetry\PoetryTranslatorUI",
  *   default_settings = {},
- *   map_remote_languages = FALSE
+ *   map_remote_languages = TRUE
  * )
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)

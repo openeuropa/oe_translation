@@ -13,4 +13,5 @@ settings:
   identifier_code: WEB
   title_prefix: EWCMS
   application_reference: FPFIS
-remote_languages_mappings: {  }
+remote_languages_mappings:
+  pt-pt: pt
