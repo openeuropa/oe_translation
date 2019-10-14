@@ -19,7 +19,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     $this->prepareRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
-    ], ['fr', 'de', 'it']);
+    ], ['fr', 'pt-pt', 'it']);
 
     // Send a status update accepting the translation for two languages but
     // refusing for one.
@@ -31,7 +31,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
           'accepted_date' => '30/09/2019 23:59',
         ],
         [
-          'code' => 'DE',
+          'code' => 'PT',
           'date' => '30/08/2019 23:59',
           'accepted_date' => '30/09/2019 23:59',
         ],
@@ -70,7 +70,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     // Send a notification cancelling one of the languages that were accepted.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG', [], [], [
       [
-        'code' => 'DE',
+        'code' => 'PT',
       ],
     ]);
 
