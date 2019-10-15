@@ -143,7 +143,7 @@ class PoetryMockController extends ControllerBase {
   public function sendStatusNotification(JobInterface $tmgmt_job, string $status): Response {
     $identifier_info = $tmgmt_job->get('poetry_request_id')->get(0)->getValue();
     $language = [
-      'code' => strtoupper($tmgmt_job->getTargetLangcode()),
+      'code' => strtoupper($tmgmt_job->getRemoteTargetLanguage()),
     ];
 
     $accepted_languages = [];
@@ -208,7 +208,7 @@ class PoetryMockController extends ControllerBase {
 
     // We need to render this in a new context to prevent cache leaks.
     $this->renderer->executeInRenderContext(new RenderContext(), function () use ($identifier_info, $identifier, $tmgmt_job, $data, $item) {
-      $translation_notification = $this->fixturesGenerator->translationNotification($identifier, $tmgmt_job->getTargetLangcode(), $data, (int) $item->id(), (int) $tmgmt_job->id());
+      $translation_notification = $this->fixturesGenerator->translationNotification($identifier, $tmgmt_job->getRemoteTargetLanguage(), $data, (int) $item->id(), (int) $tmgmt_job->id());
       $this->performNotification($translation_notification);
     });
 
