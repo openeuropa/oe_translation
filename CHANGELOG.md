@@ -1,8 +1,16 @@
 # Change Log
 
+## [0.1.1](https://github.com/openeuropa/oe_translation/tree/0.1.1) (2019-10-16)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.1...0.1.1)
+
+**Merged pull requests:**
+
+- OPENEUROPA-2108: Fix labels in translation form. [\#20](https://github.com/openeuropa/oe_translation/pull/20) ([dxvargas](https://github.com/dxvargas))
+
 ## [0.1](https://github.com/openeuropa/oe_translation/tree/0.1) (2019-07-24)
 **Merged pull requests:**
 
+- Update CHANGELOG.md for release 0.1. [\#6](https://github.com/openeuropa/oe_translation/pull/6) ([sergepavle](https://github.com/sergepavle))
 - OPENEUROPA-2053: Translations are by default saved onto the revision they started from [\#5](https://github.com/openeuropa/oe_translation/pull/5) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2056: Better translation form elements. [\#4](https://github.com/openeuropa/oe_translation/pull/4) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2017: Local translation solution. [\#2](https://github.com/openeuropa/oe_translation/pull/2) ([upchuk](https://github.com/upchuk))
