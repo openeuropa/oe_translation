@@ -60,7 +60,7 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
 
     foreach ($jobs as $job) {
       $message->withTarget()
-        ->setLanguage(strtoupper($job->getTargetLangcode()))
+        ->setLanguage(strtoupper($job->getRemoteTargetLanguage()))
         ->setFormat('HTML')
         ->setAction('INSERT')
         ->setDelay($formatted_date)
