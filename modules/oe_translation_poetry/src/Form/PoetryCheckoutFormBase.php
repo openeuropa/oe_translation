@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -13,6 +14,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueue;
+use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
 use Drupal\oe_translation_poetry\PoetryTranslatorUI;
 use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
 use EC\Poetry\Messages\Responses\ResponseInterface;
@@ -31,11 +33,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   protected $requestType = 'TRA';
 
   /**
-   * The job queue.
+   * The job queue factory.
    *
-   * @var \Drupal\oe_translation_poetry\PoetryJobQueue
+   * @var \Drupal\oe_translation_poetry\PoetryJobQueueFactory
    */
-  protected $queue;
+  protected $queueFactory;
 
   /**
    * The Poetry client.
@@ -61,8 +63,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   /**
    * PoetryCheckoutForm constructor.
    *
-   * @param \Drupal\oe_translation_poetry\PoetryJobQueue $queue
-   *   The job queue.
+   * @param \Drupal\oe_translation_poetry\PoetryJobQueueFactory $queueFactory
+   *   The job queue factory.
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
    *   The Poetry client.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
@@ -72,8 +74,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory.
    */
-  public function __construct(PoetryJobQueue $queue, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory) {
-    $this->queue = $queue;
+  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory) {
+    $this->queueFactory = $queueFactory;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
     $this->contentFormatter = $contentFormatter;
@@ -85,7 +87,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('oe_translation_poetry.job_queue'),
+      $container->get('oe_translation_poetry.job_queue_factory'),
       $container->get('oe_translation_poetry.client.default'),
       $container->get('messenger'),
       $container->get('oe_translation_poetry.html_formatter'),
@@ -104,8 +106,10 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
     $translator_settings = $this->poetry->getTranslatorSettings();
+
+    $form_state->set('entity', $node);
 
     $form['#tree'] = TRUE;
 
@@ -189,9 +193,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The title for the form page.
    */
-  public function getPageTitle(): TranslatableMarkup {
-    $target_languages = $this->queue->getTargetLanguages();
-    $entity = $this->queue->getEntity();
+  public function getPageTitle(ContentEntityInterface $node = NULL): TranslatableMarkup {
+    $queue = $this->queueFactory->get($node);
+    $target_languages = $queue->getTargetLanguages();
+    // Load the entity with the right revision.
+    $entity = $queue->getEntity();
     $target_languages = count($target_languages) > 1 ? implode(', ', $target_languages) : array_shift($target_languages);
     return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
   }
@@ -205,9 +211,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The form state.
    */
   public function submitRequest(array &$form, FormStateInterface $form_state): void {
+    $entity = $form_state->get('entity');
+    $queue = $this->queueFactory->get($entity);
     $translator_settings = $this->poetry->getTranslatorSettings();
-    $jobs = $this->queue->getAllJobs();
-    $entity = $this->queue->getEntity();
+    $jobs = $queue->getAllJobs();
+    $entity = $queue->getEntity();
     $identifier = $this->poetry->getIdentifierForContent($entity);
     $identifier->setProduct($this->requestType);
 
@@ -228,7 +236,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     // We use the formatted identifier as the user reference.
     $details->setClientId($identifier->getFormattedIdentifier());
-    $title = $this->createRequestTitle();
+    $title = $this->createRequestTitle($queue);
     $details->setTitle($title);
     $details->setApplicationId($translator_settings['application_reference']);
     $details->setReferenceFilesRemark($entity->toUrl()->setAbsolute()->toString());
@@ -304,14 +312,14 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       }
 
       $this->redirectBack($form_state);
-      $this->queue->reset();
+      $queue->reset();
       $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
     }
     catch (\Exception $exception) {
       $this->logger->error($exception->getMessage());
-      $this->messenger->addError($this->t('There was a error making the request to DGT.'));
+      $this->messenger->addError($this->t('There was an error making the request to DGT.'));
       $this->redirectBack($form_state);
-      $this->queue->reset();
+      $queue->reset();
     }
   }
 
@@ -341,7 +349,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $job->delete();
     }
 
-    $this->queue->reset();
+    $queue = $this->queueFactory->get($form_state->get('entity'));
+    $queue->reset();
   }
 
   /**
@@ -351,7 +360,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The form state.
    */
   protected function redirectBack(FormStateInterface $form_state): void {
-    $destination = $this->queue->getDestination();
+    $queue = $this->queueFactory->get($form_state->get('entity'));
+    $destination = $queue->getDestination();
     if ($destination) {
       $form_state->setRedirectUrl($destination);
     }
@@ -363,11 +373,14 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    * It uses the configured prefix, site ID and the title of the Job (one of the
    * jobs as they are identical).
    *
+   * @param \Drupal\oe_translation_poetry\PoetryJobQueue $queue
+   *   The job queue.
+   *
    * @return string
    *   The title.
    */
-  protected function createRequestTitle(): string {
-    $jobs = $this->queue->getAllJobs();
+  protected function createRequestTitle(PoetryJobQueue $queue): string {
+    $jobs = $queue->getAllJobs();
     $job = reset($jobs);
     $settings = $this->poetry->getTranslatorSettings();
     return (string) new FormattableMarkup('@prefix: @site_id - @title', [
@@ -387,10 +400,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    */
   protected function handlePoetryResponse(ResponseInterface $response, FormStateInterface $form_state): void {
     if (!$response->isSuccessful()) {
-      $this->rejectJobs($response);
+      $this->rejectJobs($response, $form_state);
     }
 
-    $jobs = $this->queue->getAllJobs();
+    $queue = $this->queueFactory->get($form_state->get('entity'));
+    $jobs = $queue->getAllJobs();
 
     /** @var \EC\Poetry\Messages\Components\Identifier $identifier */
     $identifier = $response->getIdentifier();
@@ -420,13 +434,20 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *
    * @param \EC\Poetry\Messages\Responses\ResponseInterface $response
    *   The response.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @throws \Exception
    */
-  protected function rejectJobs(ResponseInterface $response): void {
+  protected function rejectJobs(ResponseInterface $response, FormStateInterface $form_state): void {
     $warnings = $response->getWarnings() ? implode('. ', $response->getWarnings()) : NULL;
     $errors = $response->getErrors() ? implode('. ', $response->getErrors()) : NULL;
     $job_ids = [];
 
-    foreach ($this->queue->getAllJobs() as $job) {
+    $queue = $this->queueFactory->get($form_state->get('entity'));
+    $jobs = $queue->getAllJobs();
+
+    foreach ($jobs as $job) {
       if ($warnings) {
         $job->addMessage(new FormattableMarkup('There were warnings with this request: @warnings', ['@warnings' => $warnings]));
       }

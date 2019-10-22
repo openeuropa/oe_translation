@@ -28,7 +28,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $node->save();
 
     // Assert we can't access the checkout route without jobs in the queue.
-    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout'));
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $node->id()]));
     $this->assertSession()->statusCodeEquals(403);
 
     // Select some languages to translate.
@@ -208,7 +208,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // finish the translation request.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertSession()->buttonExists('Finish translation request to DGT for Bulgarian, Czech');
-    $this->assertCount(2, $this->container->get('oe_translation_poetry.job_queue')->getAllJobs());
+    $this->assertCount(2, $this->container->get('oe_translation_poetry.job_queue_factory')->get($node)->getAllJobs());
     // Delete the first unprocessed job (index 0).
     $this->clickLink('Delete unprocessed job', 0);
     $this->assertSession()->pageTextContains('Are you sure you want to delete the translation job My first node?');
@@ -217,7 +217,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->pageTextContains('The translation job My first node has been deleted.');
     $this->jobStorage->resetCache();
     $this->assertCount(1, $this->jobStorage->loadMultiple());
-    $this->assertCount(1, $this->container->get('oe_translation_poetry.job_queue')->getAllJobs());
+    $this->assertCount(1, $this->container->get('oe_translation_poetry.job_queue_factory')->get($node)->getAllJobs());
 
     // Finalize the translation for remaining unprocessed job.
     $this->drupalPostForm(NULL, [], 'Finish translation request to DGT for Czech');

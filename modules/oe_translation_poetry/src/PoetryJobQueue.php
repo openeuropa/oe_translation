@@ -4,12 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\Url;
 use Drupal\tmgmt\JobInterface;
 
@@ -24,6 +22,13 @@ class PoetryJobQueue {
    * @var \Drupal\Core\TempStore\PrivateTempStore
    */
   protected $store;
+
+  /**
+   * The namespace in the storage to keep the data in.
+   *
+   * @var string
+   */
+  protected $namespace;
 
   /**
    * The entity type manager.
@@ -42,17 +47,20 @@ class PoetryJobQueue {
   /**
    * PoetryJobQueue constructor.
    *
-   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $privateTempStoreFactory
+   * @param \Drupal\Core\TempStore\PrivateTempStore $store
    *   The private temp store.
+   * @param string $namespace
+   *   The namespace in the storage to keep the data in.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
    */
-  public function __construct(PrivateTempStoreFactory $privateTempStoreFactory, EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
-    $this->store = $privateTempStoreFactory->get('oe_translation_poetry');
+  public function __construct(PrivateTempStore $store, string $namespace, EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
+    $this->store = $store;
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
+    $this->namespace = $namespace;
   }
 
   /**
@@ -67,7 +75,7 @@ class PoetryJobQueue {
     $jobs = &$queue['jobs'];
     if (!in_array($job->id(), $jobs)) {
       $jobs[] = $job->id();
-      $this->store->set('queue', $queue);
+      $this->saveQueue($queue);
     }
   }
 
@@ -83,7 +91,7 @@ class PoetryJobQueue {
     $queue = $this->initializeQueue();
     $queue['entity_type'] = $entity_type;
     $queue['entity_revision_id'] = $id;
-    $this->store->set('queue', $queue);
+    $this->saveQueue($queue);
   }
 
   /**
@@ -94,11 +102,19 @@ class PoetryJobQueue {
    */
   public function getEntity(): ContentEntityInterface {
     $queue = $this->initializeQueue();
-    if (!$queue['entity_revision_id']) {
+    if (!$this->hasEntity()) {
       throw new \Exception('Missing Entity in the queue.');
     }
 
     return $this->entityTypeManager->getStorage($queue['entity_type'])->loadRevision($queue['entity_revision_id']);
+  }
+
+  /**
+   * Checks whether the queue has the entity info saved.
+   */
+  public function hasEntity(): bool {
+    $queue = $this->initializeQueue();
+    return (bool) $queue['entity_revision_id'];
   }
 
   /**
@@ -125,7 +141,7 @@ class PoetryJobQueue {
   public function setDestination(Url $url): void {
     $queue = $this->initializeQueue();
     $queue['destination'] = $url;
-    $this->store->set('queue', $queue);
+    $this->saveQueue($queue);
   }
 
   /**
@@ -143,7 +159,7 @@ class PoetryJobQueue {
    * Resets the entire queue.
    */
   public function reset(): void {
-    $this->store->delete('queue');
+    $this->store->delete('queue.' . $this->namespace);
   }
 
   /**
@@ -162,28 +178,13 @@ class PoetryJobQueue {
   }
 
   /**
-   * Access handler for routes that depend on the job queue.
-   *
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   The current user.
-   *
-   * @return \Drupal\Core\Access\AccessResult
-   *   The access result.
-   */
-  public function access(AccountInterface $account) {
-    return AccessResult::allowedIf(!empty($this->getAllJobs()))
-      ->cachePerUser()
-      ->addCacheTags(['tmgmt_job_list']);
-  }
-
-  /**
    * Initializes the queue if empty and returns the queue data.
    *
    * @return array
    *   The queue data.
    */
   protected function initializeQueue(): array {
-    $queue = $this->store->get('queue');
+    $queue = $this->store->get('queue.' . $this->namespace);
     if (!$queue) {
       $queue = [
         'jobs' => [],
@@ -191,10 +192,19 @@ class PoetryJobQueue {
         'entity_type' => NULL,
         'destination' => NULL,
       ];
-      $this->store->set('queue', $queue);
     }
 
     return $queue;
+  }
+
+  /**
+   * Saves the queue data in the right place.
+   *
+   * @param array $queue
+   *   The queue info.
+   */
+  protected function saveQueue(array $queue): void {
+    $this->store->set('queue.' . $this->namespace, $queue);
   }
 
 }
