@@ -196,10 +196,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   public function getPageTitle(ContentEntityInterface $node = NULL): TranslatableMarkup {
     $queue = $this->queueFactory->get($node);
     $target_languages = $queue->getTargetLanguages();
-    // Load the entity with the right revision.
-    $entity = $queue->getEntity();
     $target_languages = count($target_languages) > 1 ? implode(', ', $target_languages) : array_shift($target_languages);
-    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $node->label(), '@target_languages' => $target_languages]);
   }
 
   /**
@@ -215,7 +213,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $queue = $this->queueFactory->get($entity);
     $translator_settings = $this->poetry->getTranslatorSettings();
     $jobs = $queue->getAllJobs();
-    $entity = $queue->getEntity();
     $identifier = $this->poetry->getIdentifierForContent($entity);
     $identifier->setProduct($this->requestType);
 

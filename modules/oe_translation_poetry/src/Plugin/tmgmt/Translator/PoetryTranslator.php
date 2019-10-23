@@ -397,7 +397,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $entity = $form_state->get('entity');
     $entity = !$entity->isDefaultTranslation() ? $entity->getUntranslated() : $entity;
     $job_queue = $this->jobQueueFactory->get($entity);
-    $job_queue->setEntityId($entity->getEntityTypeId(), $entity->id());
+    $job_queue->setEntityId($entity->getEntityTypeId(), $entity->getRevisionId());
     $values = $form_state->getValues();
 
     foreach (array_keys(array_filter($values['languages'])) as $langcode) {
