@@ -200,10 +200,23 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       'title' => 'My first node',
     ]);
     $node->save();
+    $second_node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My second node',
+    ]);
+    $second_node->save();
 
     // Select some languages to translate.
     $this->createInitialTranslationJobs($node, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
 
+    // Assert that the second node doesn't have any pending jobs.
+    $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->buttonExists('Request DGT translation for the selected languages');
+    // Assert that each node has its own queue by trying to access the checkout
+    // of the second node (which has no pending jobs).
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $second_node->id()]));
+    $this->assertSession()->statusCodeEquals(403);
+    
     // Go back to the translation overview to mimic that the user did not
     // finish the translation request.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
