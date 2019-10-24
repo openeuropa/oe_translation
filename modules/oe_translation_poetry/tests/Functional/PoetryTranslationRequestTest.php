@@ -216,7 +216,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // of the second node (which has no pending jobs).
     $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $second_node->id()]));
     $this->assertSession()->statusCodeEquals(403);
-    
+
     // Go back to the translation overview to mimic that the user did not
     // finish the translation request.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
