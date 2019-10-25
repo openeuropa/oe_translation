@@ -13,10 +13,10 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
-use Drupal\oe_translation_poetry\PoetryJobQueue;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
 use Drupal\oe_translation_poetry\PoetryTranslatorUI;
 use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
+use Drupal\tmgmt\JobInterface;
 use EC\Poetry\Messages\Responses\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -104,7 +104,17 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   abstract protected function getRequestOperation(): string;
 
   /**
-   * {@inheritdoc}
+   * Form constructor.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $node
+   *   The node entity for which the translations are going to be requested.
+   *
+   * @return array
+   *   The form structure.
    */
   public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
     $translator_settings = $this->poetry->getTranslatorSettings();
@@ -190,6 +200,9 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   /**
    * Returns the title of the form page.
    *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $node
+   *   The node entity to use when generating the title.
+   *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The title for the form page.
    */
@@ -233,7 +246,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     // We use the formatted identifier as the user reference.
     $details->setClientId($identifier->getFormattedIdentifier());
-    $title = $this->createRequestTitle($queue);
+    $title = $this->createRequestTitle(reset($jobs));
     $details->setTitle($title);
     $details->setApplicationId($translator_settings['application_reference']);
     $details->setReferenceFilesRemark($entity->toUrl()->setAbsolute()->toString());
@@ -341,12 +354,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    */
   protected function cancelAndRedirect(FormStateInterface $form_state): void {
     $this->redirectBack($form_state);
-    $jobs = $this->queue->getAllJobs();
+    $queue = $this->queueFactory->get($form_state->get('entity'));
+    $jobs = $queue->getAllJobs();
     foreach ($jobs as $job) {
       $job->delete();
     }
-
-    $queue = $this->queueFactory->get($form_state->get('entity'));
     $queue->reset();
   }
 
@@ -370,15 +382,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    * It uses the configured prefix, site ID and the title of the Job (one of the
    * jobs as they are identical).
    *
-   * @param \Drupal\oe_translation_poetry\PoetryJobQueue $queue
-   *   The job queue.
+   * @param \Drupal\tmgmt\JobInterface $job
+   *   The job to get the label from.
    *
    * @return string
    *   The title.
    */
-  protected function createRequestTitle(PoetryJobQueue $queue): string {
-    $jobs = $queue->getAllJobs();
-    $job = reset($jobs);
+  protected function createRequestTitle(JobInterface $job): string {
     $settings = $this->poetry->getTranslatorSettings();
     return (string) new FormattableMarkup('@prefix: @site_id - @title', [
       '@prefix' => $settings['title_prefix'],
@@ -396,12 +406,11 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The form state.
    */
   protected function handlePoetryResponse(ResponseInterface $response, FormStateInterface $form_state): void {
-    if (!$response->isSuccessful()) {
-      $this->rejectJobs($response, $form_state);
-    }
-
     $queue = $this->queueFactory->get($form_state->get('entity'));
     $jobs = $queue->getAllJobs();
+    if (!$response->isSuccessful()) {
+      $this->rejectJobs($response, $jobs);
+    }
 
     /** @var \EC\Poetry\Messages\Components\Identifier $identifier */
     $identifier = $response->getIdentifier();
@@ -431,18 +440,15 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *
    * @param \EC\Poetry\Messages\Responses\ResponseInterface $response
    *   The response.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
+   * @param \Drupal\Core\Form\FormStateInterface[] $jobs
+   *   The jobs to reject..
    *
    * @throws \Exception
    */
-  protected function rejectJobs(ResponseInterface $response, FormStateInterface $form_state): void {
+  protected function rejectJobs(ResponseInterface $response, array $jobs): void {
     $warnings = $response->getWarnings() ? implode('. ', $response->getWarnings()) : NULL;
     $errors = $response->getErrors() ? implode('. ', $response->getErrors()) : NULL;
     $job_ids = [];
-
-    $queue = $this->queueFactory->get($form_state->get('entity'));
-    $jobs = $queue->getAllJobs();
 
     foreach ($jobs as $job) {
       if ($warnings) {

@@ -395,7 +395,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $form_state->get('entity');
-    $entity = !$entity->isDefaultTranslation() ? $entity->getUntranslated() : $entity;
+    $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
     $job_queue = $this->jobQueueFactory->get($entity);
     $job_queue->setEntityId($entity->getEntityTypeId(), $entity->getRevisionId());
     $values = $form_state->getValues();
