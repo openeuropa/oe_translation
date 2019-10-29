@@ -114,7 +114,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       $items = $job->getItems();
       $item = $items[$job_item_id] ?? NULL;
       if (!$item instanceof JobItemInterface) {
-        $this->logger->error('Translation notification received but the job ID could not be retrieved: @id. Job Item ID: @job_item.', ['@id' => $identifier->getFormattedIdentifier(), '@job_item_id' => $job_item_id]);
+        $this->logger->error('Translation notification received but the job ID could not be retrieved: @id. Job Item ID: @job_item_id.', ['@id' => $identifier->getFormattedIdentifier(), '@job_item_id' => $job_item_id]);
         return;
       }
 
