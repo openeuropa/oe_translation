@@ -107,7 +107,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       // Get item from job (we expect only one job item (entity).
       $job_item = current($job->getItems());
       if (!$job_item instanceof JobItemInterface) {
-        $this->logError($job, 'Translation to @language received but the job item could not be retrieved: @id. Job ID: @job_id.', [
+        $this->logger->error('Translation to @language received but the job item could not be retrieved: @id. Job ID: @job_id.', [
           '@language' => $language,
           '@id' => $identifier->getFormattedIdentifier(),
           '@job_id' => $job->id(),
@@ -119,7 +119,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       $decoded = base64_decode($data);
       $values = $this->contentFormatter->import($decoded, FALSE);
       if (!$values) {
-        $this->logError($job, 'Translation to @language received but the values could not be read: @id. Job ID: @job_id.', [
+        $this->logger->error('Translation to @language received but the values could not be read: @id. Job ID: @job_id.', [
           '@language' => $language,
           '@id' => $identifier->getFormattedIdentifier(),
           '@job_id' => $job->id(),
@@ -344,21 +344,6 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     }
 
     return NULL;
-  }
-
-  /**
-   * Log errors both in logger and in job.
-   *
-   * @param \Drupal\tmgmt\JobInterface $job
-   *   The job.
-   * @param string $msg
-   *   The message.
-   * @param array $vars
-   *   The variables to replace in the message.
-   */
-  protected function logError(JobInterface $job, string $msg, array $vars): void {
-    $this->logger->error($msg, $vars);
-    $job->addMessage($msg, $vars, 'error');
   }
 
 }
