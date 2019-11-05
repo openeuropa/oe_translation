@@ -94,9 +94,24 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
 
     foreach ($message->getTargets() as $target) {
       $language = strtolower($target->getLanguage());
+      /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $jobs[$language] ?? NULL;
       if (!$job) {
-        $this->logger->error('Translation to @language received for job but job cannot be found: @id', ['@language' => $language, '@id' => $identifier->getFormattedIdentifier()]);
+        $this->logger->error('Translation to @language received for job but job cannot be found: @id', [
+          '@language' => $language,
+          '@id' => $identifier->getFormattedIdentifier(),
+        ]);
+        continue;
+      }
+
+      // Get item from job (we expect only one job item (entity).
+      $job_item = current($job->getItems());
+      if (!$job_item instanceof JobItemInterface) {
+        $this->logger->error('Translation to @language received but the job item could not be retrieved: @id. Job ID: @job_id.', [
+          '@language' => $language,
+          '@id' => $identifier->getFormattedIdentifier(),
+          '@job_id' => $job->id(),
+        ]);
         continue;
       }
 
@@ -104,21 +119,16 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       $decoded = base64_decode($data);
       $values = $this->contentFormatter->import($decoded, FALSE);
       if (!$values) {
-        $this->logger->error('Translation notification received but the values could not be read: @id', ['@id' => $identifier->getFormattedIdentifier()]);
-        return;
+        $this->logger->error('Translation to @language received but the values could not be read: @id. Job ID: @job_id.', [
+          '@language' => $language,
+          '@id' => $identifier->getFormattedIdentifier(),
+          '@job_id' => $job->id(),
+        ]);
+        continue;
       }
 
-      // We expect only one job item (entity) values to be translated.
       $item_values = reset($values);
-      $job_item_id = key($values);
-      $items = $job->getItems();
-      $item = $items[$job_item_id] ?? NULL;
-      if (!$item instanceof JobItemInterface) {
-        $this->logger->error('Translation notification received but the job ID could not be retrieved: @id. Job Item ID: @job_item.', ['@id' => $identifier->getFormattedIdentifier(), '@job_item_id' => $job_item_id]);
-        return;
-      }
-
-      $item->addTranslatedData($item_values, [], TMGMT_DATA_ITEM_STATE_TRANSLATED);
+      $job_item->addTranslatedData($item_values, [], TMGMT_DATA_ITEM_STATE_TRANSLATED);
 
       $this->changeJobState($job, PoetryTranslator::POETRY_STATUS_TRANSLATED, 'poetry_state', 'Poetry has translated this job.');
       $job->save();

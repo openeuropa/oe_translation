@@ -68,13 +68,16 @@ trait PoetryTestTrait {
    *   The jobs.
    */
   protected function notifyWithDummyTranslations(array $jobs): void {
-    foreach ($jobs as $job) {
-      // Prepare the identifier.
-      $identifier = new Identifier();
-      foreach ($job->get('poetry_request_id')->first()->getValue() as $name => $value) {
-        $identifier->offsetSet($name, $value);
-      }
+    // Prepare the identifier.
+    $identifier = new Identifier();
+    $main_job = current($jobs);
+    foreach ($main_job->get('poetry_request_id')->first()->getValue() as $name => $value) {
+      $identifier->offsetSet($name, $value);
+    }
+    $main_items = $main_job->getItems();
+    $main_item = reset($main_items);
 
+    foreach ($jobs as $job) {
       // Translate the content.
       $items = $job->getItems();
       $item = reset($items);
@@ -83,7 +86,7 @@ trait PoetryTestTrait {
         $info['#text'] .= ' - ' . $job->getTargetLangcode();
       }
 
-      $translation_notification = $this->getContainer()->get('oe_translation_poetry_mock.fixture_generator')->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $item->id(), (int) $job->id());
+      $translation_notification = $this->getContainer()->get('oe_translation_poetry_mock.fixture_generator')->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $main_item->id(), (int) $main_job->id());
       $this->performNotification($translation_notification);
     }
   }

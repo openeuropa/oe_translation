@@ -101,13 +101,18 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     $this->prepareRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
-    ], ['fr']);
+    ], ['fr', 'es']);
 
     // Accept the translations.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
       [
         [
           'code' => 'FR',
+          'date' => '30/08/2019 23:59',
+          'accepted_date' => '30/09/2019 23:59',
+        ],
+        [
+          'code' => 'ES',
           'date' => '30/08/2019 23:59',
           'accepted_date' => '30/09/2019 23:59',
         ],
@@ -122,16 +127,17 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     $this->jobStorage->resetCache();
     $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
     $jobs = $this->jobStorage->loadMultiple();
-    $job = reset($jobs);
-    $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
-    $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+    foreach ($jobs as $job) {
+      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
 
-    $items = $job->getItems();
-    $item = reset($items);
-    $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
-    foreach ($data as $field => $info) {
-      $this->assertNotEmpty($info['#translation']);
-      $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode());
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode());
+      }
     }
   }
 
