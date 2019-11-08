@@ -247,13 +247,16 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
-    // Improve the button labels.
+
+    // Improve the button labels and custom redirect page.
     if (isset($form['actions']['accept'])) {
       $form['actions']['accept']['#value'] = t('Accept translation');
+      $form['actions']['accept']['#submit'][] = [__CLASS__, 'jobItemFormRedirect'];
     }
 
     if (isset($form['actions']['save'])) {
       $form['actions']['save']['#value'] = t('Update translation');
+      $form['actions']['save']['#submit'][] = [__CLASS__, 'jobItemFormRedirect'];
     }
 
     if (isset($form['actions']['validate'])) {
@@ -281,6 +284,21 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
         }
       }
     }
+  }
+
+  /**
+   * Redirect to the translation page.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function jobItemFormRedirect(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\tmgmt\JobItemInterface $job_item */
+    $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
+    $url = Url::fromRoute('entity.node.content_translation_overview', ['node' => $job_item->getItemId()]);
+    $form_state->setRedirectUrl($url);
   }
 
   /**
