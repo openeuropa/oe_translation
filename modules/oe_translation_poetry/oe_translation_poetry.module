@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\Core\Access\AccessResult;
 use Drupal\tmgmt\Entity\Job;
@@ -138,4 +139,31 @@ function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $o
   }
 
   return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for the Node confirm delete form.
+ */
+function oe_translation_poetry_form_node_confirm_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // If the user is trying to delete a node, we should show a warning that
+  // there are ongoing translation jobs associated with it.
+  $node = \Drupal::service('current_route_match')->getParameter('node');
+  if (!$node instanceof NodeInterface) {
+    return;
+  }
+
+  $query = \Drupal::database()->select('tmgmt_job', 'job');
+  $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
+  $query->fields('job', ['tjid', 'target_language']);
+  $query->fields('job_item', ['tjiid']);
+  $query->condition('job_item.item_id', $node->id());
+  $query->condition('job.translator', 'poetry', '=');
+  $query->condition('job.poetry_state', PoetryTranslator::POETRY_STATUS_ONGOING, '=');
+
+  $result = $query->execute()->fetchAllAssoc('target_language');
+  if (!$result) {
+    return;
+  }
+
+  \Drupal::messenger()->addWarning(t('This node has ongoing translation jobs associated in Poetry. Ongoing requests cannot be automatically cancelled, please inform DGT about your cancellation request.'));
 }
