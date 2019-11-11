@@ -16,7 +16,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\oe_translation_poetry\Access\JobAccessHandler;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 
 /**
@@ -24,18 +23,10 @@ use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
  */
 function oe_translation_poetry_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
-  $entity_type = $entity_types['tmgmt_job'] ?? NULL;
-  if ($entity_type) {
-    // Changing the access handler class for the TMGTM job entity.
-    $entity_type->setHandlerClass('access', JobAccessHandler::class);
-  }
-
-  /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['tmgmt_job_item'] ?? NULL;
   if ($entity_type) {
     $entity_type->setHandlerClass('list_builder', JobItemListBuilder::class);
   }
-
 }
 
 /**

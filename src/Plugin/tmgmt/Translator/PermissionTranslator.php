@@ -7,6 +7,7 @@ namespace Drupal\oe_translation\Plugin\tmgmt\Translator;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessManagerInterface;
@@ -54,7 +55,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PermissionTranslator extends TranslatorPluginBase implements ContinuousTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface, ContainerFactoryPluginInterface {
+class PermissionTranslator extends TranslatorPluginBase implements ContinuousTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface, ContainerFactoryPluginInterface, JobAccessTranslatorInterface {
 
   /**
    * The current user.
@@ -318,6 +319,24 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
     if (isset($form['actions']['preview'])) {
       array_unshift($form['actions']['preview']['#submit'], [$this, 'localTaskItemPreview']);
     }
+
+    // Add a delete button to delete the job associated with this task.
+    $source_entity = $this->entityTypeManager->getStorage($job_item->getItemType())->load($job_item->getItemId());
+    $destination = $source_entity->toUrl('drupal:content-translation-overview');
+    $delete_url = Url::fromRoute(
+      'entity.tmgmt_job.delete_form',
+      ['tmgmt_job' => $job->id()],
+      ['attributes' => ['class' => ['button']], 'query' => ['destination' => $destination->toString()]]
+    );
+
+    if ($delete_url->access()) {
+      $form['actions']['delete'] = [
+        '#type' => 'link',
+        '#url' => $delete_url,
+        '#title' => $this->t('Delete job'),
+        '#weight' => 100,
+      ];
+    }
   }
 
   /**
@@ -536,6 +555,22 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
     }
 
     return $users;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface {
+    if ($operation !== 'delete') {
+      return NULL;
+    }
+
+    // Allow the owners of the jobs to delete jobs whenever they want.
+    if ($job->isAuthor($account) && $job->getTranslatorPlugin() instanceof PermissionTranslator) {
+      return AccessResult::allowed()->addCacheableDependency($job)->cachePerUser();
+    }
+
+    return NULL;
   }
 
   /**

@@ -2,14 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_poetry\Access;
+namespace Drupal\oe_translation\Access;
 
-use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
+use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\tmgmt\Entity\Controller\JobAccessControlHandler;
-use Drupal\tmgmt\Entity\Job;
 
 /**
  * Overriding the default access control handler of the Job entity.
@@ -24,13 +23,12 @@ class JobAccessHandler extends JobAccessControlHandler {
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     /** @var \Drupal\tmgmt\JobInterface $entity */
-    if ($operation !== 'delete') {
-      return parent::checkAccess($entity, $operation, $account);
-    }
-
-    // Allow the owners of the jobs to delete jobs if they are unprocessed.
-    if ($entity->isAuthor($account) && (int) $entity->getState() === Job::STATE_UNPROCESSED && $entity->getTranslatorPlugin() instanceof PoetryTranslator) {
-      return AccessResult::allowed()->addCacheableDependency($entity)->cachePerUser();
+    $plugin = $entity->getTranslatorPlugin();
+    if ($plugin instanceof JobAccessTranslatorInterface) {
+      $access = $plugin->access($entity, $operation, $account);
+      if ($access instanceof AccessResultInterface) {
+        return $access;
+      }
     }
 
     return parent::checkAccess($entity, $operation, $account);

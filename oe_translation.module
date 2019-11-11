@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\oe_translation\Access\JobAccessHandler;
 use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -82,6 +83,11 @@ function oe_translation_entity_type_alter(array &$entity_types) {
     // Change the Job Item class with our own override.
     if ($entity_type_id === 'tmgmt_job_item') {
       $entity_type->setClass(JobItem::class);
+    }
+
+    // Change the access handler with our own.
+    if ($entity_type_id === 'tmgmt_job') {
+      $entity_type->setHandlerClass('access', JobAccessHandler::class);
     }
 
     // Change the moderation handler if set to our own override.
