@@ -251,12 +251,12 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     // Improve the button labels and custom redirect page.
     if (isset($form['actions']['accept'])) {
       $form['actions']['accept']['#value'] = t('Accept translation');
-      $form['actions']['accept']['#submit'][] = [__CLASS__, 'jobItemFormRedirect'];
+      $form['actions']['accept']['#submit'][] = [$this, 'jobItemFormRedirect'];
     }
 
     if (isset($form['actions']['save'])) {
       $form['actions']['save']['#value'] = t('Update translation');
-      $form['actions']['save']['#submit'][] = [__CLASS__, 'jobItemFormRedirect'];
+      $form['actions']['save']['#submit'][] = [$this, 'jobItemFormRedirect'];
     }
 
     if (isset($form['actions']['validate'])) {

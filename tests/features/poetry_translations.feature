@@ -56,6 +56,7 @@ Feature: Poetry translations
     Then I should see "Job item My title"
     When I press "Accept translation"
     Then I should see "The translation for My title has been accepted as My title - bg"
+    And I should see "Translations of My title"
 
     # Go to the translated page
     When I click "My title - bg"
