@@ -294,7 +294,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
-  public function jobItemFormRedirect(array &$form, FormStateInterface $form_state) {
+  public function jobItemFormRedirect(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\tmgmt\JobItemInterface $job_item */
     $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
     $url = Url::fromRoute('entity.node.content_translation_overview', ['node' => $job_item->getItemId()]);
