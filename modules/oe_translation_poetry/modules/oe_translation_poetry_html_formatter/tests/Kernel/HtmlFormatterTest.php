@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry_html_formatter\Kernel;
 
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
@@ -56,6 +58,23 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
 
     $node_type->save();
 
+    $field_storage_definition = [
+      'field_name' => 'translatable_text_field',
+      'entity_type' => 'node',
+      'type' => 'string',
+      'cardinality' => 1,
+      'translatable' => TRUE,
+    ];
+    $field_storage = FieldStorageConfig::create($field_storage_definition);
+    $field_storage->save();
+
+    $field_definition = [
+      'field_storage' => $field_storage,
+      'bundle' => 'test_node_type',
+    ];
+    $field = FieldConfig::create($field_definition);
+    $field->save();
+
     // Create a test translator.
     tmgmt_translator_auto_create($this->container->get('plugin.manager.tmgmt.translator')->getDefinition('test_translator'));
     /** @var \Drupal\node\NodeStorageInterface $storage */
@@ -64,6 +83,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $node = $storage->create([
       'type' => 'test_node_type',
       'title' => 'English title',
+      'translatable_text_field' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
     ]);
     $node->save();
 
@@ -90,7 +110,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     /** @var \Drupal\Core\Render\Markup $export */
     $export = $formatter->export($this->job);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html');
-    $this->assertEqual($expected, $export);
+    $this->assertEqual($export, $expected);
   }
 
   /**
@@ -99,7 +119,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   public function testHtmlFormatterImport() {
     /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
     $formatter = $this->container->get('oe_translation_poetry.html_formatter');
-    $processed_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
+    $expected_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
 
     // Let's get the data from the job_item and remove all the information that
     // doesn't get send to DGT.
@@ -113,9 +133,10 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     ];
     foreach ($excluded_fields as $excluded_field) {
       unset($unflattened_data['title'][0]['value'][$excluded_field]);
+      unset($unflattened_data['translatable_text_field'][0]['value'][$excluded_field]);
     }
-    $expected_data = [$this->jobItem->id() => $unflattened_data];
-    $this->assertEqual($processed_data, $expected_data);
+    $actual_data = [$this->jobItem->id() => $unflattened_data];
+    $this->assertEqual($actual_data, $expected_data);
   }
 
 }

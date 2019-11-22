@@ -16,7 +16,7 @@
           label="{{ field['#parent_label']|first }}"
           context="{{ field['#key'] }}"
           -->
-          <div class="atom" id="{{ field_key }}">{{ field['#text'] }}</div>
+          <div class="atom" id="{{ field_key }}">{{ field['#text']|raw }}</div>
         {% endfor %}
       </div>
     {% endfor %}
