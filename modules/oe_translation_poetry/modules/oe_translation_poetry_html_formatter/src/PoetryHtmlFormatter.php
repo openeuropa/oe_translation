@@ -68,9 +68,11 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
       $data = $this->tmgmtData->filterTranslatable($item->getData());
       foreach ($data as $key => $value) {
         $value['#key'] = '[' . $item->id() . '][' . $key . ']';
+        $value['renderable'] = $this->prepareValueRenderable($value);
         $items[$item->id()][$this->encodeIdSafeBase64($item->id() . '][' . $key)] = $value;
       }
     }
+
     $elements = [
       '#theme' => 'poetry_html_template',
       '#tjid' => $job->id(),
@@ -78,7 +80,8 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
       '#target_language' => $job->getRemoteTargetLanguage(),
       '#items' => $items,
     ];
-    return $this->renderer->renderPlain($elements);
+
+    return $this->renderer->renderRoot($elements);
   }
 
   /**
@@ -177,6 +180,34 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
     // Remove prefixed b.
     $data = substr($data, 1);
     return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
+  }
+
+  /**
+   * Prepares a field value to be rendered.
+   *
+   * Given the TMGMT structured field data, prepare a renderable array to
+   * print in the template depending on the field type.
+   *
+   * @param array $value
+   *   The field data.
+   *
+   * @return array
+   *   The renderable array.
+   */
+  protected function prepareValueRenderable(array $value): array {
+    if (isset($value['#format'])) {
+      // If we have a text format, we should use it and process the text.
+      return [
+        '#type' => 'processed_text',
+        '#text' => $value['#text'],
+        '#format' => $value['#format'],
+      ];
+    }
+
+    // Otherwise we default to plain text.
+    return [
+      '#plain_text' => $value['#text'],
+    ];
   }
 
 }
