@@ -5,7 +5,9 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry\Plugin\tmgmt\Translator;
 
 use Drupal\Core\Access\AccessManagerInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -16,10 +18,12 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
+use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
@@ -47,7 +51,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface {
+class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface, JobAccessTranslatorInterface {
 
   /**
    * Status indicating that the translation is ongoing in Poetry.
@@ -557,6 +561,22 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $query->condition('job_item.item_id', $entity->id());
     $query->condition('job.translator', 'poetry', '=');
     return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface {
+    if ($operation !== 'delete') {
+      return NULL;
+    }
+
+    // Allow the owners of the jobs to delete jobs if they are unprocessed.
+    if ($job->isAuthor($account) && (int) $job->getState() === Job::STATE_UNPROCESSED && $job->getTranslatorPlugin() instanceof PoetryTranslator) {
+      return AccessResult::allowed()->addCacheableDependency($job)->cachePerUser();
+    }
+
+    return NULL;
   }
 
 }
