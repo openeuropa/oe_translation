@@ -322,7 +322,6 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $build['#entity'];
-    $job_queue = $this->jobQueueFactory->get($entity);
 
     $event = new TranslationAccessEvent($entity, 'poetry', $this->currentUser, $entity->language());
     $this->eventDispatcher->dispatch(TranslationAccessEvent::EVENT, $event);
@@ -330,20 +329,18 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       return;
     }
 
-    $entity = $build['#entity'];
-    $destination = $entity->toUrl('drupal:content-translation-overview');
-    // Add a link to delete any unprocessed job for this entity.
-    $languages = $this->languageManager->getLanguages();
-    $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
-    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
-    $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
-    $translated_languages = $this->getTranslatedJobsByLanguage($entity);
-
     // Build the TMGMT translation request form.
     $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
     if (isset($build['actions']['add_to_cart'])) {
       $build['actions']['add_to_cart']['#access'] = FALSE;
     }
+
+    $destination = $entity->toUrl('drupal:content-translation-overview');
+    $languages = $this->languageManager->getLanguages();
+    $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
+    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+    $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
+    $translated_languages = $this->getTranslatedJobsByLanguage($entity);
 
     foreach ($languages as $langcode => $language) {
       // Add links for unprocessed jobs to delete the delete.
@@ -388,19 +385,25 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       }
     }
 
-    if (isset($build['actions']['request'])) {
-      /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
-      $current_jobs = $job_queue->getAllJobs();
-      if (empty($current_jobs)) {
-        // If there are no jobs in the queue, it means the user can select
-        // the languages it wants to translate.
+    $job_queue = $this->jobQueueFactory->get($entity);
+    /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
+    $current_jobs = $job_queue->getAllJobs();
+    if (empty($current_jobs)) {
+      if (empty($accepted_languages) && empty($submitted_languages)) {
+        // If there are no jobs in the queue neither sent to DGT, it means
+        // the user can select the languages it wants to translate.
         $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
       }
       else {
-        $current_target_languages = $job_queue->getTargetLanguages();
-        $language_list = count($current_target_languages) > 1 ? implode(', ', $current_target_languages) : array_shift($current_target_languages);
-        $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
+        // No action can be taken until a submitted request is accepted and
+        // sent back by DGT.
+        unset($build['actions']);
       }
+    }
+    else {
+      $current_target_languages = $job_queue->getTargetLanguages();
+      $language_list = implode(', ', $current_target_languages);
+      $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
     }
   }
 

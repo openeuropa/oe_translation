@@ -66,6 +66,9 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     ];
     $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
 
+    // Abort jobs to have the request button displayed again.
+    $this->abort($jobs);
+
     // Make a new request for the same node to check that the version increases.
     $this->createInitialTranslationJobs($node, ['de' => 'German', 'fr' => 'French']);
     $jobs = [];
@@ -105,6 +108,9 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       'title' => 'My second node',
     ]);
     $node_two->save();
+
+    // Abort jobs to have the request button displayed again.
+    $this->abort($jobs);
 
     $this->createInitialTranslationJobs($node_two, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
     // Check that two jobs have been created for the two languages and that
@@ -156,6 +162,9 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       'title' => 'My third node',
     ]);
     $node_three->save();
+
+    // Abort jobs to have the request button displayed again.
+    $this->abort($jobs);
 
     $this->createInitialTranslationJobs($node_three, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
     // Check that two jobs have been created for the two languages and that
@@ -293,6 +302,19 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       $job = $this->jobStorage->load($job->id());
       $this->assertEqual($job->getState(), JobInterface::STATE_ACTIVE);
       $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $values);
+    }
+  }
+
+  /**
+   * Abort jobs.
+   *
+   * @param \Drupal\tmgmt\JobInterface[] $jobs
+   *   The jobs to abort.
+   */
+  protected function abort(array $jobs): void {
+    foreach ($jobs as $job) {
+      $fullJob = $this->jobStorage->load($job->id());
+      $fullJob->aborted();
     }
   }
 
