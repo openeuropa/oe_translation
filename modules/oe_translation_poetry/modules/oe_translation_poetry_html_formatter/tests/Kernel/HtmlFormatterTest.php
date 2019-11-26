@@ -135,29 +135,25 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   public function testHtmlFormatterImport() {
     /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
     $formatter = $this->container->get('oe_translation_poetry.html_formatter');
-    $expected_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
-
-    // Let's get the data from the job_item and remove all the information that
-    // doesn't get send to DGT.
-    $data = $this->container->get('tmgmt.data')->filterTranslatable($this->jobItem->getData());
-    $unflattened_data = $this->container->get('tmgmt.data')->unflatten($data);
-    $excluded_fields = [
-      '#translate',
-      '#max_length',
-      '#status',
-      '#parent_label',
-      '#format',
+    $actual_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
+    $expected_data = [
+      1 => [
+        'title' => [
+          0 => [
+            'value' => [
+              '#text' => 'English title',
+            ],
+          ],
+        ],
+        'translatable_text_field' => [
+          0 => [
+            'value' => [
+              '#text' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
+            ],
+          ],
+        ],
+      ],
     ];
-    foreach ($excluded_fields as $excluded_field) {
-      if (isset($unflattened_data['title'][0]['value'][$excluded_field])) {
-        unset($unflattened_data['title'][0]['value'][$excluded_field]);
-      }
-
-      if (isset($unflattened_data['translatable_text_field'][0]['value'][$excluded_field])) {
-        unset($unflattened_data['translatable_text_field'][0]['value'][$excluded_field]);
-      }
-    }
-    $actual_data = [$this->jobItem->id() => $unflattened_data];
     $this->assertEquals($expected_data, $actual_data);
   }
 
