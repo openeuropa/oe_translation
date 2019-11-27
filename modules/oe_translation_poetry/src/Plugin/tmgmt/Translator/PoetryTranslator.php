@@ -385,26 +385,36 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       }
     }
 
+    // If for some reason we don't have the request button we bail out.
+    if (!isset($build['actions']['request'])) {
+      return;
+    }
+
     $job_queue = $this->jobQueueFactory->get($entity);
     /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
     $current_jobs = $job_queue->getAllJobs();
-    if (empty($current_jobs)) {
-      if (empty($accepted_languages) && empty($submitted_languages)) {
-        // If there are no jobs in the queue neither sent to DGT, it means
-        // the user can select the languages it wants to translate.
-        $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
-      }
-      else {
-        // No action can be taken until a submitted request is accepted and
-        // sent back by DGT.
-        unset($build['actions']);
-      }
-    }
-    else {
+    if (!empty($current_jobs)) {
       $current_target_languages = $job_queue->getTargetLanguages();
       $language_list = implode(', ', $current_target_languages);
       $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
+      return;
     }
+
+    if (empty($accepted_languages) && empty($submitted_languages)) {
+      // If there are no jobs in the queue neither sent to DGT, it means
+      // the user can select the languages it wants to translate.
+      $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
+      return;
+    }
+
+    // No action can be taken until a submitted request is accepted and
+    // sent back by DGT.
+    $build['actions'] = [
+      '#type' => 'fieldset',
+      'message' => [
+        '#markup' => $this->t('No translation requests can be made until the ongoing ones have been completed and received.'),
+      ],
+    ];
   }
 
   /**
