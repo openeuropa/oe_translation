@@ -288,6 +288,7 @@ class Poetry implements PoetryInterface {
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job');
     $query->condition('job_item.item_id', $entity->id());
+    $query->condition('job_item.item_type', $entity->getEntityTypeId());
     $query->condition('job.translator', 'poetry');
     // Do not include unprocessed Jobs. These are the ones which have not been
     // ever sent to Poetry.

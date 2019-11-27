@@ -572,6 +572,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $query->fields('job', ['tjid', 'target_language']);
     $query->fields('job_item', ['tjiid']);
     $query->condition('job_item.item_id', $entity->id());
+    $query->condition('job_item.item_type', $entity->getEntityTypeId());
     $query->condition('job.translator', 'poetry', '=');
     return $query;
   }
