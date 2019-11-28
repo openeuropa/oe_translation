@@ -82,7 +82,7 @@ class OeTranslationHandler implements EntityHandlerInterface {
           continue;
         }
 
-        if ($translator_plugin->applies($this->entity_type)) {
+        if ($translator_plugin->applies($this->entityType)) {
           $supported[] = $plugin_id;
         }
       }
