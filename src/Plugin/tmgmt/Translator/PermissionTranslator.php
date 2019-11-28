@@ -569,7 +569,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
   /**
    * {@inheritdoc}
    */
-  public function access(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface {
+  public function accessJob(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface {
     if ($operation !== 'delete') {
       return NULL;
     }

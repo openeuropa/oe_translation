@@ -28,6 +28,6 @@ interface JobAccessTranslatorInterface {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access or NULL if we want to defer to the default access checking.
    */
-  public function access(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface;
+  public function accessJob(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface;
 
 }
