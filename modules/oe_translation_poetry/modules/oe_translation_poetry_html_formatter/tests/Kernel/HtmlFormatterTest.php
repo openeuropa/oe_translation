@@ -4,6 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry_html_formatter\Kernel;
 
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
@@ -35,6 +38,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     'tmgmt_content',
     'tmgmt_test',
     'oe_translation_poetry_html_formatter',
+    'filter',
   ];
 
   /**
@@ -49,12 +53,40 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $this->installSchema('node', 'node_access');
     $this->installSchema('system', 'sequences');
 
+    $this->installConfig(['filter']);
+
     $node_type = $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'name' => 'Test node type',
       'type' => 'test_node_type',
     ]);
 
     $node_type->save();
+
+    // Add a formatted field to the content type.
+    $field_storage_definition = [
+      'field_name' => 'translatable_text_field',
+      'entity_type' => 'node',
+      'type' => 'text',
+      'cardinality' => 1,
+      'translatable' => TRUE,
+    ];
+    $field_storage = FieldStorageConfig::create($field_storage_definition);
+    $field_storage->save();
+
+    $field_definition = [
+      'field_storage' => $field_storage,
+      'bundle' => 'test_node_type',
+    ];
+    $field = FieldConfig::create($field_definition);
+    $field->save();
+
+    // Create a format for the content.
+    FilterFormat::create([
+      'format' => 'html',
+      'name' => 'Html',
+      'weight' => 1,
+      'filters' => [],
+    ])->save();
 
     // Create a test translator.
     tmgmt_translator_auto_create($this->container->get('plugin.manager.tmgmt.translator')->getDefinition('test_translator'));
@@ -64,6 +96,10 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $node = $storage->create([
       'type' => 'test_node_type',
       'title' => 'English title',
+      'translatable_text_field' => [
+        'value' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
+        'format' => 'html',
+      ],
     ]);
     $node->save();
 
@@ -90,7 +126,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     /** @var \Drupal\Core\Render\Markup $export */
     $export = $formatter->export($this->job);
     $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html');
-    $this->assertEqual($expected, $export);
+    $this->assertEquals($expected, $export);
   }
 
   /**
@@ -99,23 +135,26 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   public function testHtmlFormatterImport() {
     /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
     $formatter = $this->container->get('oe_translation_poetry.html_formatter');
-    $processed_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
-
-    // Let's get the data from the job_item and remove all the information that
-    // doesn't get send to DGT.
-    $data = $this->container->get('tmgmt.data')->filterTranslatable($this->jobItem->getData());
-    $unflattened_data = $this->container->get('tmgmt.data')->unflatten($data);
-    $excluded_fields = [
-      '#translate',
-      '#max_length',
-      '#status',
-      '#parent_label',
+    $actual_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
+    $expected_data = [
+      1 => [
+        'title' => [
+          0 => [
+            'value' => [
+              '#text' => 'English title',
+            ],
+          ],
+        ],
+        'translatable_text_field' => [
+          0 => [
+            'value' => [
+              '#text' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
+            ],
+          ],
+        ],
+      ],
     ];
-    foreach ($excluded_fields as $excluded_field) {
-      unset($unflattened_data['title'][0]['value'][$excluded_field]);
-    }
-    $expected_data = [$this->jobItem->id() => $unflattened_data];
-    $this->assertEqual($processed_data, $expected_data);
+    $this->assertEquals($expected_data, $actual_data);
   }
 
 }
