@@ -8,6 +8,8 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\oe_translation\ApplicableTranslatorInterface;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessManagerInterface;
@@ -55,7 +57,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PermissionTranslator extends TranslatorPluginBase implements ContinuousTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface, ContainerFactoryPluginInterface, JobAccessTranslatorInterface {
+class PermissionTranslator extends TranslatorPluginBase implements ApplicableTranslatorInterface, ContinuousTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface, ContainerFactoryPluginInterface, JobAccessTranslatorInterface {
 
   /**
    * The current user.
@@ -148,6 +150,14 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
       $container->get('request_stack'),
       $container->get('entity_field.manager')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function applies(EntityTypeInterface $entityType): bool {
+    // We can only translate Node entities with this translator..
+    return $entityType->id() === 'node';
   }
 
   /**

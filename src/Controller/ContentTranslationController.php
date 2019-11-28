@@ -74,6 +74,14 @@ class ContentTranslationController extends BaseContentTranslationController {
   public function overview(RouteMatchInterface $route_match, $entity_type_id = NULL): array {
     $build = parent::overview($route_match, $entity_type_id);
 
+    $handler = $this->entityTypeManager->getHandler($entity_type_id, 'oe_translation');
+    $supported_translators = $handler->getSupportedTranslators();
+    if (empty($supported_translators)) {
+      // If there are no supported translators for this entity type, we do
+      // not override at all the overview page.
+      return $build;
+    }
+
     // Remove all the default operation links.
     foreach ($build['content_translation_overview']['#rows'] as $row_key => &$row) {
       end($row);
@@ -91,6 +99,12 @@ class ContentTranslationController extends BaseContentTranslationController {
     $translators = $this->entityTypeManager->getStorage('tmgmt_translator')->loadMultiple();
     foreach ($translators as $translator) {
       $plugin_id = $translator->getPluginId();
+      if (!in_array($plugin_id, $supported_translators)) {
+        // If this translator is not supported, we don't override the overview
+        // page.
+        continue;
+      }
+
       try {
         $translator_plugin = $this->translatorManager->createInstance($plugin_id);
         if ($translator_plugin instanceof AlterableTranslatorInterface) {

@@ -23,6 +23,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\ContentEntitySource;
 use Drupal\oe_translation\LocalTranslatorInterface;
+use Drupal\oe_translation\OeTranslationHandler;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
 
@@ -64,9 +65,13 @@ function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInt
   /** @var \Drupal\tmgmt\JobItemInterface $job_item */
   $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
   $job = $job_item->getJob();
+  /** @var \Drupal\oe_translation\OeTranslationHandler $handler */
+  $handler = \Drupal::entityTypeManager()->getHandler($job_item->getItemType(), 'oe_translation');
+  $supported_translators = $handler->getSupportedTranslators();
   try {
-    $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($job->getTranslator()->getPluginId());
-    if ($translator_plugin instanceof AlterableTranslatorInterface) {
+    $plugin_id = $job->getTranslator()->getPluginId();
+    $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($plugin_id);
+    if ($translator_plugin instanceof AlterableTranslatorInterface && in_array($plugin_id, $supported_translators)) {
       $translator_plugin->jobItemFormAlter($form, $form_state);
     }
   }
@@ -85,10 +90,13 @@ function oe_translation_entity_type_alter(array &$entity_types) {
       $entity_type->setClass(JobItem::class);
     }
 
-    // Change the access handler with our own.
+    // Change the access handler with our own for the Job entity.
     if ($entity_type_id === 'tmgmt_job') {
       $entity_type->setHandlerClass('access', JobAccessHandler::class);
     }
+
+    // Add the OpenEuropa translation handler to all entity types.
+    $entity_type->setHandlerClass('oe_translation', OeTranslationHandler::class);
 
     // Change the moderation handler if set to our own override.
     if (!$entity_type->hasHandlerClass('moderation')) {
