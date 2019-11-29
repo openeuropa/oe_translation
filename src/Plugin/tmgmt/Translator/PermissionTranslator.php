@@ -266,10 +266,9 @@ class PermissionTranslator extends TranslatorPluginBase implements ContinuousTra
 
         list($field_name, $delta, $column) = explode('|', $field_path);
 
-        // In case the field has multiple columns, append the column name. The
-        // only exception is the fields which have a format for which we don't
-        // have a separate translation field.
-        if (count(Element::children($data[$field_name][0])) > 1 && !isset($data[$field_name][0]['format'])) {
+        // When the field has multiple columns they come with
+        // a label, then append the column name.
+        if (isset($data[$field_name][$delta][$column]['#label'])) {
           $field['#field_name'] .= ' ' . ucfirst($column);
         }
 
