@@ -195,8 +195,12 @@ class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
    *   The renderable array.
    */
   protected function prepareValueRenderable(array $value): array {
-    if (isset($value['#format'])) {
-      // If we have a text format, we should use it and process the text.
+    if (isset($value['#format']) && $value['#format'] !== 'plain_text') {
+      // If we have a text format, we should use it and process the text. If,
+      // however, the format is the core "plain_text" one, we do not want to
+      // use it because it comes with some filters by default such as autp
+      // that we cannot use when sending markup to Poetry. So in that case we
+      // just render with a true plain text.
       return [
         '#type' => 'processed_text',
         '#text' => $value['#text'],
