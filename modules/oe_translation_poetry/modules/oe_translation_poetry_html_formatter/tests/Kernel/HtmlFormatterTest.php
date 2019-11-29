@@ -80,6 +80,24 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $field = FieldConfig::create($field_definition);
     $field->save();
 
+    // Add a plain text formatted field to the content type.
+    $field_storage_definition = [
+      'field_name' => 'translatable_text_field_plain',
+      'entity_type' => 'node',
+      'type' => 'text',
+      'cardinality' => 1,
+      'translatable' => TRUE,
+    ];
+    $field_storage = FieldStorageConfig::create($field_storage_definition);
+    $field_storage->save();
+
+    $field_definition = [
+      'field_storage' => $field_storage,
+      'bundle' => 'test_node_type',
+    ];
+    $field = FieldConfig::create($field_definition);
+    $field->save();
+
     // Create a format for the content.
     FilterFormat::create([
       'format' => 'html',
@@ -99,6 +117,10 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
       'translatable_text_field' => [
         'value' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
         'format' => 'html',
+      ],
+      'translatable_text_field_plain' => [
+        'value' => 'plain text field value',
+        'format' => 'plain_text',
       ],
     ]);
     $node->save();
@@ -149,6 +171,13 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
           0 => [
             'value' => [
               '#text' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
+            ],
+          ],
+        ],
+        'translatable_text_field_plain' => [
+          0 => [
+            'value' => [
+              '#text' => 'plain text field value',
             ],
           ],
         ],
