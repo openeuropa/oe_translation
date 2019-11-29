@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/openeuropa/oe_translation/tree/0.2.1) (2019-11-29)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2...0.2.1)
+
+**Merged pull requests:**
+
+- OPENEUROPA-2535: Using markup in the HTML export. [\#50](https://github.com/openeuropa/oe_translation/pull/50) ([upchuk](https://github.com/upchuk))
+
 ## [0.2](https://github.com/openeuropa/oe_translation/tree/0.2) (2019-11-29)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.1.1...0.2)
