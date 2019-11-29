@@ -22,6 +22,7 @@ class TranslationTestBase extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'system',
     'tmgmt',
     'tmgmt_local',
     'tmgmt_content',
@@ -40,7 +41,7 @@ class TranslationTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp() {
     parent::setUp();
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');

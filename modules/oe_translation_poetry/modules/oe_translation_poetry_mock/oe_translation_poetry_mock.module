@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation Poetry Mock module file.
+ */
+
+declare(strict_types = 1);
+
+/**
+ * Implements hook_theme().
+ */
+function oe_translation_poetry_mock_theme($existing, $type, $theme, $path) {
+  return [
+    'status_notification' => [
+      'variables' => [
+        'request_identifier' => [],
+        'request_status' => NULL,
+        'accepted_languages' => [],
+        'refused_languages' => [],
+        'cancelled_languages' => [],
+      ],
+    ],
+    'translation_template' => [
+      'variables' => [
+        'language' => NULL,
+        'job_id' => NULL,
+        'item_id' => NULL,
+        'fields' => [],
+      ],
+    ],
+  ];
+}

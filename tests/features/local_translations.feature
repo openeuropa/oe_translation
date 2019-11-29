@@ -63,7 +63,7 @@ Feature: Local translations
 
     When I fill in the translation form element for the "Title" field with "Bulgarian title 2"
     And I press "Save and complete translation"
-    Then I should see "Translations of Bulgarian title 2"
+    Then I should see "Translations of My title"
     When I click "Bulgarian title 2" in the "Bulgarian" row
     Then I should see "Bulgarian title 2"
     And I should see "Bulgarian body"
@@ -82,3 +82,30 @@ Feature: Local translations
     And I press "Preview"
     Then I should see "Bulgarian title" in the "title" region
     And I should see "Bulgarian body" in the "node content" region
+
+  Scenario: Translation job owners can delete their local translation job
+    Given oe_demo_translatable_page content:
+      | title    | field_oe_demo_translatable_body |
+      | My title | My body                         |
+    And I am logged in as a user with the "translator" role
+    When I visit "the content administration page"
+    And I click "My title"
+    Then I should see the link "Translate"
+    When I click "Translate"
+    And I click "Translate locally" in the "Bulgarian" row
+    Then I should see the link "Delete job"
+
+    When I click "Delete job"
+    Then I should see "Are you sure you want to delete the translation job"
+
+    # Log out and back with another user who cannot delete the job.
+    Then I log out
+    And I am logged in as a user with the "translator" role
+    When I visit "the content administration page"
+    And I click "My title"
+    Then I should see the link "Translate"
+    When I click "Translate"
+    And I click "Edit local translation" in the "Bulgarian" row
+    Then I should see the button "Save and complete translation"
+    And I should not see the link "Delete job"
+

@@ -8,6 +8,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\EventDispatcher\Event;
 
@@ -65,21 +66,21 @@ class TranslationAccessEvent extends Event {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being translated.
-   * @param \Drupal\Core\Language\Language $source
-   *   The source language.
-   * @param \Drupal\Core\Language\Language $target
-   *   The target language.
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   The account.
    * @param string $plugin
    *   The translator plugin ID.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The account.
+   * @param \Drupal\Core\Language\LanguageInterface $source
+   *   The source language.
+   * @param \Drupal\Core\Language\LanguageInterface $target
+   *   The target language.
    */
-  public function __construct(ContentEntityInterface $entity, Language $source, Language $target, AccountInterface $account, string $plugin) {
+  public function __construct(ContentEntityInterface $entity, string $plugin, AccountInterface $account, LanguageInterface $source = NULL, LanguageInterface $target = NULL) {
     $this->entity = $entity;
+    $this->plugin = $plugin;
+    $this->account = $account;
     $this->source = $source;
     $this->target = $target;
-    $this->account = $account;
-    $this->plugin = $plugin;
   }
 
   /**

@@ -1,0 +1,10 @@
+name: OpenEuropa Translation Poetry HTML Formatter
+description: Custom HTML formatter to comply with DGT standards.
+package: OpenEuropa
+
+type: module
+core: 8.x
+
+dependencies:
+  - tmgmt:tmgmt
+  - drupal:filter
