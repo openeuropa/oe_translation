@@ -403,6 +403,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $job_queue = $this->jobQueueFactory->get($entity);
     /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
     $current_jobs = $job_queue->getAllJobs();
+
+    // If there are jobs in the queue, finish them.
     if (!empty($current_jobs)) {
       $current_target_languages = $job_queue->getTargetLanguages();
       $language_list = implode(', ', $current_target_languages);
@@ -410,21 +412,28 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       return;
     }
 
-    if (empty($accepted_languages) && empty($submitted_languages)) {
-      // If there are no jobs in the queue neither sent to DGT, it means
-      // the user can select the languages it wants to translate.
-      $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
+    // If requests are not yet accepted by DGT, no action can be taken.
+    if (!empty($submitted_languages)) {
+      $build['actions'] = [
+        '#type' => 'fieldset',
+        'message' => [
+          '#markup' => $this->t('No translation requests can be made until the ongoing ones have been accepted.'),
+        ],
+      ];
       return;
     }
 
-    // No action can be taken until a submitted request is accepted and
-    // sent back by DGT.
-    $build['actions'] = [
-      '#type' => 'fieldset',
-      'message' => [
-        '#markup' => $this->t('No translation requests can be made until the ongoing ones have been completed and received.'),
-      ],
-    ];
+    // If requests are waiting for translation by DGT, it is possible to
+    // request an update.
+    // @todo also possible to add language
+    if (!empty($accepted_languages)) {
+      $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
+    }
+
+    // If there are no jobs in the queue neither sent to DGT, it means
+    // the user can select the languages it wants to translate, the user
+    // can update the translation request.
+    $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
   }
 
   /**
