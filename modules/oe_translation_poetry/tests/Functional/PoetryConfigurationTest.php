@@ -108,7 +108,7 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     $request = $message->request;
 
     // Check identifier with the custom code.
-    $this->assertEqual((string) $request->attributes()['id'], $form_values['settings[identifier_code]'] . '/2019/EWCMS_SEQUENCE/0/0/TRA');
+    $this->assertEqual((string) $request->attributes()['id'], $form_values['settings[identifier_code]'] . '/2019/NEXT_EUROPA_COUNTER/0/0/TRA');
 
     // Check the title.
     $title = (string) new FormattableMarkup('@prefix: @site_id - @title', [
