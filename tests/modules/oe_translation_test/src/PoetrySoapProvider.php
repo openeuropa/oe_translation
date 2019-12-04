@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_poetry;
+namespace Drupal\oe_translation_test;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
 /**
- * Pimple service provider used for adding the SOAP client.
+ * Pimple service provider used for adding the test SOAP client.
  */
 class PoetrySoapProvider implements ServiceProviderInterface {
 

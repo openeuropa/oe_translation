@@ -93,7 +93,7 @@ class PoetryFactory {
    * @return \Drupal\oe_translation_poetry\Poetry
    *   The poetry service.
    */
-  public function get(string $translator): Poetry {
+  public function get(string $translator): PoetryInterface {
     $entity = $this->entityTypeManager->getStorage('tmgmt_translator')->load($translator);
     $settings = [];
     if ($entity instanceof TranslatorInterface) {
