@@ -97,7 +97,7 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
     if ($poetry_state === PoetryTranslator::POETRY_STATUS_ONGOING) {
       $build[] = [
-        '#markup' => $this->t('This job is being translated in Poetry'),
+        '#markup' => $this->t('This job is being translated in Poetry.'),
       ];
     }
 

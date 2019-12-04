@@ -228,7 +228,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection = new RouteCollection();
 
     $route = new Route(
-      '/admin/content/dgt/send-request/{node}',
+      '/admin/content/dgt/send-request-new/{node}',
       [
         '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
         '_title_callback' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm::getPageTitle',
@@ -238,8 +238,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
         '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
       ]
     );
-
-    $collection->add('oe_translation_poetry.job_queue_checkout', $route);
+    $collection->add('oe_translation_poetry.job_queue_checkout_new', $route);
 
     $route = new Route(
       '/poetry/notifications',
@@ -250,8 +249,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
         '_access' => 'TRUE',
       ]
     );
-
     $collection->add('oe_translation_poetry.notifications', $route);
+
     return $collection;
   }
 
@@ -341,8 +340,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
 
     // Build the TMGMT translation request form.
     $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
+
     if (isset($build['actions']['add_to_cart'])) {
       $build['actions']['add_to_cart']['#access'] = FALSE;
+    }
+
+    // If for some reason we don't have the request button we bail out.
+    if (!isset($build['actions']['request'])) {
+      return;
     }
 
     $destination = $entity->toUrl('drupal:content-translation-overview');
@@ -395,16 +400,11 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       }
     }
 
-    // If for some reason we don't have the request button we bail out.
-    if (!isset($build['actions']['request'])) {
-      return;
-    }
-
     $job_queue = $this->jobQueueFactory->get($entity);
     /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
     $current_jobs = $job_queue->getAllJobs();
 
-    // If there are jobs in the queue, finish them.
+    // If there are jobs in the queue, finish them first.
     if (!empty($current_jobs)) {
       $current_target_languages = $job_queue->getTargetLanguages();
       $language_list = implode(', ', $current_target_languages);
@@ -425,14 +425,15 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
 
     // If requests are waiting for translation by DGT, it is possible to
     // request an update.
+    // @todo check also if content has updates
     // @todo also possible to add language
     if (!empty($accepted_languages)) {
-      $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
+      $build['actions']['request']['#value'] = $this->t('Request a translation update');
+      return;
     }
 
     // If there are no jobs in the queue neither sent to DGT, it means
-    // the user can select the languages it wants to translate, the user
-    // can update the translation request.
+    // the user can select the languages it wants to translate.
     $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
   }
 
@@ -478,7 +479,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $this->request->query->remove('destination');
     }
 
-    $redirect = Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $entity->id()]);
+    $route = 'oe_translation_poetry.job_queue_checkout_new';
+    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+    if (!empty($accepted_languages)) {
+      $route = 'oe_translation_poetry.job_queue_checkout_update';
+    }
+    $redirect = Url::fromRoute($route);
 
     // Redirect to the checkout form.
     $form_state->setRedirectUrl($redirect);

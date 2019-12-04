@@ -28,7 +28,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $node->save();
 
     // Assert we can't access the checkout route without jobs in the queue.
-    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $node->id()]));
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout_new', ['node' => $node->id()]));
     $this->assertSession()->statusCodeEquals(403);
 
     // Select some languages to translate.
