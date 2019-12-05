@@ -13,13 +13,13 @@ use Drupal\oe_translation_poetry\PoetryTranslatorUI;
 /**
  * Form for requesting new translations.
  */
-class NewTranslationRequestForm extends PoetryCheckoutFormBase {
+class UpdateTranslationRequestForm extends PoetryCheckoutFormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'oe_translation_poetry_new_translation_request';
+    return 'oe_translation_poetry_create_translation_request';
   }
 
   /**
@@ -35,16 +35,16 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     $queue = $this->queueFactory->get($node);
     $entity = $queue->getEntity();
     $target_languages = $queue->getTargetLanguages();
-    $target_languages = implode(', ', $target_languages);
-    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+    $target_languages = implode(', ', $target_languages)  ;
+    return $this->t('Send request update to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $translator_settings = $this->poetry->getTranslatorSettings();
-    $form = parent::buildForm($form, $form_state, $node);
+    $form = parent::buildForm($form, $form_state);
 
     $default_contact = $translator_settings['contact'] ?? [];
     $form['details']['contact'] = [

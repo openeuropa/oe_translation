@@ -228,6 +228,19 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection = new RouteCollection();
 
     $route = new Route(
+      '/admin/content/dgt/send-request/{node}',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
+        '_title_callback' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm::getPageTitle',
+      ],
+      [
+        '_permission' => 'translate any entity',
+        '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
+      ]
+    );
+    $collection->add('oe_translation_poetry.job_queue_checkout', $route);
+
+    $route = new Route(
       '/admin/content/dgt/send-request-new/{node}',
       [
         '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
@@ -239,6 +252,19 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       ]
     );
     $collection->add('oe_translation_poetry.job_queue_checkout_new', $route);
+
+    $route = new Route(
+      '/admin/content/dgt/send-request-update/{node}',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\UpdateTranslationRequestForm',
+        '_title_callback' => '\Drupal\oe_translation_poetry\Form\UpdateTranslationRequestForm::getPageTitle',
+      ],
+      [
+        '_permission' => 'translate any entity',
+        '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
+      ]
+    );
+    $collection->add('oe_translation_poetry.job_queue_checkout_update', $route);
 
     $route = new Route(
       '/poetry/notifications',
@@ -479,12 +505,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $this->request->query->remove('destination');
     }
 
-    $route = 'oe_translation_poetry.job_queue_checkout_new';
+    $route = 'oe_translation_poetry.job_queue_checkout';
     $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
     if (!empty($accepted_languages)) {
-      $route = 'oe_translation_poetry.job_queue_checkout_update';
+      $route = 'oe_translation_poetry.job_queue_checkout';
     }
-    $redirect = Url::fromRoute($route);
+    $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
 
     // Redirect to the checkout form.
     $form_state->setRedirectUrl($redirect);
