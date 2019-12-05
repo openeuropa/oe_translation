@@ -184,7 +184,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->submitTranslationRequestForQueue($node_three);
     $this->jobStorage->resetCache();
 
-    // The jobs should have gotten submitted and the identification numbers
+    // The jobs shouqld have gotten submitted and the identification numbers
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',
@@ -223,7 +223,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->buttonExists('Request DGT translation for the selected languages');
     // Assert that each node has its own queue by trying to access the checkout
     // of the second node (which has no pending jobs).
-    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $second_node->id()]));
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout_new', ['node' => $second_node->id()]));
     $this->assertSession()->statusCodeEquals(403);
 
     // Go back to the translation overview to mimic that the user did not
