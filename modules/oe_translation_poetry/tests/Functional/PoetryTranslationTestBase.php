@@ -50,6 +50,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
    */
   protected static $modules = [
     'oe_translation_poetry',
+    'oe_translation_poetry_test',
     'oe_translation_poetry_mock',
     'oe_translation_poetry_html_formatter',
   ];

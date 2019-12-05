@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @method \Symfony\Component\EventDispatcher\EventDispatcherInterface getEventDispatcher()
  * @method get()
  */
-class Poetry {
+class Poetry implements PoetryInterface {
 
   /**
    * The Poetry client library.
@@ -123,7 +123,7 @@ class Poetry {
   /**
    * Initializes the Poetry instance.
    */
-  public function initialize() {
+  public function initialize(): void {
     if ($this->poetryClient instanceof PoetryLibrary) {
       return;
     }
@@ -149,11 +149,6 @@ class Poetry {
     }
 
     $this->poetryClient = new PoetryLibrary($values);
-
-    // Register our own service provider to override the SOAP client. We need
-    // to pass the current cookies to that the SOAP client uses them in its
-    // requests. This is critical for ensuring the tests work.
-    $this->poetryClient->register(new PoetrySoapProvider($this->requestStack->getCurrentRequest()->cookies->all()));
   }
 
   /**
@@ -169,33 +164,21 @@ class Poetry {
   }
 
   /**
-   * Gets the global identification number.
-   *
-   * @return string|null
-   *   The number.
+   * {@inheritdoc}
    */
   public function getGlobalIdentifierNumber(): ?string {
     return $this->state->get('oe_translation_poetry_id_number');
   }
 
   /**
-   * Sets the global identification number.
-   *
-   * @param string $number
-   *   The number.
+   * {@inheritdoc}
    */
   public function setGlobalIdentifierNumber(string $number): void {
     $this->state->set('oe_translation_poetry_id_number', $number);
   }
 
   /**
-   * Returns the identifier for making a translation request for a content.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   *
-   * @return \EC\Poetry\Messages\Components\Identifier
-   *   The identifier.
+   * {@inheritdoc}
    */
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
@@ -247,23 +230,14 @@ class Poetry {
   }
 
   /**
-   * Returns the settings configured in the translator.
-   *
-   * @return array
-   *   The settings.
+   * {@inheritdoc}
    */
   public function getTranslatorSettings(): array {
     return $this->translatorSettings;
   }
 
   /**
-   * Checks if the Poetry service is configured properly to be used.
-   *
-   * If there are missing settings or configuration, Poetry cannot be used
-   * so we use this method to determine this.
-   *
-   * @return bool
-   *   Whether it's available or not.
+   * {@inheritdoc}
    */
   public function isAvailable(): bool {
     // Poetry is not available if configuration is missing.
