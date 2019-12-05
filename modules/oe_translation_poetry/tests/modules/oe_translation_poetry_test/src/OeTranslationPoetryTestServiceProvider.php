@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_test;
+namespace Drupal\oe_translation_poetry_test;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
@@ -10,7 +10,7 @@ use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 /**
  * Overrides the Poetry service for the test.
  */
-class OeTranslationTestServiceProvider implements ServiceModifierInterface {
+class OeTranslationPoetryTestServiceProvider implements ServiceModifierInterface {
 
   /**
    * {@inheritdoc}
@@ -23,7 +23,7 @@ class OeTranslationTestServiceProvider implements ServiceModifierInterface {
       }
     }
     catch (\Exception $exception) {
-      // Do nothing. It means the Poetry module is not enabled.
+      // Do nothing.
     }
 
   }

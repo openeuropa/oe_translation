@@ -1,0 +1,8 @@
+name: OE Translation Poetry Test
+description: Test module for OE Translation Poetry
+core: 8.x
+type: module
+package: Testing
+
+dependencies:
+  - oe_translation_poetry:oe_translation_poetry

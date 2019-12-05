@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_test;
+namespace Drupal\oe_translation_poetry_test;
 
 use Drupal\oe_translation_poetry\Poetry;
 
