@@ -228,19 +228,6 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection = new RouteCollection();
 
     $route = new Route(
-      '/admin/content/dgt/send-request/{node}',
-      [
-        '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
-        '_title_callback' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm::getPageTitle',
-      ],
-      [
-        '_permission' => 'translate any entity',
-        '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
-      ]
-    );
-    $collection->add('oe_translation_poetry.job_queue_checkout', $route);
-
-    $route = new Route(
       '/admin/content/dgt/send-request-new/{node}',
       [
         '_form' => '\Drupal\oe_translation_poetry\Form\NewTranslationRequestForm',
@@ -505,10 +492,10 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $this->request->query->remove('destination');
     }
 
-    $route = 'oe_translation_poetry.job_queue_checkout';
+    $route = 'oe_translation_poetry.job_queue_checkout_new';
     $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
     if (!empty($accepted_languages)) {
-      $route = 'oe_translation_poetry.job_queue_checkout';
+      $route = 'oe_translation_poetry.job_queue_checkout_update';
     }
     $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
 

@@ -37,7 +37,7 @@ Feature: Poetry translations
     And I should see "Submitted to Poetry" in the "German" row
     And I should see "None" in the "Danish" row
     And I should not see the button "Request DGT translation for the selected languages"
-    And I should see "No translation requests can be made until the ongoing ones have been completed and received."
+    And I should see "No translation requests can be made until the ongoing ones have been accepted."
     And the Poetry request jobs to translate "My title" should get created for "Bulgarian, German"
 
     # The translation gets accepted in Poetry
@@ -49,7 +49,8 @@ Feature: Poetry translations
     And I should see "Ongoing in Poetry" in the "German" row
     And I should see "None" in the "Danish" row
     And I should not see the button "Request DGT translation for the selected languages"
-    And I should see "No translation requests can be made until the ongoing ones have been completed and received."
+    And I should not see "No translation requests can be made until the ongoing ones have been accepted."
+    And I should see the button "Request a translation update"
 
     # The first translation gets sent from Poetry
     When the Poetry translations of "My title" in "Bulgarian" are received from Poetry
@@ -60,7 +61,7 @@ Feature: Poetry translations
     And I click "Translate"
     # Still one job left to come from Poetry
     And I should not see the button "Request DGT translation for the selected languages"
-    And I should see "No translation requests can be made until the ongoing ones have been completed and received."
+    And I should see the button "Request a translation update"
     And I should see "Ongoing in Poetry" in the "German" row
     And I click "Review translation" in the "Bulgarian" row
     Then I should see "Job item My title"
@@ -79,4 +80,5 @@ Feature: Poetry translations
     And I click "My title"
     And I click "Translate"
     And I should see the button "Request DGT translation for the selected languages"
-    And I should not see "No translation requests can be made until the ongoing ones have been completed and received."
+    And I should not see "No translation requests can be made until the ongoing ones have been accepted."
+    And I should not see the button "Request a translation update"
