@@ -17,7 +17,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
    * Tests the handling of Poetry status notifications.
    */
   public function testStatusNotifications(): void {
-    $this->prepareRequestedJobs([
+    $this->createNodeWithRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
     ], ['fr', 'pt-pt', 'it']);
@@ -102,7 +102,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
    * Tests the handling of Poetry translation notifications.
    */
   public function testTranslationNotifications(): void {
-    $this->prepareRequestedJobs([
+    $this->createNodeWithRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
     ], ['fr', 'es']);
@@ -149,7 +149,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
    * Tests the access on the notification endpoint.
    */
   public function testNotificationEndpointAccess(): void {
-    $this->prepareRequestedJobs([
+    $this->createNodeWithRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
     ], ['fr', 'de', 'it']);
@@ -185,47 +185,6 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
 
     // Load the jobs and assert that nothing happened because the access was
     // denied.
-    $this->jobStorage->resetCache();
-    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
-    $jobs = $this->jobStorage->loadMultiple();
-    foreach ($jobs as $job) {
-      $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
-      $this->assertTrue($job->get('poetry_state')->isEmpty());
-    }
-  }
-
-  /**
-   * Creates jobs that mimic a request having been made to Poetry.
-   *
-   * @param array $values
-   *   The content values.
-   * @param array $languages
-   *   The job languages.
-   */
-  protected function prepareRequestedJobs(array $values, array $languages = []): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-    ] + $values);
-    $node->save();
-
-    // Create a job for French and German to mimic that the request has been
-    // made to Poetry.
-    foreach ($languages as $language) {
-      $job = tmgmt_job_create('en', $language, 0);
-      $job->translator = 'poetry';
-      $job->addItem('content', 'node', $node->id());
-      $job->set('poetry_request_id', $this->defaultIdentifierInfo);
-      $job->set('state', Job::STATE_ACTIVE);
-      $date = new \DateTime('05/04/2019');
-      $job->set('poetry_request_date', $date->format('Y-m-d\TH:i:s'));
-      $job->save();
-    }
-
-    // Ensure the jobs do not contain any info related to Poetry status.
     $this->jobStorage->resetCache();
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs = $this->jobStorage->loadMultiple();
