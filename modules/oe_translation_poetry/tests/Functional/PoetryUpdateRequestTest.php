@@ -1,13 +1,16 @@
 <?php
+
 declare(strict_types = 1);
+
 namespace Drupal\Tests\oe_translation_poetry\Functional;
-use Drupal\node\NodeInterface;
+
 use Drupal\tmgmt\Entity\Job;
 
 /**
  * Tests adding languages to requests made to Poetry.
  */
 class PoetryUpdateRequestTest extends PoetryTranslationTestBase {
+
   /**
    * Tests requesting a translation update.
    */
@@ -64,4 +67,5 @@ class PoetryUpdateRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');
     $this->assertSession()->pageTextContains('No translation requests can be made until the ongoing ones have been accepted.');
   }
+
 }
