@@ -1,7 +1,7 @@
 langcode: en
 status: true
 dependencies: {  }
-id: translator
+id: oe_translator
 label: Translator
 weight: 2
 is_admin: null

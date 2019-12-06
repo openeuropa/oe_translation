@@ -14,4 +14,4 @@ config_devel:
   install:
     - tmgmt.translator.current_user
     - tmgmt.translator.translator_role
-    - user.role.translator
+    - user.role.oe_translator
