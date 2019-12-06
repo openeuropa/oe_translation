@@ -64,6 +64,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
     $translator = $this->container->get('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
     $translator->setSetting('service_wsdl', PoetryMock::getWsdlUrl());
+    $translator->setSetting('title_prefix', 'OE');
     $translator->save();
 
     // Unset some services from the container to force a rebuild.
