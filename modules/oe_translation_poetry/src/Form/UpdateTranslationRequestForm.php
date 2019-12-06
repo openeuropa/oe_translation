@@ -102,11 +102,18 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
    */
   public function submitRequest(array &$form, FormStateInterface $form_state): void {
     $entity = $form_state->get('entity');
-
-    // Abort active jobs for this entity.
-    $this->abortJobsForEntity($entity);
+    $queue = $this->queueFactory->get($entity);
+    $queued_jobs = $queue->getAllJobsIds();
 
     parent::submitRequest($form, $form_state);
+
+    // Abort active jobs for this entity.
+    $jobs = $this->getAllJobsForEntity($entity);
+    foreach ($jobs as $job) {
+      if (!in_array($job->id(), $queued_jobs)) {
+        $job->aborted('Job aborted after update request.');
+      }
+    }
   }
 
   /**
@@ -117,12 +124,15 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
   }
 
   /**
-   * Cancel active jobs of an Entity.
+   * Get active jobs of an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity.
+   *
+   * @return \Drupal\tmgmt\JobInterface[]
+   *   The active jobs.
    */
-  protected function abortJobsForEntity(EntityInterface $entity): void {
+  protected function getAllJobsForEntity(EntityInterface $entity): array {
     $ids = $this->entityTypeManager->getStorage('tmgmt_job_item')->getQuery()
       ->condition('item_type', $entity->getEntityType()->id())
       ->condition('item_id', $entity->id())
@@ -130,15 +140,17 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
       ->execute();
 
     if (!$ids) {
-      return;
+      return [];
     }
 
+    $jobs = [];
     /** @var \Drupal\tmgmt\JobItemInterface[] $job_items */
     $job_items = $this->entityTypeManager->getStorage('tmgmt_job_item')->loadMultiple($ids);
     foreach ($job_items as $job_item) {
-      $job = $job_item->getJob();
-      $job->aborted('Job aborted after update request.');
+      $jobs[] = $job_item->getJob();
     }
+
+    return $jobs;
   }
 
 }

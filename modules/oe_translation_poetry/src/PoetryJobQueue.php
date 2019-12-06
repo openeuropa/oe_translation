@@ -133,6 +133,21 @@ class PoetryJobQueue {
   }
 
   /**
+   * Returns the ids of all jobs in the queue.
+   *
+   * @return array
+   *   The ids of the jobs.
+   */
+  public function getAllJobsIds(): array {
+    $queue = $this->initializeQueue();
+    if (!$queue['jobs']) {
+      return [];
+    }
+
+    return $queue['jobs'];
+  }
+
+  /**
    * Sets the destination URL.
    *
    * @param \Drupal\Core\Url $url
