@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Routing;
 
 use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
 use Symfony\Component\Routing\RouteCollection;
@@ -22,13 +23,23 @@ class RouteSubscriber extends RouteSubscriberBase {
   protected $contentTranslationManager;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a ContentTranslationRouteSubscriber object.
    *
    * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
    *   The content translation manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
-  public function __construct(ContentTranslationManagerInterface $content_translation_manager) {
+  public function __construct(ContentTranslationManagerInterface $content_translation_manager, EntityTypeManagerInterface $entity_type_manager) {
     $this->contentTranslationManager = $content_translation_manager;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -60,6 +71,16 @@ class RouteSubscriber extends RouteSubscriberBase {
       // Alter the routes to provide a custom access check to the regular
       // Drupal translation management routes.
       foreach ($this->contentTranslationManager->getSupportedEntityTypes() as $entity_type_id => $entity_type) {
+        /** @var \Drupal\oe_translation\OeTranslationHandler $handler */
+        $handler = $this->entityTypeManager->getHandler($entity_type_id, 'oe_translation');
+        $supported_translators = $handler->getSupportedTranslators();
+        if (empty($supported_translators)) {
+          // If there are no supported translators for this entity type, we
+          // do not want to prevent access and allow Drupal core translation
+          // to be possible.
+          continue;
+        }
+
         if ($entity_type->hasLinkTemplate('drupal:content-translation-add')) {
           $route_name = "entity.$entity_type_id.content_translation_add";
           $route = $collection->get($route_name);

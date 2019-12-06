@@ -6,7 +6,9 @@ namespace Drupal\oe_translation_test\Plugin\tmgmt\Translator;
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\ApplicableTranslatorInterface;
 use Drupal\tmgmt_local\LocalTaskItemInterface;
 use Drupal\tmgmt\JobInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -29,13 +31,20 @@ use Symfony\Component\Routing\RouteCollection;
  *   map_remote_languages = FALSE
  * )
  */
-class TestTranslatorWithInterfaces extends TranslatorPluginBase implements AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface {
+class TestTranslatorWithInterfaces extends TranslatorPluginBase implements ApplicableTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface {
 
   /**
    * {@inheritdoc}
    */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
     // Do nothing for now.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function applies(EntityTypeInterface $entityType): bool {
+    return $entityType->id() === 'node';
   }
 
   /**

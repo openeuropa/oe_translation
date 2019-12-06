@@ -25,7 +25,7 @@ class JobAccessHandler extends JobAccessControlHandler {
     /** @var \Drupal\tmgmt\JobInterface $entity */
     $plugin = $entity->getTranslatorPlugin();
     if ($plugin instanceof JobAccessTranslatorInterface) {
-      $access = $plugin->access($entity, $operation, $account);
+      $access = $plugin->accessJob($entity, $operation, $account);
       if ($access instanceof AccessResultInterface) {
         return $access;
       }

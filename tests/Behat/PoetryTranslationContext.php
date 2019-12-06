@@ -241,6 +241,7 @@ class PoetryTranslationContext extends RawDrupalContext {
     $query->join('tmgmt_job_item', 'job_item', 'job.tjid = job_item.tjid');
     $query->fields('job', ['tjid', 'target_language']);
     $query->condition('job_item.item_id', $entity->id());
+    $query->condition('job_item.item_type', $entity->getEntityTypeId());
     $query->condition('job.translator', 'poetry', '=');
     return $query;
   }

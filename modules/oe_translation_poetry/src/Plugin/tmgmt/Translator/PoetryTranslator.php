@@ -11,6 +11,7 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -22,6 +23,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\AlterableTranslatorInterface;
+use Drupal\oe_translation\ApplicableTranslatorInterface;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
@@ -51,7 +53,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface, JobAccessTranslatorInterface {
+class PoetryTranslator extends TranslatorPluginBase implements ApplicableTranslatorInterface, AlterableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface, JobAccessTranslatorInterface {
 
   /**
    * Status indicating that the translation is ongoing in Poetry.
@@ -209,6 +211,14 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
       $container->get('database'),
       $container->get('event_dispatcher')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function applies(EntityTypeInterface $entityType): bool {
+    // We can only translate Node entities with Poetry.
+    return $entityType->id() === 'node';
   }
 
   /**
@@ -572,6 +582,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
     $query->fields('job', ['tjid', 'target_language']);
     $query->fields('job_item', ['tjiid']);
     $query->condition('job_item.item_id', $entity->id());
+    $query->condition('job_item.item_type', $entity->getEntityTypeId());
     $query->condition('job.translator', 'poetry', '=');
     return $query;
   }
@@ -579,7 +590,7 @@ class PoetryTranslator extends TranslatorPluginBase implements AlterableTranslat
   /**
    * {@inheritdoc}
    */
-  public function access(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface {
+  public function accessJob(JobInterface $job, string $operation, AccountInterface $account): ?AccessResultInterface {
     if ($operation !== 'delete') {
       return NULL;
     }

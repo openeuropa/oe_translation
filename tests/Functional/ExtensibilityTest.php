@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation\Functional;
 
 use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\Core\Url;
+use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -57,6 +58,44 @@ class ExtensibilityTest extends TranslationTestBase {
     /** @var \Drupal\Core\Link $link */
     $link = end($links);
     $this->assertEquals($node->label(), $link->getText());
+  }
+
+  /**
+   * Tests the access to the Drupal core translation page.
+   */
+  public function testTranslationAccess(): void {
+    \Drupal::service('module_installer')->install(['menu_link_content']);
+    \Drupal::service('content_translation.manager')->setEnabled('menu_link_content', 'menu_link_content', TRUE);
+    \Drupal::service('router.builder')->rebuild();
+
+    // Check that the route for creating a menu link translation is accessible.
+    $menu_link_content = MenuLinkContent::create([
+      'menu_name' => 'main',
+      'link' => ['uri' => 'http://example.com'],
+      'title' => 'Link test',
+    ]);
+    $menu_link_content->save();
+
+    // Menu links should be translatable using the regular core way.
+    $url = $menu_link_content->toUrl('drupal:content-translation-add');
+    $url->setRouteParameter('source', 'en');
+    $url->setRouteParameter('target', 'bg');
+    $this->drupalGet($url);
+    $this->assertSession()->pageTextContains('Create Bulgarian translation of Link test');
+
+    $node = $this->entityTypeManager->getStorage('node')->create([
+      'type' => 'page',
+      'title' => 'My node',
+    ]);
+
+    $node->save();
+
+    // Nodes should not be translatable using the regular core way.
+    $url = $node->toUrl('drupal:content-translation-add');
+    $url->setRouteParameter('source', 'en');
+    $url->setRouteParameter('target', 'bg');
+    $this->drupalGet($url);
+    $this->assertResponse(403);
   }
 
 }
