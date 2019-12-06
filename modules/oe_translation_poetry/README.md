@@ -19,10 +19,10 @@ To integrate with Poetry, a request has to made to register the site with DGT. S
 There are a number of required configuration options needed for the Poetry integration to work. These can be added at this path: `admin/tmgmt/translators/manage/poetry`:
 
 * Poetry service URL - the Poetry endpoint.
-* Identifier code - Unless requested otherwise, this can be `WEB`
-* Request title prefix - Unless requested otherwise, this can be `OE`
-* Site ID - The site ID agreed with DGT
-* Application reference code - Unless requested otherwise, this can be `FPFIS`
+* Identifier code - Unless requested otherwise, this can be `WEB`.
+* Request title prefix - The prefix agreed with DGT.
+* Site ID - The site ID agreed with DGT.
+* Application reference code - Unless requested otherwise, this can be `FPFIS`.
 * Contact information - the EULogin user account of the default user to be used as a contact for making translations. These are overridable per individual translation request.
 * Organisation information - Information about the DG responsible for the site. For DIGIT sites it can be, and unless otherwise requested by DGT:
   * Responsible - DIGIT
