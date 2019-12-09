@@ -13,6 +13,3 @@ permissions:
   - 'translate any entity'
   - 'accept translation jobs'
   - 'view the administration theme'
-  - 'view all revisions'
-  - 'view any unpublished content'
-  - 'view latest version'

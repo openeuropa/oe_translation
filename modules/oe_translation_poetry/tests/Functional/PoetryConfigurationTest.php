@@ -59,7 +59,7 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
 
     // Log in with a translator user to finalize the translation process.
     /** @var \Drupal\user\RoleInterface $role */
-    $role = $this->entityTypeManager->getStorage('user_role')->load('translator');
+    $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
     $user = $this->drupalCreateUser($role->getPermissions());
     $this->drupalLogin($user);
 
