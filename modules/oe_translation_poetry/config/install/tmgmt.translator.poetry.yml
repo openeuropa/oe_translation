@@ -11,7 +11,7 @@ weight: null
 plugin: poetry
 settings:
   identifier_code: WEB
-  title_prefix: EWCMS
+  title_prefix: ''
   application_reference: FPFIS
 remote_languages_mappings:
   pt-pt: pt
