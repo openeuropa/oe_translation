@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies: {  }
 id: oe_translator
-label: Translator
+label: Translate content
 weight: 2
 is_admin: null
 permissions:
