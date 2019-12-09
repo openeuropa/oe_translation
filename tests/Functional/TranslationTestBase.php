@@ -55,7 +55,7 @@ class TranslationTestBase extends BrowserTestBase {
     $this->container->get('router.builder')->rebuild();
 
     /** @var \Drupal\user\RoleInterface $role */
-    $role = $this->entityTypeManager->getStorage('user_role')->load('translator');
+    $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
     $permissions = $role->getPermissions();
     $permissions[] = 'administer menu';
     $user = $this->drupalCreateUser($permissions);
