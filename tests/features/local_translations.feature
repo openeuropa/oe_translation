@@ -8,7 +8,7 @@ Feature: Local translations
     Given oe_demo_translatable_page content:
       | title    | field_oe_demo_translatable_body | demo_link_field                             |
       | My title | My body                         | Example - https://example.com, Node - /node |
-    And I am logged in as a user with the "translator" role
+    And I am logged in as a user with the "oe_translator" role
     When I visit "the content administration page"
     And I click "My title"
     Then I should see the link "Translate"
@@ -72,7 +72,7 @@ Feature: Local translations
     Given oe_demo_translatable_page content:
       | title    | field_oe_demo_translatable_body |
       | My title | My body                         |
-    And I am logged in as a user with the "translator" role
+    And I am logged in as a user with the "oe_translator" role
     When I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
@@ -87,7 +87,7 @@ Feature: Local translations
     Given oe_demo_translatable_page content:
       | title    | field_oe_demo_translatable_body |
       | My title | My body                         |
-    And I am logged in as a user with the "translator" role
+    And I am logged in as a user with the "oe_translator" role
     When I visit "the content administration page"
     And I click "My title"
     Then I should see the link "Translate"
@@ -100,7 +100,7 @@ Feature: Local translations
 
     # Log out and back with another user who cannot delete the job.
     Then I log out
-    And I am logged in as a user with the "translator" role
+    And I am logged in as a user with the "oe_translator" role
     When I visit "the content administration page"
     And I click "My title"
     Then I should see the link "Translate"
