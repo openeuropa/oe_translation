@@ -107,8 +107,8 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
 
     parent::submitRequest($form, $form_state);
 
-    // Abort active jobs for this entity.
-    $jobs = $this->getAllJobsForEntity($entity);
+    // Abort non queued active jobs for this entity.
+    $jobs = $this->getActiveJobsForEntity($entity);
     foreach ($jobs as $job) {
       if (!in_array($job->id(), $queued_jobs)) {
         $job->aborted('Job aborted after update request.');
@@ -132,7 +132,7 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
    * @return \Drupal\tmgmt\JobInterface[]
    *   The active jobs.
    */
-  protected function getAllJobsForEntity(EntityInterface $entity): array {
+  protected function getActiveJobsForEntity(EntityInterface $entity): array {
     $ids = $this->entityTypeManager->getStorage('tmgmt_job_item')->getQuery()
       ->condition('item_type', $entity->getEntityType()->id())
       ->condition('item_id', $entity->id())

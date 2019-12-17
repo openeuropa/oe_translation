@@ -51,17 +51,19 @@ class PoetryUpdateRequestTest extends PoetryTranslationTestBase {
 
     $page = $this->getSession()->getPage();
     $page->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Request a translation update');
+    $this->drupalPostForm(NULL, [], 'Request a translation update to all selected languages');
     $this->submitRequestInQueue($node);
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
-    // Check that the jobs have been correctly updated.
+    // Check that all jobs have been correctly updated.
     $this->jobStorage->resetCache();
-    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
-    $jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple());
-    $this->assertEqual($jobs['bg']->getState(), Job::STATE_ABORTED);
-    $this->assertEqual($jobs['cs']->getState(), Job::STATE_ABORTED);
-    $this->assertEqual($jobs['de']->getState(), Job::STATE_ACTIVE);
+    $old_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple([$jobs['bg']->id(), $jobs['cs']->id()]));
+    $this->assertEqual($old_jobs['bg']->getState(), Job::STATE_ABORTED);
+    $this->assertEqual($old_jobs['cs']->getState(), Job::STATE_ABORTED);
+    $new_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple());
+    $this->assertEqual($new_jobs['bg']->getState(), Job::STATE_ACTIVE);
+    $this->assertEqual($new_jobs['cs']->getState(), Job::STATE_ACTIVE);
+    $this->assertEqual($new_jobs['de']->getState(), Job::STATE_ACTIVE);
 
     // Assert we can not see operation buttons again.
     $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');

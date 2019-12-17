@@ -441,7 +441,19 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // @todo check also if content has updates
     // @todo also possible to add language
     if (!empty($accepted_languages)) {
-      $build['actions']['request']['#value'] = $this->t('Request a translation update');
+      $build['actions']['request']['#value'] = $this->t('Request a translation update to all selected languages');
+
+      // Activate checkbox for languages accepted and translated and having
+      // translation completed, because an update request must include these.
+      $completed_languages = $this->getCompletedJobsByLanguage($entity);
+      $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
+      foreach (array_keys($languages) as $langcode) {
+        $build['languages'][$langcode]['#attributes']['checked'] = 'checked';
+        $build['languages'][$langcode]['#attributes']['readonly'] = 'readonly';
+        unset($build['languages'][$langcode]['#attributes']['disabled']);
+        unset($build['languages'][$langcode]['#disabled']);
+        $build['languages'][$langcode]['#return_value'] = $langcode;
+      }
       return;
     }
 
@@ -548,7 +560,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    *   The entity to look jobs for.
    *
    * @return array
-   *   An array of unprocessed job IDs, keyed by the target language.
+   *   An array of accepted job IDs, keyed by the target language.
    */
   protected function getAcceptedJobsByLanguage(ContentEntityInterface $entity): array {
     $query = $this->getEntityJobsQuery($entity);
@@ -565,7 +577,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    *   The entity to look jobs for.
    *
    * @return array
-   *   An array of unprocessed job IDs, keyed by the target language.
+   *   An array of submitted job IDs, keyed by the target language.
    */
   protected function getSubmittedJobsByLanguage(ContentEntityInterface $entity): array {
     $query = $this->getEntityJobsQuery($entity);
@@ -585,12 +597,32 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    *   The entity to look jobs for.
    *
    * @return array
-   *   An array of unprocessed job IDs, keyed by the target language.
+   *   An array of translated job IDs, keyed by the target language.
    */
   protected function getTranslatedJobsByLanguage(ContentEntityInterface $entity): array {
     $query = $this->getEntityJobsQuery($entity);
     $query->condition('job.state', Job::STATE_ACTIVE, '=');
     $query->condition('poetry_state', static::POETRY_STATUS_TRANSLATED);
+    $result = $query->execute()->fetchAllAssoc('target_language');
+    return $result ?? [];
+  }
+
+  /**
+   * Get a list of Poetry jobs that are completed for a given entity.
+   *
+   * These are the jobs which have been translated by Poetry and reviewed
+   * in the site.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to look jobs for.
+   *
+   * @return array
+   *   An array of completed job IDs, keyed by the target language.
+   */
+  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity): array {
+    $query = $this->getEntityJobsQuery($entity);
+    $query->condition('job.state', Job::STATE_FINISHED, '=');
+    $query->isNull('job.poetry_state');
     $result = $query->execute()->fetchAllAssoc('target_language');
     return $result ?? [];
   }
