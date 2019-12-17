@@ -339,8 +339,9 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       return;
     }
 
-    // Build the TMGMT translation request form.
-    $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
+    // Build the TMGMT translation request form, keeping previous
+    // entries, namely #entity and content_translation_overview.
+    $build = array_merge($this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build), $build);
     if (isset($build['actions']['add_to_cart'])) {
       $build['actions']['add_to_cart']['#access'] = FALSE;
     }
