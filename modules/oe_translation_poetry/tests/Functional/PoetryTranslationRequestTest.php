@@ -47,7 +47,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two jobs.
-    $this->submitTranslationRequestForQueue($node);
+    $this->submitRequestInQueue($node);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -82,7 +82,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two new jobs in the queue.
-    $this->submitTranslationRequestForQueue($node);
+    $this->submitRequestInQueue($node);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -126,7 +126,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two jobs.
-    $this->submitTranslationRequestForQueue($node_two);
+    $this->submitRequestInQueue($node_two);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -180,7 +180,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two jobs.
-    $this->submitTranslationRequestForQueue($node_three);
+    $this->submitRequestInQueue($node_three);
     $this->jobStorage->resetCache();
 
     // The jobs shouqld have gotten submitted and the identification numbers
@@ -242,7 +242,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
     // Finalize the translation for remaining unprocessed job.
     $this->drupalPostForm(NULL, [], 'Finish translation request to DGT for Czech');
-    $this->submitTranslationRequestForQueue($node);
+    $this->submitRequestInQueue($node);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers

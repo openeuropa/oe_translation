@@ -25,7 +25,7 @@ class PoetryAddLanguageTest extends PoetryTranslationTestBase {
 
     // Assert we can not see operation buttons.
     $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');
-    $this->assertSession()->buttonNotExists('Add the selected languages to DGT translation');
+    $this->assertSession()->buttonNotExists('Add the new selected languages to DGT translation');
 
     // Send a status update accepting the translation for requested languages.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
@@ -46,17 +46,17 @@ class PoetryAddLanguageTest extends PoetryTranslationTestBase {
     // Refresh page.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
-    $this->assertSession()->buttonExists('Add the selected languages to DGT translation');
+    $this->assertSession()->buttonExists('Add the new selected languages to DGT translation');
     $page = $this->getSession()->getPage();
     $page->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Add the selected languages to DGT translation');
+    $this->drupalPostForm(NULL, [], 'Add the new selected languages to DGT translation');
     $this->submitAddLanguagesRequestForQueue($node);
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
     // Assert we can not see operation buttons again.
     $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');
-    $this->assertSession()->buttonNotExists('Add the selected languages to DGT translation');
+    $this->assertSession()->buttonNotExists('Add the new selected languages to DGT translation');
 
     // Send a status update accepting the translation for requested
     // language using same identifier.
@@ -74,7 +74,7 @@ class PoetryAddLanguageTest extends PoetryTranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
     // Assert button to add languages is back.
-    $this->assertSession()->buttonExists('Add the selected languages to DGT translation');
+    $this->assertSession()->buttonExists('Add the new selected languages to DGT translation');
 
   }
 

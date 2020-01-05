@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry\Form;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
@@ -23,12 +24,16 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
   /**
    * Returns the title of the form page.
    *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $node
+   *   The node entity to use when generating the title.
+   *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The title for the form page.
    */
-  public function getPageTitle(): TranslatableMarkup {
-    $target_languages = $this->queue->getTargetLanguages();
-    $entity = $this->queue->getEntity();
+  public function getPageTitle(ContentEntityInterface $node = NULL): TranslatableMarkup {
+    $queue = $this->queueFactory->get($node);
+    $entity = $queue->getEntity();
+    $target_languages = $queue->getTargetLanguages();
     $target_languages = implode(', ', $target_languages);
     return $this->t('Add languages to previous request to DG Translation for <em>@entity</em>: <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
   }
@@ -42,10 +47,12 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
    *   The form state.
    */
   public function submitRequest(array &$form, FormStateInterface $form_state): void {
+    $entity = $form_state->get('entity');
+    $queue = $this->queueFactory->get($entity);
     $translator_settings = $this->poetry->getTranslatorSettings();
-    $jobs = $this->queue->getAllJobs();
-    $entity = $this->queue->getEntity();
+    $jobs = $queue->getAllJobs();
     $identifier = $this->poetry->getLastIdentifierForContent($entity);
+    $identifier->setProduct($this->requestType);
 
     $date = new \DateTime($form_state->getValue('details')['date']);
     $formatted_date = $date->format('d/m/Y');
@@ -77,14 +84,14 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
       $this->handlePoetryResponse($response, $form_state);
 
       $this->redirectBack($form_state);
-      $this->queue->reset();
+      $queue->reset();
       $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
     }
     catch (\Exception $exception) {
       $this->logger->error($exception->getMessage());
       $this->messenger->addError($this->t('There was a error making the request to DGT.'));
       $this->redirectBack($form_state);
-      $this->queue->reset();
+      $queue->reset();
     }
   }
 

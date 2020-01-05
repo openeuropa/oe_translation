@@ -254,14 +254,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection->add('oe_translation_poetry.job_queue_checkout_update', $route);
 
     $route = new Route(
-      '/admin/content/dgt/add-languages-request',
+      '/admin/content/dgt/add-languages-request/{node}',
       [
         '_form' => '\Drupal\oe_translation_poetry\Form\AddLanguagesRequestForm',
         '_title_callback' => '\Drupal\oe_translation_poetry\Form\AddLanguagesRequestForm::getPageTitle',
       ],
       [
         '_permission' => 'translate any entity',
-        '_custom_access' => 'oe_translation_poetry.job_queue::access',
+        '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
       ]
     );
     $collection->add('oe_translation_poetry.job_queue_checkout_add_languages', $route);
@@ -454,7 +454,16 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // @todo check also if content has updates
     // @todo also possible to add language
     if (!empty($accepted_languages)) {
-      $build['actions']['request']['#value'] = $this->t('Request a translation update to all selected languages');
+      $build['actions']['request']['#value'] = $this->t('Add the new selected languages to DGT translation');
+      $build['actions']['request']['#name'] = 'op-add-language';
+      $build['actions']['request_2'] = [
+        '#type' => 'submit',
+        '#button_type' => 'primary',
+        '#input' => 'true',
+        '#name' => 'op-request-update',
+        '#id' => 'request-update',
+        '#value' => $this->t('Request a translation update to all selected languages'),
+      ];
 
       // Activate checkbox for languages accepted and translated and having
       // translation completed, because an update request must include these.
@@ -493,6 +502,31 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $job_queue->setEntityId($entity->getEntityTypeId(), $entity->getRevisionId());
     $values = $form_state->getValues();
 
+    $route = 'oe_translation_poetry.job_queue_checkout_new';
+    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+    if (!empty($accepted_languages)) {
+      $input = $form_state->getUserInput();
+      if (isset($input['op-add-language'])) {
+        // Remove existing languages from request.
+        $completed_languages = $this->getCompletedJobsByLanguage($entity);
+        $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+        $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
+        foreach (array_keys($languages) as $language) {
+          $values['languages'][$language] = 0;
+          $form['languages'][$language]['#value'] = 0;
+          unset($input['languages'][$language]);
+        }
+        $form_state->setValue('languages', $values['languages']);
+        $form_state->setUserInput($input);
+
+        $route = 'oe_translation_poetry.job_queue_checkout_add_languages';
+      }
+      elseif (isset($input['op-request-update'])) {
+        $route = 'oe_translation_poetry.job_queue_checkout_update';
+      }
+    }
+    $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
+
     foreach (array_keys(array_filter($values['languages'])) as $langcode) {
       $job = tmgmt_job_create($entity->language()->getId(), $langcode, $this->currentUser->id());
       // Set the Poetry translator on it.
@@ -516,16 +550,6 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     if ($this->request->query->has('destination')) {
       $this->request->query->remove('destination');
     }
-
-    $route = 'oe_translation_poetry.job_queue_checkout_new';
-    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
-    if (!empty($accepted_languages)) {
-      $route = 'oe_translation_poetry.job_queue_checkout_update';
-    }
-    if (!empty($accepted_languages)) {
-      $route = 'oe_translation_poetry.job_queue_checkout_add_languages';
-    }
-    $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
 
     // Redirect to the checkout form.
     $form_state->setRedirectUrl($redirect);
