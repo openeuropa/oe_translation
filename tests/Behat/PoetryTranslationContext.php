@@ -139,6 +139,7 @@ class PoetryTranslationContext extends RawDrupalContext {
     $node = $this->getNodeByTitle($title);
     $query = $this->getEntityJobsQuery($node);
     $query->condition('job.target_language', array_keys($languages), 'IN');
+    $query->condition('job.state', Job::STATE_ACTIVE);
     $query->isNull('job.poetry_state');
     $result = $query->execute()->fetchAllAssoc('tjid');
     $jobs = Job::loadMultiple(array_keys($result));

@@ -184,7 +184,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->submitTranslationRequestForQueue($node_three);
     $this->jobStorage->resetCache();
 
-    // The jobs shouqld have gotten submitted and the identification numbers
+    // The jobs should have gotten submitted and the identification numbers
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',

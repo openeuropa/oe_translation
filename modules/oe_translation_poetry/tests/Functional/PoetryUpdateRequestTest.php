@@ -23,7 +23,7 @@ class PoetryUpdateRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->pageTextContains('Translations of ' . $node->label());
     // Assert we can not see operation buttons.
     $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');
-    $this->assertSession()->buttonNotExists('Request a translation update');
+    $this->assertSession()->buttonNotExists('Request a translation update to all selected languages');
     // Send a status update accepting the translation for requested languages.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
       [
