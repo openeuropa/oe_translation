@@ -18,7 +18,7 @@ class PoetryMockFixturesGenerator {
   /**
    * A dummy reference that mocks that it already exists in the Poetry system.
    */
-  const EXISTING_REFERENCE = 'WEB/2019/9999/0/0/TRA';
+  const EXISTING_REFERENCE = 'WEB/2020/9999/0/0/TRA';
 
   /**
    * The Poetry service.
