@@ -43,7 +43,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     'version' => '0',
     'product' => 'TRA',
     'number' => 3234,
-    'year' => 2010,
+    'year' => 2020,
   ];
 
   /**
@@ -79,6 +79,8 @@ class PoetryTranslationTestBase extends TranslationTestBase {
 
   /**
    * Groups the jobs by their target language.
+   *
+   * It returns only the latest jobs for each language.
    *
    * @param \Drupal\tmgmt\JobInterface[] $jobs
    *   The jobs.
