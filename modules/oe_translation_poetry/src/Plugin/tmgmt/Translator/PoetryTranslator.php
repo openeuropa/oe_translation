@@ -351,6 +351,30 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       return;
     }
 
+    $destination = $entity->toUrl('drupal:content-translation-overview');
+    $languages = $this->languageManager->getLanguages();
+    $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
+    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+    $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
+    $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+
+    // If we have accepted languages in Poetry, we need to include them (and
+    // some others automatically in a potential update request).
+    // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
+    if (!empty($accepted_languages)) {
+      $build['#accepted_languages'] = $accepted_languages;
+      $build['#translated_languages'] = $translated_languages;
+      // Load the completed jobs in the same request. For this we need to get
+      // the request ID from one of the accepted jobs in order to filter the
+      // completed jobs and include only the ones in this request. For the
+      // translated jobs we don't have to filter by request ID because those
+      // still contain the `poetry_state` value which indicates they are part
+      // of the last request for that content.
+      $accepted_job_info = reset($accepted_languages);
+      $completed_languages = $this->getCompletedJobsByLanguage($entity, $accepted_job_info);
+      $build['#completed_languages'] = $completed_languages;
+    }
+
     // Build the TMGMT translation request form.
     $build = $this->formBuilder->getForm('Drupal\tmgmt_content\Form\ContentTranslateForm', $build);
 
@@ -362,13 +386,6 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     if (!isset($build['actions']['request'])) {
       return;
     }
-
-    $destination = $entity->toUrl('drupal:content-translation-overview');
-    $languages = $this->languageManager->getLanguages();
-    $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
-    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
-    $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
-    $translated_languages = $this->getTranslatedJobsByLanguage($entity);
 
     foreach ($languages as $langcode => $language) {
       // Add links for unprocessed jobs to delete the delete.
@@ -440,20 +457,9 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // request an update.
     // @todo check also if content has updates
     // @todo also possible to add language
+    // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
     if (!empty($accepted_languages)) {
       $build['actions']['request']['#value'] = $this->t('Request a translation update to all selected languages');
-
-      // Activate checkbox for languages accepted and translated and having
-      // translation completed, because an update request must include these.
-      $completed_languages = $this->getCompletedJobsByLanguage($entity);
-      $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
-      foreach (array_keys($languages) as $langcode) {
-        $build['languages'][$langcode]['#attributes']['checked'] = 'checked';
-        $build['languages'][$langcode]['#attributes']['readonly'] = 'readonly';
-        unset($build['languages'][$langcode]['#attributes']['disabled']);
-        unset($build['languages'][$langcode]['#disabled']);
-        $build['languages'][$langcode]['#return_value'] = $langcode;
-      }
       return;
     }
 
@@ -610,17 +616,25 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
   /**
    * Get a list of Poetry jobs that are completed for a given entity.
    *
-   * These are the jobs which have been translated by Poetry and reviewed
-   * in the site.
+   * These are the jobs which have been translated by Poetry in a certain
+   * request.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to look jobs for.
+   * @param object $job_info
+   *   The job information that has the request ID to filter the completed jobs
+   *   by.
    *
    * @return array
    *   An array of completed job IDs, keyed by the target language.
    */
-  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity): array {
+  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, \stdClass $job_info): array {
     $query = $this->getEntityJobsQuery($entity);
+    $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
+    $reference = $job->get('poetry_request_id')->first()->getValue();
+    foreach ($reference as $name => $value) {
+      $query->condition('job.poetry_request_id__' . $name, $value);
+    }
     $query->condition('job.state', Job::STATE_FINISHED, '=');
     $query->isNull('job.poetry_state');
     $result = $query->execute()->fetchAllAssoc('target_language');
