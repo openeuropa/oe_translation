@@ -93,14 +93,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   }
 
   /**
-   * The operation of the request: CREATE, UPDATE, DELETE.
-   *
-   * @return string
-   *   The operation.
-   */
-  abstract protected function getRequestOperation(): string;
-
-  /**
    * Form constructor.
    *
    * @param array $form

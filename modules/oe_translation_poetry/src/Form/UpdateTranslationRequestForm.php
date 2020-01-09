@@ -117,13 +117,6 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function getRequestOperation(): string {
-    return 'INSERT';
-  }
-
-  /**
    * Get active jobs of an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
