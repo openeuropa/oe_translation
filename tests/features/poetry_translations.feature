@@ -117,7 +117,7 @@ Feature: Poetry translations
     # Make an update request
     When I select the languages "German" in the language list
     And I press "Request a translation update to all selected languages"
-    Then I should see "Send update request to DG Translation for My title to update in Bulgarian, German"
+    Then I should see "Send update request to DG Translation for My title to update in German, Bulgarian"
     When I fill in "Requested delivery date" with "05/04/2050"
     And I fill in the the "first" "Author" field with "john"
     And I fill in "Secretary" with "john"
