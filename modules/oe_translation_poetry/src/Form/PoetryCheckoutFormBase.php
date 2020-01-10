@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_poetry\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -58,6 +59,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   protected $logger;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * PoetryCheckoutForm constructor.
    *
    * @param \Drupal\oe_translation_poetry\PoetryJobQueueFactory $queueFactory
@@ -70,13 +78,16 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The content formatter.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager) {
     $this->queueFactory = $queueFactory;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
     $this->contentFormatter = $contentFormatter;
     $this->logger = $loggerChannelFactory->get('oe_translation_poetry');
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -88,7 +99,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $container->get('oe_translation_poetry.client.default'),
       $container->get('messenger'),
       $container->get('oe_translation_poetry.html_formatter'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('entity_type.manager')
     );
   }
 
