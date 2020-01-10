@@ -66,6 +66,8 @@ trait PoetryTestTrait {
    *
    * @param \Drupal\tmgmt\JobInterface[] $jobs
    *   The jobs.
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   protected function notifyWithDummyTranslations(array $jobs): void {
     // Prepare the identifier.

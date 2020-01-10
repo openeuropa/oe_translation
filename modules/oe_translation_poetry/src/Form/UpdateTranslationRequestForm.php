@@ -87,7 +87,11 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
     /** @var \Drupal\tmgmt\JobItemInterface[] $job_items */
     $job_items = $this->entityTypeManager->getStorage('tmgmt_job_item')->loadMultiple($ids);
     foreach ($job_items as $job_item) {
-      $jobs[] = $job_item->getJob();
+      $job = $job_item->getJob();
+      if ($job->getTranslatorId() !== 'poetry') {
+        continue;
+      }
+      $jobs[] = $job;
     }
 
     return $jobs;

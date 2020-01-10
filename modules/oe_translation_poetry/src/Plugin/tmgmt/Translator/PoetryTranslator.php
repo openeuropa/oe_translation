@@ -66,6 +66,16 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
   const POETRY_STATUS_TRANSLATED = 'translated';
 
   /**
+   * Indicates a request for a new translation for an entity.
+   */
+  const POETRY_REQUEST_NEW = 'NEW';
+
+  /**
+   * Indicates a request for an update of a  translation for an entity.
+   */
+  const POETRY_REQUEST_UPDATE = 'UPDATE';
+
+  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -353,6 +363,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
 
     $destination = $entity->toUrl('drupal:content-translation-overview');
     $languages = $this->languageManager->getLanguages();
+    $request_type = $this->getRequestType($entity);
+
     $unprocessed_languages = $this->getUnprocessedJobsByLanguage($entity);
     $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
     $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
@@ -361,7 +373,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // If we have accepted languages in Poetry, we need to include them (and
     // some others automatically in a potential update request).
     // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
-    if (!empty($accepted_languages)) {
+    if ($request_type === self::POETRY_REQUEST_UPDATE) {
       $build['#accepted_languages'] = $accepted_languages;
       $build['#translated_languages'] = $translated_languages;
       // Load the completed jobs in the same request. For this we need to get
@@ -458,14 +470,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // @todo check also if content has updates
     // @todo also possible to add language
     // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
-    if (!empty($accepted_languages)) {
-      $build['actions']['request']['#value'] = $this->t('Request a translation update to all selected languages');
+    if ($request_type === self::POETRY_REQUEST_UPDATE) {
+      $build['actions']['request']['#value'] = $this->t('Request a DGT translation update for the selected languages');
       return;
     }
 
     // If there are no jobs in the queue neither sent to DGT, it means
     // the user can select the languages it wants to translate.
-    $build['actions']['request']['#value'] = $this->t('Request DGT translation for the selected languages');
+    $build['actions']['request']['#value'] = $this->t('Request a DGT translation for the selected languages');
   }
 
   /**
@@ -510,11 +522,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $this->request->query->remove('destination');
     }
 
-    $route = 'oe_translation_poetry.job_queue_checkout_new';
-    $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
-    if (!empty($accepted_languages)) {
-      $route = 'oe_translation_poetry.job_queue_checkout_update';
-    }
+    $request_type = $this->getRequestType($entity);
+    $route = $request_type === self::POETRY_REQUEST_UPDATE ? 'oe_translation_poetry.job_queue_checkout_update' : 'oe_translation_poetry.job_queue_checkout_new';
     $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
 
     // Redirect to the checkout form.
@@ -659,6 +668,27 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $query->condition('job_item.item_type', $entity->getEntityTypeId());
     $query->condition('job.translator', 'poetry', '=');
     return $query;
+  }
+
+  /**
+   * Returns what kind of request is to be made.
+   *
+   * This is to determine if the request that is made when pressing the big
+   * Request button should be for a new translation or an update.
+   *
+   * By default, requests are for new translations. However, if there are
+   * ongoing, accepted translations in Poetry, the request can only be for
+   * an update.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which we are making the request for.
+   *
+   * @return string
+   *   The request type constant.
+   */
+  protected function getRequestType(ContentEntityInterface $entity): string {
+    $accepted_jobs = $this->getAcceptedJobsByLanguage($entity);
+    return $accepted_jobs ? self::POETRY_REQUEST_UPDATE : self::POETRY_REQUEST_NEW;
   }
 
   /**

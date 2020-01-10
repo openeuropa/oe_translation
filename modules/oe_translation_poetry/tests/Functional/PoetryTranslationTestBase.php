@@ -117,7 +117,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     $target_languages = count($languages) > 1 ? implode(', ', $languages) : array_shift($languages);
     $expected_title = new FormattableMarkup('Send request to DG Translation for @entity in @target_languages', ['@entity' => $node->label(), '@target_languages' => $target_languages]);
 
-    $this->drupalPostForm($node->toUrl('drupal:content-translation-overview'), $values, 'Request DGT translation for the selected languages');
+    $this->drupalPostForm($node->toUrl('drupal:content-translation-overview'), $values, 'Request a DGT translation for the selected languages');
     $this->assertSession()->pageTextContains($expected_title->__toString());
   }
 

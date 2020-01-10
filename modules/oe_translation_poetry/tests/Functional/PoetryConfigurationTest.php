@@ -148,7 +148,7 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     $node->save();
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->buttonExists('Request DGT translation for the selected languages');
+    $this->assertSession()->buttonExists('Request a DGT translation for the selected languages');
 
     // Unset the service WSDL as an example of required configuration.
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
@@ -157,7 +157,7 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     $translator->save();
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->buttonNotExists('Request DGT translation for the selected languages');
+    $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
   }
 
 }
