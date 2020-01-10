@@ -101,6 +101,25 @@ class PoetryTranslationContext extends RawDrupalContext {
   }
 
   /**
+   * Asserts that a given language checkbox is checked.
+   *
+   * @param string $language
+   *   The languages.
+   *
+   * @Then the :language language checkbox in the language list is checked.
+   */
+  public function languageCheckboxIsChecked(string $language): void {
+    $languages = $this->getLanguagesFromNames($language);
+    if (!$languages) {
+      throw new \Exception('The specified languages cannot be found');
+    }
+
+    $langcodes = array_keys($languages);
+    $langcode = reset($langcodes);
+    $this->getSession()->getPage()->hasCheckedField("languages[$langcode]");
+  }
+
+  /**
    * Checks that the Poetry jobs for a given node got created for the languages.
    *
    * @param string $title

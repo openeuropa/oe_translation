@@ -27,6 +27,7 @@ use Drupal\oe_translation\ApplicableTranslatorInterface;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
+use Drupal\oe_translation_poetry\Event\PoetryRequestTypeEvent;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
 use Drupal\tmgmt\Entity\Job;
@@ -454,30 +455,29 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       return;
     }
 
-    // If requests are not yet accepted by DGT, no action can be taken.
-    if (!empty($submitted_languages)) {
-      $build['actions'] = [
-        '#type' => 'fieldset',
-        'message' => [
-          '#markup' => $this->t('No translation requests can be made until the ongoing ones have been accepted.'),
-        ],
-      ];
+    // If the request is for new translations and we don't have an ongoing
+    // request in progress (either accepted or submitted), we show the button
+    // to make a new request.
+    if (empty($accepted_languages) && empty($submitted_languages) && $request_type === self::POETRY_REQUEST_NEW) {
+      $build['actions']['request']['#value'] = $this->t('Request a DGT translation for the selected languages');
       return;
     }
 
     // If requests are waiting for translation by DGT, it is possible to
     // request an update.
-    // @todo check also if content has updates
-    // @todo also possible to add language
     // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
     if ($request_type === self::POETRY_REQUEST_UPDATE) {
       $build['actions']['request']['#value'] = $this->t('Request a DGT translation update for the selected languages');
       return;
     }
 
-    // If there are no jobs in the queue neither sent to DGT, it means
-    // the user can select the languages it wants to translate.
-    $build['actions']['request']['#value'] = $this->t('Request a DGT translation for the selected languages');
+    // If we reached this point, it means we cannot make any kind of request.
+    $build['actions'] = [
+      '#type' => 'fieldset',
+      'message' => [
+        '#markup' => $this->t('No translation requests can be made until the ongoing ones have been accepted and/or translated.'),
+      ],
+    ];
   }
 
   /**
@@ -688,7 +688,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    */
   protected function getRequestType(ContentEntityInterface $entity): string {
     $accepted_jobs = $this->getAcceptedJobsByLanguage($entity);
-    return $accepted_jobs ? self::POETRY_REQUEST_UPDATE : self::POETRY_REQUEST_NEW;
+    $request_type = $accepted_jobs ? self::POETRY_REQUEST_UPDATE : self::POETRY_REQUEST_NEW;
+    /** @var \Drupal\tmgmt\Entity\JobInterface $job */
+    $job_info = $accepted_jobs ? reset($accepted_jobs) : NULL;
+    $event = new PoetryRequestTypeEvent($entity, $request_type, $job_info);
+    $this->eventDispatcher->dispatch(PoetryRequestTypeEvent::EVENT, $event);
+    return $event->getRequestType();
   }
 
   /**
