@@ -637,7 +637,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    * @return array
    *   An array of completed job IDs, keyed by the target language.
    */
-  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, \stdClass $job_info): array {
+  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, $job_info): array {
     $query = $this->getEntityJobsQuery($entity);
     $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
     $reference = $job->get('poetry_request_id')->first()->getValue();
