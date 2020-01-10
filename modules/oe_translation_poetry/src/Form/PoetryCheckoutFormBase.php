@@ -193,6 +193,19 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    // Check delivery date is not in the past.
+    $delivery_date = new \DateTime($form_state->getValue('details')['date']);
+    $today = new \DateTime();
+    $today->setTime(0, 0, 0, 0);
+    if ($delivery_date < $today) {
+      $form_state->setErrorByName('details][date', t('@delivery_date cannot be in the past.', ['@delivery_date' => $this->t('Requested delivery date')]));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // The submit handler is submitRequest().
   }
