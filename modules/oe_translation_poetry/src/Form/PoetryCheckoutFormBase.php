@@ -197,8 +197,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     // Check delivery date is not in the past.
     $delivery_date = new \DateTime($form_state->getValue('details')['date']);
     $today = new \DateTime();
-    $today->setTime(0, 0, 0, 0);
-    if ($delivery_date < $today) {
+    if ($delivery_date->format('Y-m-d') < $today->format('Y-m-d')) {
       $form_state->setErrorByName('details][date', t('@delivery_date cannot be in the past.', ['@delivery_date' => $this->t('Requested delivery date')]));
     }
   }
