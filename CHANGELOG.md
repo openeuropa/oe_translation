@@ -7,6 +7,7 @@
 
 **Merged pull requests:**
 
+- OPENEUROPA-1766: Fix failing phpunit tests for 2020 problem. [\#58](https://github.com/openeuropa/oe_translation/pull/58) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2503: Align the translator role between components. [\#55](https://github.com/openeuropa/oe_translation/pull/55) ([nagyad](https://github.com/nagyad))
 - OPENEUROPA-2615: Poetry service interface and override in test. [\#53](https://github.com/openeuropa/oe_translation/pull/53) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2602: Remove EWCMS references from this module. [\#52](https://github.com/openeuropa/oe_translation/pull/52) ([dxvargas](https://github.com/dxvargas))
