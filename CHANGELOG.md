@@ -1,20 +1,32 @@
-# Changelog
+# Change Log
+
+## [0.2.2](https://github.com/openeuropa/oe_translation/tree/0.2.2) (2020-01-13)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2.1...0.2.2)
+
+**Warning:** As part of this release we alter the role machine name for translator that we ship with but it is up to you to change it in your site in case you are using this component. 
+
+**Merged pull requests:**
+
+- OPENEUROPA-2503: Align the translator role between components. [\#55](https://github.com/openeuropa/oe_translation/pull/55) ([nagyad](https://github.com/nagyad))
+- OPENEUROPA-2615: Poetry service interface and override in test. [\#53](https://github.com/openeuropa/oe_translation/pull/53) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2602: Remove EWCMS references from this module. [\#52](https://github.com/openeuropa/oe_translation/pull/52) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2555: Restrict the applicability of translator plugins.  [\#46](https://github.com/openeuropa/oe_translation/pull/46) ([upchuk](https://github.com/upchuk))
 
 ## [0.2.1](https://github.com/openeuropa/oe_translation/tree/0.2.1) (2019-11-29)
-
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2...0.2.1)
 
 **Merged pull requests:**
 
+- OPENEUROPA-0000: Prepare release 0.2.1. [\#51](https://github.com/openeuropa/oe_translation/pull/51) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2535: Using markup in the HTML export. [\#50](https://github.com/openeuropa/oe_translation/pull/50) ([upchuk](https://github.com/upchuk))
 
 ## [0.2](https://github.com/openeuropa/oe_translation/tree/0.2) (2019-11-29)
-
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.1.1...0.2)
 
 **Merged pull requests:**
 
 - OPENEUROPA-2535: Poetry HTML export with true \#plain\_text when needed. [\#49](https://github.com/openeuropa/oe_translation/pull/49) ([upchuk](https://github.com/upchuk))
+- Prepare release 0.2 [\#48](https://github.com/openeuropa/oe_translation/pull/48) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - Poetry epic [\#47](https://github.com/openeuropa/oe_translation/pull/47) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2551 - Hide/show request button depending on the translation status [\#45](https://github.com/openeuropa/oe_translation/pull/45) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2535 - Properly exporting HTML field values [\#44](https://github.com/openeuropa/oe_translation/pull/44) ([upchuk](https://github.com/upchuk))
@@ -26,11 +38,18 @@
 - OPENEUROPA-2464: Use PHP 7.1 in docker-compose. [\#38](https://github.com/openeuropa/oe_translation/pull/38) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2462: Fix secondary translations [\#37](https://github.com/openeuropa/oe_translation/pull/37) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2379: Entity aware poetry job queue. [\#36](https://github.com/openeuropa/oe_translation/pull/36) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2258: Use PHP 7.2 in drone and docker image. [\#29](https://github.com/openeuropa/oe_translation/pull/29) ([dxvargas](https://github.com/dxvargas))
+
+## [0.1.1](https://github.com/openeuropa/oe_translation/tree/0.1.1) (2019-10-16)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.1...0.1.1)
+
+**Merged pull requests:**
+
+- OPENEUROPA-1766: Release 0.1.1. [\#35](https://github.com/openeuropa/oe_translation/pull/35) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2284: Map Drupal languages to Poetry languages [\#34](https://github.com/openeuropa/oe_translation/pull/34) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2175:  [\#32](https://github.com/openeuropa/oe_translation/pull/32) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2283: Disable Poetry if required configuration is missing. [\#31](https://github.com/openeuropa/oe_translation/pull/31) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2253: Fixing notification access checking. [\#30](https://github.com/openeuropa/oe_translation/pull/30) ([upchuk](https://github.com/upchuk))
-- OPENEUROPA-2258: Use PHP 7.2 in drone and docker image. [\#29](https://github.com/openeuropa/oe_translation/pull/29) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2276: Various fixes needed for integrating with EWCMS [\#28](https://github.com/openeuropa/oe_translation/pull/28) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2107: Ensuring the Poetry translator is used in last job query [\#27](https://github.com/openeuropa/oe_translation/pull/27) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2190: Add tests for translator configuration. [\#26](https://github.com/openeuropa/oe_translation/pull/26) ([imanoleguskiza](https://github.com/imanoleguskiza))
@@ -39,6 +58,7 @@
 - OPENEUROPA-2230 - UI for mocking requests. [\#23](https://github.com/openeuropa/oe_translation/pull/23) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2191: Add error support for the poetry mock. [\#22](https://github.com/openeuropa/oe_translation/pull/22) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - OPENEUROPA-0000: Fix the html import when dealing with complex strings. [\#21](https://github.com/openeuropa/oe_translation/pull/21) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2108: Fix labels in translation form. [\#20](https://github.com/openeuropa/oe_translation/pull/20) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2172: Implement a custom logger channel factory to instantiate our custom channel class. [\#19](https://github.com/openeuropa/oe_translation/pull/19) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - OPENEUROPA-2106: Rework the Poetry client service. [\#18](https://github.com/openeuropa/oe_translation/pull/18) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2187: Allow users to clean unprocessed poetry jobs. [\#17](https://github.com/openeuropa/oe_translation/pull/17) ([imanoleguskiza](https://github.com/imanoleguskiza))
@@ -53,19 +73,7 @@
 - OPENEUROPA-2107: Create Poetry translation requests [\#8](https://github.com/openeuropa/oe_translation/pull/8) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2105: Poetry client and mock setup. [\#7](https://github.com/openeuropa/oe_translation/pull/7) ([upchuk](https://github.com/upchuk))
 
-## [0.1.1](https://github.com/openeuropa/oe_translation/tree/0.1.1) (2019-10-16)
-
-[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.1...0.1.1)
-
-**Merged pull requests:**
-
-- OPENEUROPA-1766: Release 0.1.1. [\#35](https://github.com/openeuropa/oe_translation/pull/35) ([dxvargas](https://github.com/dxvargas))
-- OPENEUROPA-2108: Fix labels in translation form. [\#20](https://github.com/openeuropa/oe_translation/pull/20) ([dxvargas](https://github.com/dxvargas))
-
 ## [0.1](https://github.com/openeuropa/oe_translation/tree/0.1) (2019-07-24)
-
-[Full Changelog](https://github.com/openeuropa/oe_translation/compare/caa00219e851dbc973e20cab98723eac7425e09d...0.1)
-
 **Merged pull requests:**
 
 - Update CHANGELOG.md for release 0.1. [\#6](https://github.com/openeuropa/oe_translation/pull/6) ([sergepavle](https://github.com/sergepavle))
@@ -76,4 +84,4 @@
 
 
 
-\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
+\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
