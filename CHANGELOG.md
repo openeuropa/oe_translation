@@ -1,9 +1,9 @@
 # Change Log
 
-## [0.2.2](https://github.com/openeuropa/oe_translation/tree/0.2.2) (2020-01-13)
-[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2.1...0.2.2)
+## [0.3.0](https://github.com/openeuropa/oe_translation/tree/0.3.0) (2020-01-13)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2.1...0.3.0)
 
-**Warning:** As part of this release we alter the role machine name for translator that we ship with but it is up to you to change it in your site in case you are using this component. 
+**Warning:** As part of this release we alter the role machine name for translator that we ship with but it is up to you to change it in your site in case you are using this component.
 
 **Merged pull requests:**
 
