@@ -100,7 +100,7 @@ class PoetryMockTest extends BrowserTestBase {
     $this->assertCount(1, $result);
     $logged_message = trim(unserialize(reset($result))['@message'], "'");
     $logged_message_id = (string) simplexml_load_string($logged_message)->request->attributes()['id'];
-    $this->assertEqual($logged_message_id, 'WEB/2019/40012/0/33/TRA');
+    $this->assertEqual($logged_message_id, 'WEB/' . date('Y') . '/40012/0/33/TRA');
   }
 
   /**
