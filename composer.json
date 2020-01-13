@@ -33,6 +33,9 @@
         "We use a high version of Zend Diactoros for the XMLResponse class",
         "Since the behat/mink-selenium2-driver alias has been removed, we need to take the last alias as the previous one"
     ],
+    "conflict": {
+        "openeuropa/oe_editorial": "<1.1.1"
+    },
     "scripts": {
         "drupal-scaffold": "DrupalComposer\\DrupalScaffold\\Plugin::scaffold",
         "post-install-cmd": "./vendor/bin/run drupal:site-setup",
