@@ -4,7 +4,7 @@ Feature: Poetry translations
   As a translator
   I need to be able to translate content using the Poetry service
 
-  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
+  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry @run
   Scenario: Translate content.
     Given oe_demo_translatable_page content:
       | title    | field_oe_demo_translatable_body |
@@ -37,7 +37,8 @@ Feature: Poetry translations
     And I should see "Submitted to Poetry" in the "German" row
     And I should see "None" in the "Danish" row
     And I should not see the button "Request a DGT translation for the selected languages"
-    And I should see "No translation requests can be made until the ongoing ones have been accepted."
+    And I should not see the button "Request a DGT translation update for the selected languages"
+    And I should see "No translation requests can be made until the ongoing ones have been accepted and/or translated."
     And the Poetry request jobs to translate "My title" should get created for "Bulgarian, German"
 
     # The translation gets accepted in Poetry
@@ -49,7 +50,7 @@ Feature: Poetry translations
     And I should see "Ongoing in Poetry" in the "German" row
     And I should see "None" in the "Danish" row
     And I should not see the button "Request a DGT translation for the selected languages"
-    And I should not see "No translation requests can be made until the ongoing ones have been accepted."
+    And I should not see "No translation requests can be made until the ongoing ones have been accepted and/or translated."
     And I should see the button "Request a DGT translation update for the selected languages"
 
     # The first translation gets sent from Poetry
@@ -80,7 +81,7 @@ Feature: Poetry translations
     And I click "My title"
     And I click "Translate"
     And I should see the button "Request a DGT translation for the selected languages"
-    And I should not see "No translation requests can be made until the ongoing ones have been accepted."
+    And I should not see "No translation requests can be made until the ongoing ones have been accepted and/or translated."
     And I should not see the button "Request a DGT translation update for the selected languages"
 
 
