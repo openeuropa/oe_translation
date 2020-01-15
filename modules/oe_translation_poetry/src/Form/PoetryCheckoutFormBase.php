@@ -133,6 +133,8 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       '#type' => 'date',
       '#title' => $this->t('Requested delivery date'),
       '#required' => TRUE,
+      '#default_value' => (new \DateTime('+30 day'))->format('Y-m-d'),
+      '#min' => (new \DateTime('today'))->format('Y-m-d'),
     ];
 
     $default_contact = $translator_settings['contact'] ?? [];
@@ -188,6 +190,17 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    // Check delivery date is not in the past.
+    $delivery_date = new \DateTime($form_state->getValue('details')['date']);
+    if ($delivery_date < new \DateTime('today')) {
+      $form_state->setErrorByName('details][date', t('@delivery_date cannot be in the past.', ['@delivery_date' => $this->t('Requested delivery date')]));
+    }
   }
 
   /**

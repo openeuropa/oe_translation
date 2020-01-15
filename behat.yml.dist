@@ -6,6 +6,7 @@ default:
       contexts:
         - Drupal\DrupalExtension\Context\MinkContext
         - Drupal\DrupalExtension\Context\DrupalContext
+        - Drupal\DrupalExtension\Context\MessageContext
         - Drupal\Tests\oe_translation\Behat\CleanupContext
         - Drupal\DrupalExtension\Context\ConfigContext
         - Drupal\Tests\oe_translation\Behat\LocalTranslationContext
@@ -27,5 +28,7 @@ default:
       region_map:
         title: ".page-title"
         node content: ".node--view-mode-full"
+      selectors:
+        error_message_selector: '.messages.messages--error'
   formatters:
     progress: ~
