@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\JobItemInterface;
 
 /**
  * Tests the Poetry notifications.
@@ -55,6 +56,12 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
         $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
         $this->assertEqual($job->getState(), Job::STATE_REJECTED);
         $this->assertCount(1, $job->getMessages());
+
+        $jobItemStorage = $this->entityTypeManager->getStorage('tmgmt_job_item');
+        $job_item = current($job->getItems());
+        /** @var \Drupal\tmgmt\JobItemInterface[] $jobItem */
+        $jobItem = $jobItemStorage->load($job_item->id());
+        $this->assertEqual($jobItem->get('state')->value, JobItemInterface::STATE_ABORTED);
         continue;
       }
 
