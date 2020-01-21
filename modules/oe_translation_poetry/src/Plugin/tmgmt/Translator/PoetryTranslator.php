@@ -366,7 +366,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
     $translated_languages = $this->getTranslatedJobsByLanguage($entity);
 
-    $request_type = $this->getRequestType($entity, $accepted_languages);
+    $request_type = $this->getRequestType($entity);
 
     // If we have accepted languages in Poetry, we need to include them (and
     // some others automatically in a potential update request).
@@ -381,7 +381,9 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // still contain the `poetry_state` value which indicates they are part
       // of the last request for that content.
       $accepted_job_info = reset($accepted_languages);
-      $completed_languages = $this->getCompletedJobsByLanguage($entity, $accepted_job_info);
+      /** @var \Drupal\tmgmt\Entity\JobInterface $job */
+      $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($accepted_job_info->tjid);
+      $completed_languages = $this->getCompletedJobsByLanguage($entity, $job);
       $build['#completed_languages'] = $completed_languages;
     }
 
@@ -622,20 +624,19 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    * Get a list of Poetry jobs that are completed for a given entity.
    *
    * These are the jobs which have been translated by Poetry in a certain
-   * request.
+   * request (of the given Job).
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to look jobs for.
-   * @param object $job_info
-   *   The job information that has the request ID to filter the completed jobs
-   *   by.
+   * @param \Drupal\tmgmt\JobInterface $job
+   *   The job information that contains the ID of the job that can be used
+   *   to filter by the Poetry request ID.
    *
    * @return array
    *   An array of completed job IDs, keyed by the target language.
    */
-  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, $job_info): array {
+  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, JobInterface $job): array {
     $query = $this->getEntityJobsQuery($entity);
-    $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
     $reference = $job->get('poetry_request_id')->first()->getValue();
     foreach ($reference as $name => $value) {
       $query->condition('job.poetry_request_id__' . $name, $value);

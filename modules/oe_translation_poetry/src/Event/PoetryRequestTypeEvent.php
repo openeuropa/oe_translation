@@ -44,7 +44,9 @@ class PoetryRequestTypeEvent extends Event {
    * @param \Drupal\oe_translation_poetry\PoetryRequestType $requestType
    *   The request type constant.
    * @param object|null $jobInfo
-   *   The job information of the current request.
+   *   The job information of the current request. This contains:
+   *     - tjid - the Job ID
+   *     - tjiid -the Job Item ID.
    */
   public function __construct(ContentEntityInterface $entity, PoetryRequestType $requestType, $jobInfo = NULL) {
     $this->entity = $entity;
