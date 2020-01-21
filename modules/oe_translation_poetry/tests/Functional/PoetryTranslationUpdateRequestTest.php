@@ -89,7 +89,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // Assert we can not see operation buttons again.
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonNotExists('Request a DGT translation update for the selected languages');
-    $this->assertSession()->pageTextContains('No translation requests can be made until the ongoing ones have been accepted and/or translated.');
+    $this->assertSession()->pageTextContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
 
     // Send a status update accepting the translation for requested languages.
     // We need to increment the version because we already made one update
@@ -127,7 +127,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     }
 
     // Assert we see operation buttons again.
-    $this->assertSession()->pageTextNotContains('No translation requests can be made until the ongoing ones have been accepted and/or translated.');
+    $this->assertSession()->pageTextNotContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
 

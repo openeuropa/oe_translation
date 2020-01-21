@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry\Event;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\oe_translation_poetry\PoetryRequestType;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
@@ -24,7 +25,7 @@ class PoetryRequestTypeEvent extends Event {
   /**
    * The request type constant.
    *
-   * @var string
+   * @var \Drupal\oe_translation_poetry\PoetryRequestType
    */
   protected $requestType;
 
@@ -40,12 +41,12 @@ class PoetryRequestTypeEvent extends Event {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being translated.
-   * @param string $requestType
+   * @param \Drupal\oe_translation_poetry\PoetryRequestType $requestType
    *   The request type constant.
    * @param object|null $jobInfo
    *   The job information of the current request.
    */
-  public function __construct(ContentEntityInterface $entity, string $requestType, $jobInfo = NULL) {
+  public function __construct(ContentEntityInterface $entity, PoetryRequestType $requestType, $jobInfo = NULL) {
     $this->entity = $entity;
     $this->requestType = $requestType;
     $this->jobInfo = $jobInfo;
@@ -62,22 +63,22 @@ class PoetryRequestTypeEvent extends Event {
   }
 
   /**
-   * Returns the request type constant.
+   * Returns the request type.
    *
-   * @return string
+   * @return \Drupal\oe_translation_poetry\PoetryRequestType
    *   The request type.
    */
-  public function getRequestType(): string {
+  public function getRequestType(): PoetryRequestType {
     return $this->requestType;
   }
 
   /**
-   * Sets the request type constant.
+   * Sets the request type.
    *
-   * @param string $requestType
+   * @param \Drupal\oe_translation_poetry\PoetryRequestType $requestType
    *   The request type.
    */
-  public function setRequestType(string $requestType): void {
+  public function setRequestType(PoetryRequestType $requestType): void {
     $this->requestType = $requestType;
   }
 

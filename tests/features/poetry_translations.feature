@@ -38,7 +38,7 @@ Feature: Poetry translations
     And I should see "None" in the "Danish" row
     And I should not see the button "Request a DGT translation for the selected languages"
     And I should not see the button "Request a DGT translation update for the selected languages"
-    And I should see "No translation requests can be made until the ongoing ones have been accepted and/or translated."
+    And I should see "No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated."
     And the Poetry request jobs to translate "My title" should get created for "Bulgarian, German"
 
     # The translation gets accepted in Poetry
@@ -50,7 +50,7 @@ Feature: Poetry translations
     And I should see "Ongoing in Poetry" in the "German" row
     And I should see "None" in the "Danish" row
     And I should not see the button "Request a DGT translation for the selected languages"
-    And I should not see "No translation requests can be made until the ongoing ones have been accepted and/or translated."
+    And I should not see "No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated."
     And I should see the button "Request a DGT translation update for the selected languages"
 
     # The first translation gets sent from Poetry
@@ -81,7 +81,7 @@ Feature: Poetry translations
     And I click "My title"
     And I click "Translate"
     And I should see the button "Request a DGT translation for the selected languages"
-    And I should not see "No translation requests can be made until the ongoing ones have been accepted and/or translated."
+    And I should not see "No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated."
     And I should not see the button "Request a DGT translation update for the selected languages"
 
 
