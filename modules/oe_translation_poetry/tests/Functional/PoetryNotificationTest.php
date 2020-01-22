@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\JobItemInterface;
 
 /**
  * Tests the Poetry notifications.
@@ -53,8 +54,11 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
         // Italian was refused.
         $this->assertTrue($job->get('poetry_state')->isEmpty());
         $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
-        $this->assertEqual($job->getState(), Job::STATE_REJECTED);
+        $this->assertEqual($job->getState(), Job::STATE_ABORTED);
         $this->assertCount(1, $job->getMessages());
+
+        $job_item = current($job->getItems());
+        $this->assertEqual($job_item->get('state')->value, JobItemInterface::STATE_ABORTED);
         continue;
       }
 
@@ -90,7 +94,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
       // The others were cancelled.
       $this->assertTrue($job->get('poetry_state')->isEmpty());
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
-      $this->assertEqual($job->getState(), Job::STATE_REJECTED);
+      $this->assertEqual($job->getState(), Job::STATE_ABORTED);
     }
   }
 

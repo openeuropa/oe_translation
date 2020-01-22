@@ -296,9 +296,13 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
    *   The message variables.
    */
   protected function rejectJob(JobInterface $job, string $message = '', array $variables = []): void {
+    if ($job->isAborted()) {
+      return;
+    }
+
     $job->set('poetry_state', NULL);
     $job->set('poetry_request_date_updated', NULL);
-    $this->changeJobState($job, Job::STATE_REJECTED, 'state', $message, $variables);
+    $job->aborted($message, $variables, 'status');
   }
 
   /**
