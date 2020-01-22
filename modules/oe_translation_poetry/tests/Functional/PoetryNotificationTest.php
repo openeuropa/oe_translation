@@ -57,11 +57,8 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
         $this->assertEqual($job->getState(), Job::STATE_ABORTED);
         $this->assertCount(1, $job->getMessages());
 
-        $jobItemStorage = $this->entityTypeManager->getStorage('tmgmt_job_item');
         $job_item = current($job->getItems());
-        /** @var \Drupal\tmgmt\JobItemInterface[] $jobItem */
-        $jobItem = $jobItemStorage->load($job_item->id());
-        $this->assertEqual($jobItem->get('state')->value, JobItemInterface::STATE_ABORTED);
+        $this->assertEqual($job_item->get('state')->value, JobItemInterface::STATE_ABORTED);
         continue;
       }
 
