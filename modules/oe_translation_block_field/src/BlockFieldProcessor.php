@@ -1,0 +1,70 @@
+<?php
+
+namespace Drupal\oe_translation_block_field;
+
+use Drupal\block_field\BlockFieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\tmgmt_content\DefaultFieldProcessor;
+
+class BlockFieldProcessor extends DefaultFieldProcessor {
+
+  use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function extractTranslatableData(FieldItemListInterface $field) {
+    $data = [];
+    /* @var \Drupal\Core\Field\FieldItemInterface $field_item */
+    $field_definition = $field->getFieldDefinition();
+    foreach ($field as $delta => $field_item) {
+
+      $property = $field_item->getProperties()['settings'];
+      $data['#label'] = $field_definition->getLabel();
+      if (count($field) > 1) {
+        // More than one item, add a label for the delta.
+        $data[$delta]['#label'] = t('Delta #@delta', array('@delta' => $delta));
+      }
+      $data[$delta]['settings__label'] = array(
+        '#label' => $this->t('Block title'),
+        '#text' => $property->getValue()['label'],
+        '#translate' => TRUE,
+      );
+      $data[$delta]['settings__label']['#max_length'] = 255;
+    }
+    return $data;
+  }
+
+  public function setTranslations($field_data, FieldItemListInterface $field) {
+    foreach (Element::children($field_data) as $delta) {
+      $field_item = $field_data[$delta];
+      $property_data = $field_item['settings__label'];
+      // If there is translation data for the field property, save it.
+      if (isset($property_data['#translation']['#text']) && $property_data['#translate']) {
+        // If the offset does not exist, populate it with the current value
+        // from the source content, so that the translated field offset can be
+        // saved.
+        if (!$field->offsetExists(($delta))) {
+          $translation = $field->getEntity();
+          $source = $translation->getUntranslated();
+          $source_field = $source->get($field->getName());
+          $source_offset = $source_field->offsetGet($delta);
+          // Note that the source language value will be immediately
+          // overwritten.
+          $field->offsetSet($delta, $source_offset);
+        }
+
+        $this->setTranslatedTitle($field->offsetGet($delta), $property_data['#translation']['#text']);
+      }
+    }
+  }
+
+  protected function setTranslatedTitle(BlockFieldItemInterface $field_item, string $title): void {
+    $settings = $field_item->getValue();
+    $settings['label'] = $title;
+    $field_item->set('settings', $settings);
+  }
+
+}

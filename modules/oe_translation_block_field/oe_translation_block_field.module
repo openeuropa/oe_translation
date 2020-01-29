@@ -1,0 +1,12 @@
+<?php
+
+use Drupal\oe_translation_block_field\BlockFieldProcessor;
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function oe_translation_block_field_field_info_alter(&$info) {
+  if (isset($info['block_field'])) {
+    $info['block_field']['tmgmt_field_processor'] = BlockFieldProcessor::class;
+  }
+}
