@@ -6,15 +6,13 @@ namespace Drupal\oe_translation_poetry\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
-use Drupal\oe_translation_poetry\PoetryTranslatorUI;
 use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
 use Drupal\tmgmt\JobInterface;
 use EC\Poetry\Messages\Responses\ResponseInterface;
@@ -61,6 +59,13 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   protected $logger;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * PoetryCheckoutForm constructor.
    *
    * @param \Drupal\oe_translation_poetry\PoetryJobQueueFactory $queueFactory
@@ -73,13 +78,16 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The content formatter.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager) {
     $this->queueFactory = $queueFactory;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
     $this->contentFormatter = $contentFormatter;
     $this->logger = $loggerChannelFactory->get('oe_translation_poetry');
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -91,17 +99,10 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       $container->get('oe_translation_poetry.client.default'),
       $container->get('messenger'),
       $container->get('oe_translation_poetry.html_formatter'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('entity_type.manager')
     );
   }
-
-  /**
-   * The operation of the request: CREATE, UPDATE, DELETE.
-   *
-   * @return string
-   *   The operation.
-   */
-  abstract protected function getRequestOperation(): string;
 
   /**
    * Form constructor.
@@ -117,7 +118,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The form structure.
    */
   public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
-    $translator_settings = $this->poetry->getTranslatorSettings();
 
     $form_state->set('entity', $node);
 
@@ -135,42 +135,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       '#required' => TRUE,
       '#default_value' => (new \DateTime('+30 day'))->format('Y-m-d'),
       '#min' => (new \DateTime('today'))->format('Y-m-d'),
-    ];
-
-    $default_contact = $translator_settings['contact'] ?? [];
-    $form['details']['contact'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Contact information'),
-    ];
-
-    foreach (PoetryTranslatorUI::getContactFieldNames('contact') as $name => $label) {
-      $form['details']['contact'][$name] = [
-        '#type' => 'textfield',
-        '#title' => $label,
-        '#default_value' => $default_contact[$name] ?? '',
-        '#required' => TRUE,
-      ];
-    }
-
-    $default_organisation = $translator_settings['organisation'] ?? [];
-    $form['details']['organisation'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Organisation information'),
-    ];
-
-    foreach (PoetryTranslatorUI::getContactFieldNames('organisation') as $name => $label) {
-      $form['details']['organisation'][$name] = [
-        '#type' => 'textfield',
-        '#title' => $label,
-        '#default_value' => $default_organisation[$name] ?? '',
-        '#required' => TRUE,
-      ];
-    }
-
-    $form['details']['comment'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Comment'),
-      '#description' => $this->t('Optional remark about the translation request.'),
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -208,143 +172,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // The submit handler is submitRequest().
-  }
-
-  /**
-   * Returns the title of the form page.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $node
-   *   The node entity to use when generating the title.
-   *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
-   *   The title for the form page.
-   */
-  public function getPageTitle(ContentEntityInterface $node = NULL): TranslatableMarkup {
-    $queue = $this->queueFactory->get($node);
-    $entity = $queue->getEntity();
-    $target_languages = $queue->getTargetLanguages();
-    $target_languages = count($target_languages) > 1 ? implode(', ', $target_languages) : array_shift($target_languages);
-    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
-  }
-
-  /**
-   * Submits the request to Poetry.
-   *
-   * @param array $form
-   *   The form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   */
-  public function submitRequest(array &$form, FormStateInterface $form_state): void {
-    $entity = $form_state->get('entity');
-    $queue = $this->queueFactory->get($entity);
-    $translator_settings = $this->poetry->getTranslatorSettings();
-    $jobs = $queue->getAllJobs();
-    $identifier = $this->poetry->getIdentifierForContent($entity);
-    $identifier->setProduct($this->requestType);
-
-    $date = new \DateTime($form_state->getValue('details')['date']);
-    $formatted_date = $date->format('d/m/Y');
-
-    /** @var \EC\Poetry\Messages\Requests\CreateTranslationRequest $message */
-    $message = $this->poetry->get('request.create_translation_request');
-    $message->setIdentifier($identifier);
-
-    // Build the details.
-    $details = $message->withDetails();
-    $details->setDelay($formatted_date);
-
-    if ($form_state->getValue('details')['comment']) {
-      $details->setRemark($form_state->getValue('details')['comment']);
-    }
-
-    // We use the formatted identifier as the user reference.
-    $details->setClientId($identifier->getFormattedIdentifier());
-    $title = $this->createRequestTitle(reset($jobs));
-    $details->setTitle($title);
-    $details->setApplicationId($translator_settings['application_reference']);
-    $details->setReferenceFilesRemark($entity->toUrl()->setAbsolute()->toString());
-    $details
-      ->setProcedure('NEANT')
-      ->setDestination('PUBLIC')
-      ->setType('INTER');
-
-    // Add the organisation information.
-    $organisation_information = [
-      'setResponsible' => 'responsible',
-      'setAuthor' => 'author',
-      'setRequester' => 'requester',
-    ];
-    foreach ($organisation_information as $method => $name) {
-      $details->$method($form_state->getValue('details')['organisation'][$name]);
-    }
-
-    $message->setDetails($details);
-
-    // Build the contact information.
-    foreach (PoetryTranslatorUI::getContactFieldNames('contact') as $name => $label) {
-      $message->withContact()
-        ->setType($name)
-        ->setNickname($form_state->getValue('details')['contact'][$name]);
-    }
-
-    // Build the return endpoint information.
-    $settings = $this->poetry->getSettings();
-    $username = $settings['notification.username'] ?? NULL;
-    $password = $settings['notification.password'] ?? NULL;
-    $return = $message->withReturnAddress();
-    $return->setUser($username);
-    $return->setPassword($password);
-    // The notification endpoint WSDL.
-    $return->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
-    // The notification endpoint WSDL action method.
-    $return->setPath('handle');
-    // The return is a webservice and not an email.
-    $return->setType('webService');
-    $return->setAction($this->getRequestOperation());
-    $message->setReturnAddress($return);
-
-    $source = $message->withSource();
-    $source->setFormat('HTML');
-    $source->setName('content.html');
-    $formatted_content = $this->contentFormatter->export(reset($jobs));
-    $source->setFile(base64_encode($formatted_content->__toString()));
-    $source->setLegiswriteFormat('No');
-    $source->withSourceLanguage()
-      ->setCode(strtoupper($entity->language()->getId()))
-      ->setPages(1);
-    $message->setSource($source);
-
-    foreach ($jobs as $job) {
-      $message->withTarget()
-        ->setLanguage(strtoupper($job->getRemoteTargetLanguage()))
-        ->setFormat('HTML')
-        ->setAction($this->getRequestOperation())
-        ->setDelay($formatted_date);
-    }
-
-    try {
-      $client = $this->poetry->getClient();
-      /** @var \EC\Poetry\Messages\Responses\ResponseInterface $response */
-      $response = $client->send($message);
-      $this->handlePoetryResponse($response, $form_state);
-
-      // If we request a new number by setting a sequence, update the global
-      // identifier number with the new number that came for future requests.
-      if ($identifier->getSequence()) {
-        $this->poetry->setGlobalIdentifierNumber($response->getIdentifier()->getNumber());
-      }
-
-      $this->redirectBack($form_state);
-      $queue->reset();
-      $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
-    }
-    catch (\Exception $exception) {
-      $this->logger->error($exception->getMessage());
-      $this->messenger->addError($this->t('There was an error making the request to DGT.'));
-      $this->redirectBack($form_state);
-      $queue->reset();
-    }
   }
 
   /**

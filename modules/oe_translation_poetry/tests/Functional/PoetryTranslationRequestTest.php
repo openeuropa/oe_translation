@@ -28,7 +28,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $node->save();
 
     // Assert we can't access the checkout route without jobs in the queue.
-    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $node->id()]));
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout_new', ['node' => $node->id()]));
     $this->assertSession()->statusCodeEquals(403);
 
     // Select some languages to translate.
@@ -220,10 +220,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
     // Assert that the second node doesn't have any pending jobs.
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->buttonExists('Request DGT translation for the selected languages');
+    $this->assertSession()->buttonExists('Request a DGT translation for the selected languages');
     // Assert that each node has its own queue by trying to access the checkout
     // of the second node (which has no pending jobs).
-    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout', ['node' => $second_node->id()]));
+    $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout_new', ['node' => $second_node->id()]));
     $this->assertSession()->statusCodeEquals(403);
 
     // Go back to the translation overview to mimic that the user did not
