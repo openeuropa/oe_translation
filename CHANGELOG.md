@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.0](https://github.com/openeuropa/oe_translation/tree/0.4.0) (2020-01-30)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.3.0...0.4.0)
+
+**Merged pull requests:**
+
+- OPENEUROPA-2697 - Abort also job items when requests are canceled. [\#59](https://github.com/openeuropa/oe_translation/pull/59) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2712: Add validation to checkout form for delivery date. [\#57](https://github.com/openeuropa/oe_translation/pull/57) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2252: Allow to request translation updates [\#54](https://github.com/openeuropa/oe_translation/pull/54) ([dxvargas](https://github.com/dxvargas))
+
 ## [0.3.0](https://github.com/openeuropa/oe_translation/tree/0.3.0) (2020-01-13)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2.1...0.3.0)
 
