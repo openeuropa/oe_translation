@@ -157,7 +157,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     $return->setPath('handle');
     // The return is a webservice and not an email.
     $return->setType('webService');
-    $return->setAction('INSERT');
+    $return->setAction('UPDATE');
     $message->setReturnAddress($return);
 
     $source = $message->withSource();
