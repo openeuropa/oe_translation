@@ -90,6 +90,36 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
       ];
     }
   }
+
+  // Enforce the value of the disabled checkboxes so that they get submitted.
+  // This is for the languages that should be included in the translation
+  // update requests automatically.
+  // @see PoetryTranslator::contentTranslationOverviewAlter().
+  $build = $form_state->getBuildInfo()['args'][0];
+  if (!isset($build['#accepted_languages'])) {
+    return;
+  }
+
+  $input = $form_state->getUserInput();
+  if (isset($input['op-add-language'])) {
+    return;
+  }
+
+  // We force the submission in Poetry update request all the languages for
+  // which the jobs have been accepted, translated or completed in the same
+  // request.
+  $accepted_languages = $build['#accepted_languages'];
+  $translated_languages = $build['#translated_languages'];
+  $completed_languages = $build['#completed_languages'];
+
+  $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
+  foreach (array_keys($languages) as $langcode) {
+    $form['languages'][$langcode] = [
+      '#type' => 'checkbox',
+      '#disabled' => TRUE,
+      '#value' => 1,
+    ];
+  }
 }
 
 /**

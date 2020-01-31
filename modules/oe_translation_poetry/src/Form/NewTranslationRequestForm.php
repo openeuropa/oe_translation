@@ -51,6 +51,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Contact information'),
     ];
+
     foreach (PoetryTranslatorUI::getContactFieldNames('contact') as $name => $label) {
       $form['details']['contact'][$name] = [
         '#type' => 'textfield',
@@ -64,6 +65,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Organisation information'),
     ];
+
     foreach (PoetryTranslatorUI::getContactFieldNames('organisation') as $name => $label) {
       $form['details']['organisation'][$name] = [
         '#type' => 'textfield',
@@ -77,6 +79,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
       '#title' => $this->t('Comment'),
       '#description' => $this->t('Optional remark about the translation request.'),
     ];
+
     return $form;
   }
 
@@ -154,7 +157,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     $return->setPath('handle');
     // The return is a webservice and not an email.
     $return->setType('webService');
-    $return->setAction($this->getRequestOperation());
+    $return->setAction('INSERT');
     $message->setReturnAddress($return);
 
     $source = $message->withSource();
@@ -172,7 +175,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
       $message->withTarget()
         ->setLanguage(strtoupper($job->getRemoteTargetLanguage()))
         ->setFormat('HTML')
-        ->setAction($this->getRequestOperation())
+        ->setAction('INSERT')
         ->setDelay($formatted_date);
     }
 
@@ -198,13 +201,6 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
       $this->redirectBack($form_state);
       $queue->reset();
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getRequestOperation(): string {
-    return 'INSERT';
   }
 
 }

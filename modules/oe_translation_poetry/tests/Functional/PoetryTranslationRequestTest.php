@@ -219,7 +219,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
     // Assert that the second node doesn't have any pending jobs.
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->buttonExists('Request DGT translation for the selected languages');
+    $this->assertSession()->buttonExists('Request a DGT translation for the selected languages');
     // Assert that each node has its own queue by trying to access the checkout
     // of the second node (which has no pending jobs).
     $this->drupalGet(Url::fromRoute('oe_translation_poetry.job_queue_checkout_new', ['node' => $second_node->id()]));
@@ -257,6 +257,25 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     ];
 
     $this->assertJobsPoetryRequestIdValues($this->jobStorage->loadMultiple(), $expected_poetry_request_id);
+  }
+
+  /**
+   * Asserts that the given jobs have the correct poetry request ID values.
+   *
+   * Also ensures that the state is active.
+   *
+   * @param array $jobs
+   *   The jobs.
+   * @param array $values
+   *   The poetry request ID values.
+   */
+  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
+    foreach ($jobs as $lang => $job) {
+      /** @var \Drupal\tmgmt\JobInterface $job */
+      $job = $this->jobStorage->load($job->id());
+      $this->assertEqual($job->getState(), JobInterface::STATE_ACTIVE);
+      $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $values);
+    }
   }
 
   /**

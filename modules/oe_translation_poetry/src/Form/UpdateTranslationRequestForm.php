@@ -6,67 +6,14 @@ namespace Drupal\oe_translation_poetry\Form;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\oe_translation_poetry\Poetry;
-use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
-use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
 use Drupal\tmgmt\Entity\JobItem;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for requesting translations updates.
  */
 class UpdateTranslationRequestForm extends NewTranslationRequestForm {
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * PoetryCheckoutForm constructor.
-   *
-   * @param \Drupal\oe_translation_poetry\PoetryJobQueueFactory $queueFactory
-   *   The job queue factory.
-   * @param \Drupal\oe_translation_poetry\Poetry $poetry
-   *   The Poetry client.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
-   * @param \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface $contentFormatter
-   *   The content formatter.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
-   *   The logger channel factory.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager.
-   */
-  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager) {
-    $this->queueFactory = $queueFactory;
-    $this->poetry = $poetry;
-    $this->messenger = $messenger;
-    $this->contentFormatter = $contentFormatter;
-    $this->logger = $loggerChannelFactory->get('oe_translation_poetry');
-    $this->entityTypeManager = $entityTypeManager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('oe_translation_poetry.job_queue_factory'),
-      $container->get('oe_translation_poetry.client.default'),
-      $container->get('messenger'),
-      $container->get('oe_translation_poetry.html_formatter'),
-      $container->get('logger.factory'),
-      $container->get('entity_type.manager')
-    );
-  }
 
   /**
    * {@inheritdoc}
@@ -117,13 +64,6 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function getRequestOperation(): string {
-    return 'INSERT';
-  }
-
-  /**
    * Get active jobs of an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -147,7 +87,11 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
     /** @var \Drupal\tmgmt\JobItemInterface[] $job_items */
     $job_items = $this->entityTypeManager->getStorage('tmgmt_job_item')->loadMultiple($ids);
     foreach ($job_items as $job_item) {
-      $jobs[] = $job_item->getJob();
+      $job = $job_item->getJob();
+      if ($job->getTranslatorId() !== 'poetry') {
+        continue;
+      }
+      $jobs[] = $job;
     }
 
     return $jobs;

@@ -47,7 +47,7 @@ function oe_translation_form_tmgmt_local_task_item_edit_form_alter(&$form, FormS
   $job = $task_item->getJobItem()->getJob();
   try {
     $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($job->getTranslator()->getPluginId());
-    if ($translator_plugin instanceof AlterableTranslatorInterface) {
+    if ($translator_plugin instanceof LocalTranslatorInterface) {
       $translator_plugin->localTaskItemFormAlter($form, $form_state);
     }
   }
