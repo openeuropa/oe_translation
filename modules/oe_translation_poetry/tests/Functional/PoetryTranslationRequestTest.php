@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\Core\Url;
-use Drupal\node\NodeInterface;
 use Drupal\tmgmt\JobInterface;
 
 /**
@@ -48,7 +47,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two jobs.
-    $this->submitTranslationRequestForQueue($node);
+    $this->submitRequestInQueue($node);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -83,7 +82,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two new jobs in the queue.
-    $this->submitTranslationRequestForQueue($node);
+    $this->submitRequestInQueue($node);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -127,7 +126,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two jobs.
-    $this->submitTranslationRequestForQueue($node_two);
+    $this->submitRequestInQueue($node_two);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -181,10 +180,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     }
 
     // Submit the request to Poetry for the two jobs.
-    $this->submitTranslationRequestForQueue($node_three);
+    $this->submitRequestInQueue($node_three);
     $this->jobStorage->resetCache();
 
-    // The jobs should have gotten submitted and the identification numbers
+    // The jobs shouqld have gotten submitted and the identification numbers
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',
@@ -243,7 +242,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
     // Finalize the translation for remaining unprocessed job.
     $this->drupalPostForm(NULL, [], 'Finish translation request to DGT for Czech');
-    $this->submitTranslationRequestForQueue($node);
+    $this->submitRequestInQueue($node);
     $this->jobStorage->resetCache();
 
     // The jobs should have gotten submitted and the identification numbers
@@ -258,32 +257,6 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     ];
 
     $this->assertJobsPoetryRequestIdValues($this->jobStorage->loadMultiple(), $expected_poetry_request_id);
-  }
-
-  /**
-   * Submits the translation request on the current page with default values.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node.
-   */
-  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
-    // Submit the request form.
-    $date = new \DateTime();
-    $date->modify('+ 7 days');
-    $values = [
-      'details[date]' => $date->format('Y-m-d'),
-      'details[contact][auteur]' => 'author name',
-      'details[contact][secretaire]' => 'secretary name',
-      'details[contact][contact]' => 'contact name',
-      'details[contact][responsable]' => 'responsible name',
-      'details[organisation][responsible]' => 'responsible organisation name',
-      'details[organisation][author]' => 'responsible author name',
-      'details[organisation][requester]' => 'responsible requester name',
-      'details[comment]' => 'Translation comment',
-    ];
-    $this->drupalPostForm(NULL, $values, 'Send request');
-    $this->assertSession()->pageTextContains('The request has been sent to DGT.');
-    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
   }
 
   /**

@@ -264,6 +264,19 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection->add('oe_translation_poetry.job_queue_checkout_update', $route);
 
     $route = new Route(
+      '/admin/content/dgt/add-languages-request/{node}',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\AddLanguagesRequestForm',
+        '_title_callback' => '\Drupal\oe_translation_poetry\Form\AddLanguagesRequestForm::getPageTitle',
+      ],
+      [
+        '_permission' => 'translate any entity',
+        '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
+      ]
+    );
+    $collection->add('oe_translation_poetry.job_queue_checkout_add_languages', $route);
+
+    $route = new Route(
       '/poetry/notifications',
       [
         '_controller' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::handle',
@@ -498,11 +511,21 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     }
 
     // If requests are waiting for translation by DGT, it is possible to
-    // request an update.
+    // request an update or to add languages.
     // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
-    if ($request_type->getType() === PoetryRequestType::UPDATE) {
+    if ($request_type->getType() === PoetryRequestType::UPDATE && empty($submitted_languages)) {
+      // Adapt to update button.
       $message = $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages');
       $build['actions']['request']['#value'] = $message;
+      // Create an Add languages button.
+      $build['actions']['request_2'] = [
+        '#type' => 'submit',
+        '#button_type' => 'primary',
+        '#input' => 'true',
+        '#name' => 'op-add-language',
+        '#id' => 'request-update',
+        '#value' => $this->t('Add the new selected languages to DGT translation'),
+      ];
       return;
     }
 
@@ -554,11 +577,28 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $this->request->query->remove('destination');
     }
 
-    $request_type = $this->getRequestType($entity);
-    $route = $request_type->getType() === PoetryRequestType::UPDATE ? 'oe_translation_poetry.job_queue_checkout_update' : 'oe_translation_poetry.job_queue_checkout_new';
-    $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
+    $input = $form_state->getUserInput();
+    if (isset($input['op-add-language'])) {
+      // Remove existing languages from request.
+      $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
+      $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+      $languages = array_merge($accepted_languages, $translated_languages);
+      foreach (array_keys($languages) as $language) {
+        $values['languages'][$language] = 0;
+        $form['languages'][$language]['#value'] = 0;
+        unset($input['languages'][$language]);
+      }
+      $form_state->setValue('languages', $values['languages']);
+      $form_state->setUserInput($input);
+      $route = 'oe_translation_poetry.job_queue_checkout_add_languages';
+    }
+    else {
+      $request_type = $this->getRequestType($entity);
+      $route = $request_type->getType() === PoetryRequestType::UPDATE ? 'oe_translation_poetry.job_queue_checkout_update' : 'oe_translation_poetry.job_queue_checkout_new';
+    }
 
     // Redirect to the checkout form.
+    $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
     $form_state->setRedirectUrl($redirect);
   }
 
