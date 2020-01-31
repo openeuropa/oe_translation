@@ -49,7 +49,6 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
   public function submitRequest(array &$form, FormStateInterface $form_state): void {
     $entity = $form_state->get('entity');
     $queue = $this->queueFactory->get($entity);
-    $translator_settings = $this->poetry->getTranslatorSettings();
     $jobs = $queue->getAllJobs();
     $identifier = $this->poetry->getLastIdentifierForContent($entity);
     $identifier->setProduct($this->requestType);
@@ -93,13 +92,6 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
       $this->redirectBack($form_state);
       $queue->reset();
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getRequestOperation(): string {
-    return 'INSERT';
   }
 
 }

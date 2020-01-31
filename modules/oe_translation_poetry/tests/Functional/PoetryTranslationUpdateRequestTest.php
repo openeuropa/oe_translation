@@ -8,7 +8,7 @@ use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
 
 /**
- * Tests adding languages to requests made to Poetry.
+ * Tests requesting a translation update to Poetry.
  */
 class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
 
@@ -65,7 +65,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // Include another language in the translation update.
     $this->getSession()->getPage()->checkField('edit-languages-de');
     $this->drupalPostForm(NULL, [], 'Request a DGT translation update for the selected languages');
-    $this->submitRequestInQueue($node);
+    $this->submitTranslationRequestForQueue($node);
 
     // Check that all jobs have been correctly updated (the old jobs have been
     // aborted and new ones created which should be active).

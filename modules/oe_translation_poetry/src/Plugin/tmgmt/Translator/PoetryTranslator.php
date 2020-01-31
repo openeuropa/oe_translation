@@ -517,7 +517,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // Adapt to update button.
       $message = $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages');
       $build['actions']['request']['#value'] = $message;
-      // Create an Add languages button.
+      // Show also a button to add languages.
       $build['actions']['request_2'] = [
         '#type' => 'submit',
         '#button_type' => 'primary',

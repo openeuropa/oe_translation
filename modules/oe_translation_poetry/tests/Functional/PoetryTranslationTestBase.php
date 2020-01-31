@@ -168,12 +168,12 @@ class PoetryTranslationTestBase extends TranslationTestBase {
   }
 
   /**
-   * Submits the request in queue.
+   * Submits the translation request on the current page with default values.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node.
    */
-  protected function submitRequestInQueue(NodeInterface $node): void {
+  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
     // Submit the request form.
     $date = new \DateTime();
     $date->modify('+ 7 days');
@@ -186,6 +186,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
       'details[organisation][responsible]' => 'DIGIT',
       'details[organisation][author]' => 'IE/CE/DIGIT',
       'details[organisation][requester]' => 'IE/CE/DIGIT',
+      'details[comment]' => 'Translation comment',
     ];
     $this->drupalPostForm(NULL, $values, 'Send request');
     $this->assertSession()->pageTextContains('The request has been sent to DGT.');
