@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation_poetry\Traits;
 
 use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
+use Drupal\tmgmt\Entity\Job;
 use EC\Poetry\Messages\Components\Identifier;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,6 +23,38 @@ trait PoetryTestTrait {
    */
   protected function getContainer(): ContainerInterface {
     return property_exists($this, 'container') ? $this->container : \Drupal::getContainer();
+  }
+
+  /**
+   * Complete the pending translations.
+   *
+   * If no jobs are given, get them from storage.
+   *
+   * @param \Drupal\tmgmt\Entity\Job[]|NULL $jobs
+   */
+  public function completeTranslation(array $jobs = NULL): void {
+
+    if (is_null($jobs)) {
+      $jobs = $this->jobStorage->loadMultiple();
+    }
+    // Send the translations for each job.
+    $this->notifyWithDummyTranslations($jobs);
+
+    $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode());
+      }
+    }
   }
 
   /**

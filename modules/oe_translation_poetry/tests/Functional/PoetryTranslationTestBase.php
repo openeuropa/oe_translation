@@ -179,13 +179,13 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     $date->modify('+ 7 days');
     $values = [
       'details[date]' => $date->format('Y-m-d'),
-      'details[contact][auteur]' => 'userid',
-      'details[contact][secretaire]' => 'userid',
-      'details[contact][contact]' => 'userid',
-      'details[contact][responsable]' => 'userid',
-      'details[organisation][responsible]' => 'DIGIT',
-      'details[organisation][author]' => 'IE/CE/DIGIT',
-      'details[organisation][requester]' => 'IE/CE/DIGIT',
+      'details[contact][auteur]' => 'author name',
+      'details[contact][secretaire]' => 'secretary name',
+      'details[contact][contact]' => 'contact name',
+      'details[contact][responsable]' => 'responsible name',
+      'details[organisation][responsible]' => 'responsible organisation name',
+      'details[organisation][author]' => 'responsible author name',
+      'details[organisation][requester]' => 'responsible requester name',
       'details[comment]' => 'Translation comment',
     ];
     $this->drupalPostForm(NULL, $values, 'Send request');

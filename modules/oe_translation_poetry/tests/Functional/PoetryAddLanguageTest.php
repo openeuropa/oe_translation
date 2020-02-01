@@ -76,6 +76,8 @@ class PoetryAddLanguageTest extends PoetryTranslationTestBase {
     // Assert button to add languages is back.
     $this->assertSession()->buttonExists('Add the new selected languages to DGT translation');
 
+    $this->completeTranslation();
+
   }
 
   /**
