@@ -267,3 +267,69 @@ Feature: Poetry translations
     When I press "Confirm"
     Then I should see the success message "The translation has been cancelled."
     And I should see "None" in the "Spanish" row
+
+  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
+  Scenario: Translate content and add languages.
+    Given oe_demo_translatable_page content:
+      | title      | field_oe_demo_translatable_body |
+      | Some title | Some body                       |
+    And I am logged in as a user with the "oe_translator" role
+    When I visit "the content administration page"
+    And I click "Some title"
+    And I click "Translate"
+    And I select the languages "Bulgarian" in the language list
+    And I press "Request a DGT translation for the selected languages"
+    Then I should see "Send request to DG Translation for Some title in Bulgarian"
+
+    When I fill in "Requested delivery date" with "05/04/2050"
+    And I fill in the the "first" "Author" field with "john"
+    And I fill in "Secretary" with "john"
+    And I fill in "Contact" with "john"
+    And I fill in the the "first" "Responsible" field with "john"
+    And I fill in the the "second" "Responsible" field with "john"
+    And I fill in the the "second" "Author" field with "john"
+    And I fill in "Requester" with "john"
+    And I press "Send request"
+    Then I should see "The request has been sent to DGT."
+    And I should see "Submitted to Poetry" in the "Bulgarian" row
+
+    # The translation gets accepted in Poetry
+    When the Poetry translation request of "Some title" in "Bulgarian" gets accepted
+    And I reload the page
+    Then I should see "Ongoing in Poetry" in the "Bulgarian" row
+
+    # Make a request to add a language
+    When I select the languages "German" in the language list
+    And I press "Add the new selected languages to DGT translation"
+    Then I should see "Add languages to previous request to DGT for Some title: German"
+    When I fill in "Requested delivery date" with "05/04/2050"
+    And I press "Send request"
+    Then I should see "The request has been sent to DGT."
+    And I should see "Ongoing in Poetry" in the "Bulgarian" row
+    And I should see "Submitted to Poetry" in the "German" row
+    And I should not see the button "Add the new selected languages to DGT translation"
+
+    # The translations get accepted in Poetry
+    When the Poetry translation request of "Some title" in "Bulgarian, German" gets accepted
+    And I reload the page
+    Then I should see "Ongoing in Poetry" in the "Bulgarian" row
+    And I should see "Ongoing in Poetry" in the "German" row
+    And I should see the button "Add the new selected languages to DGT translation"
+
+    # Translation are sent from Poetry
+    When the Poetry translations of "Some title" in "Bulgarian, German" are received from Poetry
+    And I reload the page
+    And I click "Review translation" in the "German" row
+    When I press "Accept translation"
+    Then I should see "The translation for Some title has been accepted as Some title - de"
+    And I click "Review translation" in the "Bulgarian" row
+    When I press "Accept translation"
+    Then I should see "The translation for Some title has been accepted as Some title - bg"
+
+    # Go to the translated pages
+    When I click "Some title - bg"
+    Then I should see "Some title - bg"
+    And I should see "Some body - bg"
+    When I click "Deutsch"
+    Then I should see "Some title - de"
+    And I should see "Some body - de"
