@@ -131,7 +131,24 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
 
-    $this->completeTranslation($jobs);
+    // Send the translations for each job.
+    $this->notifyWithDummyTranslations($jobs);
+
+    $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
+    $jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple());
+    foreach ($jobs as $job) {
+      $this->assertEquals(Job::STATE_ACTIVE, $job->getState());
+      $this->assertEquals(PoetryTranslator::POETRY_STATUS_TRANSLATED, $job->get('poetry_state')->value);
+
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $this->assertEquals($info['#text'] . ' - ' . $job->getTargetLangcode(), $info['#translation']['#text']);
+      }
+    }
   }
 
 }
