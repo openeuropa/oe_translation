@@ -511,21 +511,32 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     }
 
     // If requests are waiting for translation by DGT, it is possible to
-    // request an update or to add languages.
-    // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
-    if ($request_type->getType() === PoetryRequestType::UPDATE && empty($submitted_languages)) {
-      // Adapt to update button.
-      $message = $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages');
-      $build['actions']['request']['#value'] = $message;
-      // Show also a button to add languages.
-      $build['actions']['request_2'] = [
-        '#type' => 'submit',
-        '#button_type' => 'primary',
-        '#input' => 'true',
-        '#name' => 'op-add-language',
-        '#id' => 'request-update',
-        '#value' => $this->t('Add the new selected languages to DGT translation'),
-      ];
+    // request to add languages and we will also evaluate if requesting an
+    // update is possible.
+    if (!empty($accepted_languages) && empty($submitted_languages)) {
+      // Adapt an Add languages button.
+      $build['actions']['request']['#value'] = $this->t('Add the new selected languages to DGT translation');
+      $build['actions']['request']['#name'] = 'op-add-language';
+
+      // If requests are waiting for translation by DGT, it may be possible to
+      // request an update.
+      // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
+      if ($request_type->getType() === PoetryRequestType::UPDATE) {
+        // Add an update button.
+        $build['actions']['request_2'] = [
+          '#type' => 'submit',
+          '#button_type' => 'primary',
+          '#input' => 'true',
+          '#name' => 'op-update-request',
+          '#id' => 'request-update',
+          '#value' => $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages'),
+        ];
+      }
+      else {
+        // Only adding languages is possible, show proper message and return.
+        $message = $request_type->getMessage() ?? $this->t('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
+        \Drupal::messenger()->addWarning($message);
+      }
       return;
     }
 
