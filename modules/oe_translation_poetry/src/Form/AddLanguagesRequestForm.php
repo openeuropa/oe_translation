@@ -68,10 +68,9 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
       $message->withTarget()
         ->setLanguage(strtoupper($job->getRemoteTargetLanguage()))
         ->setFormat('HTML')
-        ->setAction('INSERT')
         ->setDelay($formatted_date)
         ->withReturnAddress()
-        ->setType('webService')
+        ->setType('smtp')
         ->setUser($username)
         ->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
     }
