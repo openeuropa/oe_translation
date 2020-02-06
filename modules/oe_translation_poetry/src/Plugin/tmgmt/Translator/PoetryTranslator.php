@@ -365,6 +365,11 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
     $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
     $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+    $aborted_languages = $this->getAbortedJobsByLanguage($entity);
+    if (!empty($aborted_languages)) {
+      // We will need this to check which aborted languages have matching identifier.
+      $last_identifier = $this->poetry->getLastIdentifierForContent($entity)->getFormattedIdentifier();
+    }
 
     $request_type = $this->getRequestType($entity);
 
@@ -425,10 +430,10 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       if (array_key_exists($langcode, $accepted_languages)) {
         $build['languages']['#options'][$langcode][3] = $this->t('Ongoing in Poetry');
       }
-      if (array_key_exists($langcode, $submitted_languages)) {
+      elseif (array_key_exists($langcode, $submitted_languages)) {
         $build['languages']['#options'][$langcode][3] = $this->t('Submitted to Poetry');
       }
-      if (array_key_exists($langcode, $translated_languages)) {
+      elseif (array_key_exists($langcode, $translated_languages)) {
         $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->load($translated_languages[$language->getId()]->tjiid);
         $build['languages']['#options'][$langcode][3] = $this->t('Ready for review');
 
@@ -438,6 +443,11 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
             'url' => $review_url,
             'title' => $this->t('Review translation'),
           ];
+        }
+      }
+      elseif (array_key_exists($langcode, $aborted_languages)) {
+        if (isset($last_identifier) && $aborted_languages[$langcode]->identifier === $last_identifier) {
+          $build['languages']['#options'][$langcode][3] = $this->t('Cancelled in Poetry');
         }
       }
     }
@@ -543,6 +553,23 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
   public function hasCheckoutSettings(JobInterface $job) {
     // For the moment we don't have any checkout settings.
     return FALSE;
+  }
+
+  /**
+   * Get a list of aborted Poetry jobs for a given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to look jobs for.
+   *
+   * @return array
+   *   An array of aborted job IDs, keyed by the target language.
+   */
+  protected function getAbortedJobsByLanguage(ContentEntityInterface $entity): array {
+    $query = $this->getEntityJobsQuery($entity);
+    $query->addExpression("CONCAT(poetry_request_id__code, '/', poetry_request_id__year, '/', poetry_request_id__number, '/', poetry_request_id__version, '/', poetry_request_id__part, '/', poetry_request_id__product)", 'identifier');
+    $query->condition('job.state', Job::STATE_ABORTED, '=');
+    $query->orderBy('job.tjid', 'ASC');
+    return $query->execute()->fetchAllAssoc('target_language');
   }
 
   /**
