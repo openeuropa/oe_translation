@@ -157,3 +157,90 @@ Feature: Poetry translations
     When I click "Deutsch"
     Then I should see "My title to update - de"
     And I should see "My body to update - de"
+
+  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
+  Scenario: Cancel languages and requests.
+    Given oe_demo_translatable_page content:
+      | title                 | field_oe_demo_translatable_body |
+      | My title to translate | My body to translate            |
+    And I am logged in as a user with the "oe_translator" role
+
+    # Send a translation request
+    When I visit "the content administration page"
+    And I click "My title to translate"
+    And I click "Translate"
+    And I select the languages "Bulgarian, Czech" in the language list
+    And I press "Request a DGT translation for the selected languages"
+    And I fill in "Requested delivery date" with "05/04/2050"
+    And I fill in the the "first" "Author" field with "john"
+    And I fill in "Secretary" with "john"
+    And I fill in "Contact" with "john"
+    And I fill in the the "first" "Responsible" field with "john"
+    And I fill in the the "second" "Responsible" field with "john"
+    And I fill in the the "second" "Author" field with "john"
+    And I fill in "Requester" with "john"
+    And I press "Send request"
+    Then I should see "Submitted to Poetry" in the "Bulgarian" row
+    And I should see "Submitted to Poetry" in the "Czech" row
+
+    # The translation gets accepted in Poetry
+    When the Poetry translation request of "My title to translate" in "Bulgarian, Czech" gets accepted
+    And I reload the page
+    Then I should see "Ongoing in Poetry" in the "Bulgarian" row
+    And I should see "Ongoing in Poetry" in the "Czech" row
+
+    # Cancel a language and leave other ongoing
+    When a status update is received from Poetry for "My title to translate" with demand status "Ongoing":
+      | language  | status    |
+      | Bulgarian | Ongoing   |
+      | Czech     | Cancelled |
+    And I reload the page
+    Then I should see "Cancelled in Poetry" in the "Czech" row
+    And I should see "Ongoing in Poetry" in the "Bulgarian" row
+
+    # Make an update request
+    When I select the languages "German" in the language list
+    And I press "Request a DGT translation update for the selected languages"
+    And I fill in "Requested delivery date" with "05/04/2050"
+    And I fill in the the "first" "Author" field with "john"
+    And I fill in "Secretary" with "john"
+    And I fill in "Contact" with "john"
+    And I fill in the the "first" "Responsible" field with "john"
+    And I fill in the the "second" "Responsible" field with "john"
+    And I fill in the the "second" "Author" field with "john"
+    And I fill in "Requester" with "john"
+    And I press "Send request"
+    Then I should see "Submitted to Poetry" in the "Bulgarian" row
+    And I should see "Submitted to Poetry" in the "German" row
+    And I should not see "Cancelled in Poetry" in the "Czech" row
+
+    # The translations get accepted in Poetry
+    When the Poetry translation request of "My title to translate" in "Bulgarian, German" gets accepted
+    And I reload the page
+    Then I should see "Ongoing in Poetry" in the "Bulgarian" row
+    And I should see "Ongoing in Poetry" in the "German" row
+
+    # Cancel the request
+    When a status update is received from Poetry for "My title to translate" with demand status "Cancelled":
+      | language  | status    |
+      | Bulgarian | Ongoing   |
+      | German    | Cancelled |
+    And I reload the page
+    Then I should see "Cancelled in Poetry" in the "Bulgarian" row
+    And I should see "Cancelled in Poetry" in the "German" row
+
+    # Send a new translation request
+    When I select the languages "Spanish" in the language list
+    And I press "Request a DGT translation for the selected languages"
+    And I fill in "Requested delivery date" with "05/04/2050"
+    And I fill in the the "first" "Author" field with "john"
+    And I fill in "Secretary" with "john"
+    And I fill in "Contact" with "john"
+    And I fill in the the "first" "Responsible" field with "john"
+    And I fill in the the "second" "Responsible" field with "john"
+    And I fill in the the "second" "Author" field with "john"
+    And I fill in "Requester" with "john"
+    And I press "Send request"
+    Then I should see "The request has been sent to DGT."
+    And I should not see "Cancelled in Poetry" in the "Bulgarian" row
+    And I should not see "Cancelled in Poetry" in the "Czech" row

@@ -367,7 +367,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $translated_languages = $this->getTranslatedJobsByLanguage($entity);
     $aborted_languages = $this->getAbortedJobsByLanguage($entity);
     if (!empty($aborted_languages)) {
-      // We will need this to check which aborted languages have matching identifier.
+      // We will later need to check which aborted languages have an
+      // identifier that matches the last one used.
       $last_identifier = $this->poetry->getLastIdentifierForContent($entity)->getFormattedIdentifier();
     }
 

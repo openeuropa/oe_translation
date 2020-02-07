@@ -7,10 +7,12 @@ namespace Drupal\Tests\oe_translation\Behat;
 use Behat\Behat\Hook\Scope\AfterFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
+use Behat\Gherkin\Node\TableNode;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 use Drupal\tmgmt\Entity\Job;
 
@@ -174,6 +176,78 @@ class PoetryTranslationContext extends RawDrupalContext {
       ];
     }
     $status_notification = \Drupal::service('oe_translation_poetry_mock.fixture_generator')->statusNotification($job->get('poetry_request_id')->first()->getValue(), 'ONG', $accepted);
+
+    $this->performNotification($status_notification);
+  }
+
+  /**
+   * Mock a Poetry notification with a status update for given content.
+   *
+   * The table has the form:
+   * | language  | status    |
+   * | Bulgarian | Ongoing   |
+   * | ...       | ...       |
+   *
+   * @param string $title
+   *   The node title.
+   * @param string $demand_status
+   *   The demand status.
+   * @param \Behat\Gherkin\Node\TableNode $nodesTable
+   *   The status for each language.
+   *
+   * @Given a status update is received from Poetry for :title with demand status :demandStatus:
+   */
+  public function poetrySendsStatusUpdate(string $title, string $demand_status, TableNode $nodesTable): void {
+    $node = $this->getNodeByTitle($title);
+    $query = $this->getEntityJobsQuery($node);
+    $query->condition('job.state', Job::STATE_ACTIVE);
+    $query->condition('job.poetry_state', PoetryTranslator::POETRY_STATUS_ONGOING);
+    $result = $query->execute()->fetchAllAssoc('tjid');
+    $job = current(Job::loadMultiple(array_keys($result)));
+    if (empty($job)) {
+      throw new \Exception('A status update needs ongoing translations but none was found.');
+    }
+
+    $accepted = $refused = $cancelled = [];
+    $demand_status_send = '';
+    foreach ($nodesTable->getHash() as $nodeHash) {
+      $language = current($this->getLanguagesFromNames($nodeHash['language']));
+      $status = $nodeHash['status'];
+
+      $language_send = [
+        'code' => strtoupper($language->getId()),
+        'date' => '30/08/2050 23:59',
+        'accepted_date' => '30/09/2050 23:59',
+      ];
+
+      if ($demand_status == 'Ongoing') {
+        $demand_status_send = 'ONG';
+      }
+      elseif ($demand_status == 'Cancelled') {
+        $demand_status_send = 'CNL';
+      }
+      elseif ($demand_status == 'Refused') {
+        $demand_status_send = 'REF';
+      }
+      else {
+        throw new \Exception('Demand status "%s" cannot be sent.', $demand_status);
+      }
+
+      if ($status == 'Ongoing') {
+        $accepted[] = $language_send;
+      }
+      elseif ($status == 'Cancelled') {
+        $cancelled[] = $language_send;
+      }
+      elseif ($status == 'Refused') {
+        $refused[] = $language_send;
+      }
+      else {
+        throw new \Exception('Status "%s" cannot be sent.', $status);
+      }
+    }
+
+    $status_notification = \Drupal::service('oe_translation_poetry_mock.fixture_generator')->statusNotification($job->get('poetry_request_id')->first()->getValue(), $demand_status_send, $accepted, $refused, $cancelled);
 
     $this->performNotification($status_notification);
   }
