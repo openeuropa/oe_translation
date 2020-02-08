@@ -190,7 +190,7 @@ Feature: Poetry translations
     And I should see "Ongoing in Poetry" in the "Czech" row
 
     # Cancel a language and leave other ongoing
-    When a status update is received from Poetry for "My title to translate" with demand status "Ongoing":
+    When Poetry updates the status for "My title to translate" as "Ongoing" with the following individual statuses
       | language  | status    |
       | Bulgarian | Ongoing   |
       | Czech     | Cancelled |
@@ -221,7 +221,7 @@ Feature: Poetry translations
     And I should see "Ongoing in Poetry" in the "German" row
 
     # Cancel the request
-    When a status update is received from Poetry for "My title to translate" with demand status "Cancelled":
+    When Poetry updates the status for "My title to translate" as "Cancelled" with the following individual statuses
       | language  | status    |
       | Bulgarian | Ongoing   |
       | German    | Cancelled |

@@ -52,7 +52,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     foreach ($jobs as $langcode => $job) {
       if ($langcode === 'it') {
         // Italian was refused.
-        $this->assertTrue($job->get('poetry_state')->isEmpty());
+        $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $job->get('poetry_state')->value);
         $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
         $this->assertEqual($job->getState(), Job::STATE_ABORTED);
         $this->assertCount(1, $job->getMessages());
@@ -92,7 +92,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
       }
 
       // The others were cancelled.
-      $this->assertTrue($job->get('poetry_state')->isEmpty());
+      $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $job->get('poetry_state')->value);
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
       $this->assertEqual($job->getState(), Job::STATE_ABORTED);
     }

@@ -300,7 +300,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    $job->set('poetry_state', NULL);
+    $job->set('poetry_state', PoetryTranslator::POETRY_STATUS_CANCELLED);
     $job->set('poetry_request_date_updated', NULL);
     $job->aborted($message, $variables, 'status');
   }

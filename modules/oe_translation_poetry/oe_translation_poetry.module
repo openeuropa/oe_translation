@@ -121,9 +121,14 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
  * Implements hook_ENTITY_TYPE_presave() for the Job entity.
  */
 function oe_translation_poetry_tmgmt_job_presave(EntityInterface $entity) {
-  // If the state of the job is not active, we should not have any value in the
-  // custom Poetry state field.
+  // If the state of the job is not active and the job was not cancelled, we
+  // should clear the custom state value.
   /** @var \Drupal\tmgmt\JobInterface $entity */
+  if ((int) $entity->getState() === Job::STATE_ABORTED && $entity->get('poetry_state')->value === PoetryTranslator::POETRY_STATUS_CANCELLED) {
+    // Return if the job is being cancelled in Poetry.
+    return;
+  }
+
   if ((int) $entity->getState() !== Job::STATE_ACTIVE) {
     $entity->set('poetry_state', NULL);
   }

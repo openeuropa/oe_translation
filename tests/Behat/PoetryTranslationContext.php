@@ -190,14 +190,14 @@ class PoetryTranslationContext extends RawDrupalContext {
    *
    * @param string $title
    *   The node title.
-   * @param string $demand_status
+   * @param string $request_status
    *   The demand status.
-   * @param \Behat\Gherkin\Node\TableNode $nodesTable
+   * @param \Behat\Gherkin\Node\TableNode $statuses
    *   The status for each language.
    *
-   * @Given a status update is received from Poetry for :title with demand status :demandStatus:
+   * @When Poetry updates the status for :title as :request_status with the following individual statuses
    */
-  public function poetrySendsStatusUpdate(string $title, string $demand_status, TableNode $nodesTable): void {
+  public function poetrySendsStatusUpdate(string $title, string $request_status, TableNode $statuses): void {
     $node = $this->getNodeByTitle($title);
     $query = $this->getEntityJobsQuery($node);
     $query->condition('job.state', Job::STATE_ACTIVE);
@@ -209,10 +209,10 @@ class PoetryTranslationContext extends RawDrupalContext {
     }
 
     $accepted = $refused = $cancelled = [];
-    $demand_status_send = '';
-    foreach ($nodesTable->getHash() as $nodeHash) {
-      $language = current($this->getLanguagesFromNames($nodeHash['language']));
-      $status = $nodeHash['status'];
+    $request_status_send = '';
+    foreach ($statuses->getHash() as $node_hash) {
+      $language = current($this->getLanguagesFromNames($node_hash['language']));
+      $status = $node_hash['status'];
 
       $language_send = [
         'code' => strtoupper($language->getId()),
@@ -220,17 +220,17 @@ class PoetryTranslationContext extends RawDrupalContext {
         'accepted_date' => '30/09/2050 23:59',
       ];
 
-      if ($demand_status == 'Ongoing') {
-        $demand_status_send = 'ONG';
+      if ($request_status == 'Ongoing') {
+        $request_status_send = 'ONG';
       }
-      elseif ($demand_status == 'Cancelled') {
-        $demand_status_send = 'CNL';
+      elseif ($request_status == 'Cancelled') {
+        $request_status_send = 'CNL';
       }
-      elseif ($demand_status == 'Refused') {
-        $demand_status_send = 'REF';
+      elseif ($request_status == 'Refused') {
+        $request_status_send = 'REF';
       }
       else {
-        throw new \Exception('Demand status "%s" cannot be sent.', $demand_status);
+        throw new \Exception('Demand status "%s" cannot be sent.', $request_status);
       }
 
       if ($status == 'Ongoing') {
@@ -247,7 +247,7 @@ class PoetryTranslationContext extends RawDrupalContext {
       }
     }
 
-    $status_notification = \Drupal::service('oe_translation_poetry_mock.fixture_generator')->statusNotification($job->get('poetry_request_id')->first()->getValue(), $demand_status_send, $accepted, $refused, $cancelled);
+    $status_notification = \Drupal::service('oe_translation_poetry_mock.fixture_generator')->statusNotification($job->get('poetry_request_id')->first()->getValue(), $request_status_send, $accepted, $refused, $cancelled);
 
     $this->performNotification($status_notification);
   }
