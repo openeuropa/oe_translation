@@ -244,3 +244,4 @@ Feature: Poetry translations
     Then I should see "The request has been sent to DGT."
     And I should not see "Cancelled in Poetry" in the "Bulgarian" row
     And I should not see "Cancelled in Poetry" in the "Czech" row
+    And I should see "Submitted to Poetry" in the "Spanish" row

@@ -208,8 +208,20 @@ class PoetryTranslationContext extends RawDrupalContext {
       throw new \Exception('A status update needs ongoing translations but none was found.');
     }
 
+    if ($request_status == 'Ongoing') {
+      $request_status_send = 'ONG';
+    }
+    elseif ($request_status == 'Cancelled') {
+      $request_status_send = 'CNL';
+    }
+    elseif ($request_status == 'Refused') {
+      $request_status_send = 'REF';
+    }
+    else {
+      throw new \Exception('Demand status "%s" cannot be sent.', $request_status);
+    }
+
     $accepted = $refused = $cancelled = [];
-    $request_status_send = '';
     foreach ($statuses->getHash() as $node_hash) {
       $language = current($this->getLanguagesFromNames($node_hash['language']));
       $status = $node_hash['status'];
@@ -219,19 +231,6 @@ class PoetryTranslationContext extends RawDrupalContext {
         'date' => '30/08/2050 23:59',
         'accepted_date' => '30/09/2050 23:59',
       ];
-
-      if ($request_status == 'Ongoing') {
-        $request_status_send = 'ONG';
-      }
-      elseif ($request_status == 'Cancelled') {
-        $request_status_send = 'CNL';
-      }
-      elseif ($request_status == 'Refused') {
-        $request_status_send = 'REF';
-      }
-      else {
-        throw new \Exception('Demand status "%s" cannot be sent.', $request_status);
-      }
 
       if ($status == 'Ongoing') {
         $accepted[] = $language_send;
