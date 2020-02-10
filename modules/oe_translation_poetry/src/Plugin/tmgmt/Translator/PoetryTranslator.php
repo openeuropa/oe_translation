@@ -69,6 +69,11 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
   const POETRY_STATUS_TRANSLATED = 'translated';
 
   /**
+   * Status indicating that the translation has been cancelled in Poetry.
+   */
+  const POETRY_STATUS_CANCELLED = 'cancelled';
+
+  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -365,6 +370,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
     $submitted_languages = $this->getSubmittedJobsByLanguage($entity);
     $translated_languages = $this->getTranslatedJobsByLanguage($entity);
+    $cancelled_jobs = $this->getCancelledJobsByLanguage($entity);
 
     $request_type = $this->getRequestType($entity);
 
@@ -381,7 +387,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // still contain the `poetry_state` value which indicates they are part
       // of the last request for that content.
       $accepted_job_info = reset($accepted_languages);
-      /** @var \Drupal\tmgmt\Entity\JobInterface $job */
+      /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($accepted_job_info->tjid);
       $completed_languages = $this->getCompletedJobsByLanguage($entity, $job);
       $build['#completed_languages'] = $completed_languages;
@@ -425,10 +431,10 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       if (array_key_exists($langcode, $accepted_languages)) {
         $build['languages']['#options'][$langcode][3] = $this->t('Ongoing in Poetry');
       }
-      if (array_key_exists($langcode, $submitted_languages)) {
+      elseif (array_key_exists($langcode, $submitted_languages)) {
         $build['languages']['#options'][$langcode][3] = $this->t('Submitted to Poetry');
       }
-      if (array_key_exists($langcode, $translated_languages)) {
+      elseif (array_key_exists($langcode, $translated_languages)) {
         $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->load($translated_languages[$language->getId()]->tjiid);
         $build['languages']['#options'][$langcode][3] = $this->t('Ready for review');
 
@@ -439,6 +445,9 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
             'title' => $this->t('Review translation'),
           ];
         }
+      }
+      elseif (array_key_exists($langcode, $cancelled_jobs)) {
+        $build['languages']['#options'][$langcode][3] = $this->t('Cancelled in Poetry');
       }
     }
 
@@ -629,8 +638,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to look jobs for.
    * @param \Drupal\tmgmt\JobInterface $job
-   *   The job information that contains the ID of the job that can be used
-   *   to filter by the Poetry request ID.
+   *   The job information that contains the request ID that can be used to
+   *   filter by the Poetry request ID.
    *
    * @return array
    *   An array of completed job IDs, keyed by the target language.
@@ -645,6 +654,39 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $query->isNull('job.poetry_state');
     $result = $query->execute()->fetchAllAssoc('target_language');
     return $result ?? [];
+  }
+
+  /**
+   * Get a list of cancelled Poetry jobs for a given entity.
+   *
+   * These include only the jobs that were cancelled in the last request made
+   * for the entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to look jobs for.
+   *
+   * @return array
+   *   An array of cancelled job IDs, keyed by the target language.
+   */
+  protected function getCancelledJobsByLanguage(ContentEntityInterface $entity): array {
+    $query = $this->getEntityJobsQuery($entity);
+    $query->condition('job.state', Job::STATE_ABORTED, '=');
+    $query->condition('poetry_state', static::POETRY_STATUS_CANCELLED);
+    $identifier_alias = $query->addExpression("CONCAT(poetry_request_id__code, '/', poetry_request_id__year, '/', poetry_request_id__number, '/', poetry_request_id__version, '/', poetry_request_id__part, '/', poetry_request_id__product)", 'identifier');
+    $last_identifier = $this->poetry->getLastIdentifierForContent($entity);
+
+    $result = $query->execute()->fetchAllAssoc('target_language');
+    if (!$result) {
+      return [];
+    }
+
+    if (!$last_identifier) {
+      return [];
+    }
+
+    return array_filter($result, function ($item) use ($last_identifier, $identifier_alias) {
+      return $item->{$identifier_alias} === $last_identifier->getFormattedIdentifier();
+    });
   }
 
   /**
