@@ -191,7 +191,7 @@ class PoetryTranslationContext extends RawDrupalContext {
    * @param string $title
    *   The node title.
    * @param string $request_status
-   *   The demand status.
+   *   The request status.
    * @param \Behat\Gherkin\Node\TableNode $statuses
    *   The status for each language.
    *
@@ -218,7 +218,7 @@ class PoetryTranslationContext extends RawDrupalContext {
       $request_status_send = 'REF';
     }
     else {
-      throw new \Exception('Demand status "%s" cannot be sent.', $request_status);
+      throw new \Exception('Request status "%s" cannot be sent.', $request_status);
     }
 
     $accepted = $refused = $cancelled = [];
