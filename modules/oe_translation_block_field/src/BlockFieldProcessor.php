@@ -8,6 +8,9 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
 
+/**
+ * Field processor for the Block title field.
+ */
 class BlockFieldProcessor extends DefaultFieldProcessor {
 
   use StringTranslationTrait;
@@ -19,10 +22,11 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
     $data = [];
     /* @var \Drupal\Core\Field\FieldItemInterface $field_item */
     $field_definition = $field->getFieldDefinition();
-    foreach ($field as $delta => $field_item) {
 
+    foreach ($field as $delta => $field_item) {
       $property = $field_item->getProperties()['settings'];
       $data['#label'] = $field_definition->getLabel();
+
       if (count($field) > 1) {
         // More than one item, add a label for the delta.
         $data[$delta]['#label'] = t('Delta #@delta', array('@delta' => $delta));
@@ -34,13 +38,18 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
       );
       $data[$delta]['settings__label']['#max_length'] = 255;
     }
+
     return $data;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setTranslations($field_data, FieldItemListInterface $field) {
     foreach (Element::children($field_data) as $delta) {
       $field_item = $field_data[$delta];
       $property_data = $field_item['settings__label'];
+
       // If there is translation data for the field property, save it.
       if (isset($property_data['#translation']['#text']) && $property_data['#translate']) {
         // If the offset does not exist, populate it with the current value
@@ -61,6 +70,13 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
     }
   }
 
+
+  /**
+   * Method to set the translated title value back to the block title.
+   *
+   * @param \Drupal\block_field\BlockFieldItemInterface $field_item
+   * @param string $title
+   */
   protected function setTranslatedTitle(BlockFieldItemInterface $field_item, string $title): void {
     $settings = $field_item->getValue();
     $settings['label'] = $title;
