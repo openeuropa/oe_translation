@@ -143,6 +143,26 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
         $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode());
       }
     }
+
+    // Send a translation update before the translation gets accepted.
+    $this->notifyWithDummyTranslations($jobs, 'UPDATED');
+
+    $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode() . ' UPDATED');
+      }
+    }
+
   }
 
   /**

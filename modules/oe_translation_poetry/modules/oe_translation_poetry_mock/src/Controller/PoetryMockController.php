@@ -203,7 +203,13 @@ class PoetryMockController extends ControllerBase {
     $item = reset($items);
     $data = \Drupal::service('tmgmt.data')->filterTranslatable($item->getData());
     foreach ($data as $field => &$info) {
-      $info['#text'] .= ' - ' . $tmgmt_job->getTargetLangcode();
+      if (isset($info['#translation'])) {
+        $info['#text'] = $info['#translation']['#text'] . ' UPDATE';
+      }
+      else {
+        $info['#text'] .= ' - ' . $tmgmt_job->getTargetLangcode();
+
+      }
     }
 
     // We need to render this in a new context to prevent cache leaks.

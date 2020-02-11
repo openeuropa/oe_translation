@@ -81,6 +81,7 @@ class ContentTranslationOverviewAlterSubscriber implements EventSubscriberInterf
     $destination = $entity->toUrl('drupal:content-translation-overview');
     $submitted_jobs = $this->getJobsByState($entity, Job::STATE_ACTIVE);
     $ongoing_jobs = $this->getJobsByState($entity, Job::STATE_ACTIVE, 'ongoing');
+    $translated_jobs = $this->getJobsByState($entity, Job::STATE_ACTIVE, 'translated');
 
     $languages = $this->languageManager->getLanguages();
     foreach ($languages as $langcode => $language) {
@@ -130,6 +131,16 @@ class ContentTranslationOverviewAlterSubscriber implements EventSubscriberInterf
           'url' => Url::fromRoute('oe_translation_poetry_mock.send_status_notification', [
             'tmgmt_job' => $ongoing_jobs[$language->getId()]->tjid,
             'status' => 'CNL',
+          ],
+            $url_options
+          ),
+        ];
+      }
+      if (isset($translated_jobs[$language->getId()])) {
+        $links['update_translation'] = [
+          'title' => $this->t('Update translation (mock)'),
+          'url' => Url::fromRoute('oe_translation_poetry_mock.send_translation_notification', [
+            'tmgmt_job' => $translated_jobs[$language->getId()]->tjid,
           ],
             $url_options
           ),
