@@ -12,6 +12,7 @@ use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 use Drupal\tmgmt\Entity\Job;
@@ -305,6 +306,29 @@ class PoetryTranslationContext extends RawDrupalContext {
     }
 
     $fields[$count_map[$count]]->setValue($value);
+  }
+
+  /**
+   * Check that the correct request reference is shown in page.
+   *
+   * @param string $title
+   *   The node title.
+   *
+   * @Then I (should )see the correct DGT Poetry request reference for :title
+   */
+  public function checkCorrectRequestReference(string $title): void {
+    // Get the reference for the node that has the given title.
+    $node = $this->getNodeByTitle($title);
+    $query = $this->getEntityJobsQuery($node);
+    $query->condition('job.state', Job::STATE_ACTIVE);
+    $result = $query->execute()->fetchAllAssoc('tjid');
+    $jobs = Job::loadMultiple(array_keys($result));
+    /** @var \Drupal\tmgmt\JobInterface $job */
+    $job = reset($jobs);
+    $request_id = $job->get('poetry_request_id')->first()->getValue();
+    $reference = PoetryRequestIdItem::toReference($request_id);
+
+    $this->assertSession()->pageTextContains('DGT Poetry request reference: ' . $reference);
   }
 
   /**
