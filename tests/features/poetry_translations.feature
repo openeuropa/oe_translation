@@ -33,6 +33,7 @@ Feature: Poetry translations
     When I fill in "Requested delivery date" with "12/01/2050"
     And I press "Send request"
     Then I should see "The request has been sent to DGT."
+    And I should see "DGT Poetry request reference: WEB"
     And I should see "Submitted to Poetry" in the "Bulgarian" row
     And I should see "Submitted to Poetry" in the "German" row
     And I should see "None" in the "Danish" row
@@ -83,7 +84,7 @@ Feature: Poetry translations
     And I should see the button "Request a DGT translation for the selected languages"
     And I should not see "No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated."
     And I should not see the button "Request a DGT translation update for the selected languages"
-
+    And I should not see "DGT Poetry request reference: WEB"
 
   @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
   Scenario: Translate content and request an update.
