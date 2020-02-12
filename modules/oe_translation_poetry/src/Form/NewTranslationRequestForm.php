@@ -109,13 +109,9 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     // Build the details.
     $details = $message->withDetails();
     $details->setDelay($formatted_date);
-
     if ($form_state->getValue('details')['comment']) {
       $details->setRemark($form_state->getValue('details')['comment']);
     }
-
-    // We use the formatted identifier as the user reference.
-    $details->setClientId($identifier->getFormattedIdentifier());
     $title = $this->createRequestTitle(reset($jobs));
     $details->setTitle($title);
     $details->setApplicationId($translator_settings['application_reference']);
