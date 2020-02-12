@@ -203,8 +203,10 @@ class PoetryMockController extends ControllerBase {
     $item = reset($items);
     $data = \Drupal::service('tmgmt.data')->filterTranslatable($item->getData());
     foreach ($data as $field => &$info) {
+      // Check whether this is a new translation or not by checking for a
+      // stored translation for the field.
       if (isset($info['#translation'])) {
-        $info['#text'] = $info['#translation']['#text'] . ' UPDATE';
+        $info['#text'] = $info['#translation']['#text'] . ' OVERRIDDEN';
       }
       else {
         $info['#text'] .= ' - ' . $tmgmt_job->getTargetLangcode();
