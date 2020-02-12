@@ -54,19 +54,19 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
         // Italian was refused.
         $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $job->get('poetry_state')->value);
         $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
-        $this->assertEqual($job->getState(), Job::STATE_ABORTED);
+        $this->assertEqualS(Job::STATE_ABORTED, $job->getState());
         $this->assertCount(1, $job->getMessages());
 
         $job_item = current($job->getItems());
-        $this->assertEqual($job_item->get('state')->value, JobItemInterface::STATE_ABORTED);
+        $this->assertEqualS(JobItemInterface::STATE_ABORTED, $job_item->get('state')->value);
         continue;
       }
 
       // The others were accepted.
-      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_ONGOING);
+      $this->assertEquals(PoetryTranslator::POETRY_STATUS_ONGOING, $job->get('poetry_state')->value);
       $date = $job->get('poetry_request_date_updated')->date;
-      $this->assertEqual($date->format('d/m/Y'), '30/09/2019');
-      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+      $this->assertEquals('30/09/2019', $date->format('d/m/Y'));
+      $this->assertEquals(Job::STATE_ACTIVE, $job->getState());
       // Two messages are set on the job: date update and marking it as ongoing.
       $this->assertCount(2, $job->getMessages());
     }
@@ -86,15 +86,15 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     foreach ($jobs as $langcode => $job) {
       if ($langcode === 'fr') {
         // French remained accepted.
-        $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_ONGOING);
-        $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
+        $this->assertEquals(PoetryTranslator::POETRY_STATUS_ONGOING, $job->get('poetry_state')->value);
+        $this->assertEquals(Job::STATE_ACTIVE, $job->getState());
         continue;
       }
 
       // The others were cancelled.
       $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $job->get('poetry_state')->value);
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
-      $this->assertEqual($job->getState(), Job::STATE_ABORTED);
+      $this->assertEquals(Job::STATE_ABORTED, $job->getState());
     }
   }
 
@@ -127,42 +127,11 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     // Send the translations for each job.
     $jobs = $this->jobStorage->loadMultiple();
     $this->notifyWithDummyTranslations($jobs);
-
-    $this->jobStorage->resetCache();
-    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
-    $jobs = $this->jobStorage->loadMultiple();
-    foreach ($jobs as $job) {
-      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
-      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
-
-      $items = $job->getItems();
-      $item = reset($items);
-      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
-      foreach ($data as $field => $info) {
-        $this->assertNotEmpty($info['#translation']);
-        $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode());
-      }
-    }
+    $this->assertJobsAreTranslated();
 
     // Send a translation update before the translation gets accepted.
     $this->notifyWithDummyTranslations($jobs, 'UPDATED');
-
-    $this->jobStorage->resetCache();
-    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
-    $jobs = $this->jobStorage->loadMultiple();
-    foreach ($jobs as $job) {
-      $this->assertEqual($job->getState(), Job::STATE_ACTIVE);
-      $this->assertEqual($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
-
-      $items = $job->getItems();
-      $item = reset($items);
-      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
-      foreach ($data as $field => $info) {
-        $this->assertNotEmpty($info['#translation']);
-        $this->assertEqual($info['#translation']['#text'], $info['#text'] . ' - ' . $job->getTargetLangcode() . ' UPDATED');
-      }
-    }
-
+    $this->assertJobsAreTranslated('UPDATED');
   }
 
   /**
@@ -201,7 +170,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     ];
     $response = $this->performNotification($status_notification, '', $credentials);
     $xml = simplexml_load_string($response);
-    $this->assertEqual((string) $xml->request->status->statusMessage, 'Poetry service cannot authenticate on notification callback: username or password not valid.');
+    $this->assertEquals('Poetry service cannot authenticate on notification callback: username or password not valid.', (string) $xml->request->status->statusMessage);
 
     // Load the jobs and assert that nothing happened because the access was
     // denied.
@@ -211,6 +180,31 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     foreach ($jobs as $job) {
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
       $this->assertTrue($job->get('poetry_state')->isEmpty());
+    }
+  }
+
+  /**
+   * Asserts that the jobs in the system have received translation values.
+   *
+   * @param string|null $suffix
+   *   Expected suffix for the translation values.
+   */
+  protected function assertJobsAreTranslated(string $suffix = NULL): void {
+    $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertEquals(Job::STATE_ACTIVE, $job->getState());
+      $this->assertEquals($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $expected_translation = $suffix ? ($info['#text'] . ' - ' . $job->getTargetLangcode() . ' ' . $suffix) : ($info['#text'] . ' - ' . $job->getTargetLangcode());
+        $this->assertEquals($expected_translation, $info['#translation']['#text']);
+      }
     }
   }
 

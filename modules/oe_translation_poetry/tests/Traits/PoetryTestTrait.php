@@ -66,12 +66,12 @@ trait PoetryTestTrait {
    *
    * @param \Drupal\tmgmt\JobInterface[] $jobs
    *   The jobs.
-   * @param string $suffix
+   * @param string|null $suffix
    *   A string to append to the translation..
    *
    * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
-  protected function notifyWithDummyTranslations(array $jobs, string $suffix = ''): void {
+  protected function notifyWithDummyTranslations(array $jobs, string $suffix = NULL): void {
     // Prepare the identifier.
     $identifier = new Identifier();
     $main_job = current($jobs);

@@ -72,7 +72,7 @@ class PoetryRequestIdFieldTest extends TranslationKernelTestBase {
     /** @var \Drupal\node\NodeInterface $node */
     $node = $node_storage->load($node->id());
 
-    $this->assertEqual($poetry_id, $node->get('poetry_request_id')->first()->getValue());
+    $this->assertEquals($poetry_id, $node->get('poetry_request_id')->first()->getValue());
 
     $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
     $build = $builder->viewField($node->get('poetry_request_id'));

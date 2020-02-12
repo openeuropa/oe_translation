@@ -43,8 +43,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
-      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
-      $this->assertEqual($job->getTargetLangcode(), $lang);
+      $this->assertEquals(JobInterface::STATE_UNPROCESSED, $job->getState());
+      $this->assertEquals($lang, $job->getTargetLangcode());
     }
 
     // Submit the request to Poetry for the two jobs.
@@ -78,8 +78,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
-      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
-      $this->assertEqual($job->getTargetLangcode(), $lang);
+      $this->assertEquals(JobInterface::STATE_UNPROCESSED, $job->getState());
+      $this->assertEquals($lang, $job->getTargetLangcode());
     }
 
     // Submit the request to Poetry for the two new jobs in the queue.
@@ -122,8 +122,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
-      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
-      $this->assertEqual($job->getTargetLangcode(), $lang);
+      $this->assertEquals(JobInterface::STATE_UNPROCESSED, $job->getState());
+      $this->assertEquals($lang, $job->getTargetLangcode());
     }
 
     // Submit the request to Poetry for the two jobs.
@@ -176,8 +176,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
-      $this->assertEqual($job->getState(), JobInterface::STATE_UNPROCESSED);
-      $this->assertEqual($job->getTargetLangcode(), $lang);
+      $this->assertEquals(JobInterface::STATE_UNPROCESSED, $job->getState());
+      $this->assertEquals($lang, $job->getTargetLangcode());
     }
 
     // Submit the request to Poetry for the two jobs.
@@ -300,8 +300,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     foreach ($jobs as $lang => $job) {
       /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $this->jobStorage->load($job->id());
-      $this->assertEqual($job->getState(), JobInterface::STATE_ACTIVE);
-      $this->assertEqual($job->get('poetry_request_id')->first()->getValue(), $values);
+      $this->assertEquals(JobInterface::STATE_ACTIVE, $job->getState());
+      $this->assertEquals($values, $job->get('poetry_request_id')->first()->getValue());
     }
   }
 

@@ -47,7 +47,7 @@ class PoetryMockTest extends BrowserTestBase {
     $settings = $poetry->getSettings();
 
     foreach ($expected_settings as $name => $setting) {
-      $this->assertEqual($settings[$name], $setting);
+      $this->assertEquals($setting, $settings[$name]);
     }
 
     $settings->set('service.wsdl', PoetryMock::getWsdlUrl());
@@ -87,7 +87,7 @@ class PoetryMockTest extends BrowserTestBase {
     $response = $client->send($message);
     $this->assertInstanceOf(MessageInterface::class, $response);
     $expected = $fixture_generator->responseFromMessage($message);
-    $this->assertEqual($expected, $response->getRaw());
+    $this->assertEquals($expected, $response->getRaw());
 
     // Check the request and response have been logged.
     $result = $this->container->get('database')
@@ -100,7 +100,7 @@ class PoetryMockTest extends BrowserTestBase {
     $this->assertCount(1, $result);
     $logged_message = trim(unserialize(reset($result))['@message'], "'");
     $logged_message_id = (string) simplexml_load_string($logged_message)->request->attributes()['id'];
-    $this->assertEqual($logged_message_id, 'WEB/' . date('Y') . '/40012/0/33/TRA');
+    $this->assertEquals('WEB/' . date('Y') . '/40012/0/33/TRA', $logged_message_id);
   }
 
   /**
@@ -129,7 +129,7 @@ class PoetryMockTest extends BrowserTestBase {
       $response = $client->send($message);
     }
     catch (ParsingException $exception) {
-      $this->assertEqual($exception->getMessage(), "XML message could not be parsed: ERROR: Authentication failed.");
+      $this->assertEquals('XML message could not be parsed: ERROR: Authentication failed.', $exception->getMessage());
     }
 
     // Use the correct credentials to access the service.
@@ -144,7 +144,7 @@ class PoetryMockTest extends BrowserTestBase {
     $client = $poetry->getClient();
     $response = $client->send($message);
     $this->assertInstanceOf(Status::class, $response);
-    $this->assertEqual($response->getRequestStatus()->getMessage(), 'Error in xmlActions:newRequest: A request with the same references if already in preparation another product exists for this reference.');
+    $this->assertEquals('Error in xmlActions:newRequest: A request with the same references if already in preparation another product exists for this reference.', $response->getRequestStatus()->getMessage());
 
     $this->container->set('oe_translation_poetry.client.default', NULL);
     /** @var \Drupal\oe_translation_poetry\Poetry $poetry */
@@ -160,7 +160,7 @@ class PoetryMockTest extends BrowserTestBase {
     $client = $poetry->getClient();
     $response = $client->send($message);
     $this->assertInstanceOf(Status::class, $response);
-    $this->assertEqual($response->getRequestStatus()->getMessage(), 'Error in xmlActions:newRequest: Application general error : Element DEMANDEID.NUMERO.XMLTEXT is undefined in REQ_ROOT.,');
+    $this->assertEquals('Error in xmlActions:newRequest: Application general error : Element DEMANDEID.NUMERO.XMLTEXT is undefined in REQ_ROOT.,', $response->getRequestStatus()->getMessage());
   }
 
 }
