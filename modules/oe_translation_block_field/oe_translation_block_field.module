@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * OpenEuropa Translation Block Field module file.
+ */
+
 use Drupal\oe_translation_block_field\BlockFieldProcessor;
 
 /**

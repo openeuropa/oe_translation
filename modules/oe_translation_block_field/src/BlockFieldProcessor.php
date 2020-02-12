@@ -29,13 +29,13 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
 
       if (count($field) > 1) {
         // More than one item, add a label for the delta.
-        $data[$delta]['#label'] = t('Delta #@delta', array('@delta' => $delta));
+        $data[$delta]['#label'] = t('Delta #@delta', ['@delta' => $delta]);
       }
-      $data[$delta]['settings__label'] = array(
+      $data[$delta]['settings__label'] = [
         '#label' => $this->t('Block title'),
         '#text' => $property->getValue()['label'],
         '#translate' => TRUE,
-      );
+      ];
       $data[$delta]['settings__label']['#max_length'] = 255;
     }
 
@@ -70,12 +70,13 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
     }
   }
 
-
   /**
    * Method to set the translated title value back to the block title.
    *
    * @param \Drupal\block_field\BlockFieldItemInterface $field_item
+   *   The block field item.
    * @param string $title
+   *   The title value to save.
    */
   protected function setTranslatedTitle(BlockFieldItemInterface $field_item, string $title): void {
     $settings = $field_item->getValue();
