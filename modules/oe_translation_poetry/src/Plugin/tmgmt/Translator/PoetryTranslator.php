@@ -473,8 +473,22 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       return;
     }
 
-    // Show DGT Poetry request reference.
-    $this->showRequestReference($build, current(array_merge($accepted_languages, $submitted_languages))->tjid);
+    // If we have an ongoing request, we should show the request ID to the user.
+    if ($submitted_languages || $accepted_languages || $translated_languages) {
+      $ongoing = array_merge($submitted_languages, $accepted_languages, $translated_languages);
+      $job_info = reset($ongoing);
+      $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
+      $request_id = $job->get('poetry_request_id')->first()->getValue();
+      $provider_info = [
+        '#type' => 'details',
+        '#title' => $this->t('Translation provider information'),
+        '#open' => TRUE,
+        'info' => [
+          '#markup' => $this->t('DGT Poetry request reference: @ref', ['@ref' => PoetryRequestIdItem::toReference($request_id)]),
+        ],
+      ];
+      array_unshift($build, $provider_info);
+    }
 
     // If requests are waiting for translation by DGT, it is possible to
     // request an update.
@@ -755,29 +769,6 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     }
 
     return NULL;
-  }
-
-  /**
-   * Show DGT Poetry request reference.
-   *
-   * @param array $build
-   *   The overview page.
-   * @param int|string $job_id
-   *   The Job Id.
-   */
-  protected function showRequestReference(array &$build, $job_id) {
-    /** @var \Drupal\tmgmt\JobInterface $job */
-    $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_id);
-    $request_id = $job->get('poetry_request_id')->first()->getValue();
-    $provider_info = [
-      '#type' => 'details',
-      '#title' => t('Provider information'),
-      '#open' => TRUE,
-      'info' => [
-        '#markup' => t('DGT Poetry request reference: @ref', ['@ref' => PoetryRequestIdItem::toReference($request_id)]),
-      ],
-    ];
-    array_unshift($build, $provider_info);
   }
 
 }

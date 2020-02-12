@@ -47,6 +47,7 @@ Feature: Poetry translations
     And I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
+    And I see the correct DGT Poetry request reference for "My title"
     And I should see "Ongoing in Poetry" in the "Bulgarian" row
     And I should see "Ongoing in Poetry" in the "German" row
     And I should see "None" in the "Danish" row
@@ -61,6 +62,7 @@ Feature: Poetry translations
     When I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
+    And I see the correct DGT Poetry request reference for "My title"
     # Still one job left to come from Poetry
     And I should not see the button "Request a DGT translation for the selected languages"
     And I should see the button "Request a DGT translation update for the selected languages"
