@@ -96,8 +96,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     $queue = $this->queueFactory->get($entity);
     $translator_settings = $this->poetry->getTranslatorSettings();
     $jobs = $queue->getAllJobs();
-    $identifier = $this->poetry->getIdentifierForContent($entity);
-    $identifier->setProduct($this->requestType);
+    $identifier = $this->poetry->setIdentifierForContent($entity, $jobs);
 
     $date = new \DateTime($form_state->getValue('details')['date']);
     $formatted_date = $date->format('d/m/Y');

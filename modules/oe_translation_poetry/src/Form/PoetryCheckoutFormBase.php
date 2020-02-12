@@ -24,13 +24,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class PoetryCheckoutFormBase extends FormBase {
 
   /**
-   * The type of request (the product). Usually a translation request.
-   *
-   * @var string
-   */
-  protected $requestType = 'TRA';
-
-  /**
    * The job queue factory.
    *
    * @var \Drupal\oe_translation_poetry\PoetryJobQueueFactory

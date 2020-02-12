@@ -33,6 +33,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class Poetry implements PoetryInterface {
 
   /**
+   * The type of request (the product). Usually a translation request.
+   *
+   * @var string
+   */
+  protected $requestType = 'TRA';
+
+  /**
    * The Poetry client library.
    *
    * @var \EC\Poetry\Poetry
@@ -180,7 +187,31 @@ class Poetry implements PoetryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
+  public function setIdentifierForContent(ContentEntityInterface $entity, array $jobs): Identifier {
+
+    $identifier = $this->getIdentifierForContent($entity);
+
+    // Update jobs.
+    $identifier_values = [
+      'code' => $identifier->getCode(),
+      'year' => $identifier->getYear(),
+      'number' => $identifier->getNumber() ?: -1,
+      'version' => $identifier->getVersion(),
+      'part' => $identifier->getPart(),
+      'product' => $identifier->getProduct(),
+    ];
+    foreach ($jobs as $job) {
+      $job->set('poetry_request_id', $identifier_values);
+      $job->save();
+    }
+
+    return $identifier;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
     if ($last_identifier_for_content instanceof Identifier) {
       // If the content has already been translated, we need to use the
@@ -192,6 +223,7 @@ class Poetry implements PoetryInterface {
     }
 
     $identifier = $this->getIdentifier();
+    $identifier->setProduct($this->requestType);
     $number = $this->getGlobalIdentifierNumber();
 
     if (!$number) {

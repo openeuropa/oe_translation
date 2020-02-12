@@ -29,15 +29,17 @@ interface PoetryInterface {
   public function setGlobalIdentifierNumber(string $number): void;
 
   /**
-   * Returns the identifier for making a translation request for a content.
+   * Generate, save and return the identifier for making a translation request.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
+   * @param \Drupal\tmgmt\JobInterface[] $jobs
+   *   The jobs.
    *
    * @return \EC\Poetry\Messages\Components\Identifier
    *   The identifier.
    */
-  public function getIdentifierForContent(ContentEntityInterface $entity): Identifier;
+  public function setIdentifierForContent(ContentEntityInterface $entity, array $jobs): Identifier;
 
   /**
    * Returns the settings configured in the translator.
