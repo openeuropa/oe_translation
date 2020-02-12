@@ -66,10 +66,12 @@ trait PoetryTestTrait {
    *
    * @param \Drupal\tmgmt\JobInterface[] $jobs
    *   The jobs.
+   * @param string|null $suffix
+   *   A string to append to the translation..
    *
    * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
-  protected function notifyWithDummyTranslations(array $jobs): void {
+  protected function notifyWithDummyTranslations(array $jobs, string $suffix = NULL): void {
     // Prepare the identifier.
     $identifier = new Identifier();
     $main_job = current($jobs);
@@ -86,6 +88,9 @@ trait PoetryTestTrait {
       $data = $this->getContainer()->get('tmgmt.data')->filterTranslatable($item->getData());
       foreach ($data as $field => &$info) {
         $info['#text'] .= ' - ' . $job->getTargetLangcode();
+        if ($suffix) {
+          $info['#text'] .= ' ' . $suffix;
+        }
       }
 
       $translation_notification = $this->getContainer()->get('oe_translation_poetry_mock.fixture_generator')->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $main_item->id(), (int) $main_job->id());

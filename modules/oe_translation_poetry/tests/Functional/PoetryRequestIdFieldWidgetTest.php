@@ -75,14 +75,14 @@ class PoetryRequestIdFieldWidgetTest extends TranslationTestBase {
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = $this->entityTypeManager->getStorage('node')->load(1);
-    $this->assertEqual([
+    $this->assertEquals($node->get('poetry_request_id')->first()->getValue(), [
       'code' => 'WEB',
       'year' => '2019',
       'number' => 102,
       'version' => 1,
       'part' => 1,
       'product' => 'TRA',
-    ], $node->get('poetry_request_id')->first()->getValue());
+    ]);
   }
 
 }

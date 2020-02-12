@@ -81,6 +81,7 @@ class ContentTranslationOverviewAlterSubscriber implements EventSubscriberInterf
     $destination = $entity->toUrl('drupal:content-translation-overview');
     $submitted_jobs = $this->getJobsByState($entity, Job::STATE_ACTIVE);
     $ongoing_jobs = $this->getJobsByState($entity, Job::STATE_ACTIVE, 'ongoing');
+    $translated_jobs = $this->getJobsByState($entity, Job::STATE_ACTIVE, 'translated');
 
     $languages = $this->languageManager->getLanguages();
     foreach ($languages as $langcode => $language) {
@@ -114,17 +115,22 @@ class ContentTranslationOverviewAlterSubscriber implements EventSubscriberInterf
           ),
         ];
       }
-
-      if (isset($ongoing_jobs[$language->getId()])) {
+      // We can send a translation if a job is ongoing or if the translation
+      // hasn't been accepted yet.
+      if (isset($ongoing_jobs[$language->getId()]) || isset($translated_jobs[$language->getId()])) {
+        $tjid = isset($ongoing_jobs[$language->getId()]) ? $ongoing_jobs[$language->getId()]->tjid : $translated_jobs[$language->getId()]->tjid;
         $links['translate_job'] = [
           'title' => $this->t('Translate job (mock)'),
-          'url' => Url::fromRoute('oe_translation_poetry_mock.send_translation_notification', [
-            'tmgmt_job' => $ongoing_jobs[$language->getId()]->tjid,
-          ],
+          'url' => Url::fromRoute(
+            'oe_translation_poetry_mock.send_translation_notification',
+            [
+              'tmgmt_job' => $tjid,
+            ],
             $url_options
           ),
         ];
-
+      }
+      if (isset($ongoing_jobs[$language->getId()])) {
         $links['cancel_job'] = [
           'title' => $this->t('Cancel job (mock)'),
           'url' => Url::fromRoute('oe_translation_poetry_mock.send_status_notification', [
