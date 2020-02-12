@@ -33,6 +33,7 @@ Feature: Poetry translations
     When I fill in "Requested delivery date" with "12/01/2050"
     And I press "Send request"
     Then I should see "The request has been sent to DGT."
+    And I see the correct DGT Poetry request reference for "My title"
     And I should see "Submitted to Poetry" in the "Bulgarian" row
     And I should see "Submitted to Poetry" in the "German" row
     And I should see "None" in the "Danish" row
@@ -46,6 +47,7 @@ Feature: Poetry translations
     And I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
+    And I see the correct DGT Poetry request reference for "My title"
     And I should see "Ongoing in Poetry" in the "Bulgarian" row
     And I should see "Ongoing in Poetry" in the "German" row
     And I should see "None" in the "Danish" row
@@ -60,6 +62,7 @@ Feature: Poetry translations
     When I visit "the content administration page"
     And I click "My title"
     And I click "Translate"
+    And I see the correct DGT Poetry request reference for "My title"
     # Still one job left to come from Poetry
     And I should not see the button "Request a DGT translation for the selected languages"
     And I should see the button "Request a DGT translation update for the selected languages"
@@ -83,7 +86,7 @@ Feature: Poetry translations
     And I should see the button "Request a DGT translation for the selected languages"
     And I should not see "No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated."
     And I should not see the button "Request a DGT translation update for the selected languages"
-
+    And I should not see "DGT Poetry request reference:"
 
   @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
   Scenario: Translate content and request an update.
@@ -108,6 +111,7 @@ Feature: Poetry translations
     And I fill in "Requester" with "john"
     And I press "Send request"
     Then I should see "The request has been sent to DGT."
+    And I see the correct DGT Poetry request reference for "My title to update"
     And I should see "Submitted to Poetry" in the "Bulgarian" row
 
     # The translation gets accepted in Poetry
@@ -129,6 +133,7 @@ Feature: Poetry translations
     And I fill in "Requester" with "john"
     And I press "Send request"
     Then I should see "The request has been sent to DGT."
+    And I see the correct DGT Poetry request reference for "My title to update"
     And I should see "Submitted to Poetry" in the "Bulgarian" row
     And I should see "Submitted to Poetry" in the "German" row
     And I should not see the button "Request a DGT translation update for the selected languages"
@@ -143,11 +148,12 @@ Feature: Poetry translations
     # Translation are sent from Poetry
     When the Poetry translations of "My title to update" in "Bulgarian, German" are received from Poetry
     And I reload the page
-    And I click "Review translation" in the "German" row
-    When I press "Accept translation"
+    Then I should not see "DGT Poetry request reference:"
+    When I click "Review translation" in the "German" row
+    And I press "Accept translation"
     Then I should see "The translation for My title to update has been accepted as My title to update - de"
-    And I click "Review translation" in the "Bulgarian" row
-    When I press "Accept translation"
+    When I click "Review translation" in the "Bulgarian" row
+    And I press "Accept translation"
     Then I should see "The translation for My title to update has been accepted as My title to update - bg"
 
     # Go to the translated pages

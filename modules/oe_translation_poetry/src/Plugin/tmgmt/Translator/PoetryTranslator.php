@@ -29,6 +29,7 @@ use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\oe_translation_poetry\Event\PoetryRequestTypeEvent;
+use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
 use Drupal\oe_translation_poetry\PoetryRequestType;
@@ -470,6 +471,23 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $message = $request_type->getMessage() ?? $this->t('Request a DGT translation for the selected languages');
       $build['actions']['request']['#value'] = $message;
       return;
+    }
+
+    // If we have an ongoing request, we should show the request ID to the user.
+    if ($submitted_languages || $accepted_languages || $translated_languages) {
+      $ongoing = array_merge($submitted_languages, $accepted_languages, $translated_languages);
+      $job_info = reset($ongoing);
+      $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
+      $request_id = $job->get('poetry_request_id')->first()->getValue();
+      $provider_info = [
+        '#type' => 'details',
+        '#title' => $this->t('Translation provider information'),
+        '#open' => TRUE,
+        'info' => [
+          '#markup' => $this->t('DGT Poetry request reference: @ref', ['@ref' => PoetryRequestIdItem::toReference($request_id)]),
+        ],
+      ];
+      array_unshift($build, $provider_info);
     }
 
     // If requests are waiting for translation by DGT, it is possible to
