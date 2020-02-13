@@ -12,7 +12,6 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
 use Drupal\Core\Url;
-use Drupal\tmgmt\Entity\Job;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LogLevel;
@@ -322,9 +321,8 @@ class Poetry implements PoetryInterface {
     $query->condition('job_item.item_id', $entity->id());
     $query->condition('job_item.item_type', $entity->getEntityTypeId());
     $query->condition('job.translator', 'poetry');
-    // Do not include unprocessed Jobs. These are the ones which have not been
-    // ever sent to Poetry.
-    $query->condition('job.state', Job::STATE_UNPROCESSED, '!=');
+    // Do not include jobs without identifier.
+    $query->condition('job.poetry_request_id__code', '', '!=');
     $query->range(0, 1);
     $query->orderBy('job.poetry_request_id__version', 'DESC');
     $result = $query->execute()->fetchCol('poetry_request_id__version');

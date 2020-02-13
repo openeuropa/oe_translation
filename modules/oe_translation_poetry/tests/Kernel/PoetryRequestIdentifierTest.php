@@ -120,18 +120,32 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
     // The date is generated dynamically.
     $this->assertEquals(date('Y'), $identifier->getYear());
 
+    // Create a third node and the job used for a concurrent translation.
+    /** @var \Drupal\node\NodeInterface $node_third */
+    $node_third = $node_storage->create([
+      'type' => 'page',
+      'title' => 'Test page',
+    ]);
+    $node_third->save();
+    $job_node_third = $this->createJobForNode($node_third);
+    // Test identifier for concurrent node.
+    $identifier = $poetry->setIdentifierForContent($node_third, [$job_node_third]);
+    $this->assertEquals('', $identifier->getSequence());
+    $this->assertEquals('11111', $identifier->getNumber());
+    $this->assertEquals('2', $identifier->getPart());
+    $this->assertEquals('0', $identifier->getVersion());
+    $this->assertEquals(date('Y'), $identifier->getYear());
+
     // Delete the jobs from the system to mimic a data loss and ensure a new
     // number is requested in this case to start over.
     $jobs = $this->container->get('entity_type.manager')->getStorage('tmgmt_job')->loadMultiple();
     foreach ($jobs as $job) {
       $job->delete();
     }
-
-    $job_node_one_third = $this->createJobForNode($node_one);
-
+    $job_node_one = $this->createJobForNode($node_one);
     // We should not be sending a number to Poetry, even though we have it
     // already because the jobs were lost. So the sequence should be sent.
-    $identifier = $poetry->setIdentifierForContent($node_one, [$job_node_one_third]);
+    $identifier = $poetry->setIdentifierForContent($node_one, [$job_node_one]);
     $this->assertEquals('SEQUENCE', $identifier->getSequence());
     $this->assertEquals('', $identifier->getNumber());
     $this->assertEquals('0', $identifier->getPart());
@@ -155,8 +169,8 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
     $job->save();
     $job->addItem('content', $node_one->getEntityTypeId(), $node_one->id());
 
-    $job_node_two_second = $this->createJobForNode($node_two);
-    $identifier = $poetry->setIdentifierForContent($node_two, [$job_node_two_second]);
+    $job_node_two = $this->createJobForNode($node_two);
+    $identifier = $poetry->setIdentifierForContent($node_two, [$job_node_two]);
     // The identifier needs to again contain the sequence to request a new
     // number as 99 was reached.
     $this->assertEquals('SEQUENCE', $identifier->getSequence());
@@ -164,7 +178,6 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
     $this->assertEquals('0', $identifier->getPart());
     $this->assertEquals('0', $identifier->getVersion());
     $this->assertEquals(date('Y'), $identifier->getYear());
-
   }
 
   /**
