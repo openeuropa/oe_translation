@@ -9,7 +9,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
 
 /**
- * Field processor for the Block title field.
+ * Field processor for the Block reference field.
  */
 class BlockFieldProcessor extends DefaultFieldProcessor {
 
@@ -29,7 +29,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
 
       if (count($field) > 1) {
         // More than one item, add a label for the delta.
-        $data[$delta]['#label'] = t('Delta #@delta', ['@delta' => $delta]);
+        $data[$delta]['#label'] = $this->t('Delta #@delta', ['@delta' => $delta]);
       }
       $data[$delta]['settings__label'] = [
         '#label' => $this->t('Block title'),
@@ -71,7 +71,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
   }
 
   /**
-   * Method to set the translated title value back to the block title.
+   * Sets the translated title value onto the block field settings.
    *
    * @param \Drupal\block_field\BlockFieldItemInterface $field_item
    *   The block field item.

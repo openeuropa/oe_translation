@@ -21,9 +21,6 @@ class BlockFieldTest extends ContentEntityTestBase {
   public static $modules = [
     'block',
     'block_field',
-    'block_field_test',
-    'menu_ui',
-    'node',
     'oe_translation_block_field',
   ];
 
@@ -40,8 +37,7 @@ class BlockFieldTest extends ContentEntityTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installSchema('node', ['node_access']);
-    $this->installConfig(['menu_ui', 'node', 'block_field', 'block_field_test']);
+    $this->installConfig(['block_field']);
 
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'field_block_field',
@@ -51,6 +47,7 @@ class BlockFieldTest extends ContentEntityTestBase {
       'translatable' => TRUE,
     ]);
     $field_storage->save();
+
     FieldConfig::create([
       'entity_type' => $this->entityTypeId,
       'field_storage' => $field_storage,
@@ -71,8 +68,8 @@ class BlockFieldTest extends ContentEntityTestBase {
    */
   public function testBlockFieldTranslation() {
     // Fill the fields with test data.
-    $this->entityTest->field_block_field->plugin_id = 'block_field_test_content';
-    $this->entityTest->field_block_field->settings = [
+    $this->entityTest->get('field_block_field')->plugin_id = 'system_powered_by_block';
+    $this->entityTest->get('field_block_field')->settings = [
       'label' => 'Hello',
       'label_display' => TRUE,
       'content' => 'World',
@@ -86,26 +83,26 @@ class BlockFieldTest extends ContentEntityTestBase {
     $job_item = tmgmt_job_item_create('content', $this->entityTypeId, $this->entityTest->id(), ['tjid' => $job->id()]);
     $job_item->save();
 
+    // Extract the translatable data from the job item using the content source.
     $source_plugin = $this->container->get('plugin.manager.tmgmt.source')->createInstance('content');
     $data = $source_plugin->getData($job_item);
-
     $this->assertEquals($data['field_block_field'][0]['settings__label']['#text'], 'Hello');
 
-    // Translate the block field value and save the translation.
-    $job->requestTranslation();
+    // Set the translation data onto the job item.
     $data['field_block_field'][0]['settings__label']['#text'] = 'Hello DE';
     $job_item->addTranslatedData($data);
     $job_item->save();
 
-    // Complete the translation.
+    // Accept the translation which saves the data onto the translation job
+    // item.
     $this->assertTrue($job_item->acceptTranslation());
     $data = $job_item->getData();
     $this->assertEquals($data['field_block_field'][0]['settings__label']['#translation']['#text'], 'Hello DE');
 
-    // Check that the translation was saved correctly.
+    // Check that the translation was saved correctly on the entity.
     $this->entityTest = $this->container->get('entity_type.manager')->getStorage($this->entityTypeId)->load($this->entityTest->id());
     $translation = $this->entityTest->getTranslation('de');
-    $field_block_field = $translation->field_block_field->settings;
+    $field_block_field = $translation->get('field_block_field')->settings;
     $this->assertEquals($field_block_field['label'], 'Hello DE');
   }
 
