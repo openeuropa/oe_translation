@@ -183,29 +183,4 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     }
   }
 
-  /**
-   * Asserts that the jobs in the system have received translation values.
-   *
-   * @param string|null $suffix
-   *   Expected suffix for the translation values.
-   */
-  protected function assertJobsAreTranslated(string $suffix = NULL): void {
-    $this->jobStorage->resetCache();
-    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
-    $jobs = $this->jobStorage->loadMultiple();
-    foreach ($jobs as $job) {
-      $this->assertEquals(Job::STATE_ACTIVE, $job->getState());
-      $this->assertEquals($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
-
-      $items = $job->getItems();
-      $item = reset($items);
-      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
-      foreach ($data as $field => $info) {
-        $this->assertNotEmpty($info['#translation']);
-        $expected_translation = $suffix ? ($info['#text'] . ' - ' . $job->getTargetLangcode() . ' ' . $suffix) : ($info['#text'] . ' - ' . $job->getTargetLangcode());
-        $this->assertEquals($expected_translation, $info['#translation']['#text']);
-      }
-    }
-  }
-
 }
