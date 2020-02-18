@@ -62,3 +62,10 @@ $config['tmgmt.translator.poetry']['settings']['service_wsdl'] = 'http://localho
 ```
 
 This will override the Poetry endpoint (the service WSDL) with the one provided by the mock.
+The username and password for the mocked Poetry endpoint are both `admin`. You may override the settings to
+test with the Mock module with the following values:
+
+```
+$settings["poetry.service.username"] = 'admin';
+$settings["poetry.service.password"] = 'admin';
+```
