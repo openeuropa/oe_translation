@@ -18,32 +18,46 @@ class JobItemCustomAbortForm extends JobItemAbortForm {
   /**
    * {@inheritdoc}
    */
-  public function JobItemAbortFormSubmit(array &$form, FormStateInterface $form_state) {
+  public function getQuestion() {
+    return $this->t('Are you sure you want to abort the translation item %title?', [
+      '%title' => $this->entity->label(),
+    ]);
+  }
 
-    /* @var JobItemInterface $job_item */
-    $job_item = $form_state->getFormObject()->getEntity();
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return $this->t('DGT will not be notified. Aborted translation items can no longer be accepted.');
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\tmgmt\Entity\JobItem $entity */
+    $job_item = $this->entity;
     try {
-      if ((!$job_item->isActive() && !$job_item->isNeedsReview()) || !$job_item->getTranslatorPlugin()) {
+      if (!$job_item->isNeedsReview() || !$job_item->getTranslatorPlugin()) {
         throw new TMGMTException('Cannot abort job item.');
       }
       $job_item->setState(JobItemInterface::STATE_ABORTED);
       // Check if this was the last unfinished job item in this job.
+      /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $job_item->getJob();
       if ($job && !$job->isContinuous() && tmgmt_job_check_finished($job_item->getJobId())) {
         // Mark the job as finished in case it is a normal job.
-        $job->finished();
+        $job->finished($this->t('The translation job has been finished (aborted).'));
       }
     }
-    catch(TMGMTException $e) {
-      \Drupal::messenger()->addError(t('Job item cannot be aborted: %error.', array(
+    catch (TMGMTException $e) {
+      $this->messenger()->addError($this->t('Job item cannot be aborted: %error.', [
         '%error' => $e->getMessage(),
-      )));
-      return;
+      ]));
     }
 
     tmgmt_write_request_messages($job_item);
-    \Drupal::messenger()->addStatus(t('The translation has been aborted.'));
+    $this->messenger()->addStatus($this->t('The translation item has been aborted.'));
 
     $url = Url::fromRoute('entity.node.content_translation_overview', ['node' => $job_item->getItemId()]);
     $form_state->setRedirectUrl($url);

@@ -18,6 +18,7 @@ use Drupal\oe_translation_poetry\Form\JobItemCustomAbortForm;
 use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
+
 /**
  * Implements hook_poetry_entity_type_alter().
  */
@@ -25,7 +26,12 @@ function oe_translation_poetry_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['tmgmt_job_item'] ?? NULL;
   if ($entity_type) {
+    // Update handler for list builder.
     $entity_type->setHandlerClass('list_builder', JobItemListBuilder::class);
+    // Update handler for form for abort action.
+    $formHandlerClasses = $entity_type->getHandlerClasses()['form'];
+    $formHandlerClasses['abort'] = JobItemCustomAbortForm::class;
+    $entity_type->setHandlerClass('form', $formHandlerClasses);
   }
 }
 
@@ -182,13 +188,4 @@ function oe_translation_poetry_form_node_confirm_form_alter(&$form, FormStateInt
   }
 
   \Drupal::messenger()->addWarning(t('This node has ongoing translation jobs associated in Poetry. Ongoing requests cannot be automatically cancelled, please inform DGT about your cancellation request.'));
-}
-
-
-/**
- * Implements hook_form_BASE_FORM_ID_alter() for the job item abort action.
- */
-function oe_translation_poetry_form_tmgmt_job_item_abort_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $form['actions']['submit']['#submit'] = [];
-  $form['actions']['submit']['#submit'][] = [JobItemCustomAbortForm::class, 'JobItemAbortFormSubmit'];
 }
