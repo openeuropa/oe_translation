@@ -302,10 +302,6 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $form['actions']['validate_html']['#access'] = FALSE;
     }
 
-    if (isset($form['actions']['abort_job_item'])) {
-      unset($form['actions']['abort_job_item']);
-    }
-
     // Hide the validation checkmarks.
     foreach (Element::children($form['review']) as $child_key) {
       $child = &$form['review'][$child_key];
