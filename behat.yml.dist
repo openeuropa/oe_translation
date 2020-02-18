@@ -30,5 +30,6 @@ default:
         node content: ".node--view-mode-full"
       selectors:
         error_message_selector: '.messages.messages--error'
+        success_message_selector: '.messages.messages--status'
   formatters:
     progress: ~
