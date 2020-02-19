@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation_block_field;
 
 use Drupal\block_field\BlockFieldItemInterface;
@@ -20,7 +22,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
    */
   public function extractTranslatableData(FieldItemListInterface $field) {
     $data = [];
-    /* @var \Drupal\Core\Field\FieldItemInterface $field_item */
+    /* @var \Drupal\Core\Field\FieldDefinitionInterface $field_item */
     $field_definition = $field->getFieldDefinition();
 
     foreach ($field as $delta => $field_item) {
@@ -35,8 +37,8 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
         '#label' => $this->t('Block title'),
         '#text' => $property->getValue()['label'],
         '#translate' => TRUE,
+        '#max_length' => 255,
       ];
-      $data[$delta]['settings__label']['#max_length'] = 255;
     }
 
     return $data;

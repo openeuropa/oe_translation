@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\Tests\oe_translation_block_field\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -64,9 +66,9 @@ class BlockFieldTest extends ContentEntityTestBase {
   }
 
   /**
-   * Tests tests that the block field is translatable.
+   * Tests that the block field is translatable.
    */
-  public function testBlockFieldTranslation() {
+  public function testBlockFieldTranslation(): void {
     // Fill the fields with test data.
     $this->entityTest->get('field_block_field')->plugin_id = 'system_powered_by_block';
     $this->entityTest->get('field_block_field')->settings = [

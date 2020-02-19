@@ -5,6 +5,8 @@
  * OpenEuropa Translation Block Field module file.
  */
 
+declare(strict_types = 1);
+
 use Drupal\oe_translation_block_field\BlockFieldProcessor;
 
 /**
