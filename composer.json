@@ -8,7 +8,8 @@
     "require": {
         "php": "^7.1",
         "drupal/core": "^8.7",
-        "drupal/tmgmt": "^1.8"
+        "drupal/tmgmt": "^1.8",
+        "drupal/block_field": "~1.0.0-alpha8"
     },
     "require-dev": {
         "composer/installers": "~1.5",

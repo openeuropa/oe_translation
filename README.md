@@ -6,6 +6,7 @@ OpenEuropa contents and translatable items.
 ## Submodules
 
 [OpenEuropa Translation Poetry](modules/oe_translation_poetry/README.md) - integrates with the DGT Poetry translation system.
+[OpenEuropa Translation Block Field](modules/oe_translation_block_field/README.md) - integrates with the Block Field module.
 
 ## Development setup
 
@@ -31,10 +32,10 @@ The development site web root should be available in the `build` directory.
 
 ### Using Docker Compose
 
-Alternatively, you can build a development site using [Docker](https://www.docker.com/get-docker) and 
+Alternatively, you can build a development site using [Docker](https://www.docker.com/get-docker) and
 [Docker Compose](https://docs.docker.com/compose/) with the provided configuration.
 
-Docker provides the necessary services and tools such as a web server and a database server to get the site running, 
+Docker provides the necessary services and tools such as a web server and a database server to get the site running,
 regardless of your local host configuration.
 
 #### Requirements:
@@ -46,7 +47,7 @@ regardless of your local host configuration.
 
 By default, Docker Compose reads two files, a `docker-compose.yml` and an optional `docker-compose.override.yml` file.
 By convention, the `docker-compose.yml` contains your base configuration and it's provided by default.
-The override file, as its name implies, can contain configuration overrides for existing services or entirely new 
+The override file, as its name implies, can contain configuration overrides for existing services or entirely new
 services.
 If a service is defined in both files, Docker Compose merges the configurations.
 
