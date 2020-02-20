@@ -14,7 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\node\NodeInterface;
-use Drupal\oe_translation_poetry\Form\JobItemCustomAbortForm;
+use Drupal\oe_translation_poetry\Form\JobItemAbortForm;
 use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
@@ -26,12 +26,7 @@ function oe_translation_poetry_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
   $entity_type = $entity_types['tmgmt_job_item'] ?? NULL;
   if ($entity_type) {
-    // Update handler for list builder.
     $entity_type->setHandlerClass('list_builder', JobItemListBuilder::class);
-    // Update handler for form for abort action.
-    $formHandlerClasses = $entity_type->getHandlerClasses()['form'];
-    $formHandlerClasses['abort'] = JobItemCustomAbortForm::class;
-    $entity_type->setHandlerClass('form', $formHandlerClasses);
   }
 }
 

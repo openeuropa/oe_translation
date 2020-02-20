@@ -252,8 +252,7 @@ Feature: Poetry translations
     And I should not see "Cancelled in Poetry" in the "Czech" row
     And I should see "Submitted to Poetry" in the "Spanish" row
 
-    # The translation gets accepted in Poetry and translation is sent
-    # and the review page is visited
+    # Translation gets accepted in Poetry, sent and we can cancel it locally.
     When Poetry updates the status for "My title to translate" as "Ongoing" with the following individual statuses
       | language | status  |
       | Spanish  | Ongoing |
@@ -261,10 +260,10 @@ Feature: Poetry translations
     And I reload the page
     And I click "Review translation"
     Then I should see "Job item My title to translate"
-    # Abort the translation item
-    When I click "Abort"
-    Then I should see "Are you sure you want to abort the translation item My title to translate"
-    And I should see "DGT will not be notified"
+    # Cancel the translation item.
+    When I click "Cancel translation job item"
+    Then I should see "Are you sure you want to cancel the translation for My title to translate in Spanish"
+    And I should see "Please be aware that DGT will not be notified and cancelled translations can no longer be accepted or resent from DGT without making a brand new request."
     When I press "Confirm"
-    Then I should see the success message "The translation item has been aborted."
+    Then I should see the success message "The translation has been cancelled."
     And I should see "None" in the "Spanish" row

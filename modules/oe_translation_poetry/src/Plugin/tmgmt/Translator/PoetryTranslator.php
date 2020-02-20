@@ -52,7 +52,8 @@ use Symfony\Component\Routing\RouteCollection;
  *   description = @Translation("Allows the users to send translation requests to Poetry."),
  *   ui = "\Drupal\oe_translation_poetry\PoetryTranslatorUI",
  *   default_settings = {},
- *   map_remote_languages = TRUE
+ *   map_remote_languages = TRUE,
+ *   abort_class = "\Drupal\oe_translation_poetry\Form\JobItemAbortForm"
  * )
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -280,6 +281,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function jobItemFormAlter(array &$form, FormStateInterface $form_state): void {
 
@@ -300,6 +302,15 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
 
     if (isset($form['actions']['validate_html'])) {
       $form['actions']['validate_html']['#access'] = FALSE;
+    }
+
+    if (isset($form['actions']['abort_job_item'])) {
+      $form['actions']['abort_job_item']['#attributes']['class'] = ['button'];
+      $form['actions']['abort_job_item']['#title'] = $this->t('Cancel translation job item');
+    }
+
+    if (isset($form['actions']['preview'])) {
+      $form['actions']['preview']['#weight'] = 100;
     }
 
     // Hide the validation checkmarks.
