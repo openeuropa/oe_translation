@@ -116,7 +116,7 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
     ];
   }
 
-  // Add a button the request new languages. This can only happen while there
+  // Add a button to request new languages. This can only happen while there
   // is an accepted ongoing request.
   $form['actions']['request_new_languages'] = [
     '#type' => 'submit',
@@ -124,12 +124,13 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
     '#value' => t('Add extra languages to the DGT request'),
     '#op' => 'add-languages',
     '#submit' => [
-      [$poetry, 'submitPoetryTranslationRequest']
+      [$poetry, 'submitPoetryTranslationRequest'],
     ],
   ];
 
   // When we submit the request to add new languages, we need to know which
-  // are the languages that have already been submitted so we can remove them.
+  // are the languages that have already been submitted so we can remove them
+  // from the request we send to Poetry.
   $form_state->set('ongoing_languages', $languages);
 }
 
