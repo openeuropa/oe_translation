@@ -511,32 +511,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     }
 
     // If requests are waiting for translation by DGT, it is possible to
-    // request to add languages and we will also evaluate if requesting an
-    // update is possible.
-    if (!empty($accepted_languages) && empty($submitted_languages)) {
-      // Adapt an Add languages button.
-      $build['actions']['request']['#value'] = $this->t('Add the new selected languages to DGT translation');
-      $build['actions']['request']['#name'] = 'op-add-language';
-
-      // If requests are waiting for translation by DGT, it may be possible to
-      // request an update.
-      // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
-      if ($request_type->getType() === PoetryRequestType::UPDATE) {
-        // Add an update button.
-        $build['actions']['request_2'] = [
-          '#type' => 'submit',
-          '#button_type' => 'primary',
-          '#input' => 'true',
-          '#name' => 'op-update-request',
-          '#id' => 'request-update',
-          '#value' => $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages'),
-        ];
-      }
-      else {
-        // Only adding languages is possible, show proper message and return.
-        $message = $request_type->getMessage() ?? $this->t('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
-        \Drupal::messenger()->addWarning($message);
-      }
+    // request an update. But only if there are no submitted languages that
+    // DGT has not responded to.
+    // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
+    if ($request_type->getType() === PoetryRequestType::UPDATE && empty($submitted_languages)) {
+      $message = $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages');
+      $build['actions']['request']['#value'] = $message;
       return;
     }
 
@@ -555,8 +535,16 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    *   The form state.
    *
    * @see oe_translation_poetry_form_tmgmt_content_translate_form_alter()
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state): void {
+    // Determine if we are making a request to add extra languages to an
+    // ongoing request.
+    $triggering_element = $form_state->getTriggeringElement();
+    $extra_language_request = isset($triggering_element['#op']) && $triggering_element['#op'] === 'add-languages';
+    $ongoing_languages = $extra_language_request ? $form_state->get('ongoing_languages') : [];
+
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $form_state->get('entity');
     $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
@@ -565,6 +553,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $values = $form_state->getValues();
 
     foreach (array_keys(array_filter($values['languages'])) as $langcode) {
+      // We do not want to create jobs for languages that already exist in the
+      // original request (ongoing ones or that have been translated).
+      if ($extra_language_request && in_array($langcode, array_keys($ongoing_languages))) {
+        continue;
+      }
+
       $job = tmgmt_job_create($entity->language()->getId(), $langcode, $this->currentUser->id());
       // Set the Poetry translator on it.
       $job->translator = 'poetry';
@@ -576,7 +570,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       catch (TMGMTException $e) {
         watchdog_exception('tmgmt', $e);
         $target_lang_name = $this->languageManager->getLanguage($langcode)->getName();
-        $this->messenger()->addError(t('Unable to add job item for target language %name. Make sure the source content is not empty.', ['%name' => $target_lang_name]));
+        $this->messenger()->addError($this->t('Unable to add job item for target language %name. Make sure the source content is not empty.', ['%name' => $target_lang_name]));
       }
     }
 
@@ -588,19 +582,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $this->request->query->remove('destination');
     }
 
-    $input = $form_state->getUserInput();
-    if (isset($input['op-add-language'])) {
-      // Remove existing languages from request.
-      $accepted_languages = $this->getAcceptedJobsByLanguage($entity);
-      $translated_languages = $this->getTranslatedJobsByLanguage($entity);
-      $languages = array_merge($accepted_languages, $translated_languages);
-      foreach (array_keys($languages) as $language) {
-        $values['languages'][$language] = 0;
-        $form['languages'][$language]['#value'] = 0;
-        unset($input['languages'][$language]);
-      }
-      $form_state->setValue('languages', $values['languages']);
-      $form_state->setUserInput($input);
+    if ($extra_language_request) {
       $route = 'oe_translation_poetry.job_queue_checkout_add_languages';
     }
     else {
@@ -608,8 +590,9 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $route = $request_type->getType() === PoetryRequestType::UPDATE ? 'oe_translation_poetry.job_queue_checkout_update' : 'oe_translation_poetry.job_queue_checkout_new';
     }
 
-    // Redirect to the checkout form.
     $redirect = Url::fromRoute($route, ['node' => $entity->id()]);
+
+    // Redirect to the checkout form.
     $form_state->setRedirectUrl($redirect);
   }
 

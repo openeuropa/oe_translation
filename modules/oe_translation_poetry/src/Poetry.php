@@ -275,13 +275,7 @@ class Poetry implements PoetryInterface {
   }
 
   /**
-   * Locates the last identifier that was used for a given content entity.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   *
-   * @return \EC\Poetry\Messages\Components\Identifier
-   *   The identifier.
+   * {@inheritdoc}
    */
   public function getLastIdentifierForContent(ContentEntityInterface $entity): ?Identifier {
     $query = $this->database->select('tmgmt_job', 'job');

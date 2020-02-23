@@ -40,6 +40,17 @@ interface PoetryInterface {
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier;
 
   /**
+   * Locates the last identifier that was used for a given content entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return \EC\Poetry\Messages\Components\Identifier
+   *   The identifier.
+   */
+  public function getLastIdentifierForContent(ContentEntityInterface $entity): ?Identifier;
+
+  /**
    * Returns the settings configured in the translator.
    *
    * @return array

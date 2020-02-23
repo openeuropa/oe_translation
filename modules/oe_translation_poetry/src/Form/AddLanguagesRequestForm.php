@@ -35,7 +35,7 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
     $entity = $queue->getEntity();
     $target_languages = $queue->getTargetLanguages();
     $target_languages = implode(', ', $target_languages);
-    return $this->t('Add languages to previous request to DGT for <em>@entity</em>: <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+    return $this->t('Send extra languages to the previous request for <em>@entity</em>: <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
   }
 
   /**
@@ -50,6 +50,8 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
     $entity = $form_state->get('entity');
     $queue = $this->queueFactory->get($entity);
     $jobs = $queue->getAllJobs();
+    // We use the last identifier of the content and we don't increment the
+    // version in this case.
     $identifier = $this->poetry->getLastIdentifierForContent($entity);
     $identifier->setProduct($this->requestType);
 

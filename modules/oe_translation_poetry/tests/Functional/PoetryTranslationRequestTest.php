@@ -39,7 +39,6 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs['bg'] = $this->jobStorage->load(1);
     $jobs['cs'] = $this->jobStorage->load(2);
-    $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
       $this->assertEquals(JobInterface::STATE_UNPROCESSED, $job->getState());
@@ -257,25 +256,6 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     ];
 
     $this->assertJobsPoetryRequestIdValues($this->jobStorage->loadMultiple(), $expected_poetry_request_id);
-  }
-
-  /**
-   * Asserts that the given jobs have the correct poetry request ID values.
-   *
-   * Also ensures that the state is active.
-   *
-   * @param array $jobs
-   *   The jobs.
-   * @param array $values
-   *   The poetry request ID values.
-   */
-  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
-    foreach ($jobs as $lang => $job) {
-      /** @var \Drupal\tmgmt\JobInterface $job */
-      $job = $this->jobStorage->load($job->id());
-      $this->assertEquals(JobInterface::STATE_ACTIVE, $job->getState());
-      $this->assertEquals($values, $job->get('poetry_request_id')->first()->getValue());
-    }
   }
 
   /**
