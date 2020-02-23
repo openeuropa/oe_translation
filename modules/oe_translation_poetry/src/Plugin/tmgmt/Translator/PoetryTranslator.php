@@ -396,22 +396,31 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $request_type = $this->getRequestType($entity);
 
     // If we have accepted languages in Poetry, we need to include them (and
-    // some others automatically in a potential update request).
+    // some others automatically in a potential update request). Also, these
+    // are needed to determine which languages should be omitted from a
+    // language addition request.
     // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
-    if ($request_type->getType() === PoetryRequestType::UPDATE) {
-      $build['#accepted_languages'] = $accepted_languages;
-      $build['#translated_languages'] = $translated_languages;
-      // Load the completed jobs in the same request. For this we need to get
-      // the request ID from one of the accepted jobs in order to filter the
-      // completed jobs and include only the ones in this request. For the
-      // translated jobs we don't have to filter by request ID because those
-      // still contain the `poetry_state` value which indicates they are part
-      // of the last request for that content.
+    $build['#accepted_languages'] = $accepted_languages;
+    $build['#translated_languages'] = $translated_languages;
+    $build['#completed_languages'] = [];
+    // Load the completed jobs in the same request. For this we need to get
+    // the request ID from one of the accepted jobs in order to filter the
+    // completed jobs and include only the ones in this request. For the
+    // translated jobs we don't have to filter by request ID because those
+    // still contain the `poetry_state` value which indicates they are part
+    // of the last request for that content.
+    if ($accepted_languages) {
       $accepted_job_info = reset($accepted_languages);
       /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($accepted_job_info->tjid);
       $completed_languages = $this->getCompletedJobsByLanguage($entity, $job);
       $build['#completed_languages'] = $completed_languages;
+    }
+
+    // If we are talking about an update request, add a marker to the build
+    // so that we can use it in the form alter.
+    if ($request_type->getType() === PoetryRequestType::UPDATE) {
+      $build['#update_request'] = TRUE;
     }
 
     // Build the TMGMT translation request form.
@@ -517,6 +526,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     if ($request_type->getType() === PoetryRequestType::UPDATE && empty($submitted_languages)) {
       $message = $request_type->getMessage() ?? $this->t('Request a DGT translation update for the selected languages');
       $build['actions']['request']['#value'] = $message;
+      return;
+    }
+
+    if (($accepted_languages || $translated_languages) && !$submitted_languages) {
+      // If at this point we are not talking about an update request but we
+      // do have accepted languages we return to allow the language addition
+      // action to be added.
+      $build['actions']['request']['#access'] = FALSE;
       return;
     }
 

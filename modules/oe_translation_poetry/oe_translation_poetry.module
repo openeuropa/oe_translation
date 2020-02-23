@@ -91,33 +91,38 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
     }
   }
 
-  // Enforce the value of the disabled checkboxes so that they get submitted.
-  // This is for the languages that should be included in the translation
-  // update requests automatically.
-  // @see PoetryTranslator::contentTranslationOverviewAlter().
+  // If we are not talking about an ongoing request with accepted languages
+  // there is nothing else we need to do.
   $build = $form_state->getBuildInfo()['args'][0];
   if (!isset($build['#accepted_languages'])) {
     return;
   }
 
-  // We force the submission in Poetry update request all the languages for
-  // which the jobs have been accepted, translated or completed in the same
-  // request.
   $accepted_languages = $build['#accepted_languages'];
   $translated_languages = $build['#translated_languages'];
   $completed_languages = $build['#completed_languages'];
-
   $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
-  foreach (array_keys($languages) as $langcode) {
-    $form['languages'][$langcode] = [
-      '#type' => 'checkbox',
-      '#disabled' => TRUE,
-      '#value' => 1,
-    ];
+
+  // If we are talking about an update request, we force the submission in
+  // request all the languages for which the jobs have been accepted, translated
+  // or completed in the current request.
+  // @see PoetryTranslator::contentTranslationOverviewAlter().
+  if (isset($build['#update_request'])) {
+    foreach (array_keys($languages) as $langcode) {
+      $form['languages'][$langcode] = [
+        '#type' => 'checkbox',
+        '#disabled' => TRUE,
+        '#value' => 1,
+      ];
+    }
   }
 
   // Add a button to request new languages. This can only happen while there
   // is an accepted ongoing request.
+  if (!$accepted_languages) {
+    return;
+  }
+
   $form['actions']['request_new_languages'] = [
     '#type' => 'submit',
     '#button' => 'primary',
