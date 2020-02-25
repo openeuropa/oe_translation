@@ -413,7 +413,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $accepted_job_info = reset($accepted_languages);
       /** @var \Drupal\tmgmt\JobInterface $job */
       $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($accepted_job_info->tjid);
-      $completed_languages = $this->getCompletedJobsByLanguage($entity, $job);
+      $completed_languages = $this->getCompletedJobsByLanguage($entity, $job->get('poetry_request_id')->first()->getValue());
       $build['#completed_languages'] = $completed_languages;
     }
 
@@ -554,6 +554,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    * @see oe_translation_poetry_form_tmgmt_content_translate_form_alter()
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state): void {
     // Determine if we are making a request to add extra languages to an
@@ -589,6 +590,11 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
         $target_lang_name = $this->languageManager->getLanguage($langcode)->getName();
         $this->messenger()->addError($this->t('Unable to add job item for target language %name. Make sure the source content is not empty.', ['%name' => $target_lang_name]));
       }
+    }
+
+    if (!$job_queue->getAllJobsIds()) {
+      $this->messenger()->addError('You need to select at least one extra language to add to the request.');
+      return;
     }
 
     $url = Url::fromRoute($this->currentRouteMatch->getRouteName(), $this->currentRouteMatch->getRawParameters()->all());
@@ -713,16 +719,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to look jobs for.
-   * @param \Drupal\tmgmt\JobInterface $job
-   *   The job information that contains the request ID that can be used to
-   *   filter by the Poetry request ID.
+   * @param array $reference
+   *   The Poetry request reference to filter the jobs by.
    *
    * @return array
    *   An array of completed job IDs, keyed by the target language.
    */
-  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, JobInterface $job): array {
+  protected function getCompletedJobsByLanguage(ContentEntityInterface $entity, array $reference): array {
     $query = $this->getEntityJobsQuery($entity);
-    $reference = $job->get('poetry_request_id')->first()->getValue();
     foreach ($reference as $name => $value) {
       $query->condition('job.poetry_request_id__' . $name, $value);
     }

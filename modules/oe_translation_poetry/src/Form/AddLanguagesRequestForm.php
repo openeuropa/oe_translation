@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 
 /**
- * Form for requesting new translations.
+ * Form for requesting the addition of new languages to an existing request.
  */
 class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
 

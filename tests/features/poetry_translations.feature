@@ -299,6 +299,9 @@ Feature: Poetry translations
     Then I should see "Ongoing in Poetry" in the "Bulgarian" row
 
     # Make a request to add a language
+    When I press "Add extra languages to the DGT request"
+    Then I should see the error message "You need to select at least one extra language to add to the request."
+
     When I select the languages "German" in the language list
     And I press "Add extra languages to the DGT request"
     Then I should see "Send extra languages to the previous request for Some title: German"

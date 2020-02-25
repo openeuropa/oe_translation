@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_poetry\Traits;
 use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\JobInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -122,6 +123,25 @@ trait PoetryTestTrait {
         $expected_translation = $suffix ? ($info['#text'] . ' - ' . $job->getTargetLangcode() . ' ' . $suffix) : ($info['#text'] . ' - ' . $job->getTargetLangcode());
         $this->assertEquals($expected_translation, $info['#translation']['#text']);
       }
+    }
+  }
+
+  /**
+   * Asserts that the given jobs have the correct poetry request ID values.
+   *
+   * Also ensures that the state is active.
+   *
+   * @param array $jobs
+   *   The jobs.
+   * @param array $values
+   *   The poetry request ID values.
+   */
+  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
+    foreach ($jobs as $lang => $job) {
+      /** @var \Drupal\tmgmt\JobInterface $job */
+      $job = $this->jobStorage->load($job->id());
+      $this->assertEquals(JobInterface::STATE_ACTIVE, $job->getState());
+      $this->assertEquals($values, $job->get('poetry_request_id')->first()->getValue());
     }
   }
 

@@ -103,9 +103,10 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
   $completed_languages = $build['#completed_languages'];
   $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
 
-  // If we are talking about an update request, we force the submission in
-  // request all the languages for which the jobs have been accepted, translated
-  // or completed in the current request.
+  // If the user can make an update request, we need to ensure that all
+  // languages that have been sent in the original request, are also included
+  // in the update request. For this reason, we force-check the boxes of all
+  // the relevant languages.
   // @see PoetryTranslator::contentTranslationOverviewAlter().
   if (isset($build['#update_request'])) {
     foreach (array_keys($languages) as $langcode) {

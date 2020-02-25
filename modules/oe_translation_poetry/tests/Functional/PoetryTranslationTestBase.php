@@ -10,7 +10,6 @@ use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 use Drupal\tmgmt\Entity\Job;
-use Drupal\tmgmt\JobInterface;
 
 /**
  * Base class for functional tests of the Poetry integration.
@@ -192,25 +191,6 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     $this->drupalPostForm(NULL, $values, 'Send request');
     $this->assertSession()->pageTextContains('The request has been sent to DGT.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
-  }
-
-  /**
-   * Asserts that the given jobs have the correct poetry request ID values.
-   *
-   * Also ensures that the state is active.
-   *
-   * @param array $jobs
-   *   The jobs.
-   * @param array $values
-   *   The poetry request ID values.
-   */
-  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
-    foreach ($jobs as $lang => $job) {
-      /** @var \Drupal\tmgmt\JobInterface $job */
-      $job = $this->jobStorage->load($job->id());
-      $this->assertEquals(JobInterface::STATE_ACTIVE, $job->getState());
-      $this->assertEquals($values, $job->get('poetry_request_id')->first()->getValue());
-    }
   }
 
 }
