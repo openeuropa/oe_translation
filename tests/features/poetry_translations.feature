@@ -165,7 +165,7 @@ Feature: Poetry translations
     And I should see "My body to update - de"
 
   @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
-  Scenario: Cancel languages and requests.
+  Scenario: Cancel and abort languages and requests.
     Given oe_demo_translatable_page content:
       | title                 | field_oe_demo_translatable_body |
       | My title to translate | My body to translate            |
@@ -251,3 +251,19 @@ Feature: Poetry translations
     And I should not see "Cancelled in Poetry" in the "Bulgarian" row
     And I should not see "Cancelled in Poetry" in the "Czech" row
     And I should see "Submitted to Poetry" in the "Spanish" row
+
+    # Translation gets accepted in Poetry, sent and we can cancel it locally.
+    When Poetry updates the status for "My title to translate" as "Ongoing" with the following individual statuses
+      | language | status  |
+      | Spanish  | Ongoing |
+    And the Poetry translation of "My title to translate" in "Spanish" is received from Poetry
+    And I reload the page
+    And I click "Review translation"
+    Then I should see "Job item My title to translate"
+    # Cancel the translation item.
+    When I click "Cancel translation job item"
+    Then I should see "Are you sure you want to cancel the translation for My title to translate in Spanish"
+    And I should see "Please be aware that DGT will not be notified and cancelled translations can no longer be accepted or resent from DGT without making a brand new request."
+    When I press "Confirm"
+    Then I should see the success message "The translation has been cancelled."
+    And I should see "None" in the "Spanish" row

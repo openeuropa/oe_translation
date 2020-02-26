@@ -13,7 +13,6 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
-use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 use Drupal\tmgmt\Entity\Job;
 
@@ -202,11 +201,10 @@ class PoetryTranslationContext extends RawDrupalContext {
     $node = $this->getNodeByTitle($title);
     $query = $this->getEntityJobsQuery($node);
     $query->condition('job.state', Job::STATE_ACTIVE);
-    $query->condition('job.poetry_state', PoetryTranslator::POETRY_STATUS_ONGOING);
     $result = $query->execute()->fetchAllAssoc('tjid');
     $job = current(Job::loadMultiple(array_keys($result)));
     if (empty($job)) {
-      throw new \Exception('A status update needs ongoing translations but none was found.');
+      throw new \Exception('A status update needs active translations but none was found.');
     }
 
     if ($request_status == 'Ongoing') {
@@ -263,7 +261,7 @@ class PoetryTranslationContext extends RawDrupalContext {
    * @param string $languages
    *   The languages.
    *
-   * @Given the Poetry translation(s) of :title in :languages are received from Poetry
+   * @Given the Poetry translation(s) of :title in :languages is/are received from Poetry
    */
   public function thePoetryTranslationRequestGetSent(string $title, string $languages): void {
     $languages = $this->getLanguagesFromNames($languages);

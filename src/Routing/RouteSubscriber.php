@@ -8,6 +8,8 @@ use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
+use Drupal\oe_translation\Controller\JobItemAbortController;
+use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -54,6 +56,8 @@ class RouteSubscriber extends RouteSubscriberBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   protected function alterRoutes(RouteCollection $collection): void {
     foreach ($collection as $route) {
@@ -66,6 +70,16 @@ class RouteSubscriber extends RouteSubscriberBase {
       if ($route->getDefault('_controller') == '\Drupal\tmgmt_content\Controller\ContentTranslationPreviewController::preview') {
         $route->setDefault('_controller', '\Drupal\oe_translation\Controller\ContentPreviewController::preview');
         $route->setDefault('_title_callback', '\Drupal\oe_translation\Controller\ContentPreviewController::title');
+      }
+
+      // Swap the TMGMT Job Item abort form handler to a controller.
+      $route = $collection->get('entity.tmgmt_job_item.abort_form');
+      if ($route instanceof Route) {
+        $route->setDefaults(
+          [
+            '_controller' => JobItemAbortController::class . '::form',
+          ]
+        );
       }
 
       // Alter the routes to provide a custom access check to the regular

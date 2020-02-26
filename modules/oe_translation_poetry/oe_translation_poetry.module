@@ -8,15 +8,15 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Session\AccountInterface;
-use Drupal\node\NodeInterface;
-use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\Core\Access\AccessResult;
-use Drupal\tmgmt\Entity\Job;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\node\NodeInterface;
+use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
+use Drupal\tmgmt\Entity\Job;
 
 /**
  * Implements hook_poetry_entity_type_alter().
@@ -142,11 +142,6 @@ function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $o
   $job = $entity->getJob();
   if (!$job->getTranslatorPlugin() instanceof PoetryTranslator) {
     return AccessResult::neutral();
-  }
-
-  if ($operation === 'abort') {
-    // We don't want to abort jobs items.
-    return AccessResult::forbidden();
   }
 
   if ($operation !== 'update') {
