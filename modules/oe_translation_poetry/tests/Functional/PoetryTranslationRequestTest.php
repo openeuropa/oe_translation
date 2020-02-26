@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\Core\Url;
-use Drupal\node\NodeInterface;
 use Drupal\tmgmt\JobInterface;
 
 /**
@@ -40,7 +39,6 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs['bg'] = $this->jobStorage->load(1);
     $jobs['cs'] = $this->jobStorage->load(2);
-    $this->assertCount(2, $jobs);
     foreach ($jobs as $lang => $job) {
       // The jobs should still be unprocessed at this stage.
       $this->assertEquals(JobInterface::STATE_UNPROCESSED, $job->getState());
@@ -258,51 +256,6 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     ];
 
     $this->assertJobsPoetryRequestIdValues($this->jobStorage->loadMultiple(), $expected_poetry_request_id);
-  }
-
-  /**
-   * Submits the translation request on the current page with default values.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node.
-   */
-  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
-    // Submit the request form.
-    $date = new \DateTime();
-    $date->modify('+ 7 days');
-    $values = [
-      'details[date]' => $date->format('Y-m-d'),
-      'details[contact][auteur]' => 'author name',
-      'details[contact][secretaire]' => 'secretary name',
-      'details[contact][contact]' => 'contact name',
-      'details[contact][responsable]' => 'responsible name',
-      'details[organisation][responsible]' => 'responsible organisation name',
-      'details[organisation][author]' => 'responsible author name',
-      'details[organisation][requester]' => 'responsible requester name',
-      'details[comment]' => 'Translation comment',
-    ];
-    $this->drupalPostForm(NULL, $values, 'Send request');
-    $this->assertSession()->pageTextContains('The request has been sent to DGT.');
-    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
-  }
-
-  /**
-   * Asserts that the given jobs have the correct poetry request ID values.
-   *
-   * Also ensures that the state is active.
-   *
-   * @param array $jobs
-   *   The jobs.
-   * @param array $values
-   *   The poetry request ID values.
-   */
-  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
-    foreach ($jobs as $lang => $job) {
-      /** @var \Drupal\tmgmt\JobInterface $job */
-      $job = $this->jobStorage->load($job->id());
-      $this->assertEquals(JobInterface::STATE_ACTIVE, $job->getState());
-      $this->assertEquals($values, $job->get('poetry_request_id')->first()->getValue());
-    }
   }
 
   /**

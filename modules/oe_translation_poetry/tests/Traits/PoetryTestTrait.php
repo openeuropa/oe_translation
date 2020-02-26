@@ -5,6 +5,9 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation_poetry\Traits;
 
 use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
+use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\JobInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -95,6 +98,50 @@ trait PoetryTestTrait {
 
       $translation_notification = $this->getContainer()->get('oe_translation_poetry_mock.fixture_generator')->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $main_item->id(), (int) $main_job->id());
       $this->performNotification($translation_notification);
+    }
+  }
+
+  /**
+   * Asserts that the jobs in the system have received translation values.
+   *
+   * @param string|null $suffix
+   *   Expected suffix for the translation values.
+   */
+  protected function assertJobsAreTranslated(string $suffix = NULL): void {
+    $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $this->assertEquals(Job::STATE_ACTIVE, $job->getState());
+      $this->assertEquals($job->get('poetry_state')->value, PoetryTranslator::POETRY_STATUS_TRANSLATED);
+
+      $items = $job->getItems();
+      $item = reset($items);
+      $data = $this->container->get('tmgmt.data')->filterTranslatable($item->getData());
+      foreach ($data as $field => $info) {
+        $this->assertNotEmpty($info['#translation']);
+        $expected_translation = $suffix ? ($info['#text'] . ' - ' . $job->getTargetLangcode() . ' ' . $suffix) : ($info['#text'] . ' - ' . $job->getTargetLangcode());
+        $this->assertEquals($expected_translation, $info['#translation']['#text']);
+      }
+    }
+  }
+
+  /**
+   * Asserts that the given jobs have the correct poetry request ID values.
+   *
+   * Also ensures that the state is active.
+   *
+   * @param array $jobs
+   *   The jobs.
+   * @param array $values
+   *   The poetry request ID values.
+   */
+  protected function assertJobsPoetryRequestIdValues(array $jobs, array $values): void {
+    foreach ($jobs as $lang => $job) {
+      /** @var \Drupal\tmgmt\JobInterface $job */
+      $job = $this->jobStorage->load($job->id());
+      $this->assertEquals(JobInterface::STATE_ACTIVE, $job->getState());
+      $this->assertEquals($values, $job->get('poetry_request_id')->first()->getValue());
     }
   }
 

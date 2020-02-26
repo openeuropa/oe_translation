@@ -8,14 +8,14 @@ use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
 
 /**
- * Tests adding languages to requests made to Poetry.
+ * Tests requesting a translation update to Poetry.
  */
 class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
 
   /**
    * Tests requesting a translation update.
    */
-  public function testUpdateRequestRequest(): void {
+  public function testTranslationUpdateRequest(): void {
     $node = $this->createNodeWithRequestedJobs([
       'title' => 'My node title',
       'field_oe_demo_translatable_body' => 'My node body',
@@ -25,6 +25,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // Assert we can not see operation buttons.
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonNotExists('Request a DGT translation update for the selected languages');
+    $this->assertSession()->buttonNotExists('Add extra languages to the DGT request');
     // Send a status update accepting the translation for requested languages.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
       [
@@ -44,6 +45,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
+    $this->assertSession()->buttonExists('Add extra languages to the DGT request');
 
     // Check that the jobs have been correctly updated.
     $this->jobStorage->resetCache();
@@ -65,7 +67,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // Include another language in the translation update.
     $this->getSession()->getPage()->checkField('edit-languages-de');
     $this->drupalPostForm(NULL, [], 'Request a DGT translation update for the selected languages');
-    $this->submitRequestInQueue($node);
+    $this->submitTranslationRequestForQueue($node);
 
     // Check that all jobs have been correctly updated (the old jobs have been
     // aborted and new ones created which should be active).
@@ -74,7 +76,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     $old_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple([$jobs['bg']->id(), $jobs['cs']->id()]));
     $this->assertEquals(Job::STATE_ABORTED, $old_jobs['bg']->getState());
     $this->assertEquals(Job::STATE_ABORTED, $old_jobs['cs']->getState());
-    /** @var \Drupal\tmgmt\Entity\JobInterface[] $new_jobs */
+    /** @var \Drupal\tmgmt\JobInterface[] $new_jobs */
     $new_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple());
     // The index method ensures that only the latest jobs are loaded.
     $this->assertCount(3, $new_jobs);
@@ -89,6 +91,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // Assert we can not see operation buttons again.
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonNotExists('Request a DGT translation update for the selected languages');
+    $this->assertSession()->buttonNotExists('Add extra languages to the DGT request');
     $this->assertSession()->pageTextContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
 
     // Send a status update accepting the translation for requested languages.
@@ -130,6 +133,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->pageTextNotContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
+    $this->assertSession()->buttonExists('Add extra languages to the DGT request');
 
     // Send the translations for each job.
     $this->notifyWithDummyTranslations($jobs);
