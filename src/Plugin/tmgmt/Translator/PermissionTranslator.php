@@ -525,6 +525,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     /** @var \Drupal\tmgmt_local\LocalTaskItemInterface $local_task_item */
     $local_task_item = $route_match->getParameter('tmgmt_local_task_item');
     $job_item = $local_task_item->getJobItem();
+    $item_type = $job_item->getItemType();
     $job = $job_item->getJob();
     if ($job->getTranslator()->getPluginId() !== $this->getPluginId()) {
       return;
@@ -535,10 +536,13 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     array_pop($links);
     array_pop($links);
     array_pop($links);
-    $entity = $this->entityTypeManager->getStorage('node')->load($job_item->getItemId());
-    if (empty($entity)) {
+
+    $item_type_storage = $this->entityTypeManager->getStorage($item_type);
+    if (empty($item_type_storage)) {
       return;
     }
+
+    $entity = $item_type_storage->load($job_item->getItemId());
     $links[] = $entity->toLink(NULL, 'drupal:content-translation-overview');
     $breadcrumb = new Breadcrumb();
     $breadcrumb->setLinks($links);
