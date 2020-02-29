@@ -59,8 +59,10 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // At the moment, since there is an ongoing request to Poetry (at least one
     // ongoing job), we can make an update request which needs to include all
     // ongoing jobs and any extra we may want.
-    $this->assertSession()->checkboxChecked('edit-languages-bg');
-    $this->assertSession()->checkboxChecked('edit-languages-cs');
+    // Use the attribute to check of the field is checked as it will be disabled
+    // and removed from the field list.
+    $this->assertTrue($this->getSession()->getPage()->findField('edit-languages-bg')->getAttribute('checked') === 'checked');
+    $this->assertTrue($this->getSession()->getPage()->findField('edit-languages-cs')->getAttribute('checked') === 'checked');
     $this->assertSession()->fieldDisabled('edit-languages-bg');
     $this->assertSession()->fieldDisabled('edit-languages-cs');
 
