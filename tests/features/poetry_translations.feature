@@ -118,6 +118,7 @@ Feature: Poetry translations
     When the Poetry translation request of "My title to update" in "Bulgarian" gets accepted
     And I reload the page
     Then I should see "Ongoing in Poetry" in the "Bulgarian" row
+    And the "Bulgarian" language checkbox in the language list is checked
 
     # Make an update request
     When I select the languages "German" in the language list
