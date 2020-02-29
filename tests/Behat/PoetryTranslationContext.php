@@ -8,6 +8,7 @@ use Behat\Behat\Hook\Scope\AfterFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
@@ -108,17 +109,27 @@ class PoetryTranslationContext extends RawDrupalContext {
    * @param string $language
    *   The languages.
    *
-   * @Then the :language language checkbox in the language list is checked.
+   * @Then the :language language checkbox in the language list is checked
    */
   public function languageCheckboxIsChecked(string $language): void {
     $languages = $this->getLanguagesFromNames($language);
     if (!$languages) {
-      throw new \Exception('The specified languages cannot be found');
+      throw new \Exception('The specified language cannot be found');
     }
 
     $langcodes = array_keys($languages);
     $langcode = reset($langcodes);
-    $this->getSession()->getPage()->hasCheckedField("languages[$langcode]");
+    $checkbox = $this->getSession()->getPage()->findField("languages[$langcode]");
+    if (!$checkbox instanceof NodeElement) {
+      throw new \Exception('The specified language cannot be found');
+    }
+
+    // We use the "checked" attribute because the checkbox may be disabled and
+    // the dom crawler does not include it in the available form elements.
+    $checked = $checkbox->getAttribute('checked') === 'checked';
+    if (!$checked) {
+      throw new \Exception('The specified language checkbox is not checked and it should have been.');
+    }
   }
 
   /**
