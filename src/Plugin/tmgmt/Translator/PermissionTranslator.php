@@ -537,12 +537,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     array_pop($links);
     array_pop($links);
 
-    $item_type_storage = $this->entityTypeManager->getStorage($item_type);
-    if (empty($item_type_storage)) {
-      return;
-    }
-
-    $entity = $item_type_storage->load($job_item->getItemId());
+    $entity = $this->entityTypeManager->getStorage($item_type)->load($job_item->getItemId());
     $links[] = $entity->toLink(NULL, 'drupal:content-translation-overview');
     $breadcrumb = new Breadcrumb();
     $breadcrumb->setLinks($links);
