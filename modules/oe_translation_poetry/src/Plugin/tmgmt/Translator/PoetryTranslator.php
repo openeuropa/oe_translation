@@ -574,13 +574,6 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $extra_language_request = isset($triggering_element['#op']) && $triggering_element['#op'] === 'add-languages';
     $ongoing_languages = $extra_language_request ? $form_state->get('ongoing_languages') : [];
 
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $form_state->get('entity');
-    $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
-    $job_queue = $this->jobQueueFactory->get($entity);
-    $job_queue->setEntityId($entity->getEntityTypeId(), $entity->getRevisionId());
-    $values = $form_state->getValues();
-
     if ($extra_language_request) {
       // In case we are adding a new language to an ongoing request, we need to
       // determine the content entity revision ID where that initial request
@@ -593,6 +586,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $job_item = reset($job_items);
       $content_item_revision_id = $job_item->get('item_rid')->value;
     }
+
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $form_state->get('entity');
+    $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
+    $job_queue = $this->jobQueueFactory->get($entity);
+    $entity_revision_id = isset($content_item_revision_id) ? $content_item_revision_id : $entity->getRevisionId();
+    $job_queue->setEntityId($entity->getEntityTypeId(), $entity_revision_id);
+    $values = $form_state->getValues();
 
     foreach (array_keys(array_filter($values['languages'])) as $langcode) {
       // We do not want to create jobs for languages that already exist in the
