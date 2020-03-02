@@ -27,7 +27,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
 
     // Assert we can not see operation buttons.
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
-    $this->assertSession()->buttonNotExists('Add extra languages to the DGT request');
+    $this->assertSession()->buttonNotExists('Add extra languages to the ongoing DGT request');
     $this->assertSession()->buttonNotExists('Request a DGT translation update for the selected languages');
     $this->assertSession()->pageTextContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
 
@@ -53,14 +53,14 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     // Refresh page.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
-    $this->assertSession()->buttonExists('Add extra languages to the DGT request');
+    $this->assertSession()->buttonExists('Add extra languages to the ongoing DGT request');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
     $this->assertSession()->pageTextNotContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
     $page = $this->getSession()->getPage();
 
     // Add new languages to the request.
     $page->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Add extra languages to the DGT request');
+    $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
     // The new language addition should create one new unprocessed job, using
     // the same request ID.
     $jobs = $this->loadJobsKeyedByLanguage();
@@ -82,7 +82,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     // The new language request has not been yet accepted so we should not see
     // buttons.
     $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
-    $this->assertSession()->buttonNotExists('Add extra languages to the DGT request');
+    $this->assertSession()->buttonNotExists('Add extra languages to the ongoing DGT request');
     $this->assertSession()->buttonNotExists('Request a DGT translation update for the selected languages');
     $this->assertSession()->pageTextContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
 
@@ -104,7 +104,126 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
     // Assert button we see the update and add language buttons again.
-    $this->assertSession()->buttonExists('Add extra languages to the DGT request');
+    $this->assertSession()->buttonExists('Add extra languages to the ongoing DGT request');
+    $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
+    $this->assertSession()->pageTextNotContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
+
+    // Send the translations for each job.
+    $this->notifyWithDummyTranslations($jobs);
+    $this->assertJobsAreTranslated();
+    foreach ($this->loadJobsKeyedByLanguage() as $job) {
+      $this->assertEquals(PoetryTranslator::POETRY_STATUS_TRANSLATED, $job->get('poetry_state')->value);
+    }
+  }
+
+  /**
+   * Tests to add a language to a request after content has been updated.
+   */
+  public function testTranslationAddLanguagesRequestAfterUpdate(): void {
+    $node = $this->createNodeWithRequestedJobs([
+      'title' => 'My node title',
+      'field_oe_demo_translatable_body' => 'My node body',
+    ], ['bg', 'cs']);
+
+    // Keep track of the original node revision ID because it is the one that
+    // should get saved on the job item.
+    $revision_id = $node->getRevisionId();
+
+    // Assert the newly created job items have the correct node revision ID.
+    $jobs = $this->loadJobsKeyedByLanguage();
+    foreach ($jobs as $job) {
+      $job_items = $job->getItems();
+      foreach ($job_items as $job_item) {
+        $this->assertEquals($revision_id, $job_item->get('item_rid')->value);
+        $this->assertEquals($node->bundle(), $job_item->get('item_bundle')->value);
+      }
+    }
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    // Send a status update accepting the translation for requested languages.
+    $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
+      [
+        [
+          'code' => 'BG',
+          'date' => '05/10/2019 23:59',
+          'accepted_date' => '05/10/2020 23:59',
+        ],
+        [
+          'code' => 'CS',
+          'date' => '05/10/2019 23:59',
+          'accepted_date' => '05/10/2020 23:59',
+        ],
+      ]);
+    $this->performNotification($status_notification);
+    $jobs = $this->loadJobsKeyedByLanguage();
+
+    // The jobs should now be active and using the default identifier.
+    $this->assertJobsPoetryRequestIdValues($jobs, $this->defaultIdentifierInfo);
+
+    // Update the node to create a new revision.
+    $node->set('title', 'My updated node title');
+    $node->setNewRevision();
+    $node->save();
+
+    // Refresh page.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+
+    // Add new languages to the request which is ongoing.
+    $this->getSession()->getPage()->checkField('edit-languages-de');
+    $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
+    // The new language addition should create one new unprocessed job, using
+    // the same request ID.
+    $jobs = $this->loadJobsKeyedByLanguage();
+    $this->assertEquals(JobInterface::STATE_UNPROCESSED, $jobs['de']->getState());
+    // The job item of the new job should have the same content revision ID
+    // as the previous job items.
+    foreach ($jobs as $job) {
+      $job_items = $job->getItems();
+      foreach ($job_items as $job_item) {
+        $this->assertEquals($revision_id, $job_item->get('item_rid')->value);
+        $this->assertEquals($node->bundle(), $job_item->get('item_bundle')->value);
+      }
+    }
+
+    // Submit the request for a new language which will activate the new job.
+    $this->submitTranslationRequestForQueue($node);
+
+    // All the jobs should now be in the same active state and using the same
+    // request ID.
+    $jobs = $this->loadJobsKeyedByLanguage();
+    $this->assertJobsPoetryRequestIdValues($jobs, $this->defaultIdentifierInfo);
+    // The new language, though, should not yet be ongoing.
+    $this->assertTrue($jobs['de']->get('poetry_state')->isEmpty());
+
+    // Refresh the page.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+
+    // The new language request has not been yet accepted so we should not see
+    // buttons.
+    $this->assertSession()->buttonNotExists('Request a DGT translation for the selected languages');
+    $this->assertSession()->buttonNotExists('Add extra languages to the ongoing DGT request');
+    $this->assertSession()->buttonNotExists('Request a DGT translation update for the selected languages');
+    $this->assertSession()->pageTextContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
+
+    // Send a status update accepting the translation for requested
+    // language using same identifier.
+    $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
+      [
+        [
+          'code' => 'DE',
+          'date' => '05/10/2019 23:59',
+          'accepted_date' => '05/10/2020 23:59',
+        ],
+      ]);
+    $this->performNotification($status_notification);
+    $jobs = $this->loadJobsKeyedByLanguage();
+    $this->assertEquals(PoetryTranslator::POETRY_STATUS_ONGOING, $jobs['de']->get('poetry_state')->value);
+
+    // Refresh page.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+
+    // Assert button we see the update and add language buttons again.
+    $this->assertSession()->buttonExists('Add extra languages to the ongoing DGT request');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
     $this->assertSession()->pageTextNotContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
 

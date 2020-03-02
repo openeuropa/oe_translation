@@ -86,7 +86,7 @@ Feature: Poetry translations
     And I should see the button "Request a DGT translation for the selected languages"
     And I should not see "No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated."
     And I should not see the button "Request a DGT translation update for the selected languages"
-    And I should not see "DGT Poetry request reference:"
+    And I should not see "Ongoing DGT Poetry request reference:"
 
   @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
   Scenario: Translate content and request an update.
@@ -149,7 +149,7 @@ Feature: Poetry translations
     # Translation are sent from Poetry
     When the Poetry translations of "My title to update" in "Bulgarian, German" are received from Poetry
     And I reload the page
-    Then I should not see "DGT Poetry request reference:"
+    Then I should not see "Ongoing DGT Poetry request reference:"
     When I click "Review translation" in the "German" row
     And I press "Accept translation"
     Then I should see "The translation for My title to update has been accepted as My title to update - de"
@@ -300,25 +300,25 @@ Feature: Poetry translations
     Then I should see "Ongoing in Poetry" in the "Bulgarian" row
 
     # Make a request to add a language
-    When I press "Add extra languages to the DGT request"
+    When I press "Add extra languages to the ongoing DGT request"
     Then I should see the error message "You need to select at least one extra language to add to the request."
 
     When I select the languages "German" in the language list
-    And I press "Add extra languages to the DGT request"
+    And I press "Add extra languages to the ongoing DGT request"
     Then I should see "Send extra languages to the previous request for Some title: German"
     When I fill in "Requested delivery date" with "05/04/2050"
     And I press "Send request"
     Then I should see "The request has been sent to DGT."
     And I should see "Ongoing in Poetry" in the "Bulgarian" row
     And I should see "Submitted to Poetry" in the "German" row
-    And I should not see the button "Add extra languages to the DGT request"
+    And I should not see the button "Add extra languages to the ongoing DGT request"
 
     # The translations get accepted in Poetry
     When the Poetry translation request of "Some title" in "Bulgarian, German" gets accepted
     And I reload the page
     Then I should see "Ongoing in Poetry" in the "Bulgarian" row
     And I should see "Ongoing in Poetry" in the "German" row
-    And I should see the button "Add extra languages to the DGT request"
+    And I should see the button "Add extra languages to the ongoing DGT request"
 
     # Translation are sent from Poetry
     When the Poetry translations of "Some title" in "Bulgarian, German" are received from Poetry

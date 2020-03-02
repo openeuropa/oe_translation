@@ -337,7 +337,7 @@ class PoetryTranslationContext extends RawDrupalContext {
     $request_id = $job->get('poetry_request_id')->first()->getValue();
     $reference = PoetryRequestIdItem::toReference($request_id);
 
-    $this->assertSession()->pageTextContains('DGT Poetry request reference: ' . $reference);
+    $this->assertSession()->pageTextContains('Ongoing DGT Poetry request reference: ' . $reference);
   }
 
   /**
