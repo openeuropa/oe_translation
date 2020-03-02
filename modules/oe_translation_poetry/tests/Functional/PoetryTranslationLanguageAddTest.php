@@ -129,13 +129,16 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     // should get saved on the job item.
     $revision_id = $node->getRevisionId();
 
-    // Assert the newly created job items have the correct node revision ID.
+    // Assert the newly created job items have the correct node revision ID and
+    // data.
     $jobs = $this->loadJobsKeyedByLanguage();
     foreach ($jobs as $job) {
       $job_items = $job->getItems();
       foreach ($job_items as $job_item) {
         $this->assertEquals($revision_id, $job_item->get('item_rid')->value);
         $this->assertEquals($node->bundle(), $job_item->get('item_bundle')->value);
+        $data = $job_item->getData();
+        $this->assertEquals('My node title', $data['title'][0]['value']['#text']);
       }
     }
 
@@ -176,12 +179,13 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     $jobs = $this->loadJobsKeyedByLanguage();
     $this->assertEquals(JobInterface::STATE_UNPROCESSED, $jobs['de']->getState());
     // The job item of the new job should have the same content revision ID
-    // as the previous job items.
+    // as the previous job items, as well as translatable data.
     foreach ($jobs as $job) {
       $job_items = $job->getItems();
       foreach ($job_items as $job_item) {
         $this->assertEquals($revision_id, $job_item->get('item_rid')->value);
         $this->assertEquals($node->bundle(), $job_item->get('item_bundle')->value);
+        $this->assertEquals('My node title', $data['title'][0]['value']['#text']);
       }
     }
 

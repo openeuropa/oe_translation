@@ -53,8 +53,13 @@ class JobItem extends OriginalJobItem {
     // already being started from the latest version of the content. Meaning
     // that if we use the regular entity load it will load the latest published
     // revision instead and we don't want that.
-    $this->set('item_rid', $item_storage->getLatestRevisionId($this->getItemId()));
-    $this->set('item_bundle', $item->bundle());
+    if ($this->get('item_rid')->isEmpty()) {
+      $this->set('item_rid', $item_storage->getLatestRevisionId($this->getItemId()));
+    }
+
+    if ($this->get('item_bundle')->isEmpty()) {
+      $this->set('item_bundle', $item->bundle());
+    }
 
     parent::preSave($storage);
   }

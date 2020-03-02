@@ -605,12 +605,20 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // Set the Poetry translator on it.
       $job->translator = 'poetry';
       try {
-        $item = $job->addItem('content', $entity->getEntityTypeId(), $entity->id());
         $job->save();
+
+        $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->create([
+          'plugin' => 'content',
+          'item_type' => $entity->getEntityTypeId(),
+          'item_id' => $entity->id(),
+          'tjid' => $job->id(),
+        ]);
+
         if ($extra_language_request) {
-          $item->set('item_rid', $content_item_revision_id);
-          $item->save();
+          $job_item->set('item_rid', $content_item_revision_id);
         }
+
+        $job_item->save();
         $job_queue->addJob($job);
       }
       catch (TMGMTException $e) {
