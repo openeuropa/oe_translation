@@ -142,7 +142,6 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
       }
     }
 
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     // Send a status update accepting the translation for requested languages.
     $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'ONG',
       [
@@ -168,7 +167,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     $node->setNewRevision();
     $node->save();
 
-    // Refresh page.
+    // Navigate to translation overview page.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
     // Add new languages to the request which is ongoing.
