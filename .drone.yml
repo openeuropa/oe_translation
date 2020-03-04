@@ -62,7 +62,7 @@ pipeline:
     image: fpfis/httpd-php-ci:7.1
     environment: *web-environment
     commands:
-      - ./vendor/bin/behat --strict
+      - ./vendor/bin/behat --strict --tags '~@exclude'
 
   debug:
     image: fpfis/httpd-php-ci:7.1

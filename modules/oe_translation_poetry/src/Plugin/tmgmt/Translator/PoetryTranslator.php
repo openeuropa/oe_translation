@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 declare(strict_types = 1);
 
@@ -270,8 +271,10 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
         '_title_callback' => '\Drupal\oe_translation_poetry\Form\AddLanguagesRequestForm::getPageTitle',
       ],
       [
-        '_permission' => 'translate any entity',
-        '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
+        // TODO: Temporarily disable access to add languages form.
+        '_access' => 'FALSE',
+        // '_permission' => 'translate any entity',
+        // '_custom_access' => 'oe_translation_poetry.job_queue_factory::access',
       ]
     );
     $collection->add('oe_translation_poetry.job_queue_checkout_add_languages', $route);

@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * @file
@@ -117,6 +118,9 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
       ];
     }
   }
+
+  // TODO: Temporarily remove the option to add new languages.
+  return;
 
   // Add a button to request new languages. This can only happen while there
   // is an accepted ongoing request.

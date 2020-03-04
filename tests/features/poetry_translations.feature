@@ -269,8 +269,9 @@ Feature: Poetry translations
     Then I should see the success message "The translation has been cancelled."
     And I should see "None" in the "Spanish" row
 
-  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry
+  @cleanup:tmgmt_job @cleanup:tmgmt_job_item @poetry @exclude
   Scenario: Translate content and add languages.
+    # TODO: Temporarily exclude the test.
     Given oe_demo_translatable_page content:
       | title      | field_oe_demo_translatable_body |
       | Some title | Some body                       |
