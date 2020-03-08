@@ -19,6 +19,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for cancelling a translation job item.
+ *
+ * Currently not used, we should reintroduce once we clarify the impact on
+ * aborting local jobs items.
  */
 class JobItemAbortForm extends OriginalJobItemAbortForm {
 
