@@ -46,6 +46,7 @@ class PoetryNotificationTest extends PoetryTranslationTestBase {
     $this->performNotification($status_notification);
     // Check that the jobs have been correctly updated.
     $this->jobStorage->resetCache();
+    $this->entityTypeManager->getStorage('tmgmt_job_item')->resetCache();
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple());
 

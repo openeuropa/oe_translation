@@ -513,9 +513,20 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
         '#title' => $this->t('Translation provider information'),
         '#open' => TRUE,
         'info' => [
-          '#markup' => $this->t('DGT Poetry request reference: @ref', ['@ref' => PoetryRequestIdItem::toReference($request_id)]),
+          '#type' => 'container',
+          'reference' => [
+            '#markup' => $this->t('Ongoing DGT Poetry request reference: @ref', ['@ref' => PoetryRequestIdItem::toReference($request_id)]),
+          ],
         ],
       ];
+
+      if ($request_type->getType() === PoetryRequestType::UPDATE && empty($submitted_languages)) {
+        // If we can do an update request, inform the user where the ongoing
+        // translations will go.
+        $provider_info['info']['message'] = [
+          '#markup' => '<br /><br />' . $this->t('Incoming translations from ongoing requests will be synchronised with the revision of the content for which they had been requested.'),
+        ];
+      }
       array_unshift($build, $provider_info);
     }
 
@@ -563,11 +574,25 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $extra_language_request = isset($triggering_element['#op']) && $triggering_element['#op'] === 'add-languages';
     $ongoing_languages = $extra_language_request ? $form_state->get('ongoing_languages') : [];
 
+    if ($extra_language_request) {
+      // In case we are adding a new language to an ongoing request, we need to
+      // determine the content entity revision ID where that initial request
+      // started so that we can set it on the newly create job items as well.
+      $ongoing_language_info = reset($ongoing_languages);
+      /** @var \Drupal\tmgmt\JobInterface $job */
+      $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($ongoing_language_info->tjid);
+      $job_items = $job->getItems();
+      /** @var \Drupal\tmgmt\JobItemInterface $job_item */
+      $job_item = reset($job_items);
+      $content_item_revision_id = $job_item->get('item_rid')->value;
+    }
+
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $form_state->get('entity');
     $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
     $job_queue = $this->jobQueueFactory->get($entity);
-    $job_queue->setEntityId($entity->getEntityTypeId(), $entity->getRevisionId());
+    $entity_revision_id = isset($content_item_revision_id) ? $content_item_revision_id : $entity->getRevisionId();
+    $job_queue->setEntityId($entity->getEntityTypeId(), $entity_revision_id);
     $values = $form_state->getValues();
 
     foreach (array_keys(array_filter($values['languages'])) as $langcode) {
@@ -581,8 +606,20 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // Set the Poetry translator on it.
       $job->translator = 'poetry';
       try {
-        $job->addItem('content', $entity->getEntityTypeId(), $entity->id());
         $job->save();
+
+        $job_item = $this->entityTypeManager->getStorage('tmgmt_job_item')->create([
+          'plugin' => 'content',
+          'item_type' => $entity->getEntityTypeId(),
+          'item_id' => $entity->id(),
+          'tjid' => $job->id(),
+        ]);
+
+        if ($extra_language_request) {
+          $job_item->set('item_rid', $content_item_revision_id);
+        }
+
+        $job_item->save();
         $job_queue->addJob($job);
       }
       catch (TMGMTException $e) {

@@ -162,6 +162,12 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     foreach ($jobs as $job) {
       $this->assertTrue($job->get('poetry_request_date_updated')->isEmpty());
       $this->assertTrue($job->get('poetry_state')->isEmpty());
+
+      $job_items = $job->getItems();
+      foreach ($job_items as $job_item) {
+        $this->assertEquals($node->getRevisionId(), $job_item->get('item_rid')->value);
+        $this->assertEquals($node->bundle(), $job_item->get('item_bundle')->value);
+      }
     }
 
     return $node;
