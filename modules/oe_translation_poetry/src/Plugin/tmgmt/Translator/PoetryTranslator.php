@@ -52,8 +52,7 @@ use Symfony\Component\Routing\RouteCollection;
  *   description = @Translation("Allows the users to send translation requests to Poetry."),
  *   ui = "\Drupal\oe_translation_poetry\PoetryTranslatorUI",
  *   default_settings = {},
- *   map_remote_languages = TRUE,
- *   abort_class = "\Drupal\oe_translation_poetry\Form\JobItemAbortForm"
+ *   map_remote_languages = TRUE
  * )
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -318,12 +317,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     }
 
     if (isset($form['actions']['abort_job_item'])) {
-      $form['actions']['abort_job_item']['#attributes']['class'] = ['button'];
-      $form['actions']['abort_job_item']['#title'] = $this->t('Cancel translation job item');
-    }
-
-    if (isset($form['actions']['preview'])) {
-      $form['actions']['preview']['#weight'] = 100;
+      unset($form['actions']['abort_job_item']);
     }
 
     // Hide the validation checkmarks.
