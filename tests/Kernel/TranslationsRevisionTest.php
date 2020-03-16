@@ -66,7 +66,7 @@ class TranslationsRevisionTest extends KernelTestBase {
 
     // In Drupal 8.8, paths have been moved to an entity type.
     // @todo remove this when the component will depend on 8.8.
-    if (version_compare(\Drupal::VERSION, '8.8.0', '>=')) {
+    if ($this->container->get('entity_type.manager')->hasDefinition('path_alias')) {
       $this->container->get('module_installer')->install(['path_alias']);
       $this->installEntitySchema('path_alias');
     }
