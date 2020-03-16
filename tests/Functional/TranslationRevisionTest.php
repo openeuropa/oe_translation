@@ -50,7 +50,7 @@ class TranslationRevisionTest extends TranslationTestBase {
     // Finalize the translation and ensure the translation was set on the
     // first node revision, not the subsequent one.
     $values = [
-      'title|0|value[translation]' => 'My node FR',
+      'Translation' => 'My node FR',
     ];
     // It should be the first local task item created so we use the ID 1.
     $url = Url::fromRoute('entity.tmgmt_local_task_item.canonical', ['tmgmt_local_task_item' => 1]);

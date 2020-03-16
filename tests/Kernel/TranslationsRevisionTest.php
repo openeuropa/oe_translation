@@ -64,6 +64,13 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->installSchema('node', 'node_access');
     $this->installSchema('system', 'sequences');
 
+    // In Drupal 8.8, paths have been moved to an entity type.
+    // @todo remove this when the component will depend on 8.8.
+    if (version_compare(\Drupal::VERSION, '8.8.0', '>=')) {
+      $this->container->get('module_installer')->install(['path_alias']);
+      $this->installEntitySchema('path_alias');
+    }
+
     $node_type = $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'name' => 'Test node type',
       'type' => 'test_node_type',
