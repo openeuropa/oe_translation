@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\oe_translation\Access\JobAccessHandler;
 use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -324,6 +325,10 @@ function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $
   // it does even if we mark the base field as non-translatable.
   if (isset($translatable_fields['moderation_state'])) {
     unset($translatable_fields['moderation_state']);
+  }
+
+  if (\Drupal::service('module_handler')->moduleExists('pathauto') && $entity->path->langcode === LanguageInterface::LANGCODE_NOT_SPECIFIED && isset($translatable_fields['path'])) {
+    unset($translatable_fields['path']);
   }
 }
 
