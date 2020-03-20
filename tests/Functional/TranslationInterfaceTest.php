@@ -13,9 +13,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Tests that we are allowing Translator plugins to make alterations.
+ * Tests the various translation interfaces.
  */
-class ExtensibilityTest extends TranslationTestBase {
+class TranslationInterfaceTest extends TranslationTestBase {
 
   /**
    * Tests that the plugins can alter pages and forms, and propose routes.
