@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation\Functional;
 
 use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\Core\Url;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -96,6 +97,52 @@ class ExtensibilityTest extends TranslationTestBase {
     $url->setRouteParameter('target', 'bg');
     $this->drupalGet($url);
     $this->assertResponse(403);
+  }
+
+  /**
+   * Tests that we can only access the translation overview in English.
+   */
+  public function testTranslationOverviewRedirect(): void {
+    $node = $this->entityTypeManager->getStorage('node')->create([
+      'type' => 'page',
+      'title' => 'My node',
+    ]);
+
+    $node->save();
+
+    $url = $node->toUrl('drupal:content-translation-overview');
+    $this->drupalGet($url);
+    $this->assertSession()->addressEquals('/en/node/1/translations');
+
+    // If we attempt this URL in French, it should redirect to EN.
+    $url = $node->toUrl('drupal:content-translation-overview');
+    $language = ConfigurableLanguage::load('fr');
+    $url->setOption('language', $language);
+    $this->drupalGet($url);
+    $this->assertSession()->addressEquals('/en/node/1/translations');
+
+    // Install the menu link content entity type.
+    \Drupal::service('module_installer')->install(['menu_link_content']);
+    \Drupal::service('content_translation.manager')->setEnabled('menu_link_content', 'menu_link_content', TRUE);
+    \Drupal::service('router.builder')->rebuild();
+
+    $menu_link_content = MenuLinkContent::create([
+      'menu_name' => 'main',
+      'link' => ['uri' => 'http://example.com'],
+      'title' => 'Link test',
+    ]);
+    $menu_link_content->save();
+
+    // For entity types that do not use TMGMT, there should be no redirect.
+    $url = $menu_link_content->toUrl('drupal:content-translation-overview');
+    $url->setOption('language', $language);
+    $this->drupalGet($url);
+    $this->assertSession()->addressEquals('/fr/admin/structure/menu/item/1/edit/translations');
+
+    // Enable the menu link content to use a TMGMT translator.
+    \Drupal::service('state')->set('oe_translation_test_enabled_translators', ['menu_link_content']);
+    $this->drupalGet($url);
+    $this->assertSession()->addressEquals('/en/admin/structure/menu/item/1/edit/translations');
   }
 
 }
