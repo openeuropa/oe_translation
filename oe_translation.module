@@ -200,16 +200,27 @@ function oe_translation_entity_base_field_info_alter(&$fields, EntityTypeInterfa
 }
 
 /**
- * Implements hook_ENTITY_TYPE_access() for the Node entity type.
+ * Implements hook_entity_access().
  */
-function oe_translation_node_access(EntityInterface $entity, $operation, AccountInterface $account) {
+function oe_translation_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if (!$entity instanceof ContentEntityInterface) {
+    return AccessResult::neutral();
+  }
+
   if (!in_array($operation, ['update'])) {
     // @todo, see if we should allow the deletion of translations.
     return AccessResult::neutral();
   }
 
-  // We do not want node translations to be manually edited.
-  // They need to be controlled from TMGMT.
+  $entity_type = $entity->getEntityTypeId();
+  $handler = \Drupal::entityTypeManager()->getHandler($entity_type, 'oe_translation');
+  $supported_translations = $handler->getSupportedTranslators();
+  if (!$supported_translations) {
+    return AccessResult::neutral();
+  }
+
+  // We do not want translations to be manually edited if they are supported
+  // by our TMGMT translators.
   if (!$entity->isDefaultTranslation()) {
     return AccessResult::forbidden()->addCacheableDependency($entity);
   }
