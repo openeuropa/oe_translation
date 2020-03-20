@@ -6,8 +6,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^7.1",
         "drupal/core": "^8.7",
+        "php": ">=7.2",
         "drupal/tmgmt": "^1.8"
     },
     "require-dev": {
