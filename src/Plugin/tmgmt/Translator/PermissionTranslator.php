@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Plugin\tmgmt\Translator;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
@@ -273,7 +274,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         $field['#theme'] = 'local_translation_form_element_group';
         $definition = $field_definitions[$field_name];
         $field['#field_name'] = $definition->getLabel();
-
         list($field_name, $delta, $column) = explode('|', $field_path);
 
         // When the field has multiple columns they come with
@@ -285,6 +285,20 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         // Append the delta in case there are multiple field values.
         if (count(Element::children($data[$field_name])) > 1) {
           $field['#field_name'] .= ' (' . ($delta + 1) . ')';
+        }
+
+        $field_parents = explode('|', $field_path);
+        if (in_array('entity', $field_parents)) {
+          $field['#field_name'] = $this->generateEmbeddedFieldName($data, $field_parents, $field_name);
+        }
+
+        $field_parents = explode('|', $field_path);
+        array_pop($field_parents);
+        array_pop($field_parents);
+        $field_parents[] = '#label';
+        $field_label = NestedArray::getValue($data, $field_parents, $exists);
+        if ($exists && in_array('entity', $field_parents)) {
+          $field['#field_name'] = $field['#field_name'] . ' - ' . $field_label;
         }
 
         $bracket_based_field_path = str_replace('|', '][', $field_path);
@@ -346,6 +360,35 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         '#weight' => 100,
       ];
     }
+  }
+
+  /**
+   * Creates the field name of a field that has been embedded.
+   *
+   * This allows the form to correctly show what field is being translated
+   * when it comes to translating embedded entity references like paragraphs.
+   *
+   * @param array $data
+   * @param array $parents
+   * @param string $field_name
+   *
+   * @return string
+   */
+  protected function generateEmbeddedFieldName(array $data, array $parents, string $field_name) {
+    $labels = [];
+    foreach ($parents as $key => $parent) {
+      if ($parent === 'entity') {
+        $sub_parents = array_slice($parents, 0, $key - 1);
+        $label = NestedArray::getValue($data, array_merge($sub_parents, ['#label']));
+        if (count(Element::children($data[$field_name])) > 1) {
+          $delta = $parents[$key - 1];
+          $label .= ' (' . $delta . ')';
+        }
+        $labels[] = $label;
+      }
+    }
+
+    return implode(' - ', $labels);
   }
 
   /**
