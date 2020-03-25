@@ -18,7 +18,6 @@ use EC\Poetry\Messages\Components\Identifier;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Zend\Diactoros\Response\XmlResponse;
 
 /**
  * Controller for running the Poetry mock server.
@@ -91,10 +90,10 @@ class PoetryMockController extends ControllerBase {
   /**
    * Returns the WSDL page.
    *
-   * @return \Zend\Diactoros\Response\XmlResponse
+   * @return \Symfony\Component\HttpFoundation\Response
    *   The XML response.
    */
-  public function wsdl(): XmlResponse {
+  public function wsdl(): Response {
     $path = drupal_get_path('module', 'oe_translation_poetry_mock') . '/poetry_mock.wsdl.xml';
     $wsdl = file_get_contents($path);
     $base_path = $this->request->getSchemeAndHttpHost();
@@ -102,7 +101,9 @@ class PoetryMockController extends ControllerBase {
       $base_path .= $this->request->getBasePath();
     }
     $wsdl = str_replace('@base_path', $base_path, $wsdl);
-    return new XmlResponse($wsdl);
+    $response = new Response($wsdl);
+    $response->headers->set('Content-type', 'application/xml; charset=utf-8');
+    return $response;
   }
 
   /**
