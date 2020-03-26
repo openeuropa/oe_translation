@@ -22,6 +22,6 @@ services:
       - { name: access_check, applies_to: _access_oe_translation }
   oe_translation.request_subscriber:
     class: Drupal\oe_translation\EventSubscriber\TranslationOverviewRequestSubscriber
-    arguments: ['@current_route_match', '@entity_type.manager']
+    arguments: ['@current_route_match', '@entity_type.manager', '@language_manager']
     tags:
       - { name: event_subscriber }

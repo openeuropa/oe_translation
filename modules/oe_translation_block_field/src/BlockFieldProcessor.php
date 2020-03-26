@@ -81,7 +81,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
    *   The title value to save.
    */
   protected function setTranslatedTitle(BlockFieldItemInterface $field_item, string $title): void {
-    $settings = $field_item->getValue();
+    $settings = $field_item->getValue()['settings'];
     $settings['label'] = $title;
     $field_item->set('settings', $settings);
   }

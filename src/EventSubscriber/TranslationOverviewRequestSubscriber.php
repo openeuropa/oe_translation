@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\EventSubscriber;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -37,16 +39,26 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
   protected $entityTypeManager;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * TranslationOverviewRequestSubscriber constructor.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
    *   The current route match.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
    */
-  public function __construct(RouteMatchInterface $routeMatch, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(RouteMatchInterface $routeMatch, EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
     $this->routeMatch = $routeMatch;
     $this->entityTypeManager = $entityTypeManager;
+    $this->languageManager = $languageManager;
   }
 
   /**
@@ -75,14 +87,30 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    // We only redirect if the entity type uses our TMGMT-based translation.
+    $handler = $this->entityTypeManager->getHandler($entity_type, 'oe_translation');
+    if (!$supported_translations = $handler->getSupportedTranslators()) {
+      return;
+    }
+
+    $current_language = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT);
+
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $this->routeMatch->getParameter($entity_type);
-    if ($entity->isDefaultTranslation()) {
+
+    // We only redirect if the current language is not that of the entity
+    // default language.
+    if ($entity->getUntranslated()->language()->getId() === $current_language->getId()) {
       return;
     }
 
     $entity = $entity->getUntranslated();
     $event->setResponse(new RedirectResponse($entity->toUrl('drupal:content-translation-overview')->toString()));
+
+    $destination = $event->getRequest()->query->get('destination');
+    if ($destination) {
+      $event->getRequest()->query->remove('destination');
+    }
   }
 
 }
