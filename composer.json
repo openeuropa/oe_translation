@@ -6,8 +6,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^7.1",
         "drupal/core": "^8.7",
+        "php": ">=7.2",
         "drupal/tmgmt": "^1.8"
     },
     "require-dev": {
@@ -16,8 +16,9 @@
         "drupal/config_devel": "~1.2",
         "drupal/drupal-extension": "~4.0",
         "drush/drush": "~9.0@stable",
+        "guzzlehttp/guzzle": "~6.3",
         "openeuropa/behat-transformation-context": "~0.1.2",
-        "openeuropa/code-review": "~1.0.0-beta3",
+        "openeuropa/code-review": "~1.0.0",
         "openeuropa/oe_multilingual": "dev-master",
         "openeuropa/drupal-core-require-dev": "^8.7",
         "openeuropa/task-runner": "~1.0.0-beta6",
@@ -68,6 +69,7 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "discard-changes": true
     }
 }

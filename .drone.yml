@@ -4,7 +4,7 @@ workspace:
 
 services:
   web:
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     environment: &web-environment
       - DOCUMENT_ROOT=/test/oe_translation
       - POETRY_IDENTIFIER_SEQUENCE=NEXT_EUROPA_COUNTER
@@ -20,7 +20,7 @@ services:
 pipeline:
   composer-install:
     group: prepare
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     volumes:
       - /cache:/cache
     commands:
@@ -28,44 +28,44 @@ pipeline:
 
   composer-update-lowest:
     group: post-prepare
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     volumes:
       - /cache:/cache
     commands:
       # @todo remove "composer install" step once the following issue is fixed.
       # @link https://webgate.ec.europa.eu/CITnet/jira/browse/OPENEUROPA-1234
-      - composer update --prefer-lowest --prefer-stable --ansi --no-suggest --no-progress
+      - composer update --prefer-lowest --prefer-stable --ansi --no-suggest --no-progress --no-interaction
     when:
       matrix:
         COMPOSER_BOUNDARY: lowest
 
   site-install:
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     commands:
       - ./vendor/bin/run drupal:site-install
 
   grumphp:
     group: test
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     commands:
       - ./vendor/bin/grumphp run
 
   phpunit:
     group: test
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     environment: *web-environment
     commands:
       - ./vendor/bin/phpunit
 
   behat:
     group: test
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     environment: *web-environment
     commands:
       - ./vendor/bin/behat --strict
 
   debug:
-    image: fpfis/httpd-php-ci:7.1
+    image: fpfis/httpd-php-ci:${PHP_VERSION}
     commands:
       - ./vendor/bin/drush ws --count 500
     when:
@@ -75,3 +75,6 @@ matrix:
   COMPOSER_BOUNDARY:
     - lowest
     - highest
+  PHP_VERSION:
+    - 7.2
+    - 7.3
