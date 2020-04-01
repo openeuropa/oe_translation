@@ -51,6 +51,9 @@ class LocalTranslationContext extends RawDrupalContext {
    */
   public function translationElementForFieldContains(string $field, string $value): void {
     $element = $this->getTranslationElementForField($field);
+    if (!$element) {
+      throw new \Exception(sprintf('The translation element for the field %s was not found.', $field));
+    }
     Assert::assertEquals($value, $element->getText());
   }
 
@@ -67,10 +70,25 @@ class LocalTranslationContext extends RawDrupalContext {
   public function fillInTranslationFormElement(string $field, string $value) {
     $element = $this->getTranslationElementForField($field);
     if (!$element) {
-      throw new \Exception('Field not found on the page.');
+      throw new \Exception(sprintf('The translation element for the field %s was not found.', $field));
     }
 
     $this->getSession()->getPage()->fillField($element->getAttribute('id'), $value);
+  }
+
+  /**
+   * Checks that a translation form element is not there.
+   *
+   * @param string $field
+   *   The field.
+   *
+   * @Then the translation form element for the :field field is not present
+   */
+  public function translationElementForFieldNotExists(string $field): void {
+    $element = $this->getTranslationElementForField($field);
+    if ($element) {
+      throw new \Exception(sprintf('The translation element for the field %s was found and it should not have been.', $field));
+    }
   }
 
   /**
@@ -83,24 +101,12 @@ class LocalTranslationContext extends RawDrupalContext {
    *   The selector.
    */
   protected function getTranslationElementForField(string $field): ?NodeElement {
-    /** @var \Behat\Mink\Element\NodeElement[] $table_headers */
-    $table_headers = $this->getSession()->getPage()->findAll('css', 'th');
-    if (!$table_headers) {
-      throw new \Exception('There are no table headers to check in.');
+    $table_header = $this->getSession()->getPage()->find('xpath', "//table//th[contains(text(), '" . $field . "')]");
+    if (!$table_header) {
+      return NULL;
     }
 
-    $found_table_header = NULL;
-    foreach ($table_headers as $table_header) {
-      if ($table_header->getText() === $field) {
-        $found_table_header = $table_header;
-      }
-    }
-
-    if (!$found_table_header) {
-      throw new \Exception(sprintf('Translation field element %s not found', $field));
-    }
-
-    $table = $found_table_header->getParent()->getParent()->getParent();
+    $table = $table_header->getParent()->getParent()->getParent();
 
     return $table->findField('Translation');
   }
