@@ -501,6 +501,10 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $ongoing = array_merge($submitted_languages, $accepted_languages, $translated_languages);
       $job_info = reset($ongoing);
       $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
+      $job_items = $job->getItems();
+      /** @var \Drupal\tmgmt\JobItemInterface $job_item */
+      $job_item = reset($job_items);
+      $build['#job_item'] = $job_item;
       $request_id = $job->get('poetry_request_id')->first()->getValue();
       $provider_info = [
         '#type' => 'details',
@@ -521,7 +525,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
           '#markup' => '<br /><br />' . $this->t('Incoming translations from ongoing requests will be synchronised with the revision of the content for which they had been requested.'),
         ];
       }
-      array_unshift($build, $provider_info);
+      $build = array_merge(['provider_info' => $provider_info], $build);
     }
 
     // If requests are waiting for translation by DGT, it is possible to
