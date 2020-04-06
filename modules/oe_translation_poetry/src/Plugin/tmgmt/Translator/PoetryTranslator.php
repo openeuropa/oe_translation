@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -182,10 +183,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    *   The current route match.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   *   The messenger.
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, PoetryJobQueueFactory $job_queue_factory, RouteMatchInterface $route_match, Connection $database, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, AccountProxyInterface $current_user, Poetry $poetry, LanguageManagerInterface $language_manager, AccessManagerInterface $access_manager, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack, FormBuilderInterface $form_builder, PoetryJobQueueFactory $job_queue_factory, RouteMatchInterface $route_match, Connection $database, EventDispatcherInterface $eventDispatcher, Messenger $messenger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->poetry = $poetry;
@@ -198,6 +201,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $this->currentRouteMatch = $route_match;
     $this->database = $database;
     $this->eventDispatcher = $eventDispatcher;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -218,7 +222,8 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $container->get('oe_translation_poetry.job_queue_factory'),
       $container->get('current_route_match'),
       $container->get('database'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('messenger')
     );
   }
 
@@ -373,7 +378,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $access = $event->getAccess();
     if ($access instanceof AccessResultForbidden) {
       if ($access instanceof AccessResultReasonInterface && $access->getReason()) {
-        \Drupal::messenger()->addWarning($access->getReason());
+        $this->messenger->addWarning($access->getReason());
       }
       return;
     }
@@ -396,6 +401,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // @see oe_translation_poetry_form_tmgmt_content_translate_form_alter().
     $build['#accepted_languages'] = $accepted_languages;
     $build['#translated_languages'] = $translated_languages;
+    $build['#submitted_languages'] = $submitted_languages;
     $build['#completed_languages'] = [];
     // Load the completed jobs in the same request. For this we need to get
     // the request ID from one of the accepted jobs in order to filter the
@@ -499,12 +505,11 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // If we have an ongoing request, we should show the request ID to the user.
     if ($submitted_languages || $accepted_languages || $translated_languages) {
       $ongoing = array_merge($submitted_languages, $accepted_languages, $translated_languages);
+      // Set the ongoing languages on the build array for the event subscribers
+      // to access.
+      $build['#ongoing_languages'] = $ongoing;
       $job_info = reset($ongoing);
       $job = $this->entityTypeManager->getStorage('tmgmt_job')->load($job_info->tjid);
-      $job_items = $job->getItems();
-      /** @var \Drupal\tmgmt\JobItemInterface $job_item */
-      $job_item = reset($job_items);
-      $build['#job_item'] = $job_item;
       $request_id = $job->get('poetry_request_id')->first()->getValue();
       $provider_info = [
         '#type' => 'details',
@@ -549,7 +554,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     // If we reached this point, it means we cannot make any kind of request.
     $build['actions']['#access'] = FALSE;
     $message = $request_type->getMessage() ?? $this->t('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
-    \Drupal::messenger()->addWarning($message);
+    $this->messenger->addWarning($message);
   }
 
   /**
@@ -623,12 +628,12 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       catch (TMGMTException $e) {
         watchdog_exception('tmgmt', $e);
         $target_lang_name = $this->languageManager->getLanguage($langcode)->getName();
-        $this->messenger()->addError($this->t('Unable to add job item for target language %name. Make sure the source content is not empty.', ['%name' => $target_lang_name]));
+        $this->messenger->addError($this->t('Unable to add job item for target language %name. Make sure the source content is not empty.', ['%name' => $target_lang_name]));
       }
     }
 
     if (!$job_queue->getAllJobsIds()) {
-      $this->messenger()->addError('You need to select at least one extra language to add to the request.');
+      $this->messenger->addError('You need to select at least one extra language to add to the request.');
       return;
     }
 
