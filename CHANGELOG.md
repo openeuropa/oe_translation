@@ -1,10 +1,36 @@
 # Change Log
 
+## [0.5.0](https://github.com/openeuropa/oe_translation/tree/0.5.0) (2020-04-08)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.4.0...0.5.0)
+
+**Merged pull requests:**
+
+- OPENEUROPA-2887: New Behat step and improving tests. [\#86](https://github.com/openeuropa/oe_translation/pull/86) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-0005: Removing zend-diactoros dependency. [\#84](https://github.com/openeuropa/oe_translation/pull/84) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-0004: Fixing block field translation processor. [\#83](https://github.com/openeuropa/oe_translation/pull/83) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2943: Upgrade to PHP 7.3. [\#81](https://github.com/openeuropa/oe_translation/pull/81) ([sergepavle](https://github.com/sergepavle))
+- OPENEUROPA-2608: Route access fixes for TMGMT-translated entity types [\#80](https://github.com/openeuropa/oe_translation/pull/80) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2604: Drupal core recommended for Drupal 8.8 [\#78](https://github.com/openeuropa/oe_translation/pull/78) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2726: Reverting the job item abort capability. [\#77](https://github.com/openeuropa/oe_translation/pull/77) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2251: Fixes add language to request + messaging improvements. [\#75](https://github.com/openeuropa/oe_translation/pull/75) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-0000: Checkbox assertion update after symfony dom crawler update [\#74](https://github.com/openeuropa/oe_translation/pull/74) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2608: Generate new breadcrumb only if entity exists. [\#73](https://github.com/openeuropa/oe_translation/pull/73) ([22Alexandra](https://github.com/22Alexandra))
+- OPENEUROPA-0002: Removing block\_field from dependency list. [\#72](https://github.com/openeuropa/oe_translation/pull/72) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2726: Allow to abort a translation item [\#70](https://github.com/openeuropa/oe_translation/pull/70) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2559: Remove external reference from request [\#67](https://github.com/openeuropa/oe_translation/pull/67) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2795: Test we can receive translation updates while a job is active [\#66](https://github.com/openeuropa/oe_translation/pull/66) ([imanoleguskiza](https://github.com/imanoleguskiza))
+- OPENEUROPA-2696: Add request reference info in overview page. [\#65](https://github.com/openeuropa/oe_translation/pull/65) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2796: Add cancelled information in translation page [\#64](https://github.com/openeuropa/oe_translation/pull/64) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2251: Allow to request languages addition. [\#63](https://github.com/openeuropa/oe_translation/pull/63) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2784: Change return action to UPDATE. [\#62](https://github.com/openeuropa/oe_translation/pull/62) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-2752: BlockField TMGMT processor. [\#60](https://github.com/openeuropa/oe_translation/pull/60) ([upchuk](https://github.com/upchuk))
+
 ## [0.4.0](https://github.com/openeuropa/oe_translation/tree/0.4.0) (2020-01-30)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.3.0...0.4.0)
 
 **Merged pull requests:**
 
+- OPENEUROPA-1766: Release 0.4.0. [\#61](https://github.com/openeuropa/oe_translation/pull/61) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2697 - Abort also job items when requests are canceled. [\#59](https://github.com/openeuropa/oe_translation/pull/59) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2712: Add validation to checkout form for delivery date. [\#57](https://github.com/openeuropa/oe_translation/pull/57) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2252: Allow to request translation updates [\#54](https://github.com/openeuropa/oe_translation/pull/54) ([dxvargas](https://github.com/dxvargas))
@@ -12,11 +38,10 @@
 ## [0.3.0](https://github.com/openeuropa/oe_translation/tree/0.3.0) (2020-01-13)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.2.1...0.3.0)
 
-**Warning:** As part of this release we alter the role machine name for translator that we ship with but it is up to you to change it in your site in case you are using this component.
-
 **Merged pull requests:**
 
 - OPENEUROPA-1766: Fix failing phpunit tests for 2020 problem. [\#58](https://github.com/openeuropa/oe_translation/pull/58) ([dxvargas](https://github.com/dxvargas))
+- OPENEUROPA-0000: Preparing for release. [\#56](https://github.com/openeuropa/oe_translation/pull/56) ([hernani](https://github.com/hernani))
 - OPENEUROPA-2503: Align the translator role between components. [\#55](https://github.com/openeuropa/oe_translation/pull/55) ([nagyad](https://github.com/nagyad))
 - OPENEUROPA-2615: Poetry service interface and override in test. [\#53](https://github.com/openeuropa/oe_translation/pull/53) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2602: Remove EWCMS references from this module. [\#52](https://github.com/openeuropa/oe_translation/pull/52) ([dxvargas](https://github.com/dxvargas))
