@@ -22,6 +22,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\ContentEntitySource;
+use Drupal\oe_translation\FieldProcessor\AddressFieldProcessor;
 use Drupal\oe_translation\LocalTranslatorInterface;
 use Drupal\oe_translation\OeTranslationHandler;
 use Drupal\oe_translation\TranslationModerationHandler;
@@ -253,6 +254,10 @@ function oe_translation_field_info_alter(&$info) {
     // For the link field use the default field processor instead of the
     // specific Link one which doesn't allow the translation of the URI.
     $info['link']['tmgmt_field_processor'] = DefaultFieldProcessor::class;
+  }
+
+  if (isset($info['address'])) {
+    $info['address']['tmgmt_field_processor'] = AddressFieldProcessor::class;
   }
 }
 

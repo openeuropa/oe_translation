@@ -274,6 +274,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         $field['#theme'] = 'local_translation_form_element_group';
         $definition = $field_definitions[$field_name];
         $field['#field_name'] = $definition->getLabel();
+
         list($field_name, $delta, $column) = explode('|', $field_path);
 
         // When the field has multiple columns they come with
@@ -290,15 +291,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         $field_parents = explode('|', $field_path);
         if (in_array('entity', $field_parents)) {
           $field['#field_name'] = $this->generateEmbeddedFieldName($data, $field_parents, $field_name);
-        }
-
-        $field_parents = explode('|', $field_path);
-        array_pop($field_parents);
-        array_pop($field_parents);
-        $field_parents[] = '#label';
-        $field_label = NestedArray::getValue($data, $field_parents, $exists);
-        if ($exists && in_array('entity', $field_parents)) {
-          $field['#field_name'] = $field['#field_name'] . ' - ' . $field_label;
         }
 
         $bracket_based_field_path = str_replace('|', '][', $field_path);
@@ -369,22 +361,66 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
    * when it comes to translating embedded entity references like paragraphs.
    *
    * @param array $data
+   *   The translatable data.
    * @param array $parents
+   *   The array of parents where field is located.
    * @param string $field_name
+   *   The field name.
    *
    * @return string
+   *   The field label.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   protected function generateEmbeddedFieldName(array $data, array $parents, string $field_name) {
     $labels = [];
     foreach ($parents as $key => $parent) {
-      if ($parent === 'entity') {
+      if ($parent !== 'entity') {
+        continue;
+      }
+
+      // Add the embedded field reference label.
+      $sub_parents = array_slice($parents, 0, $key + 1);
+      $entity_type = NestedArray::getValue($data, array_merge($sub_parents, ['#entity_type']));
+      if ($entity_type === 'paragraph') {
+        // Paragraphs are a special case because we want to print the actual
+        // paragraph bundle name as it's more relevant than the actual field
+        // names themselves.
+        $bundle = NestedArray::getValue($data, array_merge($sub_parents, ['#entity_bundle']));
+        $bundle_type = $this->entityTypeManager->getDefinition($entity_type)->getBundleEntityType();
+        $label = $this->entityTypeManager->getStorage($bundle_type)->load($bundle)->label();
+      }
+      else {
         $sub_parents = array_slice($parents, 0, $key - 1);
         $label = NestedArray::getValue($data, array_merge($sub_parents, ['#label']));
-        if (count(Element::children($data[$field_name])) > 1) {
-          $delta = $parents[$key - 1];
-          $label .= ' (' . $delta . ')';
-        }
+      }
+
+      // If the field is multi-value, append a delta count to the label.
+      if (count(Element::children($data[$field_name])) > 1) {
+        $delta = $parents[$key - 1];
+        $label .= ' (' . $delta . ')';
+      }
+
+      $labels[] = $label;
+
+      // Add the embedded field label if there are no more embedded entities
+      // down the line.
+      $sub_parents = array_slice($parents, 0, $key + 2);
+      $remaining = array_slice($parents, $key + 1);
+      $label = NestedArray::getValue($data, array_merge($sub_parents, ['#label']), $exists);
+      if ($exists && !in_array('entity', $remaining)) {
         $labels[] = $label;
+      }
+
+      // Add the column name for fields that are multi-column, like the
+      // address field.
+      $field_data = NestedArray::getValue($data, array_merge($sub_parents, [0]), $exists);
+      if ($exists && count(Element::children($field_data)) > 1) {
+        $sub_parents = array_slice($parents, 0, $key + 4);
+        $label = NestedArray::getValue($data, array_merge($sub_parents, ['#label']), $exists);
+        if ($exists) {
+          $labels[] = $label;
+        }
       }
     }
 

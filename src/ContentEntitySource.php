@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\tmgmt\JobItemInterface;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource as OriginalContentEntitySource;
@@ -48,6 +49,20 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
       $plugin_definition,
       $container->get('oe_translation.content_entity_source_translation_info')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function extractTranslatableData(ContentEntityInterface $entity) {
+    $data = parent::extractTranslatableData($entity);
+
+    // Set some information about the entity so others can know what this bit
+    // is dealing with in case it's an embedded entity.
+    $data['#entity_type'] = $entity->getEntityTypeId();
+    $data['#entity_bundle'] = $entity->bundle();
+
+    return $data;
   }
 
   /**
