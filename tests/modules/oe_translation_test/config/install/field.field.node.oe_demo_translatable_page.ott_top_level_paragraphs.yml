@@ -1,0 +1,37 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.ott_top_level_paragraphs
+    - node.type.oe_demo_translatable_page
+    - paragraphs.paragraphs_type.demo_paragraph_type
+  module:
+    - entity_reference_revisions
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.oe_demo_translatable_page.ott_top_level_paragraphs
+field_name: ott_top_level_paragraphs
+entity_type: node
+bundle: oe_demo_translatable_page
+label: 'Top level paragraphs'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      demo_paragraph_type: demo_paragraph_type
+    target_bundles_drag_drop:
+      demo_inner_paragraph_type:
+        weight: 3
+        enabled: false
+      demo_paragraph_type:
+        enabled: true
+        weight: 4
+field_type: entity_reference_revisions

@@ -6,7 +6,7 @@ Feature: Local translations
 
   Scenario: Translate content.
     Given oe_demo_translatable_page content:
-      | title    | field_oe_demo_translatable_body | demo_link_field                             |
+      | title    | field_oe_demo_translatable_body | ott_demo_link_field                         |
       | My title | My body                         | Example - https://example.com, Node - /node |
     And I am logged in as a user with the "oe_translator" role
     When I visit "the content administration page"
@@ -23,17 +23,17 @@ Feature: Local translations
     When I click "Translate locally" in the "Bulgarian" row
     Then the translation form element for the "Title" field should contain "My title"
     And the translation form element for the "Body" field should contain "My body"
-    And the translation form element for the "Link Uri (1)" field should contain "https://example.com"
-    And the translation form element for the "Link Title (1)" field should contain "Example"
-    And the translation form element for the "Link Uri (2)" field should contain "/node"
-    And the translation form element for the "Link Title (2)" field should contain "Node"
+    And the translation form element for the "Link - URI (1)" field should contain "https://example.com"
+    And the translation form element for the "Link - Link text (1)" field should contain "Example"
+    And the translation form element for the "Link - URI (2)" field should contain "/node"
+    And the translation form element for the "Link - Link text (2)" field should contain "Node"
 
     When I fill in the translation form element for the "Title" field with "Bulgarian title"
     And I fill in the translation form element for the "Body" field with "Bulgarian body"
-    And I fill in the translation form element for the "Link Uri (1)" field with "https://example.com/bg"
-    And I fill in the translation form element for the "Link Title (1)" field with "Example BG"
-    And I fill in the translation form element for the "Link Uri (2)" field with "/bg/node"
-    And I fill in the translation form element for the "Link Title (2)" field with "Node BG"
+    And I fill in the translation form element for the "Link - URI (1)" field with "https://example.com/bg"
+    And I fill in the translation form element for the "Link - Link text (1)" field with "Example BG"
+    And I fill in the translation form element for the "Link - URI (2)" field with "/bg/node"
+    And I fill in the translation form element for the "Link - Link text (2)" field with "Node BG"
     # And I press "Save and come back later"
     # Then I should see "Translations of My title"
     # And I should see "Not translated" in the "Bulgarian" row
@@ -56,10 +56,10 @@ Feature: Local translations
     And I click "Translate locally" in the "Bulgarian" row
     Then the translation form element for the "Title" field should contain "Bulgarian title"
     And the translation form element for the "Body" field should contain "Bulgarian body"
-    And the translation form element for the "Link Uri (1)" field should contain "https://example.com/bg"
-    And the translation form element for the "Link Title (1)" field should contain "Example BG"
-    And the translation form element for the "Link Uri (2)" field should contain "/bg/node"
-    And the translation form element for the "Link Title (2)" field should contain "Node BG"
+    And the translation form element for the "Link - URI (1)" field should contain "https://example.com/bg"
+    And the translation form element for the "Link - Link text (1)" field should contain "Example BG"
+    And the translation form element for the "Link - URI (2)" field should contain "/bg/node"
+    And the translation form element for the "Link - Link text (2)" field should contain "Node BG"
 
     When I fill in the translation form element for the "Title" field with "Bulgarian title 2"
     And I press "Save and complete translation"

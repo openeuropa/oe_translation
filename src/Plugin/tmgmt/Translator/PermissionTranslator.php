@@ -277,10 +277,15 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
 
         list($field_name, $delta, $column) = explode('|', $field_path);
 
+        $field_parents = explode('|', $field_path);
+
         // When the field has multiple columns they come with
         // a label, then append the column name.
         if (isset($data[$field_name][$delta][$column]['#label'])) {
-          $field['#field_name'] .= ' ' . ucfirst($column);
+          $column_label = NestedArray::getValue($data, array_merge($field_parents, ['#label']), $exists);
+          if ($exists) {
+            $field['#field_name'] .= ' - ' . $column_label;
+          }
         }
 
         // Append the delta in case there are multiple field values.
@@ -288,7 +293,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
           $field['#field_name'] .= ' (' . ($delta + 1) . ')';
         }
 
-        $field_parents = explode('|', $field_path);
         if (in_array('entity', $field_parents)) {
           $field['#field_name'] = $this->generateEmbeddedFieldName($data, $field_parents, $field_name);
         }
