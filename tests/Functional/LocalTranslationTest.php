@@ -55,30 +55,52 @@ class LocalTranslationTest extends TranslationTestBase {
     ]);
     $referenced_node->save();
 
-    // Create a node to be translated.
-    $inner_paragraph_one = Paragraph::create([
+    // Create paragraphs to reference and translate.
+    $grandchild_paragraph_one = Paragraph::create([
       'type' => 'demo_inner_paragraph_type',
-      'ott_inner_paragraph_field' => 'inner field value 1',
+      'ott_inner_paragraph_field' => 'grandchild field value 1',
     ]);
-    $inner_paragraph_one->save();
+    $grandchild_paragraph_one->save();
 
-    $inner_paragraph_two = Paragraph::create([
+    $grandchild_paragraph_two = Paragraph::create([
       'type' => 'demo_inner_paragraph_type',
-      'ott_inner_paragraph_field' => 'inner field value 2',
+      'ott_inner_paragraph_field' => 'grandchild field value 2',
     ]);
-    $inner_paragraph_two->save();
+    $grandchild_paragraph_two->save();
+
+    $child_paragraph_one = Paragraph::create([
+      'type' => 'demo_inner_paragraph_type',
+      'ott_inner_paragraph_field' => 'child field value 1',
+      'ott_inner_paragraphs' => [
+        [
+          'target_id' => $grandchild_paragraph_one->id(),
+          'target_revision_id' => $grandchild_paragraph_one->getRevisionId(),
+        ],
+        [
+          'target_id' => $grandchild_paragraph_two->id(),
+          'target_revision_id' => $grandchild_paragraph_two->getRevisionId(),
+        ],
+      ],
+    ]);
+    $child_paragraph_one->save();
+
+    $child_paragraph_two = Paragraph::create([
+      'type' => 'demo_inner_paragraph_type',
+      'ott_inner_paragraph_field' => 'child field value 2',
+    ]);
+    $child_paragraph_two->save();
 
     $top_paragraph_one = Paragraph::create([
       'type' => 'demo_paragraph_type',
       'ott_top_level_paragraph_field' => 'top field value 1',
       'ott_inner_paragraphs' => [
         [
-          'target_id' => $inner_paragraph_one->id(),
-          'target_revision_id' => $inner_paragraph_one->getRevisionId(),
+          'target_id' => $child_paragraph_one->id(),
+          'target_revision_id' => $child_paragraph_one->getRevisionId(),
         ],
         [
-          'target_id' => $inner_paragraph_two->id(),
-          'target_revision_id' => $inner_paragraph_two->getRevisionId(),
+          'target_id' => $child_paragraph_two->id(),
+          'target_revision_id' => $child_paragraph_two->getRevisionId(),
         ],
       ],
     ]);
@@ -90,6 +112,7 @@ class LocalTranslationTest extends TranslationTestBase {
     ]);
     $top_paragraph_two->save();
 
+    // Create a node to be translated.
     $node = Node::create([
       'type' => 'oe_demo_translatable_page',
       'title' => 'Translation node',
@@ -157,19 +180,27 @@ class LocalTranslationTest extends TranslationTestBase {
       'xpath' => "//table//th[normalize-space(text()) = 'Content reference - Title']",
       'value' => 'Referenced node',
     ];
+    $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
+      'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Demo inner paragraph type (0) - Inner paragraph field']",
+      'value' => 'grandchild field value 1',
+    ];
+    $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
+      'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Demo inner paragraph type (1) - Inner paragraph field']",
+      'value' => 'grandchild field value 2',
+    ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Inner paragraph field']",
-      'value' => 'inner field value 1',
+      'value' => 'child field value 1',
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (1) - Inner paragraph field']",
-      'value' => 'inner field value 2',
+      'value' => 'child field value 2',
     ];
-    $fields['ott_top_leve_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
+    $fields['ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Top level paragraph field']",
       'value' => 'top field value 1',
     ];
-    $fields['ott_top_leve_paragraphs__1__ott_top_level_paragraph_ott__0'] = [
+    $fields['ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (1) - Top level paragraph field']",
       'value' => 'top field value 2',
     ];
