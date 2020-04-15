@@ -113,10 +113,11 @@ class PoetryMockController extends ControllerBase {
    *   An empty response.
    */
   public function server(): Response {
-    $wsdl = PoetryMock::getWsdlUrl();
     $url = Url::fromRoute('oe_translation_poetry_mock.server')->toString();
     $options = ['uri' => $url];
-    $server = new \SoapServer($wsdl, $options);
+    // Instantiate the server without WSDL because in tests it makes a request
+    // to the actual site instead of the test site instance.
+    $server = new \SoapServer(NULL, $options);
     $mock = new PoetryMock($this->fixturesGenerator);
     $server->setObject($mock);
 
@@ -256,7 +257,13 @@ class PoetryMockController extends ControllerBase {
   protected function performNotification(string $message): string {
     $settings = $this->poetry->getSettings();
     $url = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString(TRUE)->getGeneratedUrl();
-    $client = new \SoapClient($url . '?wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
+    // Instantiate the client without WSDL because in tests it makes a request
+    // to the actual site instead of the test site instance.
+    $client = new \SoapClient(NULL, [
+      'cache_wsdl' => WSDL_CACHE_NONE,
+      'location' => $url,
+      'uri' => 'urn:OEPoetryClient',
+    ]);
     return $client->__soapCall('handle', [
       $settings['notification.username'],
       $settings['notification.password'],

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_poetry_test;
 
+use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
@@ -35,7 +36,15 @@ class PoetrySoapProvider implements ServiceProviderInterface {
   public function register(Container $container) {
 
     $container['soap_client'] = function (Container $container) {
-      $client = new \SoapClient($container['settings']['service.wsdl'], $container['settings']['client.options']);
+      $options = [
+        'location' => PoetryMock::getServerUrl(),
+        'uri' => 'poetryMock',
+      ] + $container['settings']['client.options'];
+
+      // Cannot pass directly the WSDL because it would make a request already
+      // before setting the cookie below and would hit the actual site and not
+      // the test site.
+      $client = new \SoapClient(NULL, $options);
 
       foreach ($this->cookies as $name => $value) {
         $client->__setCookie($name, $value);
