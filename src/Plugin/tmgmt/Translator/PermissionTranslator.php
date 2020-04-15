@@ -400,7 +400,9 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
       }
 
       // If the field is multi-value, append a delta count to the label.
-      if (count(Element::children($data[$field_name])) > 1) {
+      $delta_parents = array_slice($parents, 0, $key - 1);
+      $children = Element::children(NestedArray::getValue($data, $delta_parents));
+      if (count($children) > 1) {
         $delta = $parents[$key - 1];
         $label .= ' (' . $delta . ')';
       }
