@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.ott_top_level_paragraph_field
+    - paragraphs.paragraphs_type.demo_paragraph_type
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: paragraph.demo_paragraph_type.ott_top_level_paragraph_field
+field_name: ott_top_level_paragraph_field
+entity_type: paragraph
+bundle: demo_paragraph_type
+label: 'Top level paragraph field'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

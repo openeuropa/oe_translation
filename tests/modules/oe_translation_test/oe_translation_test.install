@@ -6,13 +6,44 @@
  */
 
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\paragraphs\Entity\ParagraphsType;
+use Drupal\tmgmt\Entity\Translator;
 
 /**
  * Implements hook_uninstall().
  */
 function oe_translation_test_uninstall() {
-  $storage = FieldStorageConfig::load('node.demo_link_field');
-  if ($storage) {
-    $storage->delete();
+  // Delete the fields.
+  $fields = [
+    'node.ott_demo_link_field',
+    'node.ott_address',
+    'node.ott_content_reference',
+    'node.ott_top_level_paragraphs',
+    'node.ott_inner_paragraph_field',
+    'node.ott_top_level_paragraph_field',
+  ];
+  foreach ($fields as $field) {
+    $storage = FieldStorageConfig::load($field);
+    if ($storage) {
+      $storage->delete();
+    }
+  }
+
+  // Delete the paragraph types.
+  $types = [
+    'demo_inner_paragraph_type',
+    'demo_paragraph_type',
+  ];
+  foreach ($types as $type) {
+    $paragraph_type = ParagraphsType::load($type);
+    if ($paragraph_type) {
+      $paragraph_type->delete();
+    }
+  }
+
+  // Delete the test translator.
+  $translator = Translator::load('oe_translation_test_translator');
+  if ($translator) {
+    $translator->delete();
   }
 }

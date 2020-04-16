@@ -2,25 +2,27 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.demo_link_field
+    - field.storage.node.ott_address
     - node.type.oe_demo_translatable_page
   module:
-    - link
+    - address
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: node.oe_demo_translatable_page.demo_link_field
-field_name: demo_link_field
+id: node.oe_demo_translatable_page.ott_address
+field_name: ott_address
 entity_type: node
 bundle: oe_demo_translatable_page
-label: Link
+label: Address
 description: ''
 required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:
-  link_type: 17
-  title: 1
-field_type: link
+  available_countries: {  }
+  langcode_override: ''
+  field_overrides: {  }
+  fields: {  }
+field_type: address

@@ -1,0 +1,37 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.ott_inner_paragraphs
+    - paragraphs.paragraphs_type.demo_inner_paragraph_type
+    - paragraphs.paragraphs_type.demo_paragraph_type
+  module:
+    - entity_reference_revisions
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: paragraph.demo_inner_paragraph_type.ott_inner_paragraphs
+field_name: ott_inner_paragraphs
+entity_type: paragraph
+bundle: demo_inner_paragraph_type
+label: 'Inner Paragraphs'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      demo_inner_paragraph_type: demo_inner_paragraph_type
+    target_bundles_drag_drop:
+      demo_inner_paragraph_type:
+        enabled: true
+        weight: 3
+      demo_paragraph_type:
+        weight: 4
+        enabled: false
+field_type: entity_reference_revisions
