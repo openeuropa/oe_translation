@@ -63,4 +63,14 @@ class PoetryMock {
     return Url::fromRoute('oe_translation_poetry_mock.wsdl')->setAbsolute()->toString();
   }
 
+  /**
+   * Builds the URL to the local mock Poetry Server.
+   *
+   * @return string
+   *   The URL.
+   */
+  public static function getServerUrl(): string {
+    return Url::fromRoute('oe_translation_poetry_mock.server')->setAbsolute()->toString();
+  }
+
 }
