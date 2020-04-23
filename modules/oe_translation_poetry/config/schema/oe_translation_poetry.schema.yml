@@ -24,9 +24,6 @@ field.value.poetry_request_id:
 tmgmt.translator.settings.poetry:
   type: mapping
   mapping:
-    service_wsdl:
-      type: string
-      label: The URL to the Poetry WSDL
     identifier_code:
       type: string
       label: Identifier code
