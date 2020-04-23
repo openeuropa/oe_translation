@@ -8,6 +8,7 @@ services:
     environment: &web-environment
       - DOCUMENT_ROOT=/test/oe_translation
       - POETRY_IDENTIFIER_SEQUENCE=NEXT_EUROPA_COUNTER
+      - POETRY_SERVICE_ENDPOINT=http://web:8080/build/poetry-mock/wsdl
       - POETRY_SERVICE_USERNAME=admin
       - POETRY_SERVICE_PASSWORD=admin
       - POETRY_NOTIFICATION_USERNAME=admin

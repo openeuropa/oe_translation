@@ -18,7 +18,6 @@ To integrate with Poetry, a request has to made to register the site with DGT. S
 
 There are a number of required configuration options needed for the Poetry integration to work. These can be added at this path: `admin/tmgmt/translators/manage/poetry`:
 
-* Poetry service URL - the Poetry endpoint.
 * Identifier code - Unless requested otherwise, this can be `WEB`.
 * Request title prefix - The prefix agreed with DGT.
 * Site ID - The site ID agreed with DGT.
@@ -37,6 +36,7 @@ Using the runner, ensure that the following ends up in the site's `settings.php`
 
 ```
 $settings["poetry.identifier.sequence"] = getenv('POETRY_IDENTIFIER_SEQUENCE');
+$settings["poetry.service.endpoint"] = getenv('POETRY_SERVICE_ENDPOINT');
 $settings["poetry.service.username"] = getenv('POETRY_SERVICE_USERNAME');
 $settings["poetry.service.password"] = getenv('POETRY_SERVICE_PASSWORD');
 $settings["poetry.notification.username"] = getenv('POETRY_NOTIFICATION_USERNAME');
@@ -45,6 +45,7 @@ $settings["poetry.notification.password"] = getenv('POETRY_NOTIFICATION_PASSWORD
 
 Then, request Devops to fill those variables on the server with the following values:
 
+* `POETRY_SERVICE_ENDPOINT` - The Poetry endpoint URL, either for Acceptance of Production.
 * `POETRY_IDENTIFIER_SEQUENCE` - `NEXT_EUROPA_COUNTER`
 * `POETRY_SERVICE_USERNAME` - Username provided by DGT or CEM for accessing the Poetry environment.
 * `POETRY_SERVICE_PASSWORD` - Password provided by DGT or CEM for accessing the Poetry environment.
@@ -55,10 +56,8 @@ The notifications credentials should be in lowercase, limited to 15 characters a
 
 ## Development
 
-For using the Mock, enable the OE Translation Poetry Mock submodule and add the following to your settings file:
+For using the Mock, enable the OE Translation Poetry Mock submodule and ensure you have the following in your settings file:
 
 ```
-$config['tmgmt.translator.poetry']['settings']['service_wsdl'] = 'http://localhost:8080/build/poetry-mock/wsdl';
+$settings["poetry.service.endpoint"] = 'http://localhost:8080/build/poetry-mock/wsdl';
 ```
-
-This will override the Poetry endpoint (the service WSDL) with the one provided by the mock.
