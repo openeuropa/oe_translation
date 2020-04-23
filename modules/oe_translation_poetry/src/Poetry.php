@@ -140,13 +140,10 @@ class Poetry implements PoetryInterface {
       'notification.username' => Settings::get('poetry.notification.username'),
       'notification.password' => Settings::get('poetry.notification.password'),
       'notification.endpoint' => Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString(),
+      'service.wsdl' => Settings::get('poetry.service.endpoint'),
       'logger' => $this->loggerChannel,
       'log_level' => LogLevel::INFO,
     ];
-
-    if (isset($this->translatorSettings['service_wsdl'])) {
-      $values['service.wsdl'] = $this->translatorSettings['service_wsdl'];
-    }
 
     $this->poetryClient = new PoetryLibrary($values);
   }
@@ -246,7 +243,6 @@ class Poetry implements PoetryInterface {
       'title_prefix',
       'application_reference',
       'site_id',
-      'service_wsdl',
     ];
     $translator_settings = $this->getTranslatorSettings();
     foreach ($required as $setting) {
@@ -259,6 +255,7 @@ class Poetry implements PoetryInterface {
     $required = [
       'poetry.service.username',
       'poetry.service.password',
+      'poetry.service.endpoint',
       'poetry.notification.username',
       'poetry.notification.password',
       'poetry.identifier.sequence',

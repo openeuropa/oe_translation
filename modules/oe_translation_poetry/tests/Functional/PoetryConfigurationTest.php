@@ -6,7 +6,6 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
-use Drupal\oe_translation_poetry_mock\PoetryMock;
 
 /**
  * Tests the configuration of Poetry translators works as intended.
@@ -39,7 +38,6 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
     $translator = $this->container->get('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
     $form_values = [
-      'settings[service_wsdl]' => PoetryMock::getWsdlUrl(),
       'settings[identifier_code]' => 'testCode',
       'settings[title_prefix]' => 'testPrefix',
       'settings[site_id]' => 'testId',
@@ -150,10 +148,10 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertSession()->buttonExists('Request a DGT translation for the selected languages');
 
-    // Unset the service WSDL as an example of required configuration.
+    // Unset the identifier code as an example of required configuration.
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
     $translator = $this->container->get('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
-    $translator->setSetting('service_wsdl', NULL);
+    $translator->setSetting('identifier_code', NULL);
     $translator->save();
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));

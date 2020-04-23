@@ -6,7 +6,6 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\node\NodeInterface;
-use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\Tests\oe_translation_poetry\Traits\PoetryTestTrait;
 use Drupal\tmgmt\Entity\Job;
@@ -64,8 +63,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
 
     // Configure the translator.
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
-    $translator = $this->container->get('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
-    $translator->setSetting('service_wsdl', PoetryMock::getWsdlUrl());
+    $translator = \Drupal::service('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
     $translator->setSetting('title_prefix', 'OE');
     $translator->save();
 

@@ -24,12 +24,6 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
 
     /** @var \Drupal\tmgmt\TranslatorInterface $translator */
     $translator = $form_state->getFormObject()->getEntity();
-    $form['service_wsdl'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Poetry Service URL'),
-      '#default_value' => $translator->getSetting('service_wsdl'),
-      '#description' => $this->t('The url to the Poetry service WSDL.'),
-    ];
     $form['identifier_code'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Identifier code'),

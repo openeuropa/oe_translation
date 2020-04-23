@@ -47,15 +47,14 @@ class PoetryTranslationContext extends RawDrupalContext {
   }
 
   /**
-   * Configures the Poetry mock WSDL.
+   * Configures the Poetry translator.
    *
    * @param \Behat\Behat\Hook\Scope\BeforeScenarioScope $scope
    *   The scope.
    *
    * @BeforeScenario @poetry
    */
-  public function configureMock(BeforeScenarioScope $scope) {
-    $this->configContext->setBasicConfig('tmgmt.translator.poetry', 'settings.service_wsdl', $this->locatePath('poetry-mock/wsdl'));
+  public function configurePoetry(BeforeScenarioScope $scope) {
     $this->configContext->setBasicConfig('tmgmt.translator.poetry', 'settings.title_prefix', 'OE');
   }
 
