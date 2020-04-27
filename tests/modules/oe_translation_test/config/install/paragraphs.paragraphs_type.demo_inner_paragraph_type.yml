@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies: {  }
+id: demo_inner_paragraph_type
+label: 'Demo inner paragraph type'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

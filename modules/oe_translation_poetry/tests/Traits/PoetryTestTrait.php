@@ -52,7 +52,15 @@ trait PoetryTestTrait {
       $path = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString();
     }
 
-    $client = new \SoapClient($path . '?wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
+    // Cannot pass directly the WSDL because it would make a request already
+    // before setting the cookie below and would hit the actual site and not
+    // the test site.
+    $client = new \SoapClient(NULL, [
+      'cache_wsdl' => WSDL_CACHE_NONE,
+      'location' => $path,
+      'uri' => 'urn:OEPoetryClient',
+    ]);
+
     if (property_exists($this, 'databasePrefix')) {
       $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua($this->databasePrefix));
     }

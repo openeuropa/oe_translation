@@ -40,6 +40,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
           'accepted_date' => '05/10/2020 23:59',
         ],
       ]);
+
     $this->performNotification($status_notification);
     // Refresh page and check the buttons.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));

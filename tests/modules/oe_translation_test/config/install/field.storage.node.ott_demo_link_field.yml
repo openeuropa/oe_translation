@@ -4,8 +4,8 @@ dependencies:
   module:
     - link
     - node
-id: node.demo_link_field
-field_name: demo_link_field
+id: node.ott_demo_link_field
+field_name: ott_demo_link_field
 entity_type: node
 type: link
 settings: {  }

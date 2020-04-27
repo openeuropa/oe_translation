@@ -8,12 +8,15 @@ use Behat\Behat\Hook\Scope\AfterFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeFeatureScope;
 use Behat\Mink\Element\NodeElement;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
+use DrupalTest\BehatTraits\Traits\BrowserCapabilityDetectionTrait;
 use PHPUnit\Framework\Assert;
 
 /**
  * Context specific to TMGMT-based local translation.
  */
 class LocalTranslationContext extends RawDrupalContext {
+
+  use BrowserCapabilityDetectionTrait;
 
   /**
    * Installs the test module.
@@ -23,7 +26,7 @@ class LocalTranslationContext extends RawDrupalContext {
    *
    * @BeforeFeature @translation
    */
-  public static function installTestModule(BeforeFeatureScope $scope) {
+  public static function installTestModule(BeforeFeatureScope $scope): void {
     \Drupal::service('module_installer')->install(['oe_translation_test']);
   }
 
@@ -35,7 +38,7 @@ class LocalTranslationContext extends RawDrupalContext {
    *
    * @AfterFeature @translation
    */
-  public static function uninstallTestModule(AfterFeatureScope $scope) {
+  public static function uninstallTestModule(AfterFeatureScope $scope): void {
     \Drupal::service('module_installer')->uninstall(['oe_translation_test']);
   }
 
@@ -54,7 +57,8 @@ class LocalTranslationContext extends RawDrupalContext {
     if (!$element) {
       throw new \Exception(sprintf('The translation element for the field %s was not found.', $field));
     }
-    Assert::assertEquals($value, $element->getText());
+
+    Assert::assertEquals($value, $element->getValue());
   }
 
   /**
@@ -67,12 +71,29 @@ class LocalTranslationContext extends RawDrupalContext {
    *
    * @When I fill in the translation form element for the :field field with :value
    */
-  public function fillInTranslationFormElement(string $field, string $value) {
+  public function fillInTranslationFormElement(string $field, string $value): void {
     $element = $this->getTranslationElementForField($field);
     if (!$element) {
       throw new \Exception(sprintf('The translation element for the field %s was not found.', $field));
     }
 
+    // If the element doesn't have a WYSIWYG, we simply fill the field in.
+    $wysiwyg = $element->getParent()->find('css', '#cke_' . $element->getAttribute('id'));
+    if (!$wysiwyg) {
+      $this->getSession()->getPage()->fillField($element->getAttribute('id'), $value);
+      return;
+    }
+
+    // Otherwise, we add it to the WYSIWYG source if we have JS.
+    if ($this->browserSupportsJavaScript()) {
+      $button = $wysiwyg->find('xpath', '//a[@title="Source"]');
+      $button->click();
+      $textarea = $wysiwyg->find('xpath', '//textarea');
+      $textarea->setValue($value);
+      return;
+    }
+
+    // Fallback to non-JS capabilities which would not render the WYSIWYG.
     $this->getSession()->getPage()->fillField($element->getAttribute('id'), $value);
   }
 

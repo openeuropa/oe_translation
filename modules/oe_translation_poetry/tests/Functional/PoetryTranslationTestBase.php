@@ -68,8 +68,9 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     $translator->save();
 
     // Unset some services from the container to force a rebuild.
-    $this->container->set('oe_translation_poetry.client.default', NULL);
-    $this->container->set('oe_translation_poetry_mock.fixture_generator', NULL);
+    \Drupal::getContainer()->set('oe_translation_poetry.client.default', NULL);
+    \Drupal::getContainer()->set('oe_translation_poetry.client_factory', NULL);
+    \Drupal::getContainer()->set('oe_translation_poetry_mock.fixture_generator', NULL);
 
     $this->jobStorage = $this->entityTypeManager->getStorage('tmgmt_job');
     $this->fixtureGenerator = $this->container->get('oe_translation_poetry_mock.fixture_generator');

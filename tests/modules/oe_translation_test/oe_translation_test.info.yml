@@ -7,3 +7,5 @@ package: Testing
 dependencies:
   - oe_translation:oe_translation
   - oe_multilingual_demo:oe_multilingual_demo
+  - address:address
+  - paragraphs:paragraphs
