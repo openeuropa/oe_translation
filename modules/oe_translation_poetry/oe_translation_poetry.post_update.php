@@ -12,7 +12,7 @@ use Drupal\tmgmt\Entity\Translator;
 /**
  * Removing the poetry endpoint from the configuration.
  */
-function oe_translation_poetry_post_update_remove_service_wsdl(): void {
+function oe_translation_poetry_post_update_0001(): void {
   $translator = Translator::load('poetry');
   if (!$translator) {
     return;
