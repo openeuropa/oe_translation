@@ -1,11 +1,20 @@
 # Changelog
 
+## [0.7.1](https://github.com/openeuropa/oe_translation/tree/0.7.1) (2020-04-29)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.7.0...0.7.1)
+
+**Merged pull requests:**
+
+- OPENEUROPA-3012: Removing the Poetry endpoint from existing configuration [\#95](https://github.com/openeuropa/oe_translation/pull/95) ([upchuk](https://github.com/upchuk))
+
 ## [0.7.0](https://github.com/openeuropa/oe_translation/tree/0.7.0) (2020-04-27)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.6.0...0.7.0)
 
 **Merged pull requests:**
 
+- OPENEUROPA-0000: Prepare release 0.7.0. [\#94](https://github.com/openeuropa/oe_translation/pull/94) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - Bringing 0.6.0 into master [\#93](https://github.com/openeuropa/oe_translation/pull/93) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2969: Fixing SOAP requests in tests. [\#89](https://github.com/openeuropa/oe_translation/pull/89) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2969: Passing ongoing languages to the translation overview build [\#87](https://github.com/openeuropa/oe_translation/pull/87) ([22Alexandra](https://github.com/22Alexandra))
