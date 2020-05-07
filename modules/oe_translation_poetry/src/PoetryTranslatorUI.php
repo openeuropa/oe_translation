@@ -48,10 +48,18 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#default_value' => $translator->getSetting('application_reference'),
       '#description' => $this->t('The application reference code identifies which type of application sent the request.'),
     ];
+    $form['number_reset'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Reset request number'),
+      '#default_value' => $translator->getSetting('global_identifier_number'),
+      '#description' => $this->t('Enabling this option will reset the number once the next request is sent. WARNING: Changing this value must only be done under extreme circumstances and only after confirming it with DGT.'),
+    ];
+
     $form['contact'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Contact information'),
     ];
+
     $contact_defaults = $translator->getSetting('contact');
     foreach (static::getContactFieldNames('contact') as $name => $label) {
       $form['contact'][$name] = [
