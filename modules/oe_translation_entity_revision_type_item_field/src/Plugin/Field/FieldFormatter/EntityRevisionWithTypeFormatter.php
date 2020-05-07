@@ -13,17 +13,17 @@ use Drupal\oe_translation_entity_revision_type_item_field\Plugin\Field\FieldType
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Plugin implementation of the EntityRevisionWithTypeItem formatter.
+ * Plugin implementation of the "Entity revision with type" formatter.
  *
  * @FieldFormatter(
- *   id = "oe_translation_entity_revision_type_item_formatter",
- *   label = @Translation("Entity revision with type item formatter"),
+ *   id = "oe_translation_entity_revision_type_formatter",
+ *   label = @Translation("Entity revision with type Formatter"),
  *   field_types = {
  *     "oe_translation_entity_revision_type_item"
  *   }
  * )
  */
-class EntityRevisionWithTypeItemFormatter extends FormatterBase {
+class EntityRevisionWithTypeFormatter extends FormatterBase {
 
   /**
    * The entity type manager.
@@ -33,7 +33,7 @@ class EntityRevisionWithTypeItemFormatter extends FormatterBase {
   protected $entityTypeManager;
 
   /**
-   * Constructs a EntityRevisionWithTypeItemFormatter object.
+   * Constructs a EntityRevisionWithTypeFormatter object.
    *
    * @param string $plugin_id
    *   The plugin_id for the formatter.
@@ -93,14 +93,18 @@ class EntityRevisionWithTypeItemFormatter extends FormatterBase {
    * Default formatter view for a single item.
    *
    * @param \Drupal\oe_translation_entity_revision_type_item_field\Plugin\Field\FieldType\EntityRevisionWithTypeItem $item
-   *  The field item.
+   *   The field item.
    *
    * @return array
    *   The single item element.
    */
   protected function viewElement(EntityRevisionWithTypeItem $item): array {
     $default = [
-      '#markup' => implode('-', [$item->entity_type, $item->entity_id, $item->entity_revision_id]),
+      '#markup' => implode('-', [
+        $item->entity_type,
+        $item->entity_id,
+        $item->entity_revision_id,
+      ]),
     ];
 
     $storage = $this->entityTypeManager->getStorage($item->entity_type);

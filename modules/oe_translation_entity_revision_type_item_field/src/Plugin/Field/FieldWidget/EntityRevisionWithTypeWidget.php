@@ -12,14 +12,14 @@ use Drupal\Core\Form\FormStateInterface;
  * Plugin implementation of the EntityRevisionWithTypeItem widget.
  *
  * @FieldWidget(
- *   id = "oe_translation_entity_revision_type_item_widget",
- *   label = @Translation("Entity revision with type item widget"),
+ *   id = "oe_translation_entity_revision_type_widget",
+ *   label = @Translation("Entity revision with type widget"),
  *   field_types = {
  *     "oe_translation_entity_revision_type_item"
  *   }
  * )
  */
-class EntityRevisionWithTypeItemWidget extends WidgetBase {
+class EntityRevisionWithTypeWidget extends WidgetBase {
 
   /**
    * {@inheritdoc}

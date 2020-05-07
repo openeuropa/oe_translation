@@ -9,14 +9,14 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
- * Defines the "EntityRevisionWithTypeItem" field type.
+ * Defines the "EntityRevisionWithType" field type.
  *
  * @FieldType(
  *   id = "oe_translation_entity_revision_type_item",
- *   label = @Translation("Entity revision with type item"),
+ *   label = @Translation("Entity revision with type"),
  *   category = @Translation("OpenEuropa"),
- *   default_formatter = "oe_translation_entity_revision_type_item_formatter",
- *   default_widget = "oe_translation_entity_revision_type_item_widget",
+ *   default_formatter = "oe_translation_entity_revision_type_formatter",
+ *   default_widget = "oe_translation_entity_revision_type_widget",
  *   list_class = "Drupal\oe_translation_entity_revision_type_item_field\EntityRevisionWithTypeItemList",
  * )
  */
@@ -28,11 +28,11 @@ class EntityRevisionWithTypeItem extends FieldItemBase {
   public function isEmpty() {
     // We consider the field empty if all the values are empty.
     $entity_id = $this->get('entity_id')->getValue();
-    $entity_revision = $this->get('entity_revision_id')->getValue();
+    $entity_revision_id = $this->get('entity_revision_id')->getValue();
     $entity_type = $this->get('entity_type')->getValue();
 
     return ($entity_id === NULL || $entity_id === '') &&
-      ($entity_revision === NULL || $entity_revision === '') &&
+      ($entity_revision_id === NULL || $entity_revision_id === '') &&
       ($entity_type === NULL || $entity_type === '');
   }
 

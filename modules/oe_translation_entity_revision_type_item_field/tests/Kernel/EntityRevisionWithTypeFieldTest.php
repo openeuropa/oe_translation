@@ -11,7 +11,7 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 /**
  * Tests the Poetry Request ID field type, widget and formatter.
  */
-class EntityRevisionWithTypeItemFieldTest extends TranslationKernelTestBase {
+class EntityRevisionWithTypeFieldTest extends TranslationKernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -51,9 +51,9 @@ class EntityRevisionWithTypeItemFieldTest extends TranslationKernelTestBase {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     $entity_revision_with_type_item = [
-      'entity_id' => 'Entity ID',
-      'entity_revision' => 'Entity revision',
-      'entity_type' => 'Entity type',
+      'entity_id' => '1',
+      'entity_revision_id' => '5',
+      'entity_type' => 'node',
     ];
 
     $node = $node_storage->create([
@@ -71,9 +71,7 @@ class EntityRevisionWithTypeItemFieldTest extends TranslationKernelTestBase {
     $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
     $build = $builder->viewField($node->get('entity_revision_type_item'));
     $output = $this->container->get('renderer')->renderRoot($build);
-    $this->assertContains('Entity ID', (string) $output);
-    $this->assertContains('Entity revision', (string) $output);
-    $this->assertContains('Entity type', (string) $output);
+    $this->assertContains('node-1-5', (string) $output);
   }
 
 }

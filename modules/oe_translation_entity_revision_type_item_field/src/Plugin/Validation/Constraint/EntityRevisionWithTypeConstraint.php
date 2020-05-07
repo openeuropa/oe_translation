@@ -24,9 +24,10 @@ class EntityRevisionWithTypeConstraint extends Constraint {
   public $missingEntityTypeMessage = "The entity type is missing.";
 
   /**
-   * Message in case the entity type value is missing.
+   * Message in case the entity type value is invalid.
    *
    * @var string
    */
   public $invalidEntityType = "The entity type is invalid.";
+
 }

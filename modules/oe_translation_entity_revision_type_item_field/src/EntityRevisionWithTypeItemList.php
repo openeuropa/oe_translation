@@ -23,7 +23,7 @@ class EntityRevisionWithTypeItemList extends FieldItemList implements EntityRevi
 
     $entities = [];
     foreach ($this->list as $delta => $item) {
-      $storage =  $entity_type_manager->getStorage($item->entity_type);
+      $storage = $entity_type_manager->getStorage($item->entity_type);
       $entity_type = $entity_type_manager->getDefinition($item->entity_type);
       if (!$entity_type->isRevisionable()) {
         $entities[$delta] = $storage->load($item->entity_id);
@@ -35,4 +35,5 @@ class EntityRevisionWithTypeItemList extends FieldItemList implements EntityRevi
 
     return $entities;
   }
+
 }
