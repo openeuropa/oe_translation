@@ -34,7 +34,7 @@ interface PoetryInterface {
    * @param bool $force_new_number
    *   Whether to force the next request to use a new number or not.
    */
-  public function forceNewIdentifierNumber($force_new_number): void;
+  public function forceNewIdentifierNumber(bool $force_new_number): void;
 
   /**
    * Asserts whether we need to request a new identifier number or not.

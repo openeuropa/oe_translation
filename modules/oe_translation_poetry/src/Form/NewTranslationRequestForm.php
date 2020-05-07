@@ -106,6 +106,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
       // identifier number with the new number that came for future requests.
       if ($identifier->getSequence()) {
         $this->poetry->setGlobalIdentifierNumber($response->getIdentifier()->getNumber());
+        $this->poetry->forceNewIdentifierNumber(FALSE);
       }
 
       $this->redirectBack($form_state);
@@ -129,13 +130,12 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
    * @return \EC\Poetry\Messages\Requests\CreateTranslationRequest
    *   The message to send to Poetry.
    */
-  private function prepareMessage(FormStateInterface $form_state) {
+  protected function prepareMessage(FormStateInterface $form_state) {
     $entity = $form_state->get('entity');
     $queue = $this->queueFactory->get($entity);
     $translator_settings = $this->poetry->getTranslatorSettings();
     $jobs = $queue->getAllJobs();
     $identifier = $this->poetry->getIdentifierForContent($entity);
-
     $identifier->setProduct($this->requestType);
 
     $date = new \DateTime($form_state->getValue('details')['date']);

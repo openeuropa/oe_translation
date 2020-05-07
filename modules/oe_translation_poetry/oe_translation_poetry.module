@@ -243,7 +243,7 @@ function _oe_translation_tmgmt_reset_global_identifier_number(TranslatorInterfac
   /** @var \Drupal\oe_translation_poetry\Poetry $poetry_client */
   $poetry_client = \Drupal::service('oe_translation_poetry.client.default');
   $translator_settings = $translator->getSettings();
-  if (!empty($translator_settings['number_reset']) && $translator_settings['number_reset']) {
+  if (!empty($translator_settings['number_reset'])) {
     $poetry_client->forceNewIdentifierNumber($translator_settings['number_reset']);
   }
 }

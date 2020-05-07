@@ -175,13 +175,13 @@ class Poetry implements PoetryInterface {
    * {@inheritdoc}
    */
   public function isNewIdentifierNumberRequired(): bool {
-    return $this->state->get('oe_translation_poetry_number_reset') ?? FALSE;
+    return (bool) $this->state->get('oe_translation_poetry_number_reset', FALSE);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function forceNewIdentifierNumber($force_new_number): void {
+  public function forceNewIdentifierNumber(bool $force_new_number): void {
     $this->state->set('oe_translation_poetry_number_reset', $force_new_number);
   }
 
@@ -189,7 +189,19 @@ class Poetry implements PoetryInterface {
    * {@inheritdoc}
    */
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
+    $identifier = $this->doGetIdentifierForContent($entity);
+    if (!$this->isNewIdentifierNumberRequired()) {
+      return $identifier;
+    }
 
+    // Reset teh fuck out of this.
+    $identifier->setNumber(NULL);
+    $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
+    return $identifier;
+  }
+
+
+  public function doGetIdentifierForContent(ContentEntityInterface $entity): Identifier {
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
     if ($last_identifier_for_content instanceof Identifier) {
       // If the content has already been translated, we need to use the
@@ -202,14 +214,7 @@ class Poetry implements PoetryInterface {
 
     $identifier = $this->getIdentifier();
     $number = $this->getGlobalIdentifierNumber();
-    if ($this->isNewIdentifierNumberRequired()) {
-      // If a new identifier number has been required, we unset the current
-      // number and reset the translator configuration.
-      $number = FALSE;
-      $this->forceNewIdentifierNumber(FALSE);
-      $this->translator->set('number_reset', FALSE);
-      $this->translator->save();
-    }
+
     if (!$number) {
       // If we don't have a number it means it's the first ever request.
       $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
