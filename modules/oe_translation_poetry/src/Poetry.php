@@ -13,6 +13,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
 use Drupal\Core\Url;
 use Drupal\tmgmt\Entity\Job;
+use Drupal\tmgmt\TranslatorInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LogLevel;
@@ -40,11 +41,11 @@ class Poetry implements PoetryInterface {
   protected $poetryClient;
 
   /**
-   * The settings provided by the translator config.
+   * The translator being used.
    *
-   * @var array
+   * @var \Drupal\tmgmt\TranslatorInterface
    */
-  protected $translatorSettings;
+  protected $translator;
 
   /**
    * The state.
@@ -91,8 +92,6 @@ class Poetry implements PoetryInterface {
   /**
    * Constructs a Poetry instance.
    *
-   * @param array $settings
-   *   The settings provided by the translator config.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel
@@ -105,19 +104,17 @@ class Poetry implements PoetryInterface {
    *   The database connection.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
+   * @param \Drupal\tmgmt\TranslatorInterface|null $translator
+   *   The translator being used.
    */
-  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack) {
-    $this->translatorSettings = $settings;
+  public function __construct(ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack, TranslatorInterface $translator = NULL) {
+    $this->translator = $translator;
     $this->state = $state;
     $this->entityTypeManager = $entityTypeManager;
     $this->database = $database;
     $this->loggerChannel = $loggerChannel;
     $this->requestStack = $requestStack;
     $this->configFactory = $configFactory;
-
-    if (!isset($this->translatorSettings['site_id'])) {
-      $this->translatorSettings['site_id'] = $this->configFactory->get('system.site')->get('name');
-    }
   }
 
   /**
@@ -127,9 +124,9 @@ class Poetry implements PoetryInterface {
     if ($this->poetryClient instanceof PoetryLibrary) {
       return;
     }
-
+    $translator_settings = $this->getTranslatorSettings();
     $values = [
-      'identifier.code' => $this->translatorSettings['identifier_code'] ?? 'WEB',
+      'identifier.code' => $translator_settings['identifier_code'] ?? 'WEB',
       // The default version will always start from 0.
       'identifier.version' => 0,
       // The default part will always start from 0.
@@ -177,7 +174,22 @@ class Poetry implements PoetryInterface {
   /**
    * {@inheritdoc}
    */
+  public function isNewIdentifierNumberRequired(): bool {
+    return $this->state->get('oe_translation_poetry_number_reset') ?? FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function forceNewIdentifierNumber($force_new_number): void {
+    $this->state->set('oe_translation_poetry_number_reset', $force_new_number);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
+
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
     if ($last_identifier_for_content instanceof Identifier) {
       // If the content has already been translated, we need to use the
@@ -190,7 +202,14 @@ class Poetry implements PoetryInterface {
 
     $identifier = $this->getIdentifier();
     $number = $this->getGlobalIdentifierNumber();
-
+    if ($this->isNewIdentifierNumberRequired()) {
+      // If a new identifier number has been required, we unset the current
+      // number and reset the translator configuration.
+      $number = FALSE;
+      $this->forceNewIdentifierNumber(FALSE);
+      $this->translator->set('number_reset', FALSE);
+      $this->translator->save();
+    }
     if (!$number) {
       // If we don't have a number it means it's the first ever request.
       $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
@@ -230,7 +249,14 @@ class Poetry implements PoetryInterface {
    * {@inheritdoc}
    */
   public function getTranslatorSettings(): array {
-    return $this->translatorSettings;
+    $settings = [];
+    if ($this->translator) {
+      $settings = $this->translator->getSettings();
+    }
+    if (!isset($settings['site_id'])) {
+      $settings['site_id'] = $this->configFactory->get('system.site')->get('name');
+    }
+    return $settings;
   }
 
   /**
