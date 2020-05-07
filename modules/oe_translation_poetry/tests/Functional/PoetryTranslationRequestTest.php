@@ -193,6 +193,44 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       'product' => 'TRA',
     ];
     $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+
+    // Abort jobs to have the request button displayed again.
+    $this->abort($jobs);
+
+    // Create a new node to force a new number to be generated.
+    /** @var \Drupal\node\NodeInterface $node_four */
+    $node_four = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My fourth node',
+    ]);
+    $node_four->save();
+
+    // Force the use of the sequence to get a new number.
+    /** @var \Drupal\tmgmt\TranslatorInterface $translator */
+    $translator = \Drupal::service('entity_type.manager')->getStorage('tmgmt_translator')->load('poetry');
+    $translator->setSetting('number_reset', TRUE);
+    $translator->save();
+
+    $this->createInitialTranslationJobs($node_four, ['bg' => 'Bulgarian']);
+
+    $jobs = [];
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs['bg'] = $this->jobStorage->load(9);
+
+    $this->submitTranslationRequestForQueue($node_four);
+    $this->jobStorage->resetCache();
+
+    // The jobs should have gotten submitted and the identification number
+    // should have a new number.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      'number' => '1002',
+      'version' => '0',
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
   }
 
   /**
