@@ -30,10 +30,10 @@ class EntityRevisionWithTypeItemWidget extends WidgetBase {
       '#title' => $this->t('Entity ID'),
       '#default_value' => isset($items[$delta]->entity_id) ? $items[$delta]->entity_id : NULL,
     ];
-    $element['entity_revision'] = [
+    $element['entity_revision_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Entity Revision'),
-      '#default_value' => isset($items[$delta]->entity_revision) ? $items[$delta]->entity_revision : NULL,
+      '#default_value' => isset($items[$delta]->entity_revision_id) ? $items[$delta]->entity_revision_id : NULL,
     ];
     $element['entity_type'] = [
       '#type' => 'textfield',
