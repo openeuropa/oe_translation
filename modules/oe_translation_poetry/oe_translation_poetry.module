@@ -17,7 +17,6 @@ use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
-use Drupal\tmgmt\TranslatorInterface;
 
 /**
  * Implements hook_poetry_entity_type_alter().

@@ -9,6 +9,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\State;
+use Drupal\tmgmt\TranslatorInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -94,8 +95,12 @@ class PoetryFactory {
    */
   public function get(string $translator): PoetryInterface {
     $entity = $this->entityTypeManager->getStorage('tmgmt_translator')->load($translator);
+    $settings = [];
+    if ($entity instanceof TranslatorInterface) {
+      $settings = $entity->get('settings');
+    }
 
-    return new Poetry($this->configFactory, $this->loggerFactory->get('poetry'), $this->state, $this->entityTypeManager, $this->database, $this->requestStack, $entity);
+    return new Poetry($settings, $this->configFactory, $this->loggerFactory->get('poetry'), $this->state, $this->entityTypeManager, $this->database, $this->requestStack);
   }
 
 }
