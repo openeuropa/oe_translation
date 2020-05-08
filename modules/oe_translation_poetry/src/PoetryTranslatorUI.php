@@ -55,34 +55,28 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
     /** @var \Drupal\oe_translation_poetry\Poetry $poetry_client */
     $poetry_client = \Drupal::service('oe_translation_poetry.client.default');
 
-    $form['reset_number'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Reset global identifier number'),
-    ];
     if ($poetry_client->isNewIdentifierNumberRequired()) {
-      $form['reset_number']['warning'] = [
-        '#markup' => $this->t('<p>WARNING: The next request will reset the global identifier number.</p>'),
-      ];
-      $form['reset_number']['reset'] = [
+      $form['reset'] = [
         '#type' => 'submit',
-        '#value' => $this
-          ->t('Cancel reset'),
+        '#value' => $this->t('Cancel reset'),
         '#submit' => [
           [$this, 'cancelReset'],
         ],
       ];
+      $form['warning'] = [
+        '#markup' => $this->t('<p>WARNING: The next request will reset the global identifier number.</p>'),
+      ];
     }
     else {
-      $form['reset_number']['warning'] = [
-        '#markup' => $this->t('<p>WARNING: Resetting the global identifier number must only be done under extreme circumstances and only after confirming it with DGT.</p>'),
-      ];
-      $form['reset_number']['reset'] = [
+      $form['reset'] = [
         '#type' => 'submit',
-        '#value' => $this
-          ->t('Reset number'),
+        '#value' => $this->t('Reset number'),
         '#submit' => [
           [$this, 'resetNumber'],
         ],
+      ];
+      $form['warning'] = [
+        '#markup' => $this->t('<p>WARNING: Resetting the global identifier number must only be done under extreme circumstances and only after confirming it with DGT.</p>'),
       ];
     }
 
