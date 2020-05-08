@@ -13,7 +13,6 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
 use Drupal\Core\Url;
 use Drupal\tmgmt\Entity\Job;
-use Drupal\tmgmt\TranslatorInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Poetry as PoetryLibrary;
 use Psr\Log\LogLevel;
@@ -41,11 +40,11 @@ class Poetry implements PoetryInterface {
   protected $poetryClient;
 
   /**
-   * The translator being used.
+   * The settings provided by the translator config.
    *
-   * @var \Drupal\tmgmt\TranslatorInterface
+   * @var array
    */
-  protected $translator;
+  protected $translatorSettings;
 
   /**
    * The state.
@@ -92,6 +91,8 @@ class Poetry implements PoetryInterface {
   /**
    * Constructs a Poetry instance.
    *
+   * @param array $settings
+   *   The settings provided by the translator config.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel
@@ -104,17 +105,19 @@ class Poetry implements PoetryInterface {
    *   The database connection.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
-   * @param \Drupal\tmgmt\TranslatorInterface|null $translator
-   *   The translator being used.
    */
-  public function __construct(ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack, TranslatorInterface $translator = NULL) {
-    $this->translator = $translator;
+  public function __construct(array $settings, ConfigFactoryInterface $configFactory, LoggerChannelInterface $loggerChannel, State $state, EntityTypeManagerInterface $entityTypeManager, Connection $database, RequestStack $requestStack) {
+    $this->translatorSettings = $settings;
     $this->state = $state;
     $this->entityTypeManager = $entityTypeManager;
     $this->database = $database;
     $this->loggerChannel = $loggerChannel;
     $this->requestStack = $requestStack;
     $this->configFactory = $configFactory;
+
+    if (!isset($this->translatorSettings['site_id'])) {
+      $this->translatorSettings['site_id'] = $this->configFactory->get('system.site')->get('name');
+    }
   }
 
   /**
@@ -124,9 +127,9 @@ class Poetry implements PoetryInterface {
     if ($this->poetryClient instanceof PoetryLibrary) {
       return;
     }
-    $translator_settings = $this->getTranslatorSettings();
+
     $values = [
-      'identifier.code' => $translator_settings['identifier_code'] ?? 'WEB',
+      'identifier.code' => $this->translatorSettings['identifier_code'] ?? 'WEB',
       // The default version will always start from 0.
       'identifier.version' => 0,
       // The default part will always start from 0.
@@ -262,14 +265,7 @@ class Poetry implements PoetryInterface {
    * {@inheritdoc}
    */
   public function getTranslatorSettings(): array {
-    $settings = [];
-    if ($this->translator) {
-      $settings = $this->translator->getSettings();
-    }
-    if (!isset($settings['site_id'])) {
-      $settings['site_id'] = $this->configFactory->get('system.site')->get('name');
-    }
-    return $settings;
+    return $this->translatorSettings;
   }
 
   /**
