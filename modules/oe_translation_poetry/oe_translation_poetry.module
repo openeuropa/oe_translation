@@ -212,38 +212,3 @@ function oe_translation_poetry_form_node_confirm_form_alter(&$form, FormStateInt
 
   \Drupal::messenger()->addWarning(t('This node has ongoing translation jobs associated in Poetry. Ongoing requests cannot be automatically cancelled, please inform DGT about your cancellation request.'));
 }
-
-/**
- * Implements hook_ENTITY_TYPE_insert() for TMGMT translators.
- */
-function oe_translation_tmgmt_translator_insert(TranslatorInterface $entity) {
-  if ($entity->getPluginId() == 'poetry') {
-    _oe_translation_tmgmt_reset_global_identifier_number($entity);
-  }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_update() for TMGMT translators.
- */
-function oe_translation_tmgmt_translator_update(TranslatorInterface $entity) {
-  if ($entity->getPluginId() == 'poetry') {
-    _oe_translation_tmgmt_reset_global_identifier_number($entity);
-  }
-}
-
-/**
- * Helper function to reset the Poetry global identifier number.
- *
- * @param \Drupal\tmgmt\TranslatorInterface $translator
- *   The translator that was saved.
- */
-function _oe_translation_tmgmt_reset_global_identifier_number(TranslatorInterface $translator) {
-  // After a Poetry translator is saved, check if the reset number checkbox
-  // was checked and if so, set the value in the poetry client.
-  /** @var \Drupal\oe_translation_poetry\Poetry $poetry_client */
-  $poetry_client = \Drupal::service('oe_translation_poetry.client.default');
-  $translator_settings = $translator->getSettings();
-  if (!empty($translator_settings['number_reset'])) {
-    $poetry_client->forceNewIdentifierNumber($translator_settings['number_reset']);
-  }
-}

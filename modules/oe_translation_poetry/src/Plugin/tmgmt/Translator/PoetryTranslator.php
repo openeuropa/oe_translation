@@ -281,6 +281,17 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection->add('oe_translation_poetry.job_queue_checkout_add_languages', $route);
 
     $route = new Route(
+      '/admin/content/dgt/confirm_reset',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\GlobalIdentifierNumberResetConfirmForm',
+      ],
+      [
+        '_permission' => 'administer tmgmt',
+      ]
+    );
+    $collection->add('oe_translation_poetry.confirm_number_reset', $route);
+
+    $route = new Route(
       '/poetry/notifications',
       [
         '_controller' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::handle',

@@ -5,11 +5,13 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
 use Drupal\tmgmt\TranslatorPluginUiBase;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * UI class for the Poetry translator.
@@ -48,12 +50,41 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#default_value' => $translator->getSetting('application_reference'),
       '#description' => $this->t('The application reference code identifies which type of application sent the request.'),
     ];
-    $form['number_reset'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Reset request number'),
-      '#default_value' => $translator->getSetting('global_identifier_number'),
-      '#description' => $this->t('Enabling this option will reset the number once the next request is sent. WARNING: Changing this value must only be done under extreme circumstances and only after confirming it with DGT.'),
+
+    // Add the option to reset the global identifier number.
+    /** @var \Drupal\oe_translation_poetry\Poetry $poetry_client */
+    $poetry_client = \Drupal::service('oe_translation_poetry.client.default');
+
+    $form['reset_number'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Reset global identifier number'),
     ];
+    if ($poetry_client->isNewIdentifierNumberRequired()) {
+      $form['reset_number']['warning'] = [
+        '#markup' => $this->t('<p>WARNING: The next request will reset the global identifier number.</p>'),
+      ];
+      $form['reset_number']['reset'] = [
+        '#type' => 'submit',
+        '#value' => $this
+          ->t('Cancel reset'),
+        '#submit' => [
+          [$this, 'cancelReset'],
+        ],
+      ];
+    }
+    else {
+      $form['reset_number']['warning'] = [
+        '#markup' => $this->t('<p>WARNING: Resetting the global identifier number must only be done under extreme circumstances and only after confirming it with DGT.</p>'),
+      ];
+      $form['reset_number']['reset'] = [
+        '#type' => 'submit',
+        '#value' => $this
+          ->t('Reset number'),
+        '#submit' => [
+          [$this, 'resetNumber'],
+        ],
+      ];
+    }
 
     $form['contact'] = [
       '#type' => 'fieldset',
@@ -82,6 +113,22 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
     }
 
     return $form;
+  }
+
+  /**
+   * Form submit method to reset the global identifier number.
+   */
+  public function resetNumber(array $form, FormStateInterface $form_state) {
+    $response = new RedirectResponse(Url::fromRoute('oe_translation_poetry.confirm_number_reset')->toString());
+    $response->send();
+  }
+
+  /**
+   * Form submit method to cancel resetting the global identifier number.
+   */
+  public function cancelReset(array $form, FormStateInterface $form_state) {
+    $poetry_client = \Drupal::service('oe_translation_poetry.client.default');
+    $poetry_client->forceNewIdentifierNumber(FALSE);
   }
 
   /**
