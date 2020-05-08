@@ -2,14 +2,15 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_entity_revision_type_item_field\Plugin\Field\FieldFormatter;
+namespace Drupal\oe_translation\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
-use Drupal\oe_translation_entity_revision_type_item_field\Plugin\Field\FieldType\EntityRevisionWithTypeItem;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\oe_translation\Plugin\Field\FieldType\EntityRevisionWithTypeItem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,7 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
-class EntityRevisionWithTypeFormatter extends FormatterBase {
+class EntityRevisionWithTypeFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager.
@@ -92,7 +93,7 @@ class EntityRevisionWithTypeFormatter extends FormatterBase {
   /**
    * Default formatter view for a single item.
    *
-   * @param \Drupal\oe_translation_entity_revision_type_item_field\Plugin\Field\FieldType\EntityRevisionWithTypeItem $item
+   * @param \Drupal\oe_translation\Plugin\Field\FieldType\EntityRevisionWithTypeItem $item
    *   The field item.
    *
    * @return array

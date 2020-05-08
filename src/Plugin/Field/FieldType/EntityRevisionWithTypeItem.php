@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_entity_revision_type_item_field\Plugin\Field\FieldType;
+namespace Drupal\oe_translation\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -17,7 +17,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   category = @Translation("OpenEuropa"),
  *   default_formatter = "oe_translation_entity_revision_type_formatter",
  *   default_widget = "oe_translation_entity_revision_type_widget",
- *   list_class = "Drupal\oe_translation_entity_revision_type_item_field\EntityRevisionWithTypeItemList",
+ *   list_class = "Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList",
  * )
  */
 class EntityRevisionWithTypeItem extends FieldItemBase {

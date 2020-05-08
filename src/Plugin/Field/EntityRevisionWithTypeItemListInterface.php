@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_entity_revision_type_item_field;
+namespace Drupal\oe_translation\Plugin\Field;
 
 /**
  * Defines field item list classes for EntityRevisionWithTypeItem field items.

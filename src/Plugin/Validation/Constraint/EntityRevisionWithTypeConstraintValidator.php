@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_entity_revision_type_item_field\Plugin\Validation\Constraint;
+namespace Drupal\oe_translation\Plugin\Validation\Constraint;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;

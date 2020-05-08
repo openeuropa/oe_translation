@@ -1,6 +1,0 @@
-name: OpenEuropa Translation EntityRevisionWithTypeItem field
-description: Provides EntityRevisionWithTypeItem field type
-package: OpenEuropa
-
-type: module
-core: 8.x
