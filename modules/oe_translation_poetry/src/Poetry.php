@@ -189,18 +189,26 @@ class Poetry implements PoetryInterface {
    * {@inheritdoc}
    */
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
-    $identifier = $this->doGetIdentifierForContent($entity);
-    if (!$this->isNewIdentifierNumberRequired()) {
+    // If a new number is forcefully required, return a default identifier
+    // with the sequence.
+    if ($this->isNewIdentifierNumberRequired()) {
+      $identifier = $this->getIdentifier();
+      $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
       return $identifier;
     }
-
-    // Reset teh fuck out of this.
-    $identifier->setNumber(NULL);
-    $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
-    return $identifier;
+    // Otherwise, calculate the identifier based on the requested entity.
+    return $this->doGetIdentifierForContent($entity);
   }
 
-
+  /**
+   * Calculates and returns the identifier for a given content entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return \EC\Poetry\Messages\Components\Identifier
+   *   The identifier.
+   */
   public function doGetIdentifierForContent(ContentEntityInterface $entity): Identifier {
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
     if ($last_identifier_for_content instanceof Identifier) {

@@ -122,7 +122,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
   }
 
   /**
-   * Prepares the message to te sent to Poetry.
+   * Prepares the message to be sent to Poetry.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current form state.

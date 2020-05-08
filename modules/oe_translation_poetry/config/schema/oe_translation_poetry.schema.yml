@@ -36,9 +36,6 @@ tmgmt.translator.settings.poetry:
     application_reference:
       type: string
       label: Application reference code
-    number_reset:
-      type: boolean
-      label: Number reset flag
     contact:
       type: mapping
       label: Contact information
