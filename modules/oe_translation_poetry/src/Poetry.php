@@ -184,8 +184,8 @@ class Poetry implements PoetryInterface {
   /**
    * {@inheritdoc}
    */
-  public function forceNewIdentifierNumber(bool $force_new_number): void {
-    $this->state->set('oe_translation_poetry_number_reset', $force_new_number);
+  public function forceNewIdentifierNumber(bool $force): void {
+    $this->state->set('oe_translation_poetry_number_reset', $force);
   }
 
   /**
