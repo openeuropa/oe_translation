@@ -36,7 +36,9 @@ class GlobalIdentifierNumberResetConfirmForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('oe_translation_poetry.client.default'));
+    return new static(
+      $container->get('oe_translation_poetry.client.default')
+    );
   }
 
   /**
@@ -58,6 +60,17 @@ class GlobalIdentifierNumberResetConfirmForm extends ConfirmFormBase {
    */
   public function getFormId() {
     return "poetry_reset_number_form";
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildForm($form, $form_state);
+
+    $form['actions']['cancel']['#url'] = Url::fromRoute('entity.tmgmt_translator.edit_form', ['tmgmt_translator' => 'poetry']);
+
+    return $form;
   }
 
   /**
