@@ -51,7 +51,7 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
         'type' => 'manual',
         'configuration' => [],
       ],
-      'manual_languages' => [
+      'automatic_languages' => [
         'type' => 'automatic',
         'configuration' => [
           'languages' => [
@@ -61,7 +61,7 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
           'date' => NULL,
         ],
       ],
-      'manual_languages_date' => [
+      'automatic_languages_date' => [
         'type' => 'automatic',
         'configuration' => [
           'languages' => [
