@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraint;
  *
  * @Constraint(
  *   id = "EntityRevisionWithType",
- *   label = @Translation("Entity Revision WithT ype", context = "Validation")
+ *   label = @Translation("Entity Revision With Type", context = "Validation")
  * )
  */
 class EntityRevisionWithTypeConstraint extends Constraint {

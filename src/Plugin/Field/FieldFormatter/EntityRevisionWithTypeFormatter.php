@@ -34,7 +34,7 @@ class EntityRevisionWithTypeFormatter extends FormatterBase implements Container
   protected $entityTypeManager;
 
   /**
-   * Constructs a EntityRevisionWithTypeFormatter object.
+   * Constructs an EntityRevisionWithTypeFormatter object.
    *
    * @param string $plugin_id
    *   The plugin_id for the formatter.
