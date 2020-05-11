@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -25,10 +28,12 @@ class TranslationSynchronisationWidget extends WidgetBase {
     $element += [
       '#type' => 'fieldset',
     ];
+
     $element['type'] = [
       '#type' => 'select',
-      '#title' => t('Select type'),
-      '#options' => $this->getTypeOptions(),
+      '#description' => $this->t('Select the type of synchronization rule.'),
+      '#title' => $this->t('Select type'),
+      '#options' => static::getSyncTypeOptions(),
       '#default_value' => isset($items[$delta]->type) ? $items[$delta]->type : NULL,
     ];
 
@@ -42,29 +47,58 @@ class TranslationSynchronisationWidget extends WidgetBase {
     }
 
     $element['configuration'] = [
-      '#type' => 'details',
-      '#title' => 'Configuration',
+      '#type' => 'container',
+      '#title' => $this->t('Configuration'),
       '#open' => TRUE,
       '#states' => [
         'visible' => [
-          ':input[name="' . $selector . '[type]"]' => ['value' => 'automatic'],
+          'select[name="' . $selector . '[type]"]' => ['value' => 'automatic'],
         ],
       ],
     ];
-    $element['configuration']['language'] = [
+
+    $element['configuration']['languages'] = [
       '#type' => 'language_select',
-      '#title' => t('Select language'),
+      '#multiple' => TRUE,
+      '#title' => $this->t('Language'),
+      '#description' => $this->t('Select the languages that need to have been approved before they can be synchronized.'),
       '#default_value' => isset($items[$delta]->configuration['language']) ? $items[$delta]->configuration['language'] : NULL,
       '#languages' => LanguageInterface::STATE_CONFIGURABLE,
-      '#required' => TRUE,
+      '#size' => 10,
+      '#states' => [
+        'required' => [
+          'select[name="' . $selector . '[type]"]' => ['value' => 'automatic'],
+        ],
+      ],
     ];
+
     $element['configuration']['date'] = [
-      '#type' => 'date',
-      '#title' => t('Date'),
-      '#default_value' => isset($items[$delta]->configuration['date']) ? $items[$delta]->configuration['date'] : '',
+      '#type' => 'datetime',
+      '#title' => $this->t('Date'),
+      '#description' => $this->t('The date by which to synchronize all approved translations regardless of which languages have been approved yet.'),
+      '#default_value' => isset($items[$delta]->configuration['date']) ? DrupalDateTime::createFromTimestamp($items[$delta]->configuration['date']) : NULL,
     ];
 
     return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    $values = parent::massageFormValues($values, $form, $form_state);
+    foreach ($values as $delta => &$item_values) {
+      if ($item_values['type'] === 'manual') {
+        $item_values['configuration'] = [];
+        continue;
+      }
+
+      if ($item_values['configuration']['date'] instanceof DrupalDateTime) {
+        $item_values['configuration']['date'] = $item_values['configuration']['date']->getTimestamp();
+      }
+    }
+
+    return $values;
   }
 
   /**
@@ -73,10 +107,10 @@ class TranslationSynchronisationWidget extends WidgetBase {
    * @return array
    *   List of options.
    */
-  protected function getTypeOptions() {
+  public static function getSyncTypeOptions(): array {
     return [
-      'manual' => 'Manual',
-      'automatic' => 'Automatic with minimum threshold',
+      'manual' => t('Manual'),
+      'automatic' => t('Automatic with minimum threshold'),
     ];
   }
 

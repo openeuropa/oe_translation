@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\oe_translation\Plugin\Field\FieldType\TranslationSynchronisationItem;
+use Drupal\oe_translation\Plugin\Field\FieldWidget\TranslationSynchronisationWidget;
 
 /**
  * Defines the 'Translation Synchronisation Formatter' formatter.
@@ -25,14 +30,29 @@ class TranslationSynchronisationFormatter extends FormatterBase {
     if (count($items) === 0) {
       return [];
     }
+
     $elements = [];
     foreach ($items as $delta => $item) {
       $elements[$delta]['type'] = [
-        '#plain_text' => $item->type,
+        '#plain_text' => static::getSyncTypeLabel($item),
       ];
     }
 
     return $elements;
+  }
+
+  /**
+   * Returns the label of the synchronization type of a field.
+   *
+   * @param \Drupal\oe_translation\Plugin\Field\FieldType\TranslationSynchronisationItem $item
+   *   The field item.
+   *
+   * @return string
+   *   The label.
+   */
+  public static function getSyncTypeLabel(TranslationSynchronisationItem $item): TranslatableMarkup {
+    $options = TranslationSynchronisationWidget::getSyncTypeOptions();
+    return $options[$item->type];
   }
 
 }

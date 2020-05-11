@@ -7,7 +7,6 @@ namespace Drupal\oe_translation\Plugin\Field\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
-use Drupal\Core\TypedData\MapDataDefinition;
 
 /**
  * Defines the 'Translation Synchronisation' field type.
@@ -39,7 +38,8 @@ class TranslationSynchronisationItem extends FieldItemBase {
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties['type'] = DataDefinition::create('string')
       ->setLabel(t('Type'));
-    $properties['configuration'] = MapDataDefinition::create()
+
+    $properties['configuration'] = DataDefinition::create('any')
       ->setLabel(t('Configuration'));
 
     return $properties;
@@ -51,7 +51,7 @@ class TranslationSynchronisationItem extends FieldItemBase {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     $columns = [
       'type' => [
-        'type' => 'varchar_ascii',
+        'type' => 'varchar',
         'description' => 'Type.',
         'length' => 255,
       ],

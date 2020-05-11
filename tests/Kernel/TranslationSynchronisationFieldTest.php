@@ -6,7 +6,7 @@ namespace Drupal\Tests\oe_translation\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\node\Entity\Node;
+use Drupal\oe_translation\Plugin\Field\FieldFormatter\TranslationSynchronisationFormatter;
 
 /**
  * Tests the Poetry Request ID field type, widget and formatter.
@@ -16,22 +16,11 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['serialization'];
-
-  /**
-   * The serializer service.
-   *
-   * @var \Symfony\Component\Serializer\SerializerInterface
-   */
-  protected $serializer;
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp() {
     parent::setUp();
 
-    $this->serializer = \Drupal::service('serializer');
+    $this->installSchema('node', ['node_access']);
+
     $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'type' => 'page',
       'name' => 'Page',
@@ -53,44 +42,55 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
   /**
    * Tests the field type and formatter.
    */
-  public function testTranslationSynchronisationItemField() {
+  public function testTranslationSynchronisationItemField(): void {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-
-    $translation_sync_values = [
-      'type' => 'automatic',
-      'configuration' => [
-        'language' => 'Bulgarian',
-        'date' => '2020-05-08',
+    $date = new \DateTime('2020-05-08');
+    $tests = [
+      'manual' => [
+        'type' => 'manual',
+        'configuration' => [],
+      ],
+      'manual_languages' => [
+        'type' => 'automatic',
+        'configuration' => [
+          'languages' => [
+            'bg',
+            'fr',
+          ],
+          'date' => NULL,
+        ],
+      ],
+      'manual_languages_date' => [
+        'type' => 'automatic',
+        'configuration' => [
+          'languages' => [
+            'de',
+            'es',
+          ],
+          'date' => $date->getTimestamp(),
+        ],
       ],
     ];
 
     $node = $node_storage->create([
       'type' => 'page',
       'title' => 'Test page',
-      'translation_sync' => $translation_sync_values,
     ]);
-
     $node->save();
-    $node_storage->resetCache();
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->load($node->id());
 
-    $this->assertEquals($translation_sync_values, $node->get('translation_sync')->first()->getValue());
-
-    $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
-    $build = $builder->viewField($node->get('translation_sync'));
-    $output = $this->container->get('renderer')->renderRoot($build);
-    $this->assertContains('automatic', (string) $output);
-
-    // Test serialization.
-    $serialized = $this->serializer->serialize($node, 'json');
-    $deserialized = $this->serializer->deserialize($serialized, Node::class, 'json');
-    $expected_values = [
-      'language' => 'Bulgarian',
-      'date' => '2020-05-08',
-    ];
-    $this->assertSame($expected_values, $deserialized->translation_sync->configuration);
+    foreach ($tests as $values) {
+      $node->set('translation_sync', $values);
+      $node->save();
+      $node_storage->resetCache();
+      /** @var \Drupal\node\NodeInterface $node */
+      $node = $node_storage->load($node->id());
+      $this->assertEquals($values, $node->get('translation_sync')->first()->getValue());
+      $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
+      $build = $builder->viewField($node->get('translation_sync'));
+      $output = $this->container->get('renderer')->renderRoot($build);
+      $this->assertContains((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
+    }
   }
 
 }
