@@ -72,11 +72,12 @@ class EntityRevisionWithTypeFieldWidgetTest extends TranslationTestBase {
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = $this->entityTypeManager->getStorage('node')->load(1);
-    $this->assertEquals($node->get('entity_revision_type_item')->first()->getValue(), [
+    $expected_values = [
       'entity_id' => '1',
       'entity_revision_id' => '1',
       'entity_type' => 'node',
-    ]);
+    ];
+    $this->assertEquals($expected_values, $node->get('entity_revision_type_item')->first()->getValue());
   }
 
 }
