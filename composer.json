@@ -18,7 +18,6 @@
         "drupal/block_field": "~1.0.0-alpha8",
         "drupal/coder": "8.3.8",
         "drupal/config_devel": "~1.2",
-        "drupal/coder": "8.3.8",
         "drupal/drupal-extension": "~4.0",
         "drupal/paragraphs": "^1.11",
         "drush/drush": "~9.0@stable",

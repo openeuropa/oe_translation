@@ -5,10 +5,13 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\datetime\Plugin\Field\FieldWidget\DateTimeWidgetBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the 'Translation Synchronisation Widget' field widget.
@@ -19,7 +22,37 @@ use Drupal\Core\Language\LanguageInterface;
  *   field_types = {"oe_translation_translation_sync"},
  * )
  */
-class TranslationSynchronisationWidget extends WidgetBase {
+class TranslationSynchronisationWidget extends DateTimeWidgetBase {
+
+  /**
+   * The date format storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $dateStorage;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityStorageInterface $date_storage) {
+    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
+
+    $this->dateStorage = $date_storage;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $plugin_id,
+      $plugin_definition,
+      $configuration['field_definition'],
+      $configuration['settings'],
+      $configuration['third_party_settings'],
+      $container->get('entity_type.manager')->getStorage('date_format')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -72,11 +105,18 @@ class TranslationSynchronisationWidget extends WidgetBase {
       ],
     ];
 
+    $date_format = $this->dateStorage->load('html_date')->getPattern();
+    $time_format = $this->dateStorage->load('html_time')->getPattern();
+
     $element['configuration']['date'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Date'),
       '#description' => $this->t('The date by which to synchronize all approved translations regardless of which languages have been approved yet.'),
       '#default_value' => isset($items[$delta]->configuration['date']) ? DrupalDateTime::createFromTimestamp($items[$delta]->configuration['date']) : NULL,
+      '#date_date_format' => $date_format,
+      '#date_date_element' => 'date',
+      '#date_time_format' => $time_format,
+      '#date_time_element' => 'time',
     ];
 
     return $element;

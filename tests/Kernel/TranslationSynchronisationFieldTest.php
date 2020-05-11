@@ -9,7 +9,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\oe_translation\Plugin\Field\FieldFormatter\TranslationSynchronisationFormatter;
 
 /**
- * Tests the Poetry Request ID field type, widget and formatter.
+ * Tests the Translation Synchronisation field type, widget and formatter.
  */
 class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
 
