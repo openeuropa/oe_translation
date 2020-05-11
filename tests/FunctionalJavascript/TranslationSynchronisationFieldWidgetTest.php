@@ -7,30 +7,12 @@ namespace Drupal\Tests\oe_translation\FunctionalJavascript;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\Node;
 
 /**
  * Tests the Translation Synchronisation field widget.
  */
-class TranslationSynchronisationFieldWidget extends WebDriverTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['oe_translation'];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $defaultTheme = 'stark';
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
+class TranslationSynchronisationFieldWidgetTest extends TranslationTestBase {
 
   /**
    * {@inheritdoc}
@@ -44,7 +26,7 @@ class TranslationSynchronisationFieldWidget extends WebDriverTestBase {
       'type' => 'oe_translation_translation_sync',
     ])->save();
 
-    $this->field = FieldConfig::create([
+    FieldConfig::create([
       'field_name' => 'translation_sync',
       'entity_type' => 'node',
       'bundle' => 'page',
@@ -59,9 +41,6 @@ class TranslationSynchronisationFieldWidget extends WebDriverTestBase {
       'third_party_settings' => [],
     ]);
     $entity_form_display->save();
-
-    $user = $this->drupalCreateUser([], NULL, TRUE);
-    $this->drupalLogin($user);
   }
 
   /**
