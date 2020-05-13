@@ -25,11 +25,8 @@ class TranslationSynchronisationItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    // We consider the field empty if all the values are empty.
     $type = $this->get('type')->getValue();
-    $configuration = $this->get('configuration')->getValue();
-
-    return ($type === NULL || $type === '') && ($configuration === NULL || $configuration === '');
+    return $type === NULL || $type === '';
   }
 
   /**

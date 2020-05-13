@@ -5,27 +5,51 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation\FunctionalJavascript;
 
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 
 /**
  * Tests the Translation Synchronisation field widget.
  */
-class TranslationSynchronisationFieldWidgetTest extends TranslationTestBase {
+class TranslationSynchronisationFieldWidgetTest extends WebDriverTestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['datetime'];
+  protected static $modules = [
+    'system',
+    'node',
+    'user',
+    'field',
+    'text',
+    'options',
+    'oe_translation',
+    'language',
+  ];
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
+
+    $this->entityTypeManager = $this->container->get('entity_type.manager');
+
+    $this->entityTypeManager->getStorage('node_type')->create([
+      'name' => 'Page',
+      'type' => 'page',
+    ])->save();
 
     FieldStorageConfig::create([
       'field_name' => 'translation_sync',
@@ -38,6 +62,9 @@ class TranslationSynchronisationFieldWidgetTest extends TranslationTestBase {
       'entity_type' => 'node',
       'bundle' => 'page',
     ])->save();
+
+    ConfigurableLanguage::create(['id' => 'fr'])->save();
+    ConfigurableLanguage::create(['id' => 'it'])->save();
 
     $entity_form_display = EntityFormDisplay::collectRenderDisplay(Node::create(['type' => 'page']), 'default');
     $entity_form_display->setComponent('translation_sync', [
@@ -57,27 +84,35 @@ class TranslationSynchronisationFieldWidgetTest extends TranslationTestBase {
    * Tests the Translation Synchronisation field widget.
    */
   public function testTranslationSynchronisationFieldWidget(): void {
-    $date_time = new DrupalDateTime('2020-05-08');
-    // Get date and time formats.
-    $date_format = DateFormat::load('html_date')->getPattern();
-    $time_format = DateFormat::load('html_time')->getPattern();
-
     $this->drupalGet('/node/add/page');
+
     $assert = $this->assertSession();
     $assert->fieldExists('title[0][value]')->setValue('My page');
 
-    // Verify that fieldset is displayed.
-    $assert->assertVisibleInViewport('css', '#edit-translation-sync-0');
+    // Assert the select is correct.
+    $select = $assert->selectExists('translation_sync[0][type]');
+    $assert->optionExists('Select type', 'None');
+    $assert->optionExists('Select type', 'Manual');
+    $assert->optionExists('Select type', 'Automatic with minimum threshold');
+    $this->assertEquals('None', $select->find('xpath', "//option[@selected='selected']")->getText());
 
-    // Verify that configuration items are not visible for manual type.
-    $assert->selectExists('translation_sync[0][type]')->selectOption('manual');
-    $assert->elementTextNotContains('css', '#edit-translation-sync-0', 'Language');
-    $assert->elementTextNotContains('css', '#edit-translation-sync-0', 'Date');
+    // Assert we don't see a configuration fieldset.
+    $this->assertFalse($this->getSession()->getPage()->find('css', '#edit-translation-sync-0-configuration')->isVisible());
 
+    // Save the node with no value.
     $this->getSession()->getPage()->pressButton('Save');
-    $this->assertSession()->pageTextContains('Page My page has been created.');
-
     /** @var \Drupal\node\NodeInterface $node */
+    $node = $this->entityTypeManager->getStorage('node')->load(1);
+    $this->assertTrue($node->get('translation_sync')->isEmpty());
+    $this->assertEmpty($node->get('translation_sync')->getValue());
+
+    // Edit the node again and configure it to be Manual.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->selectFieldOption('Select type', 'manual');
+    $this->getSession()->wait(10);
+    $this->assertFalse($this->getSession()->getPage()->find('css', '#edit-translation-sync-0-configuration')->isVisible());
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->entityTypeManager->getStorage('node')->resetCache();
     $node = $this->entityTypeManager->getStorage('node')->load(1);
     $expected_values = [
       'type' => 'manual',
@@ -85,28 +120,42 @@ class TranslationSynchronisationFieldWidgetTest extends TranslationTestBase {
     ];
     $this->assertEquals($expected_values, $node->get('translation_sync')->first()->getValue());
 
-    // Edit the node to use the automatic type.
-    $this->drupalGet('/node/1/edit');
-    $assert->selectExists('translation_sync[0][type]')->selectOption('automatic');
-    // Verify that configuration items are visible.
-    $assert->waitForField('translation_sync[0][configuration][languages][]');
-    $assert->waitForField('translation_sync[0][configuration][date][date]');
-    $assert->waitForField('translation_sync[0][configuration][date][time]');
-    $assert->elementTextContains('css', '#edit-translation-sync-0', 'Language');
-    $assert->elementTextContains('css', '#edit-translation-sync-0', 'Date');
-
-    $assert->selectExists('translation_sync[0][configuration][languages][]')->selectOption('en');
-    $assert->fieldExists('translation_sync[0][configuration][date][date]')->setValue($date_time->format($date_format));
-    $assert->fieldExists('translation_sync[0][configuration][date][time]')->setValue($date_time->format($time_format));
+    // Edit the node again and configure it to be Automatic without a date.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->selectFieldOption('Select type', 'automatic');
+    $assert->waitForField('Languages');
+    $this->assertTrue($this->getSession()->getPage()->find('css', '#edit-translation-sync-0-configuration')->isVisible());
+    $this->assertTrue($this->getSession()->getPage()->find('css', '#edit-translation-sync-0-configuration-languages')->isVisible());
+    $this->assertTrue($this->getSession()->getPage()->find('css', '#edit-translation-sync-0-configuration-date')->isVisible());
+    $this->getSession()->getPage()->selectFieldOption('Languages', 'en', TRUE);
+    $this->getSession()->getPage()->selectFieldOption('Languages', 'fr', TRUE);
     $this->getSession()->getPage()->pressButton('Save');
-    $this->assertSession()->pageTextContains('Page My page has been updated.');
-
+    $this->entityTypeManager->getStorage('node')->resetCache();
     $node = $this->entityTypeManager->getStorage('node')->load(1);
     $expected_values = [
       'type' => 'automatic',
       'configuration' => [
-        'language' => 'en',
-        'date' => $date_time->getTimestamp(),
+        'languages' => ['en', 'fr'],
+        'date' => NULL,
+      ],
+    ];
+    $this->assertEquals($expected_values, $node->get('translation_sync')->first()->getValue());
+
+    // Edit the node again and configure it to be Automatic with a date.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $date = new DrupalDateTime('now');
+    $this->getSession()->getPage()->fillField('edit-translation-sync-0-configuration-date-date', $date->format('m/d/Y'));
+    $this->getSession()->getPage()->fillField('edit-translation-sync-0-configuration-date-time', $date->format('h:i:sa'));
+    $this->getSession()->getPage()->pressButton('Save');
+
+    $this->entityTypeManager->getStorage('node')->resetCache();
+    $node = $this->entityTypeManager->getStorage('node')->load(1);
+
+    $expected_values = [
+      'type' => 'automatic',
+      'configuration' => [
+        'languages' => ['en', 'fr'],
+        'date' => $date->getTimestamp(),
       ],
     ];
     $this->assertEquals($expected_values, $node->get('translation_sync')->first()->getValue());
