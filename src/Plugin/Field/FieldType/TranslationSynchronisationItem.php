@@ -45,6 +45,22 @@ class TranslationSynchronisationItem extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
+  public function getConstraints() {
+    $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
+    $constraints = parent::getConstraints();
+
+    $constraints[] = $constraint_manager->create('ComplexData', [
+      'configuration' => [
+        'TranslationSynchronisation' => [],
+      ],
+    ]);
+
+    return $constraints;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     $columns = [
       'type' => [

@@ -47,6 +47,10 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     $date = new \DateTime('2020-05-08');
     $tests = [
+      'no-values' => [
+        'type' => '',
+        'configuration' => [],
+      ],
       'manual' => [
         'type' => 'manual',
         'configuration' => [],
@@ -85,12 +89,30 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
       $node_storage->resetCache();
       /** @var \Drupal\node\NodeInterface $node */
       $node = $node_storage->load($node->id());
-      $this->assertEquals($values, $node->get('translation_sync')->first()->getValue());
-      $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
-      $build = $builder->viewField($node->get('translation_sync'));
-      $output = $this->container->get('renderer')->renderRoot($build);
-      $this->assertContains((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
+      if (!$node->get('translation_sync')->isEmpty()) {
+        $this->assertEquals($values, $node->get('translation_sync')->first()->getValue());
+        $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
+        $build = $builder->viewField($node->get('translation_sync'));
+        $output = $this->container->get('renderer')->renderRoot($build);
+        $this->assertContains((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
+      }
     }
+
+    // Test languages validation.
+    $values = [
+      'type' => 'automatic',
+      'configuration' => [
+        'languages' => [],
+        'date' => $date->getTimestamp(),
+      ],
+    ];
+    $node->set('translation_sync', $values);
+    $node->save();
+    $node_storage->resetCache();
+    $violations = $node->validate();
+    $this->assertCount(1, $violations);
+    $violation = $violations->get(0);
+    $this->assertEqual('Select at least one language to be approved for synchronizing.', $violation->getMessage());
   }
 
 }

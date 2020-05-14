@@ -43,9 +43,7 @@ class TranslationSynchronisationWidget extends WidgetBase {
     $parents[] = $this->fieldDefinition->getName();
     $parents[] = $element['#delta'];
     $selector = array_shift($parents);
-    if ($parents) {
-      $selector .= '[' . implode('][', $parents) . ']';
-    }
+    $selector .= '[' . implode('][', $parents) . ']';
 
     $element['configuration'] = [
       '#type' => 'container',
