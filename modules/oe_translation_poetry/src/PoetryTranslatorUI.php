@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_poetry;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
@@ -48,10 +49,49 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#default_value' => $translator->getSetting('application_reference'),
       '#description' => $this->t('The application reference code identifies which type of application sent the request.'),
     ];
+
+    // Add the option to reset the global identifier number.
+    /** @var \Drupal\oe_translation_poetry\Poetry $poetry_client */
+    $poetry_client = \Drupal::service('oe_translation_poetry.client.default');
+    $form['number_reset'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Poetry number reset'),
+      '#open' => TRUE,
+    ];
+
+    $reset = NULL;
+    if ($poetry_client->isNewIdentifierNumberRequired()) {
+      $reset = [
+        '#type' => 'inline_template',
+        '#template' => '<strong>{{ message }}</strong>',
+        '#context' => [
+          'message' => $this->t('The number will be reset with the first request made to Poetry.'),
+        ],
+      ];
+    }
+    else {
+      $reset = [
+        '#type' => 'link',
+        '#url' => Url::fromRoute('oe_translation_poetry.confirm_number_reset', [], ['attributes' => ['class' => ['button']], 'query' => ['destination' => Url::fromRoute('<current>')->toString()]]),
+        '#title' => $this->t('Reset number'),
+      ];
+    }
+
+    $form['number_reset']['info'] = [
+      '#type' => 'inline_template',
+      '#template' => '<p>{{ message }}</p><p>{{ reset }}</p>',
+      '#context' => [
+        'message' => $this->t('The Poetry number is given by Poetry whenever requests are sent using the SEQUENCE (or COUNTER). For example, <strong>1000</strong> in the following example request ID: WEB/2020/<strong>1000</strong>/0/10/TRA.
+                               Reset this number only if requests made to Poetry are blocked due to duplicated IDs which prevent the sending of new requests. Normally this should not happen.'),
+        'reset' => $reset,
+      ],
+    ];
+
     $form['contact'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Contact information'),
     ];
+
     $contact_defaults = $translator->getSetting('contact');
     foreach (static::getContactFieldNames('contact') as $name => $label) {
       $form['contact'][$name] = [

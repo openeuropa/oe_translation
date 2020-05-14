@@ -259,6 +259,76 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
   }
 
   /**
+   * Tests we can reset the global identifying number.
+   */
+  public function testResetGlobalIdentifierNumberRequest(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My first node',
+    ]);
+    $node->save();
+
+    // Select a language to translate.
+    $this->createInitialTranslationJobs($node, ['bg' => 'Bulgarian']);
+
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs['bg'] = $this->jobStorage->load(1);
+    // Submit the request to Poetry.
+    $this->submitTranslationRequestForQueue($node);
+    $this->jobStorage->resetCache();
+
+    // The job should have gotten submitted and the identification number set.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      // The number is the first number because it's the first request we are
+      // making.
+      'number' => '1000',
+      'version' => '0',
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+    // Abort jobs to have the request button displayed again.
+    $this->abort($jobs);
+
+    // Create a new node to force a new number to be generated.
+    /** @var \Drupal\node\NodeInterface $node_two */
+    $node_two = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My second node',
+    ]);
+    $node_two->save();
+
+    $this->resetGlobalIdentifierNumber();
+
+    $this->createInitialTranslationJobs($node_two, ['bg' => 'Bulgarian']);
+
+    $jobs = [];
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs['bg'] = $this->jobStorage->load(2);
+
+    $this->submitTranslationRequestForQueue($node_two);
+    $this->jobStorage->resetCache();
+
+    // The job should have gotten submitted and the identification number
+    // should have a new number instead of increasing the part.
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      'year' => date('Y'),
+      'number' => '1001',
+      'version' => '0',
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+    $this->assertJobsPoetryRequestIdValues($jobs, $expected_poetry_request_id);
+  }
+
+  /**
    * Abort jobs.
    *
    * @param \Drupal\tmgmt\JobInterface[] $jobs
@@ -269,6 +339,30 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       $fullJob = $this->jobStorage->load($job->id());
       $fullJob->aborted();
     }
+  }
+
+  /**
+   * Logs in an resets the Poetry global identifier number.
+   */
+  protected function resetGlobalIdentifierNumber(): void {
+    // Augment the translator permissions to be able to configure the
+    // translators.
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
+    $permissions = $role->getPermissions();
+    $permissions[] = 'administer menu';
+    $permissions[] = 'administer tmgmt';
+    $user = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($user);
+
+    // Force the use of the sequence to get a new number.
+    $translator_storage = $this->entityTypeManager->getStorage('tmgmt_translator');
+    /** @var \Drupal\tmgmt\TranslatorInterface $translator */
+    $translator = $translator_storage->load('poetry');
+    $this->drupalGet($translator->toUrl('edit-form'));
+    $this->getSession()->getPage()->clickLink('Reset number');
+    $this->assertSession()->pageTextContains('Please confirm you want to reset the global identifier number on the next request made to DGT.');
+    $this->getSession()->getPage()->pressButton('Confirm');
   }
 
 }

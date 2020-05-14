@@ -177,7 +177,42 @@ class Poetry implements PoetryInterface {
   /**
    * {@inheritdoc}
    */
+  public function isNewIdentifierNumberRequired(): bool {
+    return (bool) $this->state->get('oe_translation_poetry_number_reset', FALSE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function forceNewIdentifierNumber(bool $force): void {
+    $this->state->set('oe_translation_poetry_number_reset', $force);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIdentifierForContent(ContentEntityInterface $entity): Identifier {
+    // If a new number is forcefully required, return a default identifier
+    // with the sequence.
+    if ($this->isNewIdentifierNumberRequired()) {
+      $identifier = $this->getIdentifier();
+      $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
+      return $identifier;
+    }
+    // Otherwise, calculate the identifier based on the requested entity.
+    return $this->doGetIdentifierForContent($entity);
+  }
+
+  /**
+   * Calculates and returns the identifier for a given content entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return \EC\Poetry\Messages\Components\Identifier
+   *   The identifier.
+   */
+  public function doGetIdentifierForContent(ContentEntityInterface $entity): Identifier {
     $last_identifier_for_content = $this->getLastIdentifierForContent($entity);
     if ($last_identifier_for_content instanceof Identifier) {
       // If the content has already been translated, we need to use the
