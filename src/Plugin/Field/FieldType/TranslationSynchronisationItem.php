@@ -16,7 +16,8 @@ use Drupal\Core\TypedData\DataDefinition;
  *   label = @Translation("Translation Synchronisation"),
  *   category = @Translation("OpenEuropa"),
  *   default_widget = "oe_translation_translation_sync_widget",
- *   default_formatter = "oe_translation_translation_sync_formatter"
+ *   default_formatter = "oe_translation_translation_sync_formatter",
+ *   constraints = {"TranslationSynchronisation" = {}}
  * )
  */
 class TranslationSynchronisationItem extends FieldItemBase {
@@ -40,22 +41,6 @@ class TranslationSynchronisationItem extends FieldItemBase {
       ->setLabel(t('Configuration'));
 
     return $properties;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getConstraints() {
-    $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
-    $constraints = parent::getConstraints();
-
-    $constraints[] = $constraint_manager->create('ComplexData', [
-      'configuration' => [
-        'TranslationSynchronisation' => [],
-      ],
-    ]);
-
-    return $constraints;
   }
 
   /**

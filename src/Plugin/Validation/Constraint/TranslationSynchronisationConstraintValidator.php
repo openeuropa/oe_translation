@@ -16,8 +16,15 @@ class TranslationSynchronisationConstraintValidator extends ConstraintValidator 
    * {@inheritdoc}
    */
   public function validate($value, Constraint $constraint) {
-    if (empty($value['languages'])) {
-      return $this->context->addViolation($constraint->missingLanguages);
+    if ($value->get('type')->getValue() !== 'automatic') {
+      // We don't have any validation if it's not an automatic.
+      return;
+    }
+
+    // If it is, we need to ensure we have some languages selected.
+    $configuration = $value->get('configuration')->getValue();
+    if (!$configuration || !isset($configuration['languages']) || empty($configuration['languages'])) {
+      $this->context->addViolation($constraint->missingLanguages);
     }
   }
 

@@ -9,7 +9,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\oe_translation\Plugin\Field\FieldFormatter\TranslationSynchronisationFormatter;
 
 /**
- * Tests the Translation Synchronisation field type, widget and formatter.
+ * Tests the Translation Synchronisation field type and formatter.
  */
 class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
 
@@ -49,7 +49,6 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
     $tests = [
       'no-values' => [
         'type' => '',
-        'configuration' => [],
       ],
       'manual' => [
         'type' => 'manual',
@@ -83,36 +82,72 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
     ]);
     $node->save();
 
-    foreach ($tests as $values) {
+    foreach ($tests as $case => $values) {
       $node->set('translation_sync', $values);
       $node->save();
       $node_storage->resetCache();
       /** @var \Drupal\node\NodeInterface $node */
       $node = $node_storage->load($node->id());
-      if (!$node->get('translation_sync')->isEmpty()) {
-        $this->assertEquals($values, $node->get('translation_sync')->first()->getValue());
-        $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
-        $build = $builder->viewField($node->get('translation_sync'));
-        $output = $this->container->get('renderer')->renderRoot($build);
-        $this->assertContains((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
+      if ($case === 'no-values') {
+        $this->assertTrue($node->get('translation_sync')->isEmpty());
+        continue;
       }
+
+      $this->assertEquals($values, $node->get('translation_sync')->first()->getValue());
+      $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
+      $build = $builder->viewField($node->get('translation_sync'));
+      $output = $this->container->get('renderer')->renderRoot($build);
+      $this->assertContains((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
     }
 
-    // Test languages validation.
-    $values = [
-      'type' => 'automatic',
-      'configuration' => [
-        'languages' => [],
-        'date' => $date->getTimestamp(),
+    // Test the languages validation.
+    $tests = [
+      'invalid' => [
+        [
+          'type' => 'automatic',
+          'configuration' => [
+            'languages' => [],
+            'date' => $date->getTimestamp(),
+          ],
+        ],
+      ],
+      'valid' => [
+        [
+          'type' => 'manual',
+          'configuration' => [],
+        ],
+        [
+          'type' => 'automatic',
+          'configuration' => [
+            'languages' => ['fr'],
+            'date' => $date->getTimestamp(),
+          ],
+        ],
+        [
+          'type' => 'automatic',
+          'configuration' => [
+            'languages' => ['fr'],
+            'date' => NULL,
+          ],
+        ],
       ],
     ];
-    $node->set('translation_sync', $values);
-    $node->save();
-    $node_storage->resetCache();
-    $violations = $node->validate();
-    $this->assertCount(1, $violations);
-    $violation = $violations->get(0);
-    $this->assertEqual('Select at least one language to be approved for synchronizing.', $violation->getMessage());
+
+    foreach ($tests as $status => $cases) {
+      foreach ($cases as $values) {
+        $node->set('translation_sync', $values);
+        $violations = $node->get('translation_sync')->validate();
+
+        if ($status === 'valid') {
+          $this->assertEquals(0, $violations->count());
+          continue;
+        }
+
+        $this->assertEquals(1, $violations->count());
+        $violation = $violations->get(0);
+        $this->assertEqual('Select at least one language to be approved for synchronizing.', $violation->getMessage());
+      }
+    }
   }
 
 }
