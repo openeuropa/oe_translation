@@ -9,7 +9,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
- * Tests the Translation Synchronisation field type and formatter.
+ * Tests the Organisational Contact field type and formatter.
  */
 class OrganisationalContactFieldTest extends TranslationKernelTestBase {
 
