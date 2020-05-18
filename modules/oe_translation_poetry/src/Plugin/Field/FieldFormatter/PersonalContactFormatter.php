@@ -27,7 +27,7 @@ class PersonalContactFormatter extends FormatterBase {
     $elements = [];
     foreach ($items as $delta => $item) {
       $elements[$delta] = [
-        '#markup' => implode('<br/>', [
+        '#markup' => implode('<br />', [
           $item->author,
           $item->secretary,
           $item->contact,
