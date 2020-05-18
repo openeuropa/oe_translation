@@ -27,7 +27,7 @@ class OrganisationalContactFormatter extends FormatterBase {
     $elements = [];
     foreach ($items as $delta => $item) {
       $elements[$delta] = [
-        '#markup' => implode('<br/>', [
+        '#markup' => implode('<br />', [
           $item->responsible,
           $item->author,
           $item->requester,
