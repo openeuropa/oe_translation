@@ -622,7 +622,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // in the ongoing request when we are adding new languages to it.
       if ($extra_language_request && in_array($langcode, array_keys($cancelled_languages))) {
         $language = $this->languageManager->getLanguage($langcode);
-        $this->messenger->addWarning($this->t('Please be aware that <em>@language</em> has been skipped from the request because it was cancelled in Poetry for the ongoing request.', ['@language' => $language->getName()]));
+        $this->messenger->addWarning($this->t('Please be aware that <em>@language</em> has been skipped from the request because it was cancelled in DGT for the ongoing request.', ['@language' => $language->getName()]));
         continue;
       }
 

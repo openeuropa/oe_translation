@@ -127,7 +127,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
 
     // Only FR should be included in the request.
-    $this->assertSession()->pageTextContains('Please be aware that Bulgarian has been skipped from the request because it was cancelled in Poetry for the ongoing request.');
+    $this->assertSession()->pageTextContains('Please be aware that Bulgarian has been skipped from the request because it was cancelled in DGT for the ongoing request.');
     $jobs = $this->loadJobsKeyedByLanguage();
     $this->assertEquals(JobInterface::STATE_UNPROCESSED, $jobs['fr']->getState());
     $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $jobs['bg']->get('poetry_state')->value);
