@@ -20,7 +20,7 @@ class OrganisationalContactItem extends ContactItemBase {
   /**
    * {@inheritdoc}
    */
-  protected static function contactValues() {
+  public static function contactTypes() {
     return [
       'responsible' => t('Responsible'),
       'author' => t('Author'),

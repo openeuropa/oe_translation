@@ -11,17 +11,4 @@ namespace Drupal\oe_translation_poetry\Plugin\Field\FieldWidget;
  *   field_types = {"oe_translation_poetry_organisation_contact"},
  * )
  */
-class OrganisationalContactWidget extends ContactWidgetBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static function contactElements() {
-    return [
-      'responsible' => t('Responsible'),
-      'author' => t('Author'),
-      'requester' => t('Requester'),
-    ];
-  }
-
-}
+class OrganisationalContactWidget extends ContactWidgetBase {}
