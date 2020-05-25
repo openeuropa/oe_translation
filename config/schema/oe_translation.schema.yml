@@ -30,3 +30,16 @@ field.value.oe_translation_translation_sync:
     configuration:
       type: string
       label: Configuration
+
+oe_translation_request.oe_translation_request_type.*:
+  type: config_entity
+  label: 'Translation Request type config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string

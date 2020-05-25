@@ -1,0 +1,5 @@
+entity.oe_translation_request_type.collection:
+  title: 'Translation Requests'
+  parent: system.admin_content
+  description: 'List of Translation Requests.'
+  route_name: entity.oe_translation_request.collection

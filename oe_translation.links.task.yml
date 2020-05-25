@@ -1,0 +1,26 @@
+entity.oe_translation_request.canonical:
+  title: View
+  route_name: entity.oe_translation_request.canonical
+  base_route: entity.oe_translation_request.canonical
+entity.oe_translation_request.edit_form:
+  title: Edit
+  route_name: entity.oe_translation_request.edit_form
+  base_route: entity.oe_translation_request.canonical
+entity.oe_translation_request.delete_form:
+  title: Delete
+  route_name: entity.oe_translation_request.delete_form
+  base_route: entity.oe_translation_request.canonical
+  weight: 10
+entity.oe_translation_request.collection:
+  title: Translation Requests
+  route_name: entity.oe_translation_request.collection
+  base_route: system.admin_content
+  weight: 10
+entity.oe_translation_request_type.edit_form:
+  title: Edit
+  route_name: entity.oe_translation_request_type.edit_form
+  base_route: entity.oe_translation_request_type.edit_form
+entity.oe_translation_request_type.collection:
+  title: List of Translation Request Types
+  route_name: entity.oe_translation_request_type.collection
+  base_route: entity.oe_translation_request_type.collection
