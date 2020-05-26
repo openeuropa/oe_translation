@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation_poetry\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\FieldItemListInterface;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation_poetry\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\FieldItemListInterface;
@@ -15,7 +17,7 @@ abstract class ContactWidgetBase extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    $types = $items->first()->contactTypes();
+    $types = $items[$delta]->contactTypes();
     $element['#type'] = 'fieldset';
     foreach ($types as $type => $label) {
       $element[$type] = [
