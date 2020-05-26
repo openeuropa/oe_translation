@@ -14,7 +14,7 @@ use Drupal\tmgmt\JobInterface;
 class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
 
   /**
-   * Tests to add a language to a request.
+   * Tests adding a language to a request.
    */
   public function testTranslationAddLanguagesRequest(): void {
     $node = $this->createNodeWithRequestedJobs([
@@ -103,21 +103,55 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     // Refresh page.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
 
-    // Assert button we see the update and add language buttons again.
+    // Assert that we see the update and add language buttons again.
     $this->assertSession()->buttonExists('Add extra languages to the ongoing DGT request');
     $this->assertSession()->buttonExists('Request a DGT translation update for the selected languages');
     $this->assertSession()->pageTextNotContains('No translation requests to DGT can be made until the ongoing ones have been accepted and/or translated.');
 
+    // Cancel one of the accepted languages.
+    $status_notification = $this->fixtureGenerator->statusNotification($this->defaultIdentifierInfo, 'CNL',
+      [
+        [
+          'code' => 'BG',
+        ],
+      ]);
+
+    $this->performNotification($status_notification);
+    $jobs = $this->loadJobsKeyedByLanguage();
+    $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $jobs['bg']->get('poetry_state')->value);
+
+    // Try to add back that language, among others.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $page->checkField('edit-languages-fr');
+    $page->checkField('edit-languages-bg');
+    $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
+
+    // Only FR should be included in the request.
+    $this->assertSession()->pageTextContains('Please be aware that Bulgarian has been skipped from the request because it was cancelled in DGT for the ongoing request.');
+    $jobs = $this->loadJobsKeyedByLanguage();
+    $this->assertEquals(JobInterface::STATE_UNPROCESSED, $jobs['fr']->getState());
+    $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $jobs['bg']->get('poetry_state')->value);
+
     // Send the translations for each job.
+    unset($jobs['bg']);
     $this->notifyWithDummyTranslations($jobs);
-    $this->assertJobsAreTranslated();
-    foreach ($this->loadJobsKeyedByLanguage() as $job) {
-      $this->assertEquals(PoetryTranslator::POETRY_STATUS_TRANSLATED, $job->get('poetry_state')->value);
+    foreach ($this->loadJobsKeyedByLanguage() as $langcode => $job) {
+      if ($langcode === 'bg') {
+        $this->assertEquals(PoetryTranslator::POETRY_STATUS_CANCELLED, $job->get('poetry_state')->value, sprintf('The %s job is not cancelled', $langcode));
+        continue;
+      }
+
+      if ($langcode === 'fr') {
+        // We have not approved the FR translation.
+        $this->assertTrue($job->get('poetry_state')->isEmpty(), sprintf('The %s job has been started.', $langcode));
+        continue;
+      }
+      $this->assertEquals(PoetryTranslator::POETRY_STATUS_TRANSLATED, $job->get('poetry_state')->value, sprintf('The %s job is not translated', $langcode));
     }
   }
 
   /**
-   * Tests to add a language to a request after content has been updated.
+   * Tests adding a language to a request after content has been updated.
    */
   public function testTranslationAddLanguagesRequestAfterUpdate(): void {
     $node = $this->createNodeWithRequestedJobs([
