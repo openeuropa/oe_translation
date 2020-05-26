@@ -17,6 +17,6 @@ interface ContactItemInterface extends FieldItemInterface {
    * @return array
    *   The contact type value labels keyed by their machine names.
    */
-  public static function contactTypes();
+  public static function contactTypes(): array;
 
 }

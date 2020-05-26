@@ -17,7 +17,8 @@ use Drupal\Core\TypedData\DataDefinition;
  *   category = @Translation("OpenEuropa"),
  *   default_widget = "oe_translation_translation_sync_widget",
  *   default_formatter = "oe_translation_translation_sync_formatter",
- *   constraints = {"TranslationSynchronisation" = {}}
+ *   constraints = {"TranslationSynchronisation" = {}},
+ *   no_ui = TRUE
  * )
  */
 class TranslationSynchronisationItem extends FieldItemBase {

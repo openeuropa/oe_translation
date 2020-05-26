@@ -12,7 +12,8 @@ namespace Drupal\oe_translation_poetry\Plugin\Field\FieldType;
  *   label = @Translation("Personal Contact"),
  *   category = @Translation("OpenEuropa"),
  *   default_widget = "oe_translation_poetry_personal_contact_widget",
- *   default_formatter = "oe_translation_poetry_personal_contact_formatter"
+ *   default_formatter = "oe_translation_poetry_personal_contact_formatter",
+ *   no_ui = TRUE
  * )
  */
 class PersonalContactItem extends ContactItemBase {
@@ -20,7 +21,7 @@ class PersonalContactItem extends ContactItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function contactTypes() {
+  public static function contactTypes(): array {
     return [
       'author' => t('Author'),
       'secretary' => t('Secretary'),

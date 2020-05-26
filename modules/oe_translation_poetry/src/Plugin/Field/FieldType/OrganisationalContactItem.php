@@ -12,7 +12,8 @@ namespace Drupal\oe_translation_poetry\Plugin\Field\FieldType;
  *   label = @Translation("Organisational Contact"),
  *   category = @Translation("OpenEuropa"),
  *   default_widget = "oe_translation_poetry_organisation_contact_widget",
- *   default_formatter = "oe_translation_poetry_organisation_contact_formatter"
+ *   default_formatter = "oe_translation_poetry_organisation_contact_formatter",
+ *   no_ui = TRUE
  * )
  */
 class OrganisationalContactItem extends ContactItemBase {
@@ -20,7 +21,7 @@ class OrganisationalContactItem extends ContactItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function contactTypes() {
+  public static function contactTypes(): array {
     return [
       'responsible' => t('Responsible'),
       'author' => t('Author'),
