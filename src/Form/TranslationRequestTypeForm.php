@@ -44,7 +44,7 @@ class TranslationRequestTypeForm extends BundleEntityFormBase {
       '#default_value' => $entity_type->id(),
       '#maxlength' => EntityTypeInterface::BUNDLE_MAX_LENGTH,
       '#machine_name' => [
-        'exists' => ['Drupal\oe_translation_request\Entity\TranslationRequestType', 'load'],
+        'exists' => ['Drupal\oe_translation\Entity\TranslationRequestType', 'load'],
         'source' => ['label'],
       ],
       '#description' => $this->t('A unique machine-readable name for this translation request type. It must only contain lowercase letters, numbers, and underscores.'),

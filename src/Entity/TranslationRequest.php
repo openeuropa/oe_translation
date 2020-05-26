@@ -258,9 +258,16 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
-    $field['content_entity'] = BaseFieldDefinition::create('oe_translation_entity_revision_type_item')
+    $fields['content_entity'] = BaseFieldDefinition::create('oe_translation_entity_revision_type_item')
       ->setLabel(t('Content entity'))
-      ->setDescription(t('Stores the entity type of the entity being translated.'));
+      ->setDescription(t('Stores the entity type of the entity being translated.'))
+      ->setDisplayOptions('form', [
+        'type' => 'oe_translation_entity_revision_type_widget',
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'oe_translation_entity_revision_type_formatter',
+      ]);
 
     $fields['translation_provider'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Translation provider'))
@@ -272,7 +279,9 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ])
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-      ]);
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['source_language_code'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Source language code'))
@@ -286,42 +295,92 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
         'type' => 'string_textfield',
       ]);
 
-    $field['target_language_codes'] = BaseFieldDefinition::create('string')
+    $fields['target_language_codes'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Target language codes'))
       ->setDescription(t('Stores the requested language codes.'))
-      ->setCardinality(-1);
+      ->setCardinality(-1)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'string',
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+      ]);
 
     $fields['jobs'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Jobs'))
       ->setDescription(t('References the TMGMT Jobs of the translation request'))
       ->setSetting('target_type', 'tmgmt_job')
-      ->setReadOnly(TRUE);
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => 60,
+          'placeholder' => '',
+        ],
+      ]);
 
     $fields['auto_accept_translations'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Auto-accept translations'))
       ->setDescription(t('Choose if incoming translations should be auto-accepted.'))
-      ->setDefaultValue(FALSE);
+      ->setStorageRequired(TRUE)
+      ->setDefaultValue(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'boolean',
+      ]);
 
-    $field['translation_synchronisation'] = BaseFieldDefinition::create('oe_translation_translation_sync')
+    $fields['translation_synchronisation'] = BaseFieldDefinition::create('oe_translation_translation_sync')
       ->setLabel(t('Translation synchronisation'))
-      ->setDescription(t('Stores the translation synchronisation settings.'));
+      ->setDescription(t('Stores the translation synchronisation settings.'))
+      ->setDisplayOptions('form', [
+        'type' => 'oe_translation_translation_sync_widget',
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'oe_translation_translation_sync_formatter',
+      ]);
 
     $fields['upstream_translation'] = BaseFieldDefinition::create('boolean')
       ->setLabel(T('Upstream translation'))
       ->setDescription(t('Choose if the translations that come in should be upstreamed to the latest revisions.'))
-      ->setDefaultValue(FALSE);
+      ->setStorageRequired(TRUE)
+      ->setDefaultValue(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'boolean',
+      ]);
 
     $fields['message_for_provider'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Message for provider'))
-      ->setDescription(t('Stores the message sent to the provider.'));
+      ->setDescription(t('Stores the message sent to the provider.'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'settings' => [
+          'rows' => 4,
+        ],
+      ]);
 
-    $field['request_status'] = BaseFieldDefinition::create('list_string')
+    $fields['request_status'] = BaseFieldDefinition::create('list_string')
       ->setLabel('Request status:')
       ->setSetting('allowed_values', [
         'draft' => 'Draft',
         'sent' => 'Sent',
         'cancelled' => 'Cancelled',
         'finalized' => 'Finalized',
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'options_select',
+        'settings' => [
+          'rows' => 4,
+        ],
       ])
       ->setDefaultValue('draft');
 
@@ -336,13 +395,11 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
           'size' => 60,
           'placeholder' => '',
         ],
-        'weight' => 15,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'author',
-        'weight' => 15,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
@@ -352,12 +409,10 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'timestamp',
-        'weight' => 20,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('form', [
         'type' => 'datetime_timestamp',
-        'weight' => 20,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
