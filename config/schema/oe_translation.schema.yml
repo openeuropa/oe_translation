@@ -5,3 +5,28 @@ tmgmt.translator.settings.permission:
     permission:
       type: string
       label: The permission needed for this translator
+
+field.value.oe_translation_entity_revision_type_item:
+  type: mapping
+  label: Default value
+  mapping:
+    entity_id:
+      type: string
+      label: Entity ID
+    entity_revision_id:
+      type: string
+      label: Entity Revision
+    entity_type:
+      type: string
+      label: Entity Type
+
+field.value.oe_translation_translation_sync:
+  type: mapping
+  label: Default value
+  mapping:
+    type:
+      type: string
+      label: Type
+    configuration:
+      type: string
+      label: Configuration

@@ -18,6 +18,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   default_formatter = "oe_translation_entity_revision_type_formatter",
  *   default_widget = "oe_translation_entity_revision_type_widget",
  *   list_class = "Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList",
+ *   no_ui = TRUE
  * )
  */
 class EntityRevisionWithTypeItem extends FieldItemBase {
