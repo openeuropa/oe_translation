@@ -6,6 +6,7 @@ namespace Drupal\oe_translation\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -44,6 +45,7 @@ use Drupal\user\UserInterface;
  *     "uuid" = "uuid",
  *     "created" = "created",
  *     "changed" = "changed",
+ *     "published" = "status",
  *   },
  *   links = {
  *     "add-form" = "/translation-request/add/{oe_translation_request_type}",
@@ -61,6 +63,7 @@ use Drupal\user\UserInterface;
 class TranslationRequest extends ContentEntityBase implements TranslationRequestInterface {
 
   use EntityChangedTrait;
+  use EntityPublishedTrait;
 
   /**
    * {@inheritdoc}
@@ -76,7 +79,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function getCreatedTime(): int {
+  public function getCreatedTime(): string {
     return $this->get('created')->value;
   }
 
@@ -196,8 +199,16 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function hasAutoAcceptTranslationsEnabled(): bool {
-    return $this->get('auto_accept_translations')->getValue();
+  public function hasAutoAcceptTranslations(): bool {
+    return (bool) $this->get('auto_accept_translations');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAutoAcceptTranslations(bool $value): TranslationRequestInterface {
+    $this->set('auto_accept_translations', $value);
+    return $this;
   }
 
   /**
@@ -218,8 +229,16 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function hasUpstreamTranslationEnabled(): bool {
-    return $this->get('upstream_translation')->getValue();
+  public function hasUpstreamTranslation(): bool {
+    return (bool) $this->get('upstream_translation');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUpstreamTranslation(bool $value): TranslationRequestInterface {
+    $this->set('upstream_translation', $value);
+    return $this;
   }
 
   /**
@@ -419,6 +438,8 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
       ->setDescription(t('The time that the translation request was last edited.'));
+
+    $fields += static::publishedBaseFieldDefinitions($entity_type);
 
     return $fields;
   }

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\tmgmt\JobInterface;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
@@ -12,15 +13,15 @@ use Drupal\Core\Entity\EntityChangedInterface;
 /**
  * Provides an interface defining a translation request entity type.
  */
-interface TranslationRequestInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface {
+interface TranslationRequestInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface, EntityPublishedInterface {
 
   /**
    * Gets the translation request creation timestamp.
    *
-   * @return int
+   * @return string
    *   Creation timestamp of the translation request.
    */
-  public function getCreatedTime(): int;
+  public function getCreatedTime(): string;
 
   /**
    * Sets the translation request creation timestamp.
@@ -134,7 +135,18 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    * @return bool
    *   TRUE if translation will be auto accepted, FALSE otherwise.
    */
-  public function hasAutoAcceptTranslationsEnabled(): bool;
+  public function hasAutoAcceptTranslations(): bool;
+
+  /**
+   * Sets the translation request auto-accept translations flag value.
+   *
+   * @param bool $value
+   *   The boolean value.
+   *
+   * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
+   *   The called translation request entity.
+   */
+  public function setAutoAcceptTranslations(bool $value): TranslationRequestInterface;
 
   /**
    * Gets the translation request synchronization settings.
@@ -161,7 +173,18 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    * @return bool
    *   TRUE if incoming translation should be upstreamed, FALSE otherwise.
    */
-  public function hasUpstreamTranslationEnabled(): bool;
+  public function hasUpstreamTranslation(): bool;
+
+  /**
+   * Sets the translation request upstream translation flag value.
+   *
+   * @param bool $value
+   *   The boolean value.
+   *
+   * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
+   *   The called translation request entity.
+   */
+  public function setUpstreamTranslation(bool $value): TranslationRequestInterface;
 
   /**
    * Gets the translation request message for the provider.
