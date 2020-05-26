@@ -31,7 +31,7 @@ field.value.oe_translation_translation_sync:
       type: string
       label: Configuration
 
-oe_translation_request.oe_translation_request_type.*:
+oe_translation.oe_translation_request_type.*:
   type: config_entity
   label: 'Translation Request type config'
   mapping:
