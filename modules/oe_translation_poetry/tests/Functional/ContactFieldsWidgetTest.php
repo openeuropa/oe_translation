@@ -5,6 +5,7 @@ namespace Drupal\Tests\oe_translation_poetry\Functional;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\BrowserTestBase;
 
@@ -48,7 +49,7 @@ class ContactFieldsWidgetTest extends BrowserTestBase {
         'type' => $case['field_type'],
       ])->save();
 
-      \Drupal::entityTypeManager()->getStorage('node_type')->create([
+      NodeType::create([
         'name' => $case['bundle'],
         'type' => $case['bundle'],
       ])->save();

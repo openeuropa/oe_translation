@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Kernel;
 
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -34,25 +32,25 @@ class ContactFieldsTest extends TranslationKernelTestBase {
       'name' => 'Page',
     ])->save();
 
-    FieldStorageConfig::create([
+    $this->container->get('entity_type.manager')->getStorage('field_storage_config')->create([
       'field_name' => 'organisational_contact_info',
       'entity_type' => 'node',
       'type' => 'oe_translation_poetry_organisation_contact',
     ])->save();
 
-    FieldConfig::create([
+    $this->container->get('entity_type.manager')->getStorage('field_config')->create([
       'field_name' => 'organisational_contact_info',
       'entity_type' => 'node',
       'bundle' => 'page',
     ])->save();
 
-    FieldStorageConfig::create([
+    $this->container->get('entity_type.manager')->getStorage('field_storage_config')->create([
       'field_name' => 'personal_contact_info',
       'entity_type' => 'node',
       'type' => 'oe_translation_poetry_personal_contact',
     ])->save();
 
-    FieldConfig::create([
+    $this->container->get('entity_type.manager')->getStorage('field_config')->create([
       'field_name' => 'personal_contact_info',
       'entity_type' => 'node',
       'bundle' => 'page',
@@ -60,131 +58,103 @@ class ContactFieldsTest extends TranslationKernelTestBase {
   }
 
   /**
-   * Tests the Organisational field type and formatter.
+   * Tests the personal and organisational contact fields and formatters.
    */
-  public function testOrganisationalContactItemField(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
+  public function testContactFields(): void {
     $tests = [
-      'no-values' => [
-        'responsible' => '',
-        'author' => '',
-        'requester' => '',
+      'organisational_contact_info' => [
+        'no-values' => [
+          'responsible' => '',
+          'author' => '',
+          'requester' => '',
+        ],
+        'only-author' => [
+          'responsible' => '',
+          'author' => 'Author',
+          'requester' => '',
+        ],
+        'only-requester' => [
+          'responsible' => '',
+          'author' => '',
+          'requester' => 'Requester',
+        ],
+        'only-responsible' => [
+          'responsible' => 'Responsible',
+          'author' => '',
+          'requester' => '',
+        ],
+        'all-values' => [
+          'responsible' => 'Responsible',
+          'author' => 'Author',
+          'requester' => 'Requester',
+        ],
       ],
-      'only-author' => [
-        'responsible' => '',
-        'author' => 'Author',
-        'requester' => '',
-      ],
-      'only-requester' => [
-        'responsible' => '',
-        'author' => '',
-        'requester' => 'Requester',
-      ],
-      'only-responsible' => [
-        'responsible' => 'Responsible',
-        'author' => '',
-        'requester' => '',
-      ],
-      'all-values' => [
-        'responsible' => 'Responsible',
-        'author' => 'Author',
-        'requester' => 'Requester',
+      'personal_contact_info' => [
+        'no-values' => [
+          'author' => '',
+          'secretary' => '',
+          'contact' => '',
+          'responsible' => '',
+        ],
+        'only-author' => [
+          'author' => 'Author',
+          'secretary' => '',
+          'contact' => '',
+          'responsible' => '',
+        ],
+        'only-secretary' => [
+          'author' => '',
+          'secretary' => 'Secretary',
+          'contact' => '',
+          'responsible' => '',
+        ],
+        'only-contact' => [
+          'author' => '',
+          'secretary' => '',
+          'contact' => 'Contact',
+          'responsible' => '',
+        ],
+        'only-responsible' => [
+          'author' => '',
+          'secretary' => '',
+          'contact' => '',
+          'responsible' => 'Responsible',
+        ],
+        'all-values' => [
+          'author' => 'Author',
+          'secretary' => 'Secretary',
+          'contact' => 'Contact',
+          'responsible' => 'Responsible',
+        ],
       ],
     ];
 
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'Test page',
-    ]);
-    $node->save();
-
-    foreach ($tests as $case => $values) {
-      $node->set('organisational_contact_info', $values);
-      $node->save();
-      $node_storage->resetCache();
-      /** @var \Drupal\node\NodeInterface $node */
-      $node = $node_storage->load($node->id());
-      if ($case === 'no-values') {
-        $this->assertTrue($node->get('organisational_contact_info')->isEmpty());
-        continue;
-      }
-
-      $this->assertEquals($values, $node->get('organisational_contact_info')->first()->getValue());
-      $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
-      $build = $builder->viewField($node->get('organisational_contact_info'));
-      $output = $this->container->get('renderer')->renderRoot($build);
-      $this->assertContains(implode('<br />', $values), (string) $output);
-    }
-  }
-
-  /**
-   * Tests the Personal field type and formatter.
-   */
-  public function testPersonalContactItemField(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $tests = [
-      'no-values' => [
-        'author' => '',
-        'secretary' => '',
-        'contact' => '',
-        'responsible' => '',
-      ],
-      'only-author' => [
-        'author' => 'Author',
-        'secretary' => '',
-        'contact' => '',
-        'responsible' => '',
-      ],
-      'only-secretary' => [
-        'author' => '',
-        'secretary' => 'Secretary',
-        'contact' => '',
-        'responsible' => '',
-      ],
-      'only-contact' => [
-        'author' => '',
-        'secretary' => '',
-        'contact' => 'Contact',
-        'responsible' => '',
-      ],
-      'only-responsible' => [
-        'author' => '',
-        'secretary' => '',
-        'contact' => '',
-        'responsible' => 'Responsible',
-      ],
-      'all-values' => [
-        'author' => 'Author',
-        'secretary' => 'Secretary',
-        'contact' => 'Contact',
-        'responsible' => 'Responsible',
-      ],
-    ];
 
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'Test page',
-    ]);
-    $node->save();
-
-    foreach ($tests as $case => $values) {
-      $node->set('personal_contact_info', $values);
+    foreach ($tests as $field => $cases) {
+      $node = $node_storage->create([
+        'type' => 'page',
+        'title' => 'Test page ' . $field,
+      ]);
       $node->save();
-      $node_storage->resetCache();
-      /** @var \Drupal\node\NodeInterface $node */
-      $node = $node_storage->load($node->id());
-      if ($case === 'no-values') {
-        $this->assertTrue($node->get('personal_contact_info')->isEmpty());
-        continue;
-      }
 
-      $this->assertEquals($values, $node->get('personal_contact_info')->first()->getValue());
-      $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
-      $build = $builder->viewField($node->get('personal_contact_info'));
-      $output = $this->container->get('renderer')->renderRoot($build);
-      $this->assertContains(implode('<br />', $values), (string) $output);
+      foreach ($cases as $case => $values) {
+        $node->set($field, $values);
+        $node->save();
+        $node_storage->resetCache();
+        /** @var \Drupal\node\NodeInterface $node */
+        $node = $node_storage->load($node->id());
+        if ($case === 'no-values') {
+          $this->assertTrue($node->get('organisational_contact_info')->isEmpty());
+          continue;
+        }
+
+        $this->assertEquals($values, $node->get($field)->first()->getValue());
+        $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
+        $build = $builder->viewField($node->get($field));
+        $output = $this->container->get('renderer')->renderRoot($build);
+        $this->assertContains(implode('<br />', $values), (string) $output);
+      }
     }
   }
 
