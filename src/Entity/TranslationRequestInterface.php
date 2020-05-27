@@ -6,7 +6,6 @@ namespace Drupal\oe_translation\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
-use Drupal\tmgmt\JobInterface;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 
@@ -113,21 +112,32 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   /**
    * Gets the translation request jobs.
    *
-   * @return \Drupal\tmgmt\JobInterface
-   *   The jobs.
+   * @return array
+   *   The array containing job ids.
    */
-  public function getJobs(): JobInterface;
+  public function getJobs(): array;
+
+  /**
+   * Checks if the translation request has a given job.
+   *
+   * @param string $job_id
+   *   The job id.
+   *
+   * @return bool
+   *   True if the job was found, otherwise false.
+   */
+  public function hasJob(string $job_id): bool;
 
   /**
    * Sets the translation request jobs.
    *
-   * @param \Drupal\tmgmt\JobInterface $jobs
-   *   The translation request jobs.
+   * @param string $job_id
+   *   The job id.
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
    *   The called translation request entity.
    */
-  public function setJobs(JobInterface $jobs): TranslationRequestInterface;
+  public function addJob(string $job_id): TranslationRequestInterface;
 
   /**
    * Gets the translation request auto accept translation flag.
@@ -141,7 +151,7 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    * Sets the translation request auto-accept translations flag value.
    *
    * @param bool $value
-   *   The boolean value.
+   *   The flag value.
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
    *   The called translation request entity.
@@ -179,7 +189,7 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    * Sets the translation request upstream translation flag value.
    *
    * @param bool $value
-   *   The boolean value.
+   *   The flag value.
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
    *   The called translation request entity.

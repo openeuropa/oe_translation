@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\tmgmt\JobInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -87,8 +86,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setCreatedTime(int $timestamp): TranslationRequestInterface {
-    $this->set('created', $timestamp);
-    return $this;
+    return $this->set('created', $timestamp);
   }
 
   /**
@@ -109,31 +107,28 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setOwnerId($uid): TranslationRequestInterface {
-    $this->set('uid', $uid);
-    return $this;
+    return $this->set('uid', $uid);
   }
 
   /**
    * {@inheritdoc}
    */
   public function setOwner(UserInterface $account): TranslationRequestInterface {
-    $this->set('uid', $account->id());
-    return $this;
+    return $this->set('uid', $account->id());
   }
 
   /**
    * {@inheritdoc}
    */
   public function getContentEntity(): array {
-    return $this->get('content_entity')->value;
+    return $this->get('content_entity')->first()->getValue();
   }
 
   /**
    * {@inheritdoc}
    */
   public function setContentEntity(array $content_entity): TranslationRequestInterface {
-    $this->set('content_entity', $content_entity);
-    return $this;
+    return $this->set('content_entity', $content_entity);
   }
 
   /**
@@ -147,8 +142,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setTranslationProvider(string $translation_provider): TranslationRequestInterface {
-    $this->set('translation_provider', $translation_provider);
-    return $this;
+    return $this->set('translation_provider', $translation_provider);
   }
 
   /**
@@ -162,8 +156,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setSourceLanguageCode(string $source_language_code): TranslationRequestInterface {
-    $this->set('source_language_code', $source_language_code);
-    return $this;
+    return $this->set('source_language_code', $source_language_code);
   }
 
   /**
@@ -177,83 +170,93 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setTargetLanguageCodes(array $target_language_codes): TranslationRequestInterface {
-    $this->set('target_language_codes', $target_language_codes);
-    return $this;
+    return $this->set('target_language_codes', $target_language_codes);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getJobs(): JobInterface {
-    return $this->get('jobs')->target_id;
+  public function getJobs(): array {
+    $jobs = [];
+    foreach ($this->get('jobs') as $job) {
+      if ($job->target_id) {
+        $jobs[] = $job->target_id;
+      }
+    }
+
+    return $jobs;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setJobs(JobInterface $jobs): TranslationRequestInterface {
-    $this->set('jobs', $jobs);
-    return $this;
+  public function hasJob(string $job_id): bool {
+    return in_array($job_id, $this->getJobs());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addJob(string $job_id): TranslationRequestInterface {
+    $jobs = $this->getJobs();
+    $jobs[] = $job_id;
+    return $this->set('jobs', array_unique($jobs));
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasAutoAcceptTranslations(): bool {
-    return (bool) $this->get('auto_accept_translations');
+    return (bool) $this->get('auto_accept_translations')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setAutoAcceptTranslations(bool $value): TranslationRequestInterface {
-    $this->set('auto_accept_translations', $value);
-    return $this;
+    return $this->set('auto_accept_translations', $value);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTranslationSync(): array {
-    return $this->get('translation_synchronisation')->value;
+    return $this->get('translation_synchronisation')->first()->getValue();
   }
 
   /**
    * {@inheritdoc}
    */
   public function setTranslationSync(array $translation_synchronisation): TranslationRequestInterface {
-    $this->set('translation_synchronisation', $translation_synchronisation);
-    return $this;
+    return $this->set('translation_synchronisation', $translation_synchronisation);
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasUpstreamTranslation(): bool {
-    return (bool) $this->get('upstream_translation');
+    return (bool) $this->get('upstream_translation')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setUpstreamTranslation(bool $value): TranslationRequestInterface {
-    $this->set('upstream_translation', $value);
-    return $this;
+    return $this->set('upstream_translation', $value);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getMessageForProvider(): string {
-    return $this->get('message_for_provider')->getValue();
+    return $this->get('message_for_provider')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setMessageForProvider(string $message_for_provider): TranslationRequestInterface {
-    $this->set('message_for_provider', $message_for_provider);
-    return $this;
+    return $this->set('message_for_provider', $message_for_provider);
   }
 
   /**
@@ -267,8 +270,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setRequestStatus(string $request_status): TranslationRequestInterface {
-    $this->set('request_status', $request_status);
-    return $this;
+    return $this->set('request_status', $request_status);
   }
 
   /**
@@ -330,15 +332,8 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ->setLabel(t('Jobs'))
       ->setDescription(t('References the TMGMT Jobs of the translation request'))
       ->setSetting('target_type', 'tmgmt_job')
-      ->setSetting('handler', 'default')
-      ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
-        'settings' => [
-          'match_operator' => 'CONTAINS',
-          'size' => 60,
-          'placeholder' => '',
-        ],
-      ]);
+      ->setCardinality(-1)
+      ->setReadOnly(TRUE);
 
     $fields['auto_accept_translations'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Auto-accept translations'))
@@ -365,7 +360,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ]);
 
     $fields['upstream_translation'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(T('Upstream translation'))
+      ->setLabel(t('Upstream translation'))
       ->setDescription(t('Choose if the translations that come in should be upstreamed to the latest revisions.'))
       ->setStorageRequired(TRUE)
       ->setDefaultValue(FALSE)
