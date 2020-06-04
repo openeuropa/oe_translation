@@ -13,7 +13,7 @@ use Drupal\Core\Routing\RedirectDestinationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a list controller for the translation request entity type.
+ * Provides a list builder for the translation request entity type.
  */
 class TranslationRequestListBuilder extends EntityListBuilder {
 

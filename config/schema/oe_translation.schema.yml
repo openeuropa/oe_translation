@@ -41,5 +41,3 @@ oe_translation.oe_translation_request_type.*:
     label:
       type: label
       label: 'Label'
-    uuid:
-      type: string

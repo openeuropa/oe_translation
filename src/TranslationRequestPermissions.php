@@ -4,27 +4,56 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\oe_translation\Entity\TranslationRequestType;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides dynamic permissions for different translation request types.
  */
-class TranslationRequestPermissions {
+class TranslationRequestPermissions implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Constructs a TranslationRequestPermissions instance.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   */
+  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
+    $this->entityTypeManager = $entityTypeManager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity_type.manager')
+    );
+  }
 
   /**
    * Returns an array of translation request permissions.
    */
   public function translationRequestTypePermissions() {
-    $perms = [];
+    $permissions = [];
     // Generate permissions for all translation request types.
-    foreach (TranslationRequestType::loadMultiple() as $type) {
-      $perms += $this->buildPermissions($type);
+    foreach ($this->entityTypeManager->getStorage('oe_translation_request_type') as $bundle) {
+      $permissions += $this->buildPermissions($bundle);
     }
 
-    return $perms;
+    return $permissions;
   }
 
   /**

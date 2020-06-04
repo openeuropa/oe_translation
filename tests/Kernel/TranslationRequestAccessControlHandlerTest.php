@@ -31,7 +31,7 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
   /**
    * The access control handler.
    *
-   * @var \Drupal\oe_translation\TranslationRequestAccessControlHandler
+   * @var \Drupal\oe_translation\Access\TranslationRequestAccessControlHandler
    */
   protected $accessControlHandler;
 
@@ -61,7 +61,6 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
       'id' => 'request',
       'label' => 'Request',
     ])->save();
-    $type_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_type');
     $type_storage->create([
       'id' => 'test',
       'label' => 'Test',

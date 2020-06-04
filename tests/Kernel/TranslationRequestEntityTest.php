@@ -6,11 +6,12 @@ namespace Drupal\Tests\oe_translation\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\Tests\tmgmt\Functional\TmgmtTestTrait;
+use Drupal\tmgmt\JobInterface;
 
 /**
  * Tests the Translation Request entity.
  */
-class TranslationRequestTest extends EntityKernelTestBase {
+class TranslationRequestEntityTest extends EntityKernelTestBase {
 
   use TmgmtTestTrait;
 
@@ -42,9 +43,9 @@ class TranslationRequestTest extends EntityKernelTestBase {
     ]);
 
     $this->installEntitySchema('node');
+    $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('tmgmt_job');
     $this->installEntitySchema('oe_translation_request');
-    $this->accessControlHandler = $this->container->get('entity_type.manager')->getAccessControlHandler('oe_translation_request');
 
     // Create test bundle.
     $type_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_type');
@@ -60,31 +61,26 @@ class TranslationRequestTest extends EntityKernelTestBase {
     ])->save();
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $node_storage->create([
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
       'type' => 'page',
       'title' => 'Node to be referenced in content entity',
     ]);
-    $node_storage->create([
-      'type' => 'page',
-      'title' => 'Additional node to be referenced',
-    ]);
+    $node->save();
+    // Create a new revision.
+    $node->setNewRevision(TRUE);
+    $node->save();
   }
 
   /**
    * Tests Translation Request entities.
    */
-  public function testTranslationRequest(): void {
+  public function testTranslationRequestEntity(): void {
     $date = new \DateTime('2020-05-08');
-    $message_for_provider = $this->randomString();
     // Create a translation request.
     $translation_request_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request');
     $values = [
       'bundle' => 'request',
-      'content_entity' => [
-        'entity_id' => '1',
-        'entity_revision_id' => '1',
-        'entity_type' => 'node',
-      ],
       'translation_provider' => 'Translation provider',
       'source_language_code' => 'en',
       'target_language_codes' => [
@@ -103,27 +99,30 @@ class TranslationRequestTest extends EntityKernelTestBase {
           'date' => $date->getTimestamp(),
         ],
       ],
-      'message_for_provider' => $message_for_provider,
+      'message' => 'The message for the provider',
       'request_status' => 'draft',
     ];
-    /** @var \Drupal\oe_translation\Entity\TranslationRequest $translation_request */
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
     $translation_request = $translation_request_storage->create($values);
+    $node = $this->container->get('entity_type.manager')->getStorage('node')->loadRevision(2);
+    $translation_request->setContentEntity($node);
     $translation_request->save();
 
     // Assert values are saved and retrieved properly from the entity.
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
     $translation_request = $translation_request_storage->load($translation_request->id());
-    $this->assertEquals([
-      'entity_id' => '1',
-      'entity_revision_id' => '1',
-      'entity_type' => 'node',
-    ], $translation_request->getContentEntity());
+    $entity = $translation_request->getContentEntity();
+    $this->assertEquals(1, $entity->id());
+    $this->assertEquals(2, $entity->getRevisionId());
+    $this->assertEquals('node', $entity->getEntityTypeId());
     $this->assertEquals('Translation provider', $translation_request->getTranslationProvider());
     $this->assertEquals('en', $translation_request->getSourceLanguageCode());
-    $target_language_codes = $translation_request->getTargetLanguageCodes();
-    $this->assertEquals('fr', $target_language_codes[0]['value']);
-    $this->assertEquals('es', $target_language_codes[1]['value']);
-    $this->assertEquals(TRUE, $translation_request->hasAutoAcceptTranslations());
-    $this->assertEquals(FALSE, $translation_request->hasUpstreamTranslation());
+    $this->assertEquals([
+      'fr',
+      'es',
+    ], $translation_request->getTargetLanguageCodes());
+    $this->assertEquals(TRUE, $translation_request->autoAcceptsTranslations());
+    $this->assertEquals(FALSE, $translation_request->upstreamsTranslations());
     $this->assertEquals([
       'type' => 'automatic',
       'configuration' => [
@@ -134,21 +133,10 @@ class TranslationRequestTest extends EntityKernelTestBase {
         'date' => $date->getTimestamp(),
       ],
     ], $translation_request->getTranslationSync());
-    $this->assertEquals($message_for_provider, $translation_request->getMessageForProvider());
+    $this->assertEquals('The message for the provider', $translation_request->getMessage());
     $this->assertEquals('draft', $translation_request->getRequestStatus());
 
-    // Update the entity values.
-    $translation_request->setContentEntity([
-      'entity_id' => '2',
-      'entity_revision_id' => '2',
-      'entity_type' => 'node',
-    ]);
-    $this->assertEquals([
-      'entity_id' => '2',
-      'entity_revision_id' => '2',
-      'entity_type' => 'node',
-    ], $translation_request->getContentEntity());
-
+    // Update some entity values.
     $translation_request->setTranslationProvider('New translation provider');
     $this->assertEquals('New translation provider', $translation_request->getTranslationProvider());
 
@@ -156,9 +144,10 @@ class TranslationRequestTest extends EntityKernelTestBase {
     $this->assertEquals('ro', $translation_request->getSourceLanguageCode());
 
     $translation_request->setTargetLanguageCodes(['de', 'el']);
-    $target_language_codes = $translation_request->getTargetLanguageCodes();
-    $this->assertEquals('de', $target_language_codes[0]['value']);
-    $this->assertEquals('el', $target_language_codes[1]['value']);
+    $this->assertEquals([
+      'de',
+      'el',
+    ], $translation_request->getTargetLanguageCodes());
 
     // Create tmgmt jobs to be referenced.
     $job1 = $this->createJob('en', 'fr', 1, []);
@@ -169,11 +158,16 @@ class TranslationRequestTest extends EntityKernelTestBase {
     $this->assertEquals(TRUE, $translation_request->hasJob($job1->id()));
     $this->assertEquals(FALSE, $translation_request->hasJob($job2->id()));
     $translation_request->addJob($job2->id());
+    $this->assertEquals(TRUE, $translation_request->hasJob($job1->id()));
     $this->assertEquals(TRUE, $translation_request->hasJob($job2->id()));
-    $this->assertEquals([$job1->id(), $job2->id()], $translation_request->getJobs());
+    $this->assertEquals([$job1->id(), $job2->id()], $translation_request->getJobIds());
+    $this->assertCount(2, $translation_request->getJobs());
+    foreach ($translation_request->getJobs() as $job) {
+      $this->assertInstanceOf(JobInterface::class, $job);
+    }
 
     $translation_request->setAutoAcceptTranslations(FALSE);
-    $this->assertEquals(FALSE, $translation_request->hasAutoAcceptTranslations());
+    $this->assertEquals(FALSE, $translation_request->autoAcceptsTranslations());
     $translation_request->setTranslationSync([
       'type' => 'manual',
       'configuration' => [],
@@ -184,11 +178,11 @@ class TranslationRequestTest extends EntityKernelTestBase {
     ], $translation_request->getTranslationSync());
 
     $translation_request->setUpstreamTranslation(TRUE);
-    $this->assertEquals(TRUE, $translation_request->hasUpstreamTranslation());
+    $this->assertEquals(TRUE, $translation_request->upstreamsTranslations());
 
     $message_for_provider = $this->randomString();
-    $translation_request->setMessageForProvider($message_for_provider);
-    $this->assertEquals($message_for_provider, $translation_request->getMessageForProvider());
+    $translation_request->setMessage($message_for_provider);
+    $this->assertEquals($message_for_provider, $translation_request->getMessage());
 
     $translation_request->setRequestStatus('sent');
     $this->assertEquals('sent', $translation_request->getRequestStatus());

@@ -8,7 +8,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Form controller for the translation request entity edit forms.
+ * Form handler for the translation request entity add/edit forms.
  */
 class TranslationRequestForm extends ContentEntityForm {
 
@@ -16,7 +16,6 @@ class TranslationRequestForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-
     $entity = $this->getEntity();
     $result = $entity->save();
     $link = $entity->toLink($this->t('View'))->toRenderable();

@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation;
+namespace Drupal\oe_translation\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
@@ -27,13 +27,13 @@ class TranslationRequestAccessControlHandler extends EntityAccessControlHandler 
     switch ($operation) {
       case 'view':
         $permission = $entity->isPublished() ? 'view translation request' : 'view unpublished translation request';
-        return AccessResult::allowedIfHasPermission($account, $permission)->addCacheableDependency($entity);
+        return AccessResult::allowedIfHasPermission($account, $permission)->addCacheableDependency($entity)->cachePerPermissions();
 
       case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit ' . $type . ' translation request');
+        return AccessResult::allowedIfHasPermission($account, 'edit ' . $type . ' translation request')->cachePerPermissions();
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete ' . $type . ' translation request');
+        return AccessResult::allowedIfHasPermission($account, 'delete ' . $type . ' translation request')->cachePerPermissions();
 
       default:
         return AccessResult::neutral();

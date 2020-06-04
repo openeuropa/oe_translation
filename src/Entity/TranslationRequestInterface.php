@@ -36,21 +36,21 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   /**
    * Gets the translation request content entity.
    *
-   * @return array
-   *   The content entity values.
+   * @return \Drupal\Core\Entity\ContentEntityInterface|null
+   *   The content entity.
    */
-  public function getContentEntity(): array;
+  public function getContentEntity(): ?ContentEntityInterface;
 
   /**
    * Sets the translation request content entity.
    *
-   * @param array $content_entity
-   *   The content entity values.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The content entity.
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
    *   The called translation request entity.
    */
-  public function setContentEntity(array $content_entity): TranslationRequestInterface;
+  public function setContentEntity(ContentEntityInterface $entity): TranslationRequestInterface;
 
   /**
    * Gets the translation request provider.
@@ -112,10 +112,18 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   /**
    * Gets the translation request jobs.
    *
-   * @return array
-   *   The array containing job ids.
+   * @return \Drupal\tmgmt\JobInterface[]
+   *   An array of TMGMT jobs.
    */
   public function getJobs(): array;
+
+  /**
+   * Gets the translation request job IDs.
+   *
+   * @return array
+   *   An array of TMGMT job IDs.
+   */
+  public function getJobIds(): array;
 
   /**
    * Checks if the translation request has a given job.
@@ -140,12 +148,12 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   public function addJob(string $job_id): TranslationRequestInterface;
 
   /**
-   * Gets the translation request auto accept translation flag.
+   * Whether the request auto-accepts translations.
    *
    * @return bool
    *   TRUE if translation will be auto accepted, FALSE otherwise.
    */
-  public function hasAutoAcceptTranslations(): bool;
+  public function autoAcceptsTranslations(): bool;
 
   /**
    * Sets the translation request auto-accept translations flag value.
@@ -178,12 +186,16 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   public function setTranslationSync(array $translation_synchronisation): TranslationRequestInterface;
 
   /**
-   * Gets the translation request upstream translation flag.
+   * Whether the translation request will upstream translations.
+   *
+   * Upstreaming translations means that when translations that originate from
+   * the current request arrive into the system, they will be carried over
+   * upstream to the latest content revision.
    *
    * @return bool
    *   TRUE if incoming translation should be upstreamed, FALSE otherwise.
    */
-  public function hasUpstreamTranslation(): bool;
+  public function upstreamsTranslations(): bool;
 
   /**
    * Sets the translation request upstream translation flag value.
@@ -202,18 +214,18 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    * @return string
    *   The message for the provider.
    */
-  public function getMessageForProvider(): string;
+  public function getMessage(): ?string;
 
   /**
    * Sets the translation request message for the provider.
    *
-   * @param string $message_for_provider
+   * @param string $message
    *   The message for the provider.
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
    *   The called translation request entity.
    */
-  public function setMessageForProvider(string $message_for_provider): TranslationRequestInterface;
+  public function setMessage(string $message): TranslationRequestInterface;
 
   /**
    * Gets the translation request status.
