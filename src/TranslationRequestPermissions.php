@@ -49,7 +49,7 @@ class TranslationRequestPermissions implements ContainerInjectionInterface {
   public function translationRequestTypePermissions() {
     $permissions = [];
     // Generate permissions for all translation request types.
-    foreach ($this->entityTypeManager->getStorage('oe_translation_request_type') as $bundle) {
+    foreach ($this->entityTypeManager->getStorage('oe_translation_request_type')->loadMultiple() as $bundle) {
       $permissions += $this->buildPermissions($bundle);
     }
 
