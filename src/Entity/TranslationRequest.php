@@ -33,7 +33,7 @@ use Drupal\user\EntityOwnerTrait;
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
  *     },
  *     "route_provider" = {
- *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *       "html" = "Drupal\oe_translation\Routing\TranslationRequestRouteProvider",
  *     }
  *   },
  *   base_table = "oe_translation_request",
