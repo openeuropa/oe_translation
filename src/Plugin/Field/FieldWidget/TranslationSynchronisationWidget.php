@@ -36,6 +36,7 @@ class TranslationSynchronisationWidget extends WidgetBase {
       '#title' => $this->t('Select type'),
       '#options' => static::getSyncTypeOptions(),
       '#default_value' => isset($items[$delta]->type) ? $items[$delta]->type : NULL,
+      '#required' => $element['#required'],
     ];
 
     // Get the selector to build the paths for type field.
@@ -54,6 +55,7 @@ class TranslationSynchronisationWidget extends WidgetBase {
           'select[name="' . $selector . '[type]"]' => ['value' => 'automatic'],
         ],
       ],
+      '#required' => $element['#required'],
     ];
 
     $element['configuration']['languages'] = [

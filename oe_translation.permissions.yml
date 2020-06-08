@@ -1,0 +1,15 @@
+administer translation requests:
+  title: 'Administer translation requests'
+  restrict access: true
+administer translation request types:
+  title: 'Administer translation request types'
+  restrict access: true
+access translation request overview:
+  title: 'Access translation request overview page'
+view translation request:
+  title: View translation request
+view unpublished translation request:
+  title: View unpublished translation request
+
+permission_callbacks:
+  - \Drupal\oe_translation\TranslationRequestPermissions::translationRequestTypePermissions
