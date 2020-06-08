@@ -22,14 +22,4 @@ class TranslationRequestRouteProvider extends AdminHtmlRouteProvider {
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function getCanonicalRoute(EntityTypeInterface $entity_type) {
-    if ($route = parent::getCanonicalRoute($entity_type)) {
-      $route->setRequirement('_permission', 'access translation request canonical');
-      return $route;
-    }
-  }
-
 }

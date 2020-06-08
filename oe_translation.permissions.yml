@@ -6,12 +6,10 @@ administer translation request types:
   restrict access: true
 access translation request overview:
   title: 'Access translation request overview page'
-access translation request canonical:
-  title: 'Access translation request canonical page'
 view translation request:
   title: View translation request
 view unpublished translation request:
-  title: View unpusblished translation request
+  title: View unpublished translation request
 
 permission_callbacks:
   - \Drupal\oe_translation\TranslationRequestPermissions::translationRequestTypePermissions
