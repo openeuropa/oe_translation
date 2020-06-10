@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\oe_translation\ApplicableTranslatorInterface;
@@ -267,7 +268,62 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
 
     $field_definitions = $this->entityFieldManager->getFieldDefinitions($job_item->getItemType(), $job_item->get('item_bundle')->value);
 
+    // Build an array of entity reference fields containing relevant information
+    // like field label, machine name and value to be used for the translation
+    // form.
+    $entity_reference_fields = [];
+    foreach ($field_definitions as $field_definition) {
+      if ($field_definition->getType() === 'entity_reference' && $field_definition instanceof FieldConfig) {
+        foreach ($data[$field_definition->getName()] as $field_values) {
+          $target_id = $field_values['target_id']['#text'];
+          $referenced_entity = $this->entityTypeManager->getStorage('taxonomy_term')->load($target_id);
+          $value = $referenced_entity->label();
+          $entity_reference_fields[] = [
+            'field_label' => $field_definition->label(),
+            'field_name' => $field_definition->getName(),
+            'value' => $value,
+          ];
+        }
+      }
+    }
+
     foreach (Element::children($form['translation']) as $field_name) {
+      // TMGMT supports only text fields so we need to add in the translation
+      // form the entity reference fields building the same markup.
+      foreach ($entity_reference_fields as $delta => $entity_reference_field) {
+        if ($entity_reference_field['field_name'] === $field_name) {
+          $path = $field_name . '|' . $delta . '|value';
+          $form['translation'][$field_name][$path] = [
+            '#tree' => TRUE,
+            '#theme' => 'local_translation_form_element_group',
+            '#ajaxid' => 'tmgmt-local-element-' . str_replace('_', '-', $field_name) . $delta . '-value',
+            '#parent_label' => [$entity_reference_field['field_label']],
+            '#zebra' => 'odd',
+            'status' => [
+              '#theme' => 'tmgmt_local_translation_form_element_status',
+              '#value' => 0,
+            ],
+            'source' => [
+              '#type' => 'textarea',
+              '#value' => $entity_reference_field['value'],
+              '#title' => $this->t('Source'),
+              '#disabled' => TRUE,
+              '#rows' => 3,
+            ],
+            'translation' => [
+              '#type' => 'textarea',
+              '#default_value' => $entity_reference_field['value'],
+              '#title' => $this->t('Translation'),
+              // The value should only be visible and not editable.
+              '#disabled' => TRUE,
+              '#rows' => 3,
+              '#allow_focus' => FALSE,
+            ],
+            // phpcs:ignore
+            '#field_name' => $this->t($entity_reference_field['field_label']),
+          ];
+        }
+      }
       foreach (Element::children($form['translation'][$field_name]) as $field_path) {
         $field = &$form['translation'][$field_name][$field_path];
         // Clean up the translation form element.
