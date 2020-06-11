@@ -309,8 +309,27 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         if ($field['translation']['#default_value'] === NULL) {
           if ($existing_translation_data && array_key_exists($field_name, $existing_translation_data)) {
             $flat = \Drupal::service('tmgmt.data')->flatten($existing_translation_data[$field_name], $field_name);
-
             if (isset($flat[$bracket_based_field_path]) && isset($flat[$bracket_based_field_path]['#text'])) {
+              // Build the target_id path.
+              $target_id_path = $field_name . '][' . $delta . '][target_id';
+              if (isset($flat[$target_id_path]['#text']) &&
+                $flat[$target_id_path]['#text'] !== $data[$field_name][$delta]['target_id']['#text']) {
+                // If the existing translation is for a different target_id,
+                // we use the source value.
+                $field['translation']['#default_value'] = $field['source']['#value'];
+                // Find the new delta of the target_id of this translation.
+                for ($i = 0; $i < count($data[$field_name]) - 1; $i++) {
+                  if ($data[$field_name][$i]['target_id']['#text'] === $flat[$target_id_path]['#text']) {
+                    $new_delta = $i;
+                    // Replace the field path with the new delta and update
+                    // the default value in the form. (This causes the new
+                    // translations not to be saved.)
+                    $field_path = preg_replace('/' . $delta . '/', $new_delta, $field_path, 1);
+                    $form['translation'][$field_name][$field_path]['translation']['#default_value'] = $flat[$bracket_based_field_path]['#text'];
+                  }
+                }
+                continue;
+              }
               // It seems TMGMT only supports text based fields to translate.
               $field['translation']['#default_value'] = $flat[$bracket_based_field_path]['#text'];
               continue;
