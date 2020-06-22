@@ -151,6 +151,7 @@ class LocalTranslationTest extends TranslationTestBase {
     $fields['title'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Title']",
       'value' => 'Translation node',
+      'translate' => TRUE,
     ];
     $fields['address_country_code'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Address - The two-letter country code.']",
@@ -179,30 +180,37 @@ class LocalTranslationTest extends TranslationTestBase {
     $fields['ott_content_reference'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Content reference - Title']",
       'value' => 'Referenced node',
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Demo inner paragraph type (0) - Inner paragraph field']",
       'value' => 'grandchild field value 1',
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Demo inner paragraph type (1) - Inner paragraph field']",
       'value' => 'grandchild field value 2',
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Inner paragraph field']",
       'value' => 'child field value 1',
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (1) - Inner paragraph field']",
       'value' => 'child field value 2',
+      'translate' => TRUE,
     ];
     $fields['ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Top level paragraph field']",
       'value' => 'top field value 1',
+      'translate' => TRUE,
     ];
     $fields['ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (1) - Top level paragraph field']",
       'value' => 'top field value 2',
+      'translate' => TRUE,
     ];
 
     foreach ($fields as $key => $data) {
@@ -218,6 +226,57 @@ class LocalTranslationTest extends TranslationTestBase {
       }
 
       $this->assertEquals($data['value'], $element->getText());
+      // Set a translation value.
+      if (isset($data['translate'])) {
+        $element->setValue($data['value'] . ' FR');
+      }
+    }
+
+    // Save the translation.
+    $this->getSession()->getPage()->pressButton('Save and complete translation');
+
+    // Start a new local translation and assert that the default values are now
+    // the translated values from the previous translation.
+    $this->drupalGet(Url::fromRoute('oe_translation.permission_translator.create_local_task', [
+      'entity' => $node->id(),
+      'source' => 'en',
+      'target' => 'fr',
+      'entity_type' => 'node',
+    ]));
+
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+
+      $expected_value = isset($data['translate']) ? $data['value'] . ' FR' : $data['value'];
+      $this->assertEquals($expected_value, $element->getText());
+    }
+
+    // Reorder top level paragraphs.
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['title' => 'Translation node']);
+    $node = reset($node);
+
+    $field_values = $node->get('ott_top_level_paragraphs')->getValue();
+    $new_values = [];
+    $new_values[0] = $field_values[1];
+    $new_values[1] = $field_values[0];
+    $node->set('ott_top_level_paragraphs', $new_values);
+    $node->save();
+
+    // Assert that when we navigate back to the local translation, the default
+    // values are still correct.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->getSession()->getPage()->clickLink('Edit local translation');
+
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+
+      $expected_value = isset($data['translate']) ? $data['value'] . ' FR' : $data['value'];
+      $this->assertEquals($expected_value, $element->getText());
     }
   }
 
