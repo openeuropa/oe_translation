@@ -151,7 +151,7 @@ class LocalTranslationTest extends TranslationTestBase {
     $fields['title'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Title']",
       'value' => 'Translation node',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['address_country_code'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Address - The two-letter country code.']",
@@ -180,37 +180,37 @@ class LocalTranslationTest extends TranslationTestBase {
     $fields['ott_content_reference'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Content reference - Title']",
       'value' => 'Referenced node',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Demo inner paragraph type (0) - Inner paragraph field']",
       'value' => 'grandchild field value 1',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Demo inner paragraph type (1) - Inner paragraph field']",
       'value' => 'grandchild field value 2',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (0) - Inner paragraph field']",
       'value' => 'child field value 1',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Demo inner paragraph type (1) - Inner paragraph field']",
       'value' => 'child field value 2',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (0) - Top level paragraph field']",
       'value' => 'top field value 1',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
     $fields['ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type (1) - Top level paragraph field']",
       'value' => 'top field value 2',
-      'translate' => TRUE
+      'translate' => TRUE,
     ];
 
     foreach ($fields as $key => $data) {
