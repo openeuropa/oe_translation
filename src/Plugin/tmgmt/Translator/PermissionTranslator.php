@@ -297,8 +297,6 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
           $field['#field_name'] = $this->generateEmbeddedFieldName($data, $field_parents, $field_name);
         }
 
-        $bracket_based_field_path = str_replace('|', '][', $field_path);
-
         // Hide the translation tick button.
         $field['actions']['#access'] = FALSE;
 
@@ -308,11 +306,31 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         // version instead.
         if ($field['translation']['#default_value'] === NULL) {
           if ($existing_translation_data && array_key_exists($field_name, $existing_translation_data)) {
-            $flat = \Drupal::service('tmgmt.data')->flatten($existing_translation_data[$field_name], $field_name);
+            // Check if we are dealing with an entity reference and alter the
+            // parents array to the deep value based on the ID of the embedded
+            // entity in case the latter was changed in the source.
+            foreach ($field_parents as $key => $parent) {
+              if ($parent === 'entity') {
+                $delta_key = $key - 1;
+                $sub_parents = array_slice($field_parents, 0, $key + 1);
+                // The entity ID of the embedded entity being translated.
+                $entity_id = NestedArray::getValue($data, array_merge($sub_parents, ['#id']));
+                // Determine the delta of the same entity in the translated
+                // data.
+                $references = NestedArray::getValue($existing_translation_data, array_slice($field_parents, 0, $key - 1));
+                foreach (Element::children($references) as $reference_child) {
+                  if ($references[$reference_child]['entity']['#id'] == $entity_id) {
+                    $field_parents[$delta_key] = $reference_child;
+                  }
+                }
 
-            if (isset($flat[$bracket_based_field_path]) && isset($flat[$bracket_based_field_path]['#text'])) {
-              // It seems TMGMT only supports text based fields to translate.
-              $field['translation']['#default_value'] = $flat[$bracket_based_field_path]['#text'];
+                continue;
+              }
+            }
+
+            $default_value = NestedArray::getValue($existing_translation_data, array_merge($field_parents, ['#text']), $exists);
+            if ($exists) {
+              $field['translation']['#default_value'] = $default_value;
               continue;
             }
           }
