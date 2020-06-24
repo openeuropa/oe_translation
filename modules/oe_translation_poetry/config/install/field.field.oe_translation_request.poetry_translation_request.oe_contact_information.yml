@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.oe_translation_request.field_organisation_information
+    - field.storage.oe_translation_request.oe_contact_information
     - oe_translation.oe_translation_request_type.poetry_translation_request
   module:
     - oe_translation_poetry
@@ -10,15 +10,15 @@ dependencies:
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: oe_translation_request.poetry_translation_request.field_organisation_information
-field_name: field_organisation_information
+id: oe_translation_request.poetry_translation_request.oe_contact_information
+field_name: oe_contact_information
 entity_type: oe_translation_request
 bundle: poetry_translation_request
-label: 'Organisation information'
+label: 'Contact information'
 description: ''
 required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''
 settings: {  }
-field_type: oe_translation_poetry_organisation_contact
+field_type: oe_translation_poetry_personal_contact

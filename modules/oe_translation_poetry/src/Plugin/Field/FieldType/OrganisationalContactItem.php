@@ -13,6 +13,7 @@ namespace Drupal\oe_translation_poetry\Plugin\Field\FieldType;
  *   category = @Translation("OpenEuropa"),
  *   default_widget = "oe_translation_poetry_organisation_contact_widget",
  *   default_formatter = "oe_translation_poetry_organisation_contact_formatter",
+ *   no_ui = TRUE
  * )
  */
 class OrganisationalContactItem extends ContactItemBase {

@@ -2,11 +2,11 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.oe_translation_request.poetry_translation_request.field_contact_information
-    - field.field.oe_translation_request.poetry_translation_request.field_organisation_information
-    - field.field.oe_translation_request.poetry_translation_request.field_poetry_request_id
-    - field.field.oe_translation_request.poetry_translation_request.field_translation_deadline
-    - field.field.oe_translation_request.poetry_translation_request.field_update_of
+    - field.field.oe_translation_request.poetry_translation_request.oe_contact_information
+    - field.field.oe_translation_request.poetry_translation_request.oe_organisation_information
+    - field.field.oe_translation_request.poetry_translation_request.oe_poetry_request_id
+    - field.field.oe_translation_request.poetry_translation_request.oe_translation_deadline
+    - field.field.oe_translation_request.poetry_translation_request.oe_update_of
     - oe_translation.oe_translation_request_type.poetry_translation_request
   module:
     - datetime
@@ -16,28 +16,28 @@ targetEntityType: oe_translation_request
 bundle: poetry_translation_request
 mode: default
 content:
-  field_contact_information:
+  oe_contact_information:
     weight: 2
     label: above
     settings: {  }
     third_party_settings: {  }
     type: oe_translation_poetry_personal_contact_formatter
     region: content
-  field_organisation_information:
+  oe_organisation_information:
     weight: 3
     label: above
     settings: {  }
     third_party_settings: {  }
     type: oe_translation_poetry_organisation_contact_formatter
     region: content
-  field_poetry_request_id:
+  oe_poetry_request_id:
     weight: 1
     label: above
     settings: {  }
     third_party_settings: {  }
     type: poetry_request_id_formatter
     region: content
-  field_translation_deadline:
+  oe_translation_deadline:
     weight: 0
     label: above
     settings:
@@ -46,7 +46,7 @@ content:
     third_party_settings: {  }
     type: datetime_default
     region: content
-  field_update_of:
+  oe_update_of:
     weight: 4
     label: above
     settings:

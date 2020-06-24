@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.oe_translation_request.field_translation_deadline
+    - field.storage.oe_translation_request.oe_translation_deadline
     - oe_translation.oe_translation_request_type.poetry_translation_request
   module:
     - datetime
@@ -10,8 +10,8 @@ dependencies:
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: oe_translation_request.poetry_translation_request.field_translation_deadline
-field_name: field_translation_deadline
+id: oe_translation_request.poetry_translation_request.oe_translation_deadline
+field_name: oe_translation_deadline
 entity_type: oe_translation_request
 bundle: poetry_translation_request
 label: 'Translation Deadline'

@@ -4,8 +4,8 @@ dependencies:
   module:
     - datetime
     - oe_translation
-id: oe_translation_request.field_translation_deadline
-field_name: field_translation_deadline
+id: oe_translation_request.oe_translation_deadline
+field_name: oe_translation_deadline
 entity_type: oe_translation_request
 type: datetime
 settings:

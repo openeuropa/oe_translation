@@ -64,21 +64,21 @@ class PoetryTranslationRequestTest extends TranslationKernelTestBase {
     ];
     $poetry_translation_request = $translation_request_storage->create([
       'bundle' => 'poetry_translation_request',
-      'field_poetry_request_id' => $poetry_id,
-      'field_contact_information' => $personal_contact_info,
-      'field_organisation_information' => $organisation_info,
-      'field_update_of' => $referenced_request->id(),
-      'field_translation_deadline' => '10-12-2020',
+      'oe_poetry_request_id' => $poetry_id,
+      'oe_contact_information' => $personal_contact_info,
+      'oe_organisation_information' => $organisation_info,
+      'oe_update_of' => $referenced_request->id(),
+      'oe_translation_deadline' => '10-12-2020',
     ]);
     $poetry_translation_request->save();
     $translation_request_storage->resetCache();
     $poetry_translation_request = $translation_request_storage->load($poetry_translation_request->id());
     $this->assertEqual($poetry_translation_request->bundle(), 'poetry_translation_request');
-    $this->assertEqual($poetry_translation_request->get('field_poetry_request_id')->first()->getValue(), $poetry_id);
-    $this->assertEqual($poetry_translation_request->get('field_contact_information')->first()->getValue(), $personal_contact_info);
-    $this->assertEqual($poetry_translation_request->get('field_organisation_information')->first()->getValue(), $organisation_info);
-    $this->assertEqual($poetry_translation_request->get('field_update_of')->first()->getValue()['target_id'], $referenced_request->id());
-    $this->assertEqual($poetry_translation_request->get('field_translation_deadline')->first()->getValue()['value'], '10-12-2020');
+    $this->assertEqual($poetry_translation_request->get('oe_poetry_request_id')->first()->getValue(), $poetry_id);
+    $this->assertEqual($poetry_translation_request->get('oe_contact_information')->first()->getValue(), $personal_contact_info);
+    $this->assertEqual($poetry_translation_request->get('oe_organisation_information')->first()->getValue(), $organisation_info);
+    $this->assertEqual($poetry_translation_request->get('oe_update_of')->first()->getValue()['target_id'], $referenced_request->id());
+    $this->assertEqual($poetry_translation_request->get('oe_translation_deadline')->first()->getValue()['value'], '10-12-2020');
   }
 
 }

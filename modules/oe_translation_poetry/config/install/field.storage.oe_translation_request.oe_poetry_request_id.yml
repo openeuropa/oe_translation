@@ -4,10 +4,10 @@ dependencies:
   module:
     - oe_translation
     - oe_translation_poetry
-id: oe_translation_request.field_organisation_information
-field_name: field_organisation_information
+id: oe_translation_request.oe_poetry_request_id
+field_name: oe_poetry_request_id
 entity_type: oe_translation_request
-type: oe_translation_poetry_organisation_contact
+type: poetry_request_id
 settings: {  }
 module: oe_translation_poetry
 locked: false
