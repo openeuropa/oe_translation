@@ -37,5 +37,5 @@ content:
     region: content
 hidden:
   oe_poetry_request_id: true
-  fiel  d_update_of: true
+  oe_update_of: true
 
