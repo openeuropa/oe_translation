@@ -50,7 +50,7 @@ class PoetryTranslationRequestEntityTest extends BrowserTestBase {
    * Tests that the Poetry translation request form works properly.
    */
   public function testCreateTranslationRequest() {
-    $this->drupalGet(Url::fromRoute('entity.oe_translation_request.add_form', ['oe_translation_request_type' => 'poetry_translation_request']));
+    $this->drupalGet(Url::fromRoute('entity.oe_translation_request.add_form', ['oe_translation_request_type' => 'poetry']));
 
     // Assert that the deadline field is available and its default value
     // is the current date +14 days.

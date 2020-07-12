@@ -3,17 +3,17 @@ status: true
 dependencies:
   config:
     - field.storage.oe_translation_request.oe_contact_information
-    - oe_translation.oe_translation_request_type.poetry_translation_request
+    - oe_translation.oe_translation_request_type.poetry
   module:
     - oe_translation_poetry
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: oe_translation_request.poetry_translation_request.oe_contact_information
+id: oe_translation_request.poetry.oe_contact_information
 field_name: oe_contact_information
 entity_type: oe_translation_request
-bundle: poetry_translation_request
+bundle: poetry
 label: 'Contact information'
 description: ''
 required: false

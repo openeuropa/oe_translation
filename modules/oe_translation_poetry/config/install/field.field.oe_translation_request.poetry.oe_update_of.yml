@@ -3,16 +3,16 @@ status: true
 dependencies:
   config:
     - field.storage.oe_translation_request.oe_update_of
-    - oe_translation.oe_translation_request_type.poetry_translation_request
+    - oe_translation.oe_translation_request_type.poetry
   module:
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
     excluded: false
-id: oe_translation_request.poetry_translation_request.oe_update_of
+id: oe_translation_request.poetry.oe_update_of
 field_name: oe_update_of
 entity_type: oe_translation_request
-bundle: poetry_translation_request
+bundle: poetry
 label: 'Update of'
 description: ''
 required: false
@@ -23,7 +23,7 @@ settings:
   handler: 'default:oe_translation_request'
   handler_settings:
     target_bundles:
-      poetry_translation_request: poetry_translation_request
+      poetry: poetry
     sort:
       field: _none
     auto_create: false

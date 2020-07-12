@@ -39,7 +39,7 @@ class PoetryTranslationRequestTest extends TranslationKernelTestBase {
     /** @var \Drupal\Core\Entity\EntityStorageInterface $translation_request_storage */
     $translation_request_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request');
     // Create an empty translation request to be referenced.
-    $referenced_request = $translation_request_storage->create(['bundle' => 'poetry_translation_request']);
+    $referenced_request = $translation_request_storage->create(['bundle' => 'poetry']);
     $referenced_request->save();
     // Create a translation request of Poetry type and assert all values are
     // properly stored.
@@ -63,7 +63,7 @@ class PoetryTranslationRequestTest extends TranslationKernelTestBase {
       'requester' => 'Requester',
     ];
     $poetry_translation_request = $translation_request_storage->create([
-      'bundle' => 'poetry_translation_request',
+      'bundle' => 'poetry',
       'oe_poetry_request_id' => $poetry_id,
       'oe_contact_information' => $personal_contact_info,
       'oe_organisation_information' => $organisation_info,
@@ -73,7 +73,7 @@ class PoetryTranslationRequestTest extends TranslationKernelTestBase {
     $poetry_translation_request->save();
     $translation_request_storage->resetCache();
     $poetry_translation_request = $translation_request_storage->load($poetry_translation_request->id());
-    $this->assertEqual($poetry_translation_request->bundle(), 'poetry_translation_request');
+    $this->assertEqual($poetry_translation_request->bundle(), 'poetry');
     $this->assertEqual($poetry_translation_request->get('oe_poetry_request_id')->first()->getValue(), $poetry_id);
     $this->assertEqual($poetry_translation_request->get('oe_contact_information')->first()->getValue(), $personal_contact_info);
     $this->assertEqual($poetry_translation_request->get('oe_organisation_information')->first()->getValue(), $organisation_info);

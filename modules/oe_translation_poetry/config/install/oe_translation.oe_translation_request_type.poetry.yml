@@ -1,5 +1,5 @@
 langcode: en
 status: true
 dependencies: {  }
-id: poetry_translation_request
+id: poetry
 label: 'Poetry Translation request'

@@ -2,19 +2,19 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.oe_translation_request.poetry_translation_request.oe_contact_information
-    - field.field.oe_translation_request.poetry_translation_request.oe_organisation_information
-    - field.field.oe_translation_request.poetry_translation_request.oe_poetry_request_id
-    - field.field.oe_translation_request.poetry_translation_request.oe_translation_deadline
-    - field.field.oe_translation_request.poetry_translation_request.oe_update_of
-    - oe_translation.oe_translation_request_type.poetry_translation_request
+    - field.field.oe_translation_request.poetry.oe_contact_information
+    - field.field.oe_translation_request.poetry.oe_organisation_information
+    - field.field.oe_translation_request.poetry.oe_poetry_request_id
+    - field.field.oe_translation_request.poetry.oe_translation_deadline
+    - field.field.oe_translation_request.poetry.oe_update_of
+    - oe_translation.oe_translation_request_type.poetry
   module:
     - datetime
     - oe_translation
     - oe_translation_poetry
-id: oe_translation_request.poetry_translation_request.default
+id: oe_translation_request.poetry.default
 targetEntityType: oe_translation_request
-bundle: poetry_translation_request
+bundle: poetry
 mode: default
 content:
   oe_contact_information:
