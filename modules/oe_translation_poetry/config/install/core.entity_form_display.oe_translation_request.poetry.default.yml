@@ -1,0 +1,40 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.oe_translation_request.poetry.oe_contact_information
+    - field.field.oe_translation_request.poetry.oe_organisation_information
+    - field.field.oe_translation_request.poetry.oe_poetry_request_id
+    - field.field.oe_translation_request.poetry.oe_translation_deadline
+    - field.field.oe_translation_request.poetry.oe_update_of
+    - oe_translation.oe_translation_request_type.poetry
+  module:
+    - datetime
+    - oe_translation
+    - oe_translation_poetry
+id: oe_translation_request.poetry.default
+targetEntityType: oe_translation_request
+bundle: poetry
+mode: default
+content:
+  oe_contact_information:
+    weight: 17
+    settings: {  }
+    third_party_settings: {  }
+    type: oe_translation_poetry_personal_contact_widget
+    region: content
+  oe_organisation_information:
+    weight: 23
+    settings: {  }
+    third_party_settings: {  }
+    type: oe_translation_poetry_organisation_contact_widget
+    region: content
+  oe_translation_deadline:
+    weight: 5
+    settings: {  }
+    third_party_settings: {  }
+    type: datetime_default
+    region: content
+hidden:
+  oe_poetry_request_id: true
+  oe_update_of: true

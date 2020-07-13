@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.oe_update_of
+    - oe_translation.oe_translation_request_type.poetry
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: oe_translation_request.poetry.oe_update_of
+field_name: oe_update_of
+entity_type: oe_translation_request
+bundle: poetry
+label: 'Update of'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:oe_translation_request'
+  handler_settings:
+    target_bundles:
+      poetry: poetry
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

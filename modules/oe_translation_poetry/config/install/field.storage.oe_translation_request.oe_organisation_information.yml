@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation
+    - oe_translation_poetry
+id: oe_translation_request.oe_organisation_information
+field_name: oe_organisation_information
+entity_type: oe_translation_request
+type: oe_translation_poetry_organisation_contact
+settings: {  }
+module: oe_translation_poetry
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

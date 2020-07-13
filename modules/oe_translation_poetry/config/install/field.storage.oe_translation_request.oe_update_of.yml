@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation
+id: oe_translation_request.oe_update_of
+field_name: oe_update_of
+entity_type: oe_translation_request
+type: entity_reference
+settings:
+  target_type: oe_translation_request
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
