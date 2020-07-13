@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\oe_translation\ApplicableTranslatorInterface;
@@ -272,8 +273,17 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         $field = &$form['translation'][$field_name][$field_path];
         // Clean up the translation form element.
         $field['#theme'] = 'local_translation_form_element_group';
-        $definition = $field_definitions[$field_name];
-        $field['#field_name'] = $definition->getLabel();
+        $definition = isset($field_definitions[$field_name]) ? $field_definitions[$field_name] : NULL;
+        if (!$definition instanceof FieldDefinitionInterface && isset($data[$field_name]['#label'])) {
+          // Try to find from #label.
+          $field['#field_name'] = $data[$field_name]['#label'];
+        }
+        elseif (!$definition instanceof FieldDefinitionInterface) {
+          $field['#field_name'] = t('Unknown field');
+        }
+        else {
+          $field['#field_name'] = $definition->getLabel();
+        }
 
         list($field_name, $delta, $column) = explode('|', $field_path);
 
