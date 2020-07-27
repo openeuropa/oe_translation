@@ -6,6 +6,7 @@ namespace Drupal\oe_translation\Plugin\tmgmt\Translator;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -248,21 +249,12 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
       return;
     }
 
-    // Query for the latest revision of the entity in the target language to see
-    // if there are any existing translation values we can pre-fill the form
-    // with.
-    $results = $this->entityTypeManager->getStorage($job_item->getItemType())->getQuery()
-      ->condition($entity_type->getKey('id'), $job_item->getItemId())
-      ->condition('langcode', $job->getTargetLangcode())
-      ->allRevisions()
-      ->execute();
-
-    if ($results) {
-      end($results);
-      $vid = key($results);
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    // Load the revision of the entity from which the translation was started
+    // and see if there are translation values to pre-fill.
+    $vid = $job_item->get('item_rid')->value;
+    if ($vid) {
       $entity = $this->entityTypeManager->getStorage($job_item->getItemType())->loadRevision($vid);
-      $existing_translation = $entity instanceof NodeInterface && $entity->hasTranslation($job->getTargetLangcode()) ? $entity->getTranslation($job->getTargetLangcode()) : NULL;
+      $existing_translation = $entity instanceof ContentEntityInterface && $entity->hasTranslation($job->getTargetLangcode()) ? $entity->getTranslation($job->getTargetLangcode()) : NULL;
       $existing_translation_data = $existing_translation ? $this->createSourceData($existing_translation, $task_item) : [];
     }
 
@@ -325,9 +317,17 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
                 $sub_parents = array_slice($field_parents, 0, $key + 1);
                 // The entity ID of the embedded entity being translated.
                 $entity_id = NestedArray::getValue($data, array_merge($sub_parents, ['#id']));
+                if (!$entity_id) {
+                  continue;
+                }
+
                 // Determine the delta of the same entity in the translated
                 // data.
                 $references = NestedArray::getValue($existing_translation_data, array_slice($field_parents, 0, $key - 1));
+                if (!$references) {
+                  continue;
+                }
+
                 foreach (Element::children($references) as $reference_child) {
                   if ($references[$reference_child]['entity']['#id'] == $entity_id) {
                     $field_parents[$delta_key] = $reference_child;
