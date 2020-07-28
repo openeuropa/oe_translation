@@ -45,6 +45,9 @@ class LocalTranslationTest extends TranslationTestBase {
 
   /**
    * Tests the translation field labels and default values.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function testLocalTranslationFields(): void {
     // Create a node that we can reference.
@@ -263,12 +266,81 @@ class LocalTranslationTest extends TranslationTestBase {
     $new_values[0] = $field_values[1];
     $new_values[1] = $field_values[0];
     $node->set('ott_top_level_paragraphs', $new_values);
+    $node->setNewRevision(TRUE);
     $node->save();
 
     // Assert that when we navigate back to the local translation, the default
-    // values are still correct.
+    // values are still inline with the revision where we started from.
+    // Remember that we didn't save the translation task.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->getSession()->getPage()->clickLink('Edit local translation');
+
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+
+      $expected_value = isset($data['translate']) ? $data['value'] . ' FR' : $data['value'];
+      $this->assertEquals($expected_value, $element->getText());
+    }
+
+    // Make changes to the paragraphs and remove some of them.
+    $top_paragraph_three = Paragraph::create([
+      'type' => 'demo_paragraph_type',
+      'ott_top_level_paragraph_field' => 'top field value 3',
+    ]);
+    $top_paragraph_three->save();
+
+    $node->set('ott_top_level_paragraphs', [$top_paragraph_three]);
+    $node->setNewRevision(TRUE);
+    $node->save();
+
+    // Go back to the translation form. Remember that we didn't save the
+    // translation task.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->getSession()->getPage()->clickLink('Edit local translation');
+
+    // Run the same assertions.
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+
+      $expected_value = isset($data['translate']) ? $data['value'] . ' FR' : $data['value'];
+      $this->assertEquals($expected_value, $element->getText());
+    }
+
+    // Save the task.
+    $this->getSession()->getPage()->pressButton('Save and complete translation');
+
+    // Start a new translation and assert that now we have the changed default
+    // values.
+    $this->drupalGet(Url::fromRoute('oe_translation.permission_translator.create_local_task', [
+      'entity' => $node->id(),
+      'source' => 'en',
+      'target' => 'fr',
+      'entity_type' => 'node',
+    ]));
+
+    // Some fields were removed.
+    $removed = [
+      'ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0',
+      'ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1',
+      'ott_inner_paragraphs__0__ott_inner_paragraph_ott__0',
+      'ott_inner_paragraphs__0__ott_inner_paragraph_ott__1',
+      'ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0',
+    ];
+
+    foreach ($removed as $name) {
+      unset($fields[$name]);
+    }
+
+    // Only one paragraph remained so the delta was removed.
+    $fields['ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
+      'xpath' => "//table//th[normalize-space(text()) = 'Demo paragraph type - Top level paragraph field']",
+      'value' => 'top field value 3',
+      // This one doesn't have a previous translation.
+    ];
 
     foreach ($fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
