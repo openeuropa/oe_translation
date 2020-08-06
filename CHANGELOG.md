@@ -1,11 +1,21 @@
 # Changelog
 
+## [0.9.0](https://github.com/openeuropa/oe_translation/tree/0.9.0) (2020-08-04)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.8.0...0.9.0)
+
+**Merged pull requests:**
+
+- EWPP-18: Local translation default value fix. [\#113](https://github.com/openeuropa/oe_translation/pull/113) ([upchuk](https://github.com/upchuk))
+- EWPP-17: Allowing for extra TMGMT field labels in local translator. [\#111](https://github.com/openeuropa/oe_translation/pull/111) ([upchuk](https://github.com/upchuk))
+
 ## [0.8.0](https://github.com/openeuropa/oe_translation/tree/0.8.0) (2020-06-22)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.7.1...0.8.0)
 
 **Merged pull requests:**
 
+- RELEASE-0.8.0: Update CHANGELOG.md for release 0.8.0. [\#108](https://github.com/openeuropa/oe_translation/pull/108) ([sergepavle](https://github.com/sergepavle))
 - OPENEUROPA-3156: Fixing translation field default values for the local translator [\#107](https://github.com/openeuropa/oe_translation/pull/107) ([22Alexandra](https://github.com/22Alexandra))
 - OPENEUROPA-3190: Passing languages to the local translation access event [\#106](https://github.com/openeuropa/oe_translation/pull/106) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-3216: Remove drupal-coder version. [\#104](https://github.com/openeuropa/oe_translation/pull/104) ([nagyad](https://github.com/nagyad))
@@ -78,7 +88,6 @@
 - OPENEUROPA-1766: Release 0.4.0. [\#61](https://github.com/openeuropa/oe_translation/pull/61) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2697 - Abort also job items when requests are canceled. [\#59](https://github.com/openeuropa/oe_translation/pull/59) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2712: Add validation to checkout form for delivery date. [\#57](https://github.com/openeuropa/oe_translation/pull/57) ([dxvargas](https://github.com/dxvargas))
-- OPENEUROPA-2503: Align the translator role between components. [\#55](https://github.com/openeuropa/oe_translation/pull/55) ([nagyad](https://github.com/nagyad))
 - OPENEUROPA-2252: Allow to request translation updates [\#54](https://github.com/openeuropa/oe_translation/pull/54) ([dxvargas](https://github.com/dxvargas))
 
 ## [0.3.0](https://github.com/openeuropa/oe_translation/tree/0.3.0) (2020-01-13)
@@ -89,6 +98,7 @@
 
 - OPENEUROPA-1766: Fix failing phpunit tests for 2020 problem. [\#58](https://github.com/openeuropa/oe_translation/pull/58) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-0000: Preparing for release. [\#56](https://github.com/openeuropa/oe_translation/pull/56) ([hernani](https://github.com/hernani))
+- OPENEUROPA-2503: Align the translator role between components. [\#55](https://github.com/openeuropa/oe_translation/pull/55) ([nagyad](https://github.com/nagyad))
 - OPENEUROPA-2615: Poetry service interface and override in test. [\#53](https://github.com/openeuropa/oe_translation/pull/53) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2602: Remove EWCMS references from this module. [\#52](https://github.com/openeuropa/oe_translation/pull/52) ([dxvargas](https://github.com/dxvargas))
 - OPENEUROPA-2555: Restrict the applicability of translator plugins.  [\#46](https://github.com/openeuropa/oe_translation/pull/46) ([upchuk](https://github.com/upchuk))
