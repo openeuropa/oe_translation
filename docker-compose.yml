@@ -1,7 +1,7 @@
 version: '2'
 services:
   web:
-    image: fpfis/httpd-php-dev:7.3
+    image: registry.fpfis.eu/fpfis/httpd-php:7.3-dev
     working_dir: /var/www/html
     ports:
       - 8080:8080
@@ -21,7 +21,7 @@ services:
       POETRY_NOTIFICATION_USERNAME: "admin"
       POETRY_NOTIFICATION_PASSWORD: "admin"
   mysql:
-    image: percona/percona-server:5.6
+    image: registry.fpfis.eu/fpfis/sql:percona-5.7
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
 #    ports:
@@ -33,7 +33,7 @@ services:
   # @link https://github.com/elgalu/docker-selenium/issues/20
   selenium:
     # Newer Selenium Chrome images are not supported at the moment by behat/mink-selenium2-driver.
-    image: selenium/standalone-chrome-debug:3.141.59-oxygen
+    image: registry.fpfis.eu/fpfis/selenium:standalone-chrome-debug-3.141.59-oxygen
     environment:
       - DISPLAY=:99
       - SE_OPTS=-debug
