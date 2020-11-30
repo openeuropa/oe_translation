@@ -157,7 +157,7 @@ class LocalTranslationTest extends TranslationTestBase {
       'translate' => TRUE,
     ];
     $fields['address_country_code'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address - The two-letter country code.']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Address - The two-letter country code']",
       'value' => 'BE',
     ];
     $fields['address_locality'] = [
