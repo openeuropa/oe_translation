@@ -10,6 +10,7 @@ use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\NotificationEndpointResolver;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry_mock\PoetryMock;
 use Drupal\oe_translation_poetry_mock\PoetryMockFixturesGenerator;
@@ -256,7 +257,7 @@ class PoetryMockController extends ControllerBase {
    */
   protected function performNotification(string $message): string {
     $settings = $this->poetry->getSettings();
-    $url = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString(TRUE)->getGeneratedUrl();
+    $url = NotificationEndpointResolver::resolve();
     // Instantiate the client without WSDL because in tests it makes a request
     // to the actual site instead of the test site instance.
     $client = new \SoapClient(NULL, [

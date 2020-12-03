@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_poetry\Traits;
 
-use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\NotificationEndpointResolver;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
@@ -49,7 +49,7 @@ trait PoetryTestTrait {
     }
 
     if ($path === '') {
-      $path = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString();
+      $path = NotificationEndpointResolver::resolve();
     }
 
     // Cannot pass directly the WSDL because it would make a request already
