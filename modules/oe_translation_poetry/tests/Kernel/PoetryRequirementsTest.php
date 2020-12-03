@@ -52,10 +52,11 @@ class PoetryRequirementsTest extends TranslationKernelTestBase {
       'poetry.service.password' => t('Value set'),
       'poetry.notification.username' => t('Value set'),
       'poetry.notification.password' => t('Value set'),
+      'poetry.notification.endpoint_prefix' => t('Value not set'),
       'poetry.identifier.sequence' => 'sequence',
     ];
 
-    $this->assertCount(6, $requirements);
+    $this->assertCount(7, $requirements);
     foreach ($requirements as $name => $requirement) {
       $this->assertNotEmpty($requirement['value']);
       $this->assertEquals($values[$name], $requirement['value'], sprintf('The %s value is not set', $name));

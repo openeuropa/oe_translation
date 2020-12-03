@@ -4,12 +4,17 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
+use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\oe_translation_poetry\NotificationEndpointResolver;
 use Drupal\tmgmt\Entity\Job;
 
 /**
  * Tests identifiers generation.
  */
-class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
+class PoetryRequestTest extends TranslationKernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -41,7 +46,7 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
   }
 
   /**
-   * Tests the identifier generation.
+   * Tests the request identifier generation.
    */
   public function testIdentifier(): void {
     // Define the sequence setting.
@@ -158,6 +163,66 @@ class PoetryRequestIdentifierTest extends TranslationKernelTestBase {
     $this->assertEquals('0', $identifier->getPart());
     $this->assertEquals('0', $identifier->getVersion());
     $this->assertEquals(date('Y'), $identifier->getYear());
+  }
+
+  /**
+   * Tests the Poetry request ID field type and formatter.
+   */
+  public function testPoetryRequestIdField(): void {
+    FieldStorageConfig::create([
+      'field_name' => 'poetry_request_id',
+      'entity_type' => 'node',
+      'type' => 'poetry_request_id',
+    ])->save();
+
+    FieldConfig::create([
+      'entity_type' => 'node',
+      'field_name' => 'poetry_request_id',
+      'bundle' => 'page',
+    ])->save();
+
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
+    $poetry_id = [
+      'code' => 'WEB',
+      'year' => '2019',
+      'number' => 122,
+      'version' => 1,
+      'part' => 1,
+      'product' => 'TRA',
+    ];
+
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'Test page',
+      'poetry_request_id' => $poetry_id,
+    ]);
+
+    $node->save();
+    $node_storage->resetCache();
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->load($node->id());
+
+    $this->assertEquals($poetry_id, $node->get('poetry_request_id')->first()->getValue());
+
+    $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
+    $build = $builder->viewField($node->get('poetry_request_id'));
+    $output = $this->container->get('renderer')->renderRoot($build);
+    $this->assertContains('WEB/2019/122/1/1/TRA', (string) $output);
+  }
+
+  /**
+   * Tests the notification endpoint resolver.
+   */
+  public function testNotificationEndpointResolver(): void {
+    $expected = Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString(TRUE)->getGeneratedUrl();
+    $this->assertEquals($expected, NotificationEndpointResolver::resolve());
+
+    $settings = Settings::getAll();
+    $settings['poetry.notification.endpoint_prefix'] = 'http://example.com';
+    new Settings($settings);
+
+    $this->assertEquals('http://example.com/localhost/poetry/notifications', NotificationEndpointResolver::resolve());
   }
 
 }

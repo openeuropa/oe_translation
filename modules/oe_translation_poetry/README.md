@@ -30,7 +30,7 @@ There are a number of required configuration options needed for the Poetry integ
 
 ### Environment variables
 
-There are a few settings that need to end up in the `settings.php` file of the site. The values of these are, however, populated as environment variables by Devops.
+There are a few settings that need to end up in the `settings.php` file of the site. The values of these are, however, populated as environment variables by DevOps.
 
 Using the runner, ensure that the following ends up in the site's `settings.php` file:
 
@@ -43,7 +43,7 @@ $settings["poetry.notification.username"] = getenv('POETRY_NOTIFICATION_USERNAME
 $settings["poetry.notification.password"] = getenv('POETRY_NOTIFICATION_PASSWORD');
 ```
 
-Then, request Devops to fill those variables on the server with the following values:
+Then, request DevOps to fill those variables on the server with the following values:
 
 * `POETRY_SERVICE_ENDPOINT` - The Poetry endpoint URL, either for Acceptance of Production.
 * `POETRY_IDENTIFIER_SEQUENCE` - `NEXT_EUROPA_COUNTER`
@@ -53,6 +53,16 @@ Then, request Devops to fill those variables on the server with the following va
 * `POETRY_NOTIFICATION_PASSWORD` - Password for authenticating requests made by Poetry to the site (the notifications).
 
 The notifications credentials should be in lowercase, limited to 15 characters and different to Poetry service credentials. The username should identify the platform making the translation requests.
+
+#### Poetry notification endpoint rerouting
+
+Optionally, you can configure a setting (and associated environment variable) that allows the notifications coming from Poetry to be first sent to another URL managed by DevOps and then rerouted back to the site:
+
+```
+$settings["poetry.notification.endpoint_prefix"] = getenv('POETRY_NOTIFICATION_ENDPOINT_PREFIX');
+```
+
+If this value is set, the notification endpoint is prefixed and rerouted. Otherwise, the default site endpoint is used in Poetry requests.
 
 ## Development
 
