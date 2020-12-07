@@ -12,7 +12,7 @@ use Drupal\oe_translation_poetry\NotificationEndpointResolver;
 use Drupal\tmgmt\Entity\Job;
 
 /**
- * Tests identifiers generation.
+ * Tests Poetry request elements.
  */
 class PoetryRequestTest extends TranslationKernelTestBase {
 
