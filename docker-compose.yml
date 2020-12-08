@@ -16,6 +16,7 @@ services:
       # For Linux users: sudo ip addr add 10.254.254.254/32 dev lo label lo:1
       POETRY_IDENTIFIER_SEQUENCE: "NEXT_EUROPA_COUNTER"
       POETRY_SERVICE_ENDPOINT: "http://localhost:8080/build/poetry-mock/wsdl"
+      POETRY_NOTIFICATION_ENDPOINT_PREFIX: "http://fake.com"
       POETRY_SERVICE_USERNAME: "admin"
       POETRY_SERVICE_PASSWORD: "admin"
       POETRY_NOTIFICATION_USERNAME: "admin"
