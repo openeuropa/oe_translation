@@ -8,3 +8,4 @@ grumphp.yml
 phpunit.xml
 runner.yml
 vendor
+/.gitattributes
