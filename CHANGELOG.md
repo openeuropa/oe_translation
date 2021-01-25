@@ -1,11 +1,24 @@
 # Changelog
 
-## [0.9.0](https://github.com/openeuropa/oe_translation/tree/0.9.0) (2020-08-04)
+## [0.10.0](https://github.com/openeuropa/oe_translation/tree/0.10.0) (2021-01-22)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.9.0...0.10.0)
+
+**Merged pull requests:**
+
+- EWPP-545: Adding the http\_build\_url polyfill and fixing mock number generation. [\#123](https://github.com/openeuropa/oe_translation/pull/123) ([upchuk](https://github.com/upchuk))
+- EWPP-529: Replace scaffold library. [\#122](https://github.com/openeuropa/oe_translation/pull/122) ([sergepavle](https://github.com/sergepavle))
+- EWPP-545: Remove test env variable. [\#120](https://github.com/openeuropa/oe_translation/pull/120) ([imanoleguskiza](https://github.com/imanoleguskiza))
+- EWPP-545: Poetry notification endpoint prefixing. [\#119](https://github.com/openeuropa/oe_translation/pull/119) ([upchuk](https://github.com/upchuk))
+- EWPP-516: Update docker images. [\#117](https://github.com/openeuropa/oe_translation/pull/117) ([22Alexandra](https://github.com/22Alexandra))
+
+## [0.9.0](https://github.com/openeuropa/oe_translation/tree/0.9.0) (2020-08-06)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.8.0...0.9.0)
 
 **Merged pull requests:**
 
+- Release-0.9.0: Update changelog. [\#115](https://github.com/openeuropa/oe_translation/pull/115) ([nagyad](https://github.com/nagyad))
 - EWPP-18: Local translation default value fix. [\#113](https://github.com/openeuropa/oe_translation/pull/113) ([upchuk](https://github.com/upchuk))
 - EWPP-17: Allowing for extra TMGMT field labels in local translator. [\#111](https://github.com/openeuropa/oe_translation/pull/111) ([upchuk](https://github.com/upchuk))
 
