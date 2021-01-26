@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Functional;
 
+use Drupal\block_content\Entity\BlockContent;
+use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
@@ -20,6 +22,7 @@ class LocalTranslationTest extends TranslationTestBase {
     'address',
     'paragraphs',
     'entity_reference_revisions',
+    'block_content',
   ];
 
   /**
@@ -41,6 +44,56 @@ class LocalTranslationTest extends TranslationTestBase {
         ],
       ])
       ->save();
+  }
+
+  /**
+   * Tests that we can make local translations with Block entities.
+   */
+  public function testBlockTranslations(): void {
+    // Enable the "permission" translator on the block entity.
+    \Drupal::state()->set('oe_translation_test_enabled_translators', ['block_content']);
+
+    $bundle = BlockContentType::create([
+      'id' => 'basic',
+      'label' => 'basic',
+    ]);
+    $bundle->save();
+
+    \Drupal::service('content_translation.manager')->setEnabled('block_content', 'basic', TRUE);
+
+    // Create a custom block.
+    $custom_block = BlockContent::create([
+      'type' => 'basic',
+      'info' => 'Custom Block',
+      'langcode' => 'en',
+    ]);
+    $custom_block->save();
+
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
+    $permissions = $role->getPermissions();
+    $permissions[] = 'administer menu';
+    $permissions[] = 'administer blocks';
+    $user = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($user);
+
+    $this->drupalGet($custom_block->toUrl('drupal:content-translation-overview'));
+
+    // Translate in BG.
+    $this->getSession()->getPage()->find('css', '.tmgmttranslate-localadd a[hreflang="bg"]')->click();
+    $this->getSession()->getPage()->fillField('info|0|value[translation]', 'BG translation');
+    $this->getSession()->getPage()->pressButton('Save and complete translation');
+    $this->assertSession()->pageTextContainsOnce('The translation for Custom Block has been saved as completed.');
+    $this->assertSession()->linkExistsExact('BG translation');
+
+    // Update the BG translation.
+    $this->getSession()->getPage()->find('css', '.tmgmttranslate-localadd a[hreflang="bg"]')->click();
+    $translation_field = $this->getSession()->getPage()->find('css', '#edit-info0value-translation');
+    $this->assertEquals('BG translation', $translation_field->getValue());
+    $this->getSession()->getPage()->fillField('info|0|value[translation]', 'Updated BG translation');
+    $this->getSession()->getPage()->pressButton('Save and complete translation');
+    $this->assertSession()->pageTextContainsOnce('The translation for Custom Block has been saved as completed.');
+    $this->assertSession()->linkExistsExact('Updated BG translation');
   }
 
   /**
