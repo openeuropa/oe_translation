@@ -81,7 +81,7 @@ class LocalTranslationTest extends TranslationTestBase {
 
     // Translate in BG.
     $this->getSession()->getPage()->find('css', '.tmgmttranslate-localadd a[hreflang="bg"]')->click();
-    $this->getSession()->getPage()->fillField('info|0|value[translation]', 'BG translation');
+    $this->getSession()->getPage()->find('css', '#edit-info0value-translation')->setValue('BG translation');
     $this->getSession()->getPage()->pressButton('Save and complete translation');
     $this->assertSession()->pageTextContainsOnce('The translation for Custom Block has been saved as completed.');
     $this->assertSession()->linkExistsExact('BG translation');
@@ -90,7 +90,7 @@ class LocalTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->find('css', '.tmgmttranslate-localadd a[hreflang="bg"]')->click();
     $translation_field = $this->getSession()->getPage()->find('css', '#edit-info0value-translation');
     $this->assertEquals('BG translation', $translation_field->getValue());
-    $this->getSession()->getPage()->fillField('info|0|value[translation]', 'Updated BG translation');
+    $translation_field->setValue('Updated BG translation');
     $this->getSession()->getPage()->pressButton('Save and complete translation');
     $this->assertSession()->pageTextContainsOnce('The translation for Custom Block has been saved as completed.');
     $this->assertSession()->linkExistsExact('Updated BG translation');

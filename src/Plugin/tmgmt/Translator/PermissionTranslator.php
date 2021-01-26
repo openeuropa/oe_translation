@@ -14,7 +14,6 @@ use Drupal\oe_translation\JobAccessTranslatorInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\oe_translation\ApplicableTranslatorInterface;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource;
-use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
@@ -729,7 +728,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
   /**
    * Creates the source data ready to be translated for a node.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The node.
    * @param \Drupal\tmgmt_local\LocalTaskItemInterface $task_item
    *   The local task item.
@@ -737,10 +736,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
    * @return array
    *   The source data.
    */
-  protected function createSourceData(NodeInterface $node, LocalTaskItemInterface $task_item): array {
+  protected function createSourceData(ContentEntityInterface $entity, LocalTaskItemInterface $task_item): array {
     $job_item = $task_item->getJobItem();
     $source_plugin = $job_item->getSourcePlugin();
-    return $source_plugin instanceof ContentEntitySource ? $source_plugin->extractTranslatableData($node) : [];
+    return $source_plugin instanceof ContentEntitySource ? $source_plugin->extractTranslatableData($entity) : [];
   }
 
   /**
