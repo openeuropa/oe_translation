@@ -726,10 +726,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
   }
 
   /**
-   * Creates the source data ready to be translated for a node.
+   * Creates the source data of a content entity, ready to be translated.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The node.
+   *   The content entity.
    * @param \Drupal\tmgmt_local\LocalTaskItemInterface $task_item
    *   The local task item.
    *
