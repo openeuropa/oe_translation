@@ -380,8 +380,16 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $form['actions']['accept'] = [
       '#type' => 'submit',
       '#button_type' => 'primary',
-      '#value' => $this->t('Retry to accept translation'),
+      '#value' => $this->t('Re-save translation'),
       '#submit' => [[$this, 'retryAccept']],
+    ];
+
+    $form['actions']['disclaimer'] = [
+      '#type' => 'container',
+      0 => [
+        '#type' => 'markup',
+        '#markup' => $this->t('Re-saving the translation will update the content translation at the version it was requested from. Note that if you have updated the translation on that version it will be overridden.'),
+      ],
     ];
   }
 
@@ -400,7 +408,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $plugin = $job_item->getSourcePlugin();
     $result = $plugin->saveTranslation($job_item, $job_item->getJob()->getTargetLangcode());
     if ($result) {
-      $this->messenger->addStatus($this->t('The translation has been accepted.'));
+      $this->messenger->addStatus($this->t('The translation has been saved.'));
       $form_state->setRedirectUrl($job_item->getJob()->toUrl());
       $job_item->accepted();
       return;
