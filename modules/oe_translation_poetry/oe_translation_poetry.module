@@ -187,11 +187,7 @@ function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $o
       return AccessResult::forbidden()->addCacheableDependency($job);
     }
 
-    if (!$target_entity->hasTranslation($job->getTargetLangcode())) {
-      return AccessResult::neutral()->addCacheableDependency($job)->addCacheableDependency($target_entity);
-    }
-
-    return AccessResult::forbidden()->addCacheableDependency($job)->addCacheableDependency($target_entity);
+    return AccessResult::neutral()->addCacheableDependency($job)->addCacheableDependency($target_entity);
   }
 
   return AccessResult::neutral();
