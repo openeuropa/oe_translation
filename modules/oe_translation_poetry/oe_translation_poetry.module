@@ -184,7 +184,7 @@ function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $o
 
   if ($job->get('poetry_state')->value !== PoetryTranslator::POETRY_STATUS_TRANSLATED) {
     // Forbid access to job item updates if they are not waiting to be accepted
-    // or if there is no translation on the target entity from this job item.
+    // or if the source entity for this item is no longer available.
     /** @var \Drupal\oe_translation\EntitySourceTranslationInfoInterface $translation_source_info */
     $translation_source_info = \Drupal::service('oe_translation.content_entity_source_translation_info');
     /** @var \Drupal\Core\Entity\ContentEntityInterface $target_entity */
