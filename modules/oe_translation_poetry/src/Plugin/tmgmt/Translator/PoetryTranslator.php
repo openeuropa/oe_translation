@@ -6,9 +6,11 @@ namespace Drupal\oe_translation_poetry\Plugin\tmgmt\Translator;
 
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Access\AccessResultReasonInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -349,6 +351,69 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
         }
       }
     }
+
+    // In case the job item was marked as accepted but the translation is
+    // missing from the actual target entity, add a submit button that allows
+    // to save it again.
+    $cache = new CacheableMetadata();
+    /** @var \Drupal\tmgmt\JobItemInterface $job_item */
+    $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
+    $job = $job_item->getJob();
+    $cache->addCacheableDependency($job);
+    if ($job->getTranslatorId() !== 'poetry') {
+      $cache->applyTo($form);
+      return;
+    }
+
+    if ($job->getState() != JobInterface::STATE_FINISHED) {
+      $cache->applyTo($form);
+      return;
+    }
+
+    $access = $job_item->access('update', NULL, TRUE);
+    $cache->addCacheableDependency($access);
+    if (!$access instanceof AccessResultAllowed) {
+      $cache->applyTo($form);
+      return;
+    }
+
+    $form['actions']['accept'] = [
+      '#type' => 'submit',
+      '#button_type' => 'primary',
+      '#value' => $this->t('Re-save translation'),
+      '#submit' => [[$this, 'retryAccept']],
+    ];
+
+    $form['actions']['disclaimer'] = [
+      '#type' => 'container',
+      0 => [
+        '#type' => 'markup',
+        '#markup' => $this->t('Re-saving the translation will update the content translation at the version it was requested from. Note that if you have updated the translation on that version it will be overridden.'),
+      ],
+    ];
+  }
+
+  /**
+   * Form callback for trying to accept the translation.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function retryAccept(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\tmgmt\JobItemInterface $job_item */
+    $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
+    /** @var \Drupal\tmgmt\SourcePluginInterface $plugin */
+    $plugin = $job_item->getSourcePlugin();
+    $result = $plugin->saveTranslation($job_item, $job_item->getJob()->getTargetLangcode());
+    if ($result) {
+      $this->messenger->addStatus($this->t('The translation has been saved.'));
+      $form_state->setRedirectUrl($job_item->getJob()->toUrl());
+      $job_item->accepted();
+      return;
+    }
+    $this->messenger->addError($this->t('There was a problem accepting the translation.'));
   }
 
   /**

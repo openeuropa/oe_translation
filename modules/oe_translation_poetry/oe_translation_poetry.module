@@ -170,7 +170,7 @@ function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $o
   /** @var \Drupal\tmgmt\JobItemInterface $entity */
   $job = $entity->getJob();
   if (!$job->getTranslatorPlugin() instanceof PoetryTranslator) {
-    return AccessResult::neutral();
+    return AccessResult::neutral()->addCacheableDependency($job);
   }
 
   if ($operation === 'abort') {
@@ -183,9 +183,17 @@ function oe_translation_poetry_tmgmt_job_item_access(EntityInterface $entity, $o
   }
 
   if ($job->get('poetry_state')->value !== PoetryTranslator::POETRY_STATUS_TRANSLATED) {
-    // Forbid access to job item updates if they have not been translated by
-    // Poetry.
-    return AccessResult::forbidden();
+    // Forbid access to job item updates if they are not waiting to be accepted
+    // or if the source entity for this item is no longer available.
+    /** @var \Drupal\oe_translation\EntitySourceTranslationInfoInterface $translation_source_info */
+    $translation_source_info = \Drupal::service('oe_translation.content_entity_source_translation_info');
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $target_entity */
+    $target_entity = $translation_source_info->getEntityFromJobItem($entity);
+    if (!$target_entity) {
+      return AccessResult::forbidden()->addCacheableDependency($job);
+    }
+
+    return AccessResult::neutral()->addCacheableDependency($job)->addCacheableDependency($target_entity);
   }
 
   return AccessResult::neutral();
