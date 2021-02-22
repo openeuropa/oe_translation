@@ -53,6 +53,7 @@ commands:
         $settings["poetry.service.password"] = getenv('POETRY_SERVICE_PASSWORD');
         $settings["poetry.notification.username"] = getenv('POETRY_NOTIFICATION_USERNAME');
         $settings["poetry.notification.password"] = getenv('POETRY_NOTIFICATION_PASSWORD');
+        $settings["poetry.notification.endpoint_prefix"] = getenv('POETRY_NOTIFICATION_ENDPOINT_PREFIX');
     # Generate settings.testing.php, it will be used when running functional tests.
     - { task: "process-php", type: "write", config: "drupal.settings", source: "${drupal.root}/sites/default/default.settings.php", destination: "${drupal.root}/sites/default/settings.testing.php", override: true }
     - task: "append"
@@ -64,6 +65,7 @@ commands:
         $settings["poetry.service.password"] = getenv('POETRY_SERVICE_PASSWORD');
         $settings["poetry.notification.username"] = getenv('POETRY_NOTIFICATION_USERNAME');
         $settings["poetry.notification.password"] = getenv('POETRY_NOTIFICATION_PASSWORD');
+        $settings["poetry.notification.endpoint_prefix"] = getenv('POETRY_NOTIFICATION_ENDPOINT_PREFIX');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }
   setup:behat:

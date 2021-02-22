@@ -16,11 +16,6 @@ use EC\Poetry\Messages\MessageInterface;
 class PoetryMockFixturesGenerator {
 
   /**
-   * A dummy reference that mocks that it already exists in the Poetry system.
-   */
-  const EXISTING_REFERENCE = 'WEB/2020/9999/0/0/TRA';
-
-  /**
    * The Poetry service.
    *
    * @var \Drupal\oe_translation_poetry\Poetry
@@ -74,7 +69,7 @@ class PoetryMockFixturesGenerator {
       $response = new FormattableMarkup($error_template, $variables);
       return (string) $response;
     }
-    if ($identifier->getFormattedIdentifier() === self::EXISTING_REFERENCE) {
+    if ($identifier->getFormattedIdentifier() === $this->getExistingReference()) {
       $variables['@message'] = 'Error in xmlActions:newRequest: A request with the same references if already in preparation another product exists for this reference.';
       $response = new FormattableMarkup($error_template, $variables);
       return (string) $response;
@@ -204,6 +199,17 @@ class PoetryMockFixturesGenerator {
     ];
 
     return $identifier_variables;
+  }
+
+  /**
+   * Returns a dummy reference that already exists in the Poetry system.
+   *
+   * @return string
+   *   The reference.
+   */
+  protected function getExistingReference(): string {
+    $year = date('Y');
+    return "WEB/$year/9999/0/0/TRA";
   }
 
 }

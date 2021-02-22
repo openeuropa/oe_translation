@@ -7,7 +7,7 @@ namespace Drupal\oe_translation_poetry\Form;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\NotificationEndpointResolver;
 
 /**
  * Form for requesting the addition of new languages to an existing request.
@@ -74,7 +74,7 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
         ->withReturnAddress()
         ->setType('smtp')
         ->setUser($username)
-        ->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
+        ->setAddress(NotificationEndpointResolver::resolve() . '?wsdl');
     }
 
     try {

@@ -7,7 +7,7 @@ namespace Drupal\oe_translation_poetry\Form;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
+use Drupal\oe_translation_poetry\NotificationEndpointResolver;
 use Drupal\oe_translation_poetry\PoetryTranslatorUI;
 
 /**
@@ -148,7 +148,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     $return->setUser($username);
     $return->setPassword($password);
     // The notification endpoint WSDL.
-    $return->setAddress(Url::fromRoute('oe_translation_poetry.notifications')->setAbsolute()->toString() . '?wsdl');
+    $return->setAddress(NotificationEndpointResolver::resolve() . '?wsdl');
     // The notification endpoint WSDL action method.
     $return->setPath('handle');
     // The return is a webservice and not an email.

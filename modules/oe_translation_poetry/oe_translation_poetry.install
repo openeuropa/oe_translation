@@ -44,6 +44,13 @@ function oe_translation_poetry_requirements($phase) {
         'severity' => REQUIREMENT_INFO,
       ];
     }
+
+    $value = Settings::get('poetry.notification.endpoint_prefix', FALSE);
+    $requirements['poetry.notification.endpoint_prefix'] = [
+      'title' => 'Poetry notification endpoint prefix',
+      'value' => $value ? $value : t('Value not set'),
+      'severity' => REQUIREMENT_INFO,
+    ];
   }
 
   return $requirements;
