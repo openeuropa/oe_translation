@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.12.0](https://github.com/openeuropa/oe_translation/tree/1.12.0) (2021-03-19)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.11.1...1.12.0)
+
+**Merged pull requests:**
+
+- EWPP-864: Printing the hreflang on the translation overview page so we can determine the row language. [\#132](https://github.com/openeuropa/oe_translation/pull/132) ([upchuk](https://github.com/upchuk))
+
+## [0.11.1](https://github.com/openeuropa/oe_translation/tree/0.11.1) (2021-03-12)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.11.0...0.11.1)
+
+**Merged pull requests:**
+
+- Update changelog for release 0.11.1 [\#131](https://github.com/openeuropa/oe_translation/pull/131) ([imanoleguskiza](https://github.com/imanoleguskiza))
+
 ## [0.11.0](https://github.com/openeuropa/oe_translation/tree/0.11.0) (2021-03-11)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.10.0...0.11.0)
@@ -16,9 +32,9 @@
 
 **Merged pull requests:**
 
-- Prepare release 0.10.0. [\#121](https://github.com/openeuropa/oe_translation/pull/121) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-545: Adding the http\_build\_url polyfill and fixing mock number generation. [\#123](https://github.com/openeuropa/oe_translation/pull/123) ([upchuk](https://github.com/upchuk))
 - EWPP-529: Replace scaffold library. [\#122](https://github.com/openeuropa/oe_translation/pull/122) ([sergepavle](https://github.com/sergepavle))
+- Prepare release 0.10.0. [\#121](https://github.com/openeuropa/oe_translation/pull/121) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-545: Remove test env variable. [\#120](https://github.com/openeuropa/oe_translation/pull/120) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-545: Poetry notification endpoint prefixing. [\#119](https://github.com/openeuropa/oe_translation/pull/119) ([upchuk](https://github.com/upchuk))
 - EWPP-516: Update docker images. [\#117](https://github.com/openeuropa/oe_translation/pull/117) ([22Alexandra](https://github.com/22Alexandra))
