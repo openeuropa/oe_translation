@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.12.0](https://github.com/openeuropa/oe_translation/tree/0.12.0) (2021-03-19)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.11.1...0.12.0)
+
+**Merged pull requests:**
+
+- EWPP-864: Printing the hreflang on the translation overview page so we can determine the row language. [\#132](https://github.com/openeuropa/oe_translation/pull/132) ([upchuk](https://github.com/upchuk))
+
+## [0.11.1](https://github.com/openeuropa/oe_translation/tree/0.11.1) (2021-03-12)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.11.0...0.11.1)
+
+**Merged pull requests:**
+
+- Update changelog for release 0.11.1 [\#131](https://github.com/openeuropa/oe_translation/pull/131) ([imanoleguskiza](https://github.com/imanoleguskiza))
+
 ## [0.11.0](https://github.com/openeuropa/oe_translation/tree/0.11.0) (2021-03-11)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.10.0...0.11.0)
@@ -16,9 +32,9 @@
 
 **Merged pull requests:**
 
-- Prepare release 0.10.0. [\#121](https://github.com/openeuropa/oe_translation/pull/121) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-545: Adding the http\_build\_url polyfill and fixing mock number generation. [\#123](https://github.com/openeuropa/oe_translation/pull/123) ([upchuk](https://github.com/upchuk))
 - EWPP-529: Replace scaffold library. [\#122](https://github.com/openeuropa/oe_translation/pull/122) ([sergepavle](https://github.com/sergepavle))
+- Prepare release 0.10.0. [\#121](https://github.com/openeuropa/oe_translation/pull/121) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-545: Remove test env variable. [\#120](https://github.com/openeuropa/oe_translation/pull/120) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-545: Poetry notification endpoint prefixing. [\#119](https://github.com/openeuropa/oe_translation/pull/119) ([upchuk](https://github.com/upchuk))
 - EWPP-516: Update docker images. [\#117](https://github.com/openeuropa/oe_translation/pull/117) ([22Alexandra](https://github.com/22Alexandra))
@@ -181,6 +197,7 @@
 - OPENEUROPA-2163: Poetry request ID field type. [\#9](https://github.com/openeuropa/oe_translation/pull/9) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2107: Create Poetry translation requests [\#8](https://github.com/openeuropa/oe_translation/pull/8) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2105: Poetry client and mock setup. [\#7](https://github.com/openeuropa/oe_translation/pull/7) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2017: Local translation solution. [\#2](https://github.com/openeuropa/oe_translation/pull/2) ([upchuk](https://github.com/upchuk))
 
 ## [0.1.1](https://github.com/openeuropa/oe_translation/tree/0.1.1) (2019-10-16)
 
@@ -200,7 +217,6 @@
 - Update CHANGELOG.md for release 0.1. [\#6](https://github.com/openeuropa/oe_translation/pull/6) ([sergepavle](https://github.com/sergepavle))
 - OPENEUROPA-2053: Translations are by default saved onto the revision they started from [\#5](https://github.com/openeuropa/oe_translation/pull/5) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2056: Better translation form elements. [\#4](https://github.com/openeuropa/oe_translation/pull/4) ([upchuk](https://github.com/upchuk))
-- OPENEUROPA-2017: Local translation solution. [\#2](https://github.com/openeuropa/oe_translation/pull/2) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2016: Module scaffolding [\#1](https://github.com/openeuropa/oe_translation/pull/1) ([dxvargas](https://github.com/dxvargas))
 
 
