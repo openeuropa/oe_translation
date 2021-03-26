@@ -280,6 +280,13 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
 
         $field_parents = explode('|', $field_path);
 
+        if (!is_numeric($delta) && isset($data[$field_name][$delta]['#label'])) {
+          // In case we have a more "special" field, like metatag, which doesn't
+          // have a delta, but may have multiple "sections" with labels,
+          // append that label as well to the field name.
+          $field['#field_name'] .= ' - ' . $data[$field_name][$delta]['#label'];
+        }
+
         // When the field has multiple columns they come with
         // a label, then append the column name.
         if (isset($data[$field_name][$delta][$column]['#label'])) {
@@ -289,8 +296,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
           }
         }
 
-        // Append the delta in case there are multiple field values.
-        if (count(Element::children($data[$field_name])) > 1) {
+        // Append the delta in case there are multiple field values and if the
+        // delta is numeric (field has a real delta, which happens in most
+        // cases).
+        if (count(Element::children($data[$field_name])) > 1 && is_numeric($delta)) {
           $field['#field_name'] .= ' (' . ($delta + 1) . ')';
         }
 

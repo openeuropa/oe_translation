@@ -23,6 +23,7 @@ class LocalTranslationTest extends TranslationTestBase {
     'paragraphs',
     'entity_reference_revisions',
     'block_content',
+    'metatag',
   ];
 
   /**
@@ -191,6 +192,11 @@ class LocalTranslationTest extends TranslationTestBase {
         'address_line1' => 'The street name',
       ],
       'ott_content_reference' => $referenced_node->id(),
+      'field_metatag' => serialize([
+        'description' => 'description override',
+        'abstract' => 'abstract override',
+        'geo_placename' => 'geo place override',
+      ]),
     ]);
 
     $node->save();
@@ -232,6 +238,18 @@ class LocalTranslationTest extends TranslationTestBase {
     $fields['address_family_name'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Address - Last name']",
       'value' => 'The last name',
+    ];
+    $fields['field_metatag_basic_description'] = [
+      'xpath' => "//table//th[normalize-space(text()) = 'Metatag - Basic tags - Description']",
+      'value' => 'description override',
+    ];
+    $fields['field_metatag_basic_abstract'] = [
+      'xpath' => "//table//th[normalize-space(text()) = 'Metatag - Basic tags - Abstract']",
+      'value' => 'abstract override',
+    ];
+    $fields['field_metatag_advanced_abstract'] = [
+      'xpath' => "//table//th[normalize-space(text()) = 'Metatag - Advanced - Geographical place name']",
+      'value' => 'geo place override',
     ];
     $fields['ott_content_reference'] = [
       'xpath' => "//table//th[normalize-space(text()) = 'Content reference - Title']",
