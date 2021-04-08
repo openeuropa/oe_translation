@@ -13,6 +13,48 @@ use Drupal\tmgmt\JobInterface;
 class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
   /**
+   * Tests a failed new translation request.
+   */
+  public function testFailedNewTranslationRequest(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My first node',
+    ]);
+    $node->save();
+
+    // Select some languages to translate.
+    $this->createInitialTranslationJobs($node, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Mark the mock to return an error.
+    $error = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum';
+    \Drupal::state()->set('oe_translation_poetry_mock_error', $error);
+
+    $this->submitTranslationRequestForQueue($node, 'There was an error making the request to DGT.');
+    $this->jobStorage->resetCache();
+    /** @var \Drupal\tmgmt\JobInterface[] $jobs */
+    $jobs = $this->jobStorage->loadMultiple();
+    foreach ($jobs as $job) {
+      $messages = $job->getMessages();
+      $message_strings = [];
+      foreach ($messages as $message) {
+        $message_strings[] = (string) $message->getMessage();
+      }
+
+      $this->assertEquals([
+        'There were errors with this request: Type: request, Code: -1, Message: ' . $error . '.',
+        'The translation job has been rejected by the translation provider.',
+      ], $message_strings, sprintf('The messages of the %s job were not correct.', $job->getTargetLangcode()));
+
+      $this->assertEquals(JobInterface::STATE_REJECTED, $job->getState(), sprintf('The state of the %s job was not correct.', $job->getTargetLangcode()));
+    }
+  }
+
+  /**
    * Tests new translation requests.
    */
   public function testNewTranslationRequest(): void {
