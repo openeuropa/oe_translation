@@ -177,8 +177,10 @@ class PoetryTranslationTestBase extends TranslationTestBase {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node.
+   * @param string $expected_message
+   *   The expected status message on the screen.
    */
-  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
+  protected function submitTranslationRequestForQueue(NodeInterface $node, string $expected_message = 'The request has been sent to DGT.'): void {
     // Submit the request form.
     $date = new \DateTime();
     $date->modify('+ 7 days');
@@ -194,7 +196,7 @@ class PoetryTranslationTestBase extends TranslationTestBase {
       'details[comment]' => 'Translation comment',
     ];
     $this->drupalPostForm(NULL, $values, 'Send request');
-    $this->assertSession()->pageTextContains('The request has been sent to DGT.');
+    $this->assertSession()->pageTextContains($expected_message);
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
   }
 

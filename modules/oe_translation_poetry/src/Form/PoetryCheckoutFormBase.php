@@ -293,10 +293,10 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     foreach ($jobs as $job) {
       if ($warnings) {
-        $job->addMessage(new FormattableMarkup('There were warnings with this request: @warnings', ['@warnings' => $warnings]));
+        $job->addMessage('There were warnings with this request: @warnings', ['@warnings' => $warnings]);
       }
       if ($errors) {
-        $job->addMessage(new FormattableMarkup('There were errors with this request: @errors', ['@errors' => $errors]));
+        $job->addMessage('There were errors with this request: @errors', ['@errors' => $errors]);
       }
 
       $job->rejected();

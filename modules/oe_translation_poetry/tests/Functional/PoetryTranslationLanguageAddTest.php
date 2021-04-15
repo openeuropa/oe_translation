@@ -273,12 +273,9 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
   }
 
   /**
-   * Submits the request to add languages on the current page.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node.
+   * {@inheritdoc}
    */
-  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
+  protected function submitTranslationRequestForQueue(NodeInterface $node, string $expected_message = 'The request has been sent to DGT.'): void {
     // Submit the request form.
     $date = new \DateTime();
     $date->modify('+ 7 days');
