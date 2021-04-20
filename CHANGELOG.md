@@ -1,11 +1,21 @@
 # Changelog
 
+## [0.13.0](https://github.com/openeuropa/oe_translation/tree/0.13.0) (2021-04-20)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.12.0...0.13.0)
+
+**Merged pull requests:**
+
+- EWPP-959: Fix on the storing of Poetry error messages in the job. [\#136](https://github.com/openeuropa/oe_translation/pull/136) ([upchuk](https://github.com/upchuk))
+- EWPP-721: Update xdebug configuration. [\#125](https://github.com/openeuropa/oe_translation/pull/125) ([22Alexandra](https://github.com/22Alexandra))
+
 ## [0.12.0](https://github.com/openeuropa/oe_translation/tree/0.12.0) (2021-03-19)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.11.1...0.12.0)
 
 **Merged pull requests:**
 
+- Release-0.12.0: Update changelog. [\#134](https://github.com/openeuropa/oe_translation/pull/134) ([nagyad](https://github.com/nagyad))
 - EWPP-864: Printing the hreflang on the translation overview page so we can determine the row language. [\#132](https://github.com/openeuropa/oe_translation/pull/132) ([upchuk](https://github.com/upchuk))
 
 ## [0.11.1](https://github.com/openeuropa/oe_translation/tree/0.11.1) (2021-03-12)
