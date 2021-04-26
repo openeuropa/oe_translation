@@ -36,6 +36,7 @@ class TranslationTestBase extends BrowserTestBase {
     'options',
     'oe_translation',
     'oe_translation_test',
+    'metatag',
   ];
 
   /**
@@ -53,6 +54,8 @@ class TranslationTestBase extends BrowserTestBase {
 
     $this->container->get('content_translation.manager')->setEnabled('node', 'page', TRUE);
     $this->container->get('router.builder')->rebuild();
+
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'content']);
 
     /** @var \Drupal\user\RoleInterface $role */
     $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');

@@ -9,3 +9,4 @@ dependencies:
   - oe_multilingual_demo:oe_multilingual_demo
   - address:address
   - paragraphs:paragraphs
+  - metatag:metatag
