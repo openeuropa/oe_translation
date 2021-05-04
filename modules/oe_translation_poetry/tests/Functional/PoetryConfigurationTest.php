@@ -13,6 +13,13 @@ use Drupal\Core\Url;
 class PoetryConfigurationTest extends PoetryTranslationTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'dblog',
+  ];
+
+  /**
    * Tests the configuration of the Poetry translator plugin.
    */
   public function testTranslatorConfiguration() : void {
