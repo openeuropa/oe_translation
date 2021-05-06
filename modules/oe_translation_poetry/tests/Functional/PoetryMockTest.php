@@ -25,6 +25,7 @@ class PoetryMockTest extends BrowserTestBase {
     'oe_translation',
     'oe_translation_poetry',
     'oe_translation_poetry_mock',
+    'dblog',
   ];
 
   /**

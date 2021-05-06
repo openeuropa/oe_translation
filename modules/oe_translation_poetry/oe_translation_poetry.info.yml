@@ -7,7 +7,6 @@ core: 8.x
 dependencies:
   - oe_translation:oe_translation
   - oe_translation_poetry_html_formatter:oe_translation_poetry_html_formatter
-  - drupal:dblog
   - drupal:datetime
 
 configure: entity.tmgmt_translator.collection
