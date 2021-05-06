@@ -120,5 +120,5 @@ Please read [the full documentation](https://github.com/openeuropa/openeuropa) f
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the available versions, see the [tags on this repository](https://github.com/openeuropa/oe_translation/tags).
+We use [SemVer](http://semver.org/) for versioning. For the available versions, see the [tags on this repository](https://github.com/openeuropa/oe_translation/tags).\
 
