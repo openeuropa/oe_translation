@@ -21,7 +21,6 @@ function oe_translation_test_uninstall() {
     'node.ott_top_level_paragraphs',
     'node.ott_inner_paragraph_field',
     'node.ott_top_level_paragraph_field',
-    'node.field_metatag'
   ];
   foreach ($fields as $field) {
     $storage = FieldStorageConfig::load($field);
