@@ -23,6 +23,7 @@ class LocalTranslationTest extends TranslationTestBase {
     'paragraphs',
     'entity_reference_revisions',
     'block_content',
+    'oe_translation_metatag_test',
     'metatag',
   ];
 

@@ -36,7 +36,6 @@ class TranslationTestBase extends BrowserTestBase {
     'options',
     'oe_translation',
     'oe_translation_test',
-    'metatag',
   ];
 
   /**

@@ -1,5 +1,5 @@
-name: OE Translation Test
-description: Test module for OE Translation
+name: 'OE Translation Metatag Test'
+description: 'Test module for OE Translation metatag'
 core: 8.x
 type: module
 package: Testing
@@ -7,5 +7,4 @@ package: Testing
 dependencies:
   - oe_translation:oe_translation
   - oe_multilingual_demo:oe_multilingual_demo
-  - address:address
-  - paragraphs:paragraphs
+  - metatag:metatag
