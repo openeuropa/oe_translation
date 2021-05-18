@@ -95,6 +95,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',
+      // The year is the current date year because it's the first request we
+      // are making.
       'year' => date('Y'),
       // The number is the first number because it's the first request we are
       // making.
@@ -109,7 +111,20 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // Abort jobs to have the request button displayed again.
     $this->abort($jobs);
 
-    // Make a new request for the same node to check that the version increases.
+    // Update the job to make the year different on the saved job to mimic the
+    // fact that the previous job was requested in a different year so that we
+    // can assert the new requests all follow that year.
+    foreach ($jobs as $lang => $job) {
+      /** @var \Drupal\tmgmt\JobInterface $job */
+      $job = $this->jobStorage->load($job->id());
+      $values = $job->get('poetry_request_id')->first()->getValue();
+      $values['year'] = 2020;
+      $job->set('poetry_request_id', $values);
+      $job->save();
+    }
+
+    // Make a new request for the same node to check that the version increases
+    // but the year stays the same.
     $this->createInitialTranslationJobs($node, ['de' => 'German', 'fr' => 'French']);
     $jobs = [];
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
@@ -130,7 +145,9 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',
-      'year' => date('Y'),
+      // The year follows the previous job year, even if we are no longer in
+      // that year.
+      'year' => 2020,
       'number' => '1000',
       // The version should increase.
       'version' => '1',
@@ -174,7 +191,9 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',
-      'year' => date('Y'),
+      // The year follows the previous job year, even if we are no longer in
+      // that year.
+      'year' => 2020,
       'number' => '1000',
       // Version is reset to 0 because it's a new node.
       'version' => '0',
@@ -228,6 +247,8 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // set.
     $expected_poetry_request_id = [
       'code' => 'WEB',
+      // Since the part has reached 99 and a new number requested, the year
+      // can now also take the current one.
       'year' => date('Y'),
       'number' => '1001',
       'version' => '0',
