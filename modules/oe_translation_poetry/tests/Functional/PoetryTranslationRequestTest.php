@@ -38,6 +38,20 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->jobStorage->resetCache();
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs = $this->jobStorage->loadMultiple();
+    $expected_poetry_request_id = [
+      'code' => 'WEB',
+      // The year is the current date year because it's the first request we
+      // are making.
+      'year' => date('Y'),
+      // The number is the first number because it's the first request we are
+      // making.
+      'number' => '1000',
+      // We always start with version and part 0 in the first request.
+      'version' => '0',
+      'part' => '0',
+      'product' => 'TRA',
+    ];
+
     foreach ($jobs as $job) {
       $messages = $job->getMessages();
       $message_strings = [];
@@ -51,6 +65,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
       ], $message_strings, sprintf('The messages of the %s job were not correct.', $job->getTargetLangcode()));
 
       $this->assertEquals(JobInterface::STATE_REJECTED, $job->getState(), sprintf('The state of the %s job was not correct.', $job->getTargetLangcode()));
+      $this->assertEquals($expected_poetry_request_id, $job->get('poetry_request_id')->first()->getValue());
     }
   }
 
