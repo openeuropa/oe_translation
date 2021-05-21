@@ -15,6 +15,7 @@ use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
 use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
 use Drupal\tmgmt\JobInterface;
+use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Messages\Responses\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -255,19 +256,10 @@ abstract class PoetryCheckoutFormBase extends FormBase {
 
     /** @var \EC\Poetry\Messages\Components\Identifier $identifier */
     $identifier = $response->getIdentifier();
-    $identifier_values = [
-      'code' => $identifier->getCode(),
-      'year' => $identifier->getYear(),
-      'number' => $identifier->getNumber(),
-      'version' => $identifier->getVersion(),
-      'part' => $identifier->getPart(),
-      'product' => $identifier->getProduct(),
-    ];
-
     $date = new \DateTime($form_state->getValue('details')['date']);
 
     foreach ($jobs as $job) {
-      $job->set('poetry_request_id', $identifier_values);
+      $this->setIdentifierValuesOnJob($job, $identifier);
       $job->set('poetry_request_date', $date->format('Y-m-d\TH:i:s'));
       // Submit the job. This will also save it.
       $job->submitted();
@@ -291,6 +283,9 @@ abstract class PoetryCheckoutFormBase extends FormBase {
     $errors = $response->getErrors() ? implode('. ', $response->getErrors()) : NULL;
     $job_ids = [];
 
+    /** @var \EC\Poetry\Messages\Components\Identifier $identifier */
+    $identifier = $response->getIdentifier();
+
     foreach ($jobs as $job) {
       if ($warnings) {
         $job->addMessage('There were warnings with this request: @warnings', ['@warnings' => $warnings]);
@@ -299,12 +294,34 @@ abstract class PoetryCheckoutFormBase extends FormBase {
         $job->addMessage('There were errors with this request: @errors', ['@errors' => $errors]);
       }
 
+      $this->setIdentifierValuesOnJob($job, $identifier);
       $job->rejected();
       $job_ids[] = $job->id();
     }
 
     $message = new FormattableMarkup('The DGT request with the following jobs has been rejected upon submission: @jobs The messages have been saved in the jobs.', ['@jobs' => implode(', ', $job_ids)]);
     throw new \Exception($message->__toString());
+  }
+
+  /**
+   * Sets identifier values onto a job.
+   *
+   * @param \Drupal\tmgmt\JobInterface $job
+   *   The job.
+   * @param \EC\Poetry\Messages\Components\Identifier $identifier
+   *   The identifier.
+   */
+  protected function setIdentifierValuesOnJob(JobInterface $job, Identifier $identifier) {
+    $identifier_values = [
+      'code' => $identifier->getCode(),
+      'year' => $identifier->getYear(),
+      'number' => $identifier->getNumber(),
+      'version' => $identifier->getVersion(),
+      'part' => $identifier->getPart(),
+      'product' => $identifier->getProduct(),
+    ];
+
+    $job->set('poetry_request_id', $identifier_values);
   }
 
 }

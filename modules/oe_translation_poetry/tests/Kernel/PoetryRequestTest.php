@@ -80,7 +80,8 @@ class PoetryRequestTest extends TranslationKernelTestBase {
     $this->assertEquals('WEB', $identifier->getCode());
     $this->assertEquals(0, $identifier->getPart());
     $this->assertEquals(0, $identifier->getVersion());
-    // The date is generated dynamically.
+    // The date is generated dynamically and it is the current year because it
+    // is the first request.
     $this->assertEquals(date('Y'), $identifier->getYear());
 
     // Simulate a previous translation for node 1.
@@ -92,6 +93,7 @@ class PoetryRequestTest extends TranslationKernelTestBase {
         'version' => '0',
         'product' => 'TRA',
         'number' => 11111,
+        // We go some years back for this simulation.
         'year' => 2018,
       ],
       'translator' => 'poetry',
@@ -119,8 +121,8 @@ class PoetryRequestTest extends TranslationKernelTestBase {
     // The part is increased by one from the previous request.
     $this->assertEquals('1', $identifier->getPart());
     $this->assertEquals('0', $identifier->getVersion());
-    // The date is generated dynamically.
-    $this->assertEquals(date('Y'), $identifier->getYear());
+    // The date is the same as before because the global number was not changed.
+    $this->assertEquals(2018, $identifier->getYear());
 
     // Delete the jobs from the system to mimic a data loss and ensure a new
     // number is requested in this case to start over.
@@ -136,6 +138,8 @@ class PoetryRequestTest extends TranslationKernelTestBase {
     $this->assertEquals('', $identifier->getNumber());
     $this->assertEquals('0', $identifier->getPart());
     $this->assertEquals('0', $identifier->getVersion());
+    // Since we are sending the sequence again for a new number, the year is
+    // also reset.
     $this->assertEquals(date('Y'), $identifier->getYear());
 
     // Create another finished translation for the first node but increase the
@@ -162,6 +166,7 @@ class PoetryRequestTest extends TranslationKernelTestBase {
     $this->assertEquals('', $identifier->getNumber());
     $this->assertEquals('0', $identifier->getPart());
     $this->assertEquals('0', $identifier->getVersion());
+    // And the year is also renewed.
     $this->assertEquals(date('Y'), $identifier->getYear());
   }
 

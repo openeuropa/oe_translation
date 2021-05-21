@@ -233,27 +233,32 @@ class Poetry implements PoetryInterface {
 
     // If we have a global number, we can maybe use it. However, we first to
     // determine the part. And for this we need to check the jobs.
-    $part = $this->getLastPartForNumber($number);
+    $request_id = $this->getLastRequestIdForNumber($number);
+    if (!$request_id) {
+      // In case we lost track of the jobs we need to reset and request a new
+      // number. And for this we allow the new year.
+      $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
+      return $identifier;
+    }
+
+    $part = (int) $request_id['part'];
+
     if ($part > -1) {
-      // We check if the part came back as -1 in case jobs were missing from
-      // the system, we increment only if we know where to increment from.
+      // If we have a part, we increment by 1.
       $part++;
     }
 
     // If the incremented part is 100, we need to scrap the the global number
-    // and request a new one. The maximum can be 99.
+    // and request a new one. The maximum can be 99. And in this case, a new
+    // year can also be allowed.
     if ($part === 100) {
       $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
       return $identifier;
     }
 
-    if ($part === -1) {
-      // In case we lost track of the jobs we need to reset and request a new
-      // number.
-      $identifier->setSequence(Settings::get('poetry.identifier.sequence'));
-      return $identifier;
-    }
-
+    // If we successfully incremented the part on the same number, we should
+    // use the same year this number was started from.
+    $identifier->setYear($request_id['year']);
     $identifier->setPart($part);
     $identifier->setNumber($number);
 
@@ -333,15 +338,15 @@ class Poetry implements PoetryInterface {
   }
 
   /**
-   * Gets the next part to use for a global number.
+   * Gets the last requested ID for a global number.
    *
    * @param string $number
    *   The number.
    *
-   * @return int
-   *   The part.
+   * @return array
+   *   The request ID values.
    */
-  protected function getLastPartForNumber(string $number): int {
+  protected function getLastRequestIdForNumber(string $number): array {
     $job_ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
       ->condition('poetry_request_id__number', $number)
       ->sort('poetry_request_id.part', 'DESC')
@@ -351,12 +356,12 @@ class Poetry implements PoetryInterface {
     if (!$job_ids) {
       // Normally we should get a value since the number must have been used
       // on previous jobs.
-      return -1;
+      return [];
     }
 
     /** @var \Drupal\tmgmt\JobInterface $job */
     $job = $this->entityTypeManager->getStorage('tmgmt_job')->load(reset($job_ids));
-    return (int) $job->get('poetry_request_id')->part;
+    return $job->get('poetry_request_id')->first()->getValue();
   }
 
 }
