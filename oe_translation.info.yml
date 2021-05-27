@@ -1,9 +1,9 @@
-name: OpenEuropa Translation
-description: Translation management tool for the OpenEuropa project.
+name: 'OpenEuropa Translation'
+description: 'Translation management tool for the OpenEuropa project.'
 package: OpenEuropa
 
 type: module
-core: 8.x
+core_version_requirement: ^8 || ^9
 dependencies:
   - tmgmt:tmgmt
   - tmgmt:tmgmt_content

@@ -1,6 +1,6 @@
-name: OE Translation Test
-description: Test module for OE Translation
-core: 8.x
+name: 'OE Translation Test'
+description: 'Test module for OE Translation'
+core_version_requirement: ^8 || ^9
 type: module
 package: Testing
 

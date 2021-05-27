@@ -1,6 +1,6 @@
-name: OE Translation Poetry Test
-description: Test module for OE Translation Poetry
-core: 8.x
+name: 'OE Translation Poetry Test'
+description: 'Test module for OE Translation Poetry'
+core_version_requirement: ^8 || ^9
 type: module
 package: Testing
 

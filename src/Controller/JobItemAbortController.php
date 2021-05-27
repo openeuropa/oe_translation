@@ -88,7 +88,7 @@ class JobItemAbortController extends ControllerBase {
       ->setOperation('abort')
         // The entity manager cannot be injected due to a circular dependency.
         // @todo Remove this set call in https://www.drupal.org/node/2603542.
-      ->setEntityManager(\Drupal::entityManager());
+      ->setEntityManager(\Drupal::service('entity_type.manager'));
 
     $form_object->setEntity($tmgmt_job_item);
 
