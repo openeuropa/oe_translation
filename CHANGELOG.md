@@ -1,11 +1,24 @@
-# Changelog
+# Change Log
+
+## [0.14.0](https://github.com/openeuropa/oe_translation/tree/0.14.0) (2021-06-15)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.13.0...0.14.0)
+
+**Merged pull requests:**
+
+- EWPP-1099: The sources and cart routes of TMGMT should not be accessible by anyone. [\#144](https://github.com/openeuropa/oe_translation/pull/144) ([upchuk](https://github.com/upchuk))
+- EWPP-1118: Fix date renewal on Poetry requests [\#143](https://github.com/openeuropa/oe_translation/pull/143) ([upchuk](https://github.com/upchuk))
+- EWPP-1103: Move test metatag field into separate test module. [\#142](https://github.com/openeuropa/oe_translation/pull/142) ([nagyad](https://github.com/nagyad))
+- EWPP-124: Remove dblog dependency. [\#141](https://github.com/openeuropa/oe_translation/pull/141) ([gervasek](https://github.com/gervasek))
+- EWPP-124: Remove dblog dependency. [\#139](https://github.com/openeuropa/oe_translation/pull/139) ([imanoleguskiza](https://github.com/imanoleguskiza))
+- EWPP-513: Patch address and tmgmt modules. [\#137](https://github.com/openeuropa/oe_translation/pull/137) ([22Alexandra](https://github.com/22Alexandra))
+- EWPP-936: Support for metatag field translation. [\#135](https://github.com/openeuropa/oe_translation/pull/135) ([upchuk](https://github.com/upchuk))
 
 ## [0.13.0](https://github.com/openeuropa/oe_translation/tree/0.13.0) (2021-04-20)
-
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.12.0...0.13.0)
 
 **Merged pull requests:**
 
+- Prepare release 0.13.0. [\#138](https://github.com/openeuropa/oe_translation/pull/138) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-959: Fix on the storing of Poetry error messages in the job. [\#136](https://github.com/openeuropa/oe_translation/pull/136) ([upchuk](https://github.com/upchuk))
 - EWPP-721: Update xdebug configuration. [\#125](https://github.com/openeuropa/oe_translation/pull/125) ([22Alexandra](https://github.com/22Alexandra))
 
