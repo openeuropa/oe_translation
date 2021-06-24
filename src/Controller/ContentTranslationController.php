@@ -60,9 +60,9 @@ class ContentTranslationController extends BaseContentTranslationController {
    *   The language manager.
    */
   public function __construct(ContentTranslationManagerInterface $manager, EntityTypeManagerInterface $entity_type_manager, TranslatorManager $translator_manager, EventDispatcherInterface $event_dispatcher, LanguageManagerInterface $language_manager = NULL) {
-    //$entity_field_manager = \Drupal::service('entity_field.manager');
+    $entity_field_manager = \Drupal::service('entity_field.manager');
     
-    parent::__construct($manager);
+    parent::__construct($manager, $entity_field_manager);
 
     $this->entityTypeManager = $entity_type_manager;
     $this->translatorManager = $translator_manager;
