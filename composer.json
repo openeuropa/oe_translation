@@ -23,7 +23,7 @@
         "drupal/paragraphs": "^1.11",
         "drupaltest/behat-traits": "dev-GH-6",
         "drush/drush": "^10.3",
-        "ec-europa/oe-poetry-client": "dev-master",
+        "ec-europa/oe-poetry-client": "dev-EWPP-917",
         "openeuropa/behat-transformation-context" : "~0.1",
         "openeuropa/code-review": "~1.6",
         "openeuropa/drupal-core-require-dev": "^8.9 || ^9.1",
@@ -43,12 +43,16 @@
         "post-install-cmd": "./vendor/bin/run drupal:site-setup",
         "post-update-cmd": "./vendor/bin/run drupal:site-setup"
     },
-    "repositories": [
-        {
+    "repositories": {
+        "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
+        },
+        "ec-europa/oe-poetry-client": {
+            "type": "git",
+            "url": "https://github.com/GilNovacomm/oe-poetry-client.git"
         }
-    ],
+    },
     "autoload": {
         "psr-4": {
             "Drupal\\oe_translation\\": "./src/"
