@@ -27,6 +27,11 @@ class BlockFieldTest extends ContentEntityTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
    * The test entity.
    *
    * @var \Drupal\Core\Entity\EntityInterface
