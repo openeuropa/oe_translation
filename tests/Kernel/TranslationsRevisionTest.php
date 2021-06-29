@@ -38,6 +38,7 @@ class TranslationsRevisionTest extends KernelTestBase {
     'content_moderation',
     'content_translation',
     'views',
+    'path_alias',
   ];
 
   /**
@@ -65,6 +66,7 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     $this->installEntitySchema('content_moderation_state');
+    $this->installEntitySchema('path_alias');
 
     $this->installSchema('node', 'node_access');
     $this->installSchema('system', 'sequences');

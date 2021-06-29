@@ -27,7 +27,7 @@
         "openeuropa/behat-transformation-context": "~0.1",
         "openeuropa/code-review": "~1.6",
         "openeuropa/drupal-core-require-dev": "^8.9 || ^9.1",
-        "openeuropa/oe_multilingual": "dev-master",
+        "openeuropa/oe_multilingual": "dev-EWPP-917",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0",
         "phpspec/prophecy-phpunit": "^1 || ^2",
         "phpunit/phpunit": "^6.5 || ^7 || ^8 || ^9"
@@ -52,6 +52,10 @@
         "ec-europa/oe-poetry-client": {
             "type": "git",
             "url": "https://github.com/GilNovacomm/oe-poetry-client.git"
+        },
+        "openeuropa/oe_multilingual": {
+            "type": "git",
+            "url": "https://github.com/GilNovacomm/oe_multilingual.git"
         }
     },
     "autoload": {
