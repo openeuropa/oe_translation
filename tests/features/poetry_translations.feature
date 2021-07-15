@@ -27,6 +27,8 @@ Feature: Poetry translations
     And I fill in the the "second" "Responsible" field with "john"
     And I fill in the the "second" "Author" field with "john"
     And I fill in "Requester" with "john"
+    And I press "Send request"
+    Then I should see the error message "Requested delivery date field is required."
     And I fill in "Requested delivery date" with "12/01/2019"
     And I press "Send request"
     Then I should see the error message "Requested delivery date cannot be in the past."

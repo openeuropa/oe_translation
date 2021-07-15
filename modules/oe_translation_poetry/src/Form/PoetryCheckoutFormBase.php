@@ -134,7 +134,6 @@ abstract class PoetryCheckoutFormBase extends FormBase {
       '#type' => 'date',
       '#title' => $this->t('Requested delivery date'),
       '#required' => TRUE,
-      '#default_value' => (new \DateTime('+30 day'))->format('Y-m-d'),
       '#min' => (new \DateTime('today'))->format('Y-m-d'),
     ];
 
