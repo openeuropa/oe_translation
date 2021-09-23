@@ -46,7 +46,7 @@ class TranslationTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');

@@ -310,7 +310,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // Delete the first unprocessed job (index 0).
     $this->clickLink('Delete unprocessed job', 0);
     $this->assertSession()->pageTextContains('Are you sure you want to delete the translation job My first node?');
-    $this->drupalPostForm(NULL, [], 'Delete');
+    $this->submitForm([], 'Delete');
     // One of the two unprocessed jobs have been deleted.
     $this->assertSession()->pageTextContains('The translation job My first node has been deleted.');
     $this->jobStorage->resetCache();
@@ -318,7 +318,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertCount(1, $this->container->get('oe_translation_poetry.job_queue_factory')->get($node)->getAllJobs());
 
     // Finalize the translation for remaining unprocessed job.
-    $this->drupalPostForm(NULL, [], 'Finish translation request to DGT for Czech');
+    $this->submitForm([], 'Finish translation request to DGT for Czech');
     $this->submitTranslationRequestForQueue($node);
     $this->jobStorage->resetCache();
 

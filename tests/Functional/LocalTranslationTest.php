@@ -35,7 +35,7 @@ class LocalTranslationTest extends TranslationTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Mark the paragraph bundles translatable.

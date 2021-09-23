@@ -69,7 +69,7 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
 
     // Include another language in the translation update.
     $this->getSession()->getPage()->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Request a DGT translation update for the selected languages');
+    $this->submitForm([], 'Request a DGT translation update for the selected languages');
     $this->submitTranslationRequestForQueue($node);
 
     // Check that all jobs have been correctly updated (the old jobs have been
