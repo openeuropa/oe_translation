@@ -22,7 +22,10 @@ function oe_translation_install($is_syncing) {
   // Hide the "translation skills" fields on the User forms as we are not using
   // the local translator plugin in its original form.
   /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface[] $form_displays */
-  $form_displays = EntityFormDisplay::loadMultiple(['user.user.default', 'user.user.register']);
+  $form_displays = EntityFormDisplay::loadMultiple([
+    'user.user.default',
+    'user.user.register',
+  ]);
   foreach ($form_displays as $form_display) {
     $component = $form_display->getComponent('tmgmt_translation_skills');
     if ($component) {

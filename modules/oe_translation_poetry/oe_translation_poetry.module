@@ -69,7 +69,10 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
 function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $poetry = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance('poetry');
   $form['actions']['request']['#submit'] = [];
-  $form['actions']['request']['#submit'][] = [$poetry, 'submitPoetryTranslationRequest'];
+  $form['actions']['request']['#submit'][] = [
+    $poetry,
+    'submitPoetryTranslationRequest',
+  ];
 
   // If we have jobs in the current job queue, we want to disable all the
   // checkboxes for choosing languages to translate. The user should first

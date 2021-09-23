@@ -119,7 +119,10 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     }
 
     $target_languages = count($languages) > 1 ? implode(', ', $languages) : array_shift($languages);
-    $expected_title = new FormattableMarkup('Send request to DG Translation for @entity in @target_languages', ['@entity' => $node->label(), '@target_languages' => $target_languages]);
+    $expected_title = new FormattableMarkup('Send request to DG Translation for @entity in @target_languages', [
+      '@entity' => $node->label(),
+      '@target_languages' => $target_languages,
+    ]);
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->submitForm($values, 'Request a DGT translation for the selected languages');

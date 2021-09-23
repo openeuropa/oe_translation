@@ -36,7 +36,10 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
     $entity = $queue->getEntity();
     $target_languages = $queue->getTargetLanguages();
     $target_languages = implode(', ', $target_languages);
-    return $this->t('Send update request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+    return $this->t('Send update request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', [
+      '@entity' => $entity->label(),
+      '@target_languages' => $target_languages,
+    ]);
   }
 
   /**

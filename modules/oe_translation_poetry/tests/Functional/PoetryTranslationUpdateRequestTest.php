@@ -76,7 +76,10 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
     // aborted and new ones created which should be active).
     $this->jobStorage->resetCache();
 
-    $old_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple([$jobs['bg']->id(), $jobs['cs']->id()]));
+    $old_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple([
+      $jobs['bg']->id(),
+      $jobs['cs']->id(),
+    ]));
     $this->assertEquals(Job::STATE_ABORTED, $old_jobs['bg']->getState());
     $this->assertEquals(Job::STATE_ABORTED, $old_jobs['cs']->getState());
     /** @var \Drupal\tmgmt\JobInterface[] $new_jobs */

@@ -209,7 +209,7 @@ function oe_translation_entity_access(EntityInterface $entity, $operation, Accou
   }
 
   if (!in_array($operation, ['update'])) {
-    // @todo, see if we should allow the deletion of translations.
+    // @todo , see if we should allow the deletion of translations.
     return AccessResult::neutral();
   }
 

@@ -154,7 +154,10 @@ class TranslationsRevisionTest extends KernelTestBase {
       $node->save();
       $this->assertEquals('draft', $node->moderation_state->value);
 
-      $translation = $node->addTranslation('fr', ['title' => 'Test node FR', 'moderation_state' => 'draft']);
+      $translation = $node->addTranslation('fr', [
+        'title' => 'Test node FR',
+        'moderation_state' => 'draft',
+      ]);
       $translation->save();
       $this->assertEquals('draft', $translation->moderation_state->value);
 
