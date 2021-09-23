@@ -12,7 +12,13 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 /**
  * Implements hook_install().
  */
-function oe_translation_install() {
+function oe_translation_install($is_syncing) {
+  if ($is_syncing) {
+    // We don't want to change config when the module is installed as part of
+    // a configuration sync.
+    return;
+  }
+
   // Hide the "translation skills" fields on the User forms as we are not using
   // the local translator plugin in its original form.
   /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface[] $form_displays */
