@@ -1,10 +1,20 @@
-# Change Log
+# Changelog
+
+## [0.15.0](https://github.com/openeuropa/oe_translation/tree/0.15.0) (2021-09-27)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.14.0...0.15.0)
+
+**Merged pull requests:**
+
+- EWPP-1319: Remove default value from translation request delivery date. [\#148](https://github.com/openeuropa/oe_translation/pull/148) ([nagyad](https://github.com/nagyad))
 
 ## [0.14.0](https://github.com/openeuropa/oe_translation/tree/0.14.0) (2021-06-15)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.13.0...0.14.0)
 
 **Merged pull requests:**
 
+- Prepare changelog for release 0.14.0. [\#147](https://github.com/openeuropa/oe_translation/pull/147) ([brummbar](https://github.com/brummbar))
 - EWPP-1099: The sources and cart routes of TMGMT should not be accessible by anyone. [\#144](https://github.com/openeuropa/oe_translation/pull/144) ([upchuk](https://github.com/upchuk))
 - EWPP-1118: Fix date renewal on Poetry requests [\#143](https://github.com/openeuropa/oe_translation/pull/143) ([upchuk](https://github.com/upchuk))
 - EWPP-1103: Move test metatag field into separate test module. [\#142](https://github.com/openeuropa/oe_translation/pull/142) ([nagyad](https://github.com/nagyad))
@@ -14,6 +24,7 @@
 - EWPP-936: Support for metatag field translation. [\#135](https://github.com/openeuropa/oe_translation/pull/135) ([upchuk](https://github.com/upchuk))
 
 ## [0.13.0](https://github.com/openeuropa/oe_translation/tree/0.13.0) (2021-04-20)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.12.0...0.13.0)
 
 **Merged pull requests:**
@@ -220,7 +231,6 @@
 - OPENEUROPA-2163: Poetry request ID field type. [\#9](https://github.com/openeuropa/oe_translation/pull/9) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2107: Create Poetry translation requests [\#8](https://github.com/openeuropa/oe_translation/pull/8) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2105: Poetry client and mock setup. [\#7](https://github.com/openeuropa/oe_translation/pull/7) ([upchuk](https://github.com/upchuk))
-- OPENEUROPA-2017: Local translation solution. [\#2](https://github.com/openeuropa/oe_translation/pull/2) ([upchuk](https://github.com/upchuk))
 
 ## [0.1.1](https://github.com/openeuropa/oe_translation/tree/0.1.1) (2019-10-16)
 
@@ -240,6 +250,7 @@
 - Update CHANGELOG.md for release 0.1. [\#6](https://github.com/openeuropa/oe_translation/pull/6) ([sergepavle](https://github.com/sergepavle))
 - OPENEUROPA-2053: Translations are by default saved onto the revision they started from [\#5](https://github.com/openeuropa/oe_translation/pull/5) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2056: Better translation form elements. [\#4](https://github.com/openeuropa/oe_translation/pull/4) ([upchuk](https://github.com/upchuk))
+- OPENEUROPA-2017: Local translation solution. [\#2](https://github.com/openeuropa/oe_translation/pull/2) ([upchuk](https://github.com/upchuk))
 - OPENEUROPA-2016: Module scaffolding [\#1](https://github.com/openeuropa/oe_translation/pull/1) ([dxvargas](https://github.com/dxvargas))
 
 
