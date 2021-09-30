@@ -47,14 +47,6 @@
         "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
-        },
-        "ec-europa/oe-poetry-client": {
-            "type": "git",
-            "url": "https://github.com/GilNovacomm/oe-poetry-client.git"
-        },
-        "openeuropa/oe_multilingual": {
-            "type": "git",
-            "url": "https://github.com/GilNovacomm/oe_multilingual.git"
         }
     },
     "autoload": {
@@ -64,8 +56,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Drupal\\Tests\\oe_translation\\": "./tests",
-            "Drupal\\Tests\\oe_translation_poetry\\": "./modules/oe_translation_poetry/tests"
+            "Drupal\\Tests\\oe_translation\\": "./tests/src",
+            "Drupal\\Tests\\oe_translation_poetry\\": "./modules/oe_translation_poetry/tests/src"
         }
     },
     "extra": {
