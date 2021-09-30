@@ -72,7 +72,12 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
     else {
       $reset = [
         '#type' => 'link',
-        '#url' => Url::fromRoute('oe_translation_poetry.confirm_number_reset', [], ['attributes' => ['class' => ['button']], 'query' => ['destination' => Url::fromRoute('<current>')->toString()]]),
+        '#url' => Url::fromRoute('oe_translation_poetry.confirm_number_reset', [], [
+          'attributes' => ['class' => ['button']],
+          'query' => [
+            'destination' => Url::fromRoute('<current>')->toString(),
+          ],
+        ]),
         '#title' => $this->t('Reset number'),
       ];
     }

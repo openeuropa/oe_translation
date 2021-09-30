@@ -54,7 +54,8 @@ class TranslationRevisionTest extends TranslationTestBase {
     ];
     // It should be the first local task item created so we use the ID 1.
     $url = Url::fromRoute('entity.tmgmt_local_task_item.canonical', ['tmgmt_local_task_item' => 1]);
-    $this->drupalPostForm($url, $values, t('Save'));
+    $this->drupalGet($url);
+    $this->submitForm($values, t('Save'));
 
     // The node title is that of the original revision, not the new one created.
     $this->assertSession()->pageTextContains('The translation for My node has been saved as completed.');

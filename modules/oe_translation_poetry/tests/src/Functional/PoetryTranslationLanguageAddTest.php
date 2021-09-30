@@ -60,7 +60,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
 
     // Add new languages to the request.
     $page->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
+    $this->submitForm([], 'Add extra languages to the ongoing DGT request');
     // The new language addition should create one new unprocessed job, using
     // the same request ID.
     $jobs = $this->loadJobsKeyedByLanguage();
@@ -124,7 +124,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $page->checkField('edit-languages-fr');
     $page->checkField('edit-languages-bg');
-    $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
+    $this->submitForm([], 'Add extra languages to the ongoing DGT request');
 
     // Only FR should be included in the request.
     $this->assertSession()->pageTextContains('Please be aware that Bulgarian has been skipped from the request because it was cancelled in DGT for the ongoing request.');
@@ -206,7 +206,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
 
     // Add new languages to the request which is ongoing.
     $this->getSession()->getPage()->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Add extra languages to the ongoing DGT request');
+    $this->submitForm([], 'Add extra languages to the ongoing DGT request');
     // The new language addition should create one new unprocessed job, using
     // the same request ID.
     $jobs = $this->loadJobsKeyedByLanguage();
@@ -282,7 +282,7 @@ class PoetryTranslationLanguageAddTest extends PoetryTranslationTestBase {
     $values = [
       'details[date]' => $date->format('Y-m-d'),
     ];
-    $this->drupalPostForm(NULL, $values, 'Send request');
+    $this->submitForm($values, 'Send request');
     $this->assertSession()->pageTextContains('The request has been sent to DGT.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
   }

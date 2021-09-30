@@ -35,7 +35,10 @@ class AddLanguagesRequestForm extends PoetryCheckoutFormBase {
     $entity = $queue->getEntity();
     $target_languages = $queue->getTargetLanguages();
     $target_languages = implode(', ', $target_languages);
-    return $this->t('Send extra languages to the previous request for <em>@entity</em>: <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+    return $this->t('Send extra languages to the previous request for <em>@entity</em>: <em>@target_languages</em>', [
+      '@entity' => $entity->label(),
+      '@target_languages' => $target_languages,
+    ]);
   }
 
   /**

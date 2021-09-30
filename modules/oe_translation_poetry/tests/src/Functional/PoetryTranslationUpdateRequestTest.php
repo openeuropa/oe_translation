@@ -69,14 +69,17 @@ class PoetryTranslationUpdateRequestTest extends PoetryTranslationTestBase {
 
     // Include another language in the translation update.
     $this->getSession()->getPage()->checkField('edit-languages-de');
-    $this->drupalPostForm(NULL, [], 'Request a DGT translation update for the selected languages');
+    $this->submitForm([], 'Request a DGT translation update for the selected languages');
     $this->submitTranslationRequestForQueue($node);
 
     // Check that all jobs have been correctly updated (the old jobs have been
     // aborted and new ones created which should be active).
     $this->jobStorage->resetCache();
 
-    $old_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple([$jobs['bg']->id(), $jobs['cs']->id()]));
+    $old_jobs = $this->indexJobsByLanguage($this->jobStorage->loadMultiple([
+      $jobs['bg']->id(),
+      $jobs['cs']->id(),
+    ]));
     $this->assertEquals(Job::STATE_ABORTED, $old_jobs['bg']->getState());
     $this->assertEquals(Job::STATE_ABORTED, $old_jobs['cs']->getState());
     /** @var \Drupal\tmgmt\JobInterface[] $new_jobs */

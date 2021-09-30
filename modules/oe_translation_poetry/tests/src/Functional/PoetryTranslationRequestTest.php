@@ -27,7 +27,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $node->save();
 
     // Select some languages to translate.
-    $this->createInitialTranslationJobs($node, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
+    $this->createInitialTranslationJobs($node, [
+      'bg' => 'Bulgarian',
+      'cs' => 'Czech',
+    ]);
     $this->assertSession()->statusCodeEquals(200);
 
     // Mark the mock to return an error.
@@ -88,7 +91,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertSession()->statusCodeEquals(403);
 
     // Select some languages to translate.
-    $this->createInitialTranslationJobs($node, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
+    $this->createInitialTranslationJobs($node, [
+      'bg' => 'Bulgarian',
+      'cs' => 'Czech',
+    ]);
     $this->assertSession()->statusCodeEquals(200);
 
     // Check that two jobs have been created for the two languages and that
@@ -140,7 +146,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
 
     // Make a new request for the same node to check that the version increases
     // but the year stays the same.
-    $this->createInitialTranslationJobs($node, ['de' => 'German', 'fr' => 'French']);
+    $this->createInitialTranslationJobs($node, [
+      'de' => 'German',
+      'fr' => 'French',
+    ]);
     $jobs = [];
     /** @var \Drupal\tmgmt\JobInterface[] $jobs */
     $jobs['de'] = $this->jobStorage->load(3);
@@ -184,7 +193,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // Abort jobs to have the request button displayed again.
     $this->abort($jobs);
 
-    $this->createInitialTranslationJobs($node_two, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
+    $this->createInitialTranslationJobs($node_two, [
+      'bg' => 'Bulgarian',
+      'cs' => 'Czech',
+    ]);
     // Check that two jobs have been created for the two languages and that
     // their status is unprocessed.
     $jobs = [];
@@ -240,7 +252,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // Abort jobs to have the request button displayed again.
     $this->abort($jobs);
 
-    $this->createInitialTranslationJobs($node_three, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
+    $this->createInitialTranslationJobs($node_three, [
+      'bg' => 'Bulgarian',
+      'cs' => 'Czech',
+    ]);
     // Check that two jobs have been created for the two languages and that
     // their status is unprocessed.
     $jobs = [];
@@ -292,7 +307,10 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $second_node->save();
 
     // Select some languages to translate.
-    $this->createInitialTranslationJobs($node, ['bg' => 'Bulgarian', 'cs' => 'Czech']);
+    $this->createInitialTranslationJobs($node, [
+      'bg' => 'Bulgarian',
+      'cs' => 'Czech',
+    ]);
 
     // Assert that the second node doesn't have any pending jobs.
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
@@ -310,7 +328,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     // Delete the first unprocessed job (index 0).
     $this->clickLink('Delete unprocessed job', 0);
     $this->assertSession()->pageTextContains('Are you sure you want to delete the translation job My first node?');
-    $this->drupalPostForm(NULL, [], 'Delete');
+    $this->submitForm([], 'Delete');
     // One of the two unprocessed jobs have been deleted.
     $this->assertSession()->pageTextContains('The translation job My first node has been deleted.');
     $this->jobStorage->resetCache();
@@ -318,7 +336,7 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->assertCount(1, $this->container->get('oe_translation_poetry.job_queue_factory')->get($node)->getAllJobs());
 
     // Finalize the translation for remaining unprocessed job.
-    $this->drupalPostForm(NULL, [], 'Finish translation request to DGT for Czech');
+    $this->submitForm([], 'Finish translation request to DGT for Czech');
     $this->submitTranslationRequestForQueue($node);
     $this->jobStorage->resetCache();
 

@@ -38,12 +38,18 @@ class TranslationsRevisionTest extends KernelTestBase {
     'content_moderation',
     'content_translation',
     'views',
+    'path_alias',
   ];
 
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
     parent::setUp();
 
     $this->installConfig([
@@ -60,16 +66,10 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     $this->installEntitySchema('content_moderation_state');
+    $this->installEntitySchema('path_alias');
 
     $this->installSchema('node', 'node_access');
     $this->installSchema('system', 'sequences');
-
-    // In Drupal 8.8, paths have been moved to an entity type.
-    // @todo remove this when the component will depend on 8.8.
-    if ($this->container->get('entity_type.manager')->hasDefinition('path_alias')) {
-      $this->container->get('module_installer')->install(['path_alias']);
-      $this->installEntitySchema('path_alias');
-    }
 
     $node_type = $this->container->get('entity_type.manager')->getStorage('node_type')->create([
       'name' => 'Test node type',
@@ -154,7 +154,10 @@ class TranslationsRevisionTest extends KernelTestBase {
       $node->save();
       $this->assertEquals('draft', $node->moderation_state->value);
 
-      $translation = $node->addTranslation('fr', ['title' => 'Test node FR', 'moderation_state' => 'draft']);
+      $translation = $node->addTranslation('fr', [
+        'title' => 'Test node FR',
+        'moderation_state' => 'draft',
+      ]);
       $translation->save();
       $this->assertEquals('draft', $translation->moderation_state->value);
 

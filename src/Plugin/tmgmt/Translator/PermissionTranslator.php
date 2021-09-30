@@ -372,7 +372,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     }
 
     if (isset($form['actions']['preview'])) {
-      array_unshift($form['actions']['preview']['#submit'], [$this, 'localTaskItemPreview']);
+      array_unshift($form['actions']['preview']['#submit'], [
+        $this,
+        'localTaskItemPreview',
+      ]);
     }
 
     // Add a delete button to delete the job associated with this task.
@@ -381,7 +384,12 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     $delete_url = Url::fromRoute(
       'entity.tmgmt_job.delete_form',
       ['tmgmt_job' => $job->id()],
-      ['attributes' => ['class' => ['button']], 'query' => ['destination' => $destination->toString()]]
+      [
+        'attributes' => [
+          'class' => ['button'],
+        ],
+        'query' => ['destination' => $destination->toString()],
+      ],
     );
 
     if ($delete_url->access()) {
@@ -544,7 +552,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
       }
 
       $links = &$build['content_translation_overview']['#rows'][$i][3]['data']['#links'];
-      $url_options = ['language' => $language, 'query' => ['destination' => $destination->toString()]];
+      $url_options = [
+        'language' => $language,
+        'query' => ['destination' => $destination->toString()],
+      ];
 
       // Check if a local task item exists and the current user can edit it.
       if (isset($job_items[$language->getId()]) && ($local_task_item = $this->getLocalTaskItemFromJobItem($job_items[$language->getId()]))) {
