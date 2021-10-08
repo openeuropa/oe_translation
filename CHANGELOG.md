@@ -1,11 +1,20 @@
 # Changelog
 
+## [0.16.0](https://github.com/openeuropa/oe_translation/tree/0.16.0) (2021-10-08)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.15.0...0.16.0)
+
+**Merged pull requests:**
+
+- EWPP-917: Drupal 9 compatibility fixes. [\#145](https://github.com/openeuropa/oe_translation/pull/145) ([GilNovacomm](https://github.com/GilNovacomm))
+
 ## [0.15.0](https://github.com/openeuropa/oe_translation/tree/0.15.0) (2021-09-27)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.14.0...0.15.0)
 
 **Merged pull requests:**
 
+- Prepare relase 0.15.0. [\#149](https://github.com/openeuropa/oe_translation/pull/149) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-1319: Remove default value from translation request delivery date. [\#148](https://github.com/openeuropa/oe_translation/pull/148) ([nagyad](https://github.com/nagyad))
 
 ## [0.14.0](https://github.com/openeuropa/oe_translation/tree/0.14.0) (2021-06-15)
