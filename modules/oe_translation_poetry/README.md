@@ -6,7 +6,7 @@ This submodule integrates with the DGT Poetry system to provide translations ser
 
 If you want to use this submodule, you need to add the following packages to your site:
 
-* ec-europa/oe-poetry-client:dev-master
+* ec-europa/oe-poetry-client:^0.5
 
 ## Setup
 
