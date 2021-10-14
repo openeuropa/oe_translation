@@ -23,7 +23,7 @@
         "drupal/paragraphs": "^1.11",
         "drupaltest/behat-traits": "dev-GH-6",
         "drush/drush": "^10.3",
-        "ec-europa/oe-poetry-client": "dev-master",
+        "ec-europa/oe-poetry-client": "^0.5",
         "openeuropa/behat-transformation-context": "^0.1",
         "openeuropa/code-review": "^1.6",
         "openeuropa/drupal-core-require-dev": "^8.9 || ^9.1",
