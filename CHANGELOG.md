@@ -1,13 +1,28 @@
-# Change Log
+# Changelog
 
-## [0.16.0](https://github.com/openeuropa/oe_translation/tree/0.16.0) (2021-10-14)
-[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.15.0...0.16.0)
+## [0.17.0](https://github.com/openeuropa/oe_translation/tree/0.17.0) (2021-12-06)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.16.0...0.17.0)
 
 **Merged pull requests:**
 
+- EWPP-913: Trusted pre render callback. [\#150](https://github.com/openeuropa/oe_translation/pull/150) ([upchuk](https://github.com/upchuk))
+
+## [0.16.0](https://github.com/openeuropa/oe_translation/tree/0.16.0) (2021-10-14)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.15.0...0.16.0)
+
+**Closed issues:**
+
+- symfony/dom-crawler v4.4.5 [\#85](https://github.com/openeuropa/oe_translation/issues/85)
+
+**Merged pull requests:**
+
+- Prepare changelog for release 0.16.0. [\#152](https://github.com/openeuropa/oe_translation/pull/152) ([brummbar](https://github.com/brummbar))
 - EWPP-917: Drupal 9 compatibility fixes. [\#145](https://github.com/openeuropa/oe_translation/pull/145) ([GilNovacomm](https://github.com/GilNovacomm))
 
 ## [0.15.0](https://github.com/openeuropa/oe_translation/tree/0.15.0) (2021-09-27)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.14.0...0.15.0)
 
 **Merged pull requests:**
