@@ -25,6 +25,7 @@
         "drupal/drupal-extension": "^4.0",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.11",
+        "drupal/token": "^1.10",
         "drupaltest/behat-traits": "dev-GH-10",
         "drush/drush": "^10.3",
         "ec-europa/oe-poetry-client": "^0.5",
@@ -37,7 +38,8 @@
     "_readme": [
         "Explicit requirement for egulias/email-validator due to https://www.drupal.org/project/drupal/issues/3061074#comment-14300579. It can be removed when Drupal core 9.2 support is droppped.",
         "Explicit lower version requirement of ctools due to Drupal core 9.2 compatibility.",
-        "Behat-traits fork is used to ensure PHP8 compatibility."
+        "Behat-traits fork is used to ensure PHP8 compatibility.",
+        "Explicit requirement of token module due to PHP7.4 compatbility."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -50,10 +52,6 @@
         "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
-        },
-        "behat-traits": {
-            "type": "vcs",
-            "url": "https://github.com/nagyad/behat-traits.git"
         }
     },
     "autoload": {
