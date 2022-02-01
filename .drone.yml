@@ -44,7 +44,7 @@ pipeline:
         COMPOSER_BOUNDARY: highest
 
   composer-update-lowest:
-    group: post-prepare
+    group: prepare
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     volumes:
       - /cache:/cache

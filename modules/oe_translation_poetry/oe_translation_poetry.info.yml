@@ -3,7 +3,7 @@ description: Integration of the Poetry service into the OpenEuropa translation f
 package: OpenEuropa
 
 type: module
-core_version_requirement: ^8.9 || ^9.1
+core_version_requirement: ^9.2
 dependencies:
   - oe_translation:oe_translation
   - oe_translation_poetry_html_formatter:oe_translation_poetry_html_formatter
