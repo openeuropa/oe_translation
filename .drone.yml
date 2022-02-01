@@ -17,6 +17,7 @@ services:
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     environment: &web-environment
       - DOCUMENT_ROOT=/test/oe_translation
+      - COMPOSERVER=--2
       - POETRY_IDENTIFIER_SEQUENCE=NEXT_EUROPA_COUNTER
       - POETRY_SERVICE_ENDPOINT=http://web:8080/build/poetry-mock/wsdl
       - POETRY_SERVICE_USERNAME=admin
@@ -30,13 +31,17 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
 pipeline:
-  composer-install:
+  composer-install-highest:
     group: prepare
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     volumes:
       - /cache:/cache
     commands:
-      - composer install --ansi --no-suggest --no-progress
+      - composer self-update --2
+      - composer install --ansi --no-progress
+    when:
+      matrix:
+        COMPOSER_BOUNDARY: highest
 
   composer-update-lowest:
     group: post-prepare
@@ -44,9 +49,8 @@ pipeline:
     volumes:
       - /cache:/cache
     commands:
-      # @todo remove "composer install" step once the following issue is fixed.
-      # @link https://webgate.ec.europa.eu/CITnet/jira/browse/OPENEUROPA-1234
-      - composer update --prefer-lowest --prefer-stable --ansi --no-suggest --no-progress --no-interaction
+      - composer self-update --2
+      - composer update --prefer-lowest --prefer-stable --ansi --no-progress
     when:
       matrix:
         COMPOSER_BOUNDARY: lowest
@@ -54,6 +58,7 @@ pipeline:
   site-install:
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     commands:
+      - while ! mysqladmin ping -h mysql --silent; do sleep 1; done
       - ./vendor/bin/run drupal:site-install
 
   grumphp:
@@ -88,4 +93,5 @@ matrix:
     - lowest
     - highest
   PHP_VERSION:
-    - 7.3
+    - 7.4
+    - 8.0

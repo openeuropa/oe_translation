@@ -672,7 +672,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $entity = $form_state->get('entity');
     $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
     $job_queue = $this->jobQueueFactory->get($entity);
-    $entity_revision_id = isset($content_item_revision_id) ? $content_item_revision_id : $entity->getRevisionId();
+    $entity_revision_id = $content_item_revision_id ?? $entity->getRevisionId();
     $job_queue->setEntityId($entity->getEntityTypeId(), $entity_revision_id);
     $values = $form_state->getValues();
 
