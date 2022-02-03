@@ -26,9 +26,9 @@
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.11",
         "drupal/token": "^1.10",
-        "drupaltest/behat-traits": "dev-GH-10",
+        "drupaltest/behat-traits": "dev-8.x-1.x",
         "drush/drush": "^10.3",
-        "ec-europa/oe-poetry-client": "^0.5",
+        "ec-europa/oe-poetry-client": "dev-EWPP-1908",
         "openeuropa/behat-transformation-context": "^0.1",
         "openeuropa/code-review": "^2.0",
         "openeuropa/oe_multilingual": "^1.10",
@@ -37,9 +37,8 @@
     },
     "_readme": [
         "Explicit requirement for egulias/email-validator due to https://www.drupal.org/project/drupal/issues/3061074#comment-14300579. It can be removed when Drupal core 9.2 support is droppped.",
-        "Explicit lower version requirement of ctools due to Drupal core 9.2 compatibility.",
-        "Behat-traits fork is used to ensure PHP8 compatibility.",
-        "Explicit requirement of token module due to PHP7.4 compatbility."
+        "Explicit lower version requirement of drupal/ctools due to Drupal core 9.2 compatibility.",
+        "Explicit requirement of drupal/token module due to PHP7.4 compatbility."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
