@@ -1,11 +1,20 @@
 # Changelog
 
+## [0.17.0](https://github.com/openeuropa/oe_translation/tree/0.17.0) (2022-02-07)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.16.1...0.17.0)
+
+**Merged pull requests:**
+
+- EWPP-1908: PHP7.4/8.0 compatibility. [\#156](https://github.com/openeuropa/oe_translation/pull/156) ([nagyad](https://github.com/nagyad))
+
 ## [0.16.1](https://github.com/openeuropa/oe_translation/tree/0.16.1) (2021-12-06)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.16.0...0.16.1)
 
 **Merged pull requests:**
 
+- Prepare release 0.16.1. [\#155](https://github.com/openeuropa/oe_translation/pull/155) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-913: Trusted pre render callback. [\#150](https://github.com/openeuropa/oe_translation/pull/150) ([upchuk](https://github.com/upchuk))
 
 ## [0.16.0](https://github.com/openeuropa/oe_translation/tree/0.16.0) (2021-10-14)
