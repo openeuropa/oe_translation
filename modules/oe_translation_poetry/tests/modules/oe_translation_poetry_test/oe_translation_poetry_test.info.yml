@@ -1,6 +1,6 @@
 name: OE Translation Poetry Test
 description: Test module for OE Translation Poetry
-core_version_requirement: ^8.9 || ^9.1
+core_version_requirement: ^9.2
 type: module
 package: Testing
 

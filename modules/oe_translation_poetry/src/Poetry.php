@@ -325,7 +325,7 @@ class Poetry implements PoetryInterface {
     $query->condition('job.state', Job::STATE_UNPROCESSED, '!=');
     $query->range(0, 1);
     $query->orderBy('job.poetry_request_id__version', 'DESC');
-    $result = $query->execute()->fetchCol('poetry_request_id__version');
+    $result = $query->execute()->fetchCol();
     if (!$result) {
       return NULL;
     }

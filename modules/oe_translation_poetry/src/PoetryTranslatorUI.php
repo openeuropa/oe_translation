@@ -59,7 +59,6 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       '#open' => TRUE,
     ];
 
-    $reset = NULL;
     if ($poetry_client->isNewIdentifierNumberRequired()) {
       $reset = [
         '#type' => 'inline_template',
@@ -98,11 +97,11 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
     ];
 
     $contact_defaults = $translator->getSetting('contact');
-    foreach (static::getContactFieldNames('contact') as $name => $label) {
+    foreach (static::getContactFieldNames() as $name => $label) {
       $form['contact'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
-        '#default_value' => $contact_defaults[$name],
+        '#default_value' => $contact_defaults[$name] ?? NULL,
       ];
     }
     $form['organisation'] = [
@@ -114,7 +113,7 @@ class PoetryTranslatorUI extends TranslatorPluginUiBase {
       $form['organisation'][$name] = [
         '#type' => 'textfield',
         '#title' => $label,
-        '#default_value' => $organisation_defaults[$name],
+        '#default_value' => $organisation_defaults[$name] ?? NULL,
       ];
     }
 
