@@ -102,6 +102,7 @@ trait PoetryTestTrait {
         if ($suffix) {
           $info['#text'] .= ' ' . $suffix;
         }
+        $info['#text'] = strip_tags($info['#text']);
       }
 
       $translation_notification = $this->getContainer()->get('oe_translation_poetry_mock.fixture_generator')->translationNotification($identifier, $job->getTargetLangcode(), $data, (int) $main_item->id(), (int) $main_job->id());
