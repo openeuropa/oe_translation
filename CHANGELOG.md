@@ -1,11 +1,20 @@
 # Changelog
 
+## [1.17.1](https://github.com/openeuropa/oe_translation/tree/1.17.1) (2022-04-11)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.17.0...1.17.1)
+
+**Merged pull requests:**
+
+- EWPP-2076: Strip html tags for dummy test translations. [\#158](https://github.com/openeuropa/oe_translation/pull/158) ([22Alexandra](https://github.com/22Alexandra))
+
 ## [0.17.0](https://github.com/openeuropa/oe_translation/tree/0.17.0) (2022-02-07)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.16.1...0.17.0)
 
 **Merged pull requests:**
 
+- EWPP-0000: Prepare for 0.17.0 release. [\#157](https://github.com/openeuropa/oe_translation/pull/157) ([hernani](https://github.com/hernani))
 - EWPP-1908: PHP7.4/8.0 compatibility. [\#156](https://github.com/openeuropa/oe_translation/pull/156) ([nagyad](https://github.com/nagyad))
 
 ## [0.16.1](https://github.com/openeuropa/oe_translation/tree/0.16.1) (2021-12-06)
