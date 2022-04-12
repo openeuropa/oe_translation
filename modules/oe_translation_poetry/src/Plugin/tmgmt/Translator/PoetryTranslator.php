@@ -479,6 +479,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $build['#translated_languages'] = $translated_languages;
     $build['#submitted_languages'] = $submitted_languages;
     $build['#cancelled_languages'] = $cancelled_jobs;
+    $build['#unprocessed_languages'] = $unprocessed_languages;
     $build['#completed_languages'] = [];
     // Load the completed jobs in the same request. For this we need to get
     // the request ID from one of the accepted jobs in order to filter the
@@ -513,7 +514,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     }
 
     foreach ($languages as $langcode => $language) {
-      // Add links for unprocessed jobs to delete the delete.
+      // Add links for unprocessed jobs to delete them.
       if (array_key_exists($langcode, $unprocessed_languages)) {
         $links = &$build['languages']['#options'][$langcode][4]['data']['#links'];
         $url_options = [
@@ -558,13 +559,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       }
     }
 
-    $job_queue = $this->jobQueueFactory->get($entity);
-    /** @var \Drupal\tmgmt\JobInterface[] $current_jobs */
-    $current_jobs = $job_queue->getAllJobs();
-
-    // If there are jobs in the queue, finish them first.
-    if (!empty($current_jobs)) {
-      $current_target_languages = $job_queue->getTargetLanguages();
+    // If there are jobs that have been started, finish them first. Change the
+    // button label and add a marker on the button to understand in the submit
+    // handler what the user is doing.
+    if (!empty($unprocessed_languages)) {
+      $current_target_languages = [];
+      foreach ($unprocessed_languages as $langcode => $job_info) {
+        $current_target_languages[] = $this->languageManager->getLanguage($langcode)->getName();
+      }
       $language_list = implode(', ', $current_target_languages);
       $build['actions']['request']['#value'] = $this->t('Finish translation request to DGT for @language_list', ['@language_list' => $language_list]);
       return;
@@ -648,6 +650,23 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function submitPoetryTranslationRequest(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $form_state->get('entity');
+    $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
+    // Check if there are any unprocessed jobs for this entity and prevent
+    // concurrent requests from duplicating jobs. We do this by checking if
+    // there are any unprocessed jobs AND that the current submission is not
+    // empty of languages because it would mean a new request with languages
+    // was submitted. As opposed to using the same submit button to finish
+    // an existing unprocessed set of jobs in which case no languages would
+    // be submitted.
+    $unprocessed_jobs = $this->getUnprocessedJobsByLanguage($entity);
+    $submitted = array_filter($form_state->getValue('languages'));
+    if (!empty($unprocessed_jobs) && $submitted) {
+      $this->messenger->addError('The request could not be created because there is already a request that has been started but not sent yet to Poetry.');
+      return;
+    }
+
     // Determine if we are making a request to add extra languages to an
     // ongoing request.
     $triggering_element = $form_state->getTriggeringElement();
@@ -668,13 +687,23 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       $content_item_revision_id = $job_item->get('item_rid')->value;
     }
 
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $form_state->get('entity');
-    $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
     $job_queue = $this->jobQueueFactory->get($entity);
     $entity_revision_id = $content_item_revision_id ?? $entity->getRevisionId();
     $job_queue->setEntityId($entity->getEntityTypeId(), $entity_revision_id);
     $values = $form_state->getValues();
+
+    if (!array_filter($values['languages']) && !$job_queue->getAllJobsIds() && !empty($unprocessed_jobs)) {
+      // If we find ourselves in the situation that a different user (hence
+      // no jobs in the queue) goes to translate an entity which already has
+      // unprocessed jobs (meaning that new requests are blocked until someone
+      // continues that job or deletes it - the owner of the job can delete),
+      // we add these unprocessed jobs to the queue of the current user as well
+      // since much of the logic then is based on the jobs in the queue.
+      $loaded_unprocessed_jobs = $this->entityTypeManager->getStorage('tmgmt_job')->loadMultiple(array_column($unprocessed_jobs, 'tjid'));
+      foreach ($loaded_unprocessed_jobs as $unprocessed_job) {
+        $job_queue->addJob($unprocessed_job);
+      }
+    }
 
     foreach (array_keys(array_filter($values['languages'])) as $langcode) {
       // We do not want to create jobs for languages that already exist in the

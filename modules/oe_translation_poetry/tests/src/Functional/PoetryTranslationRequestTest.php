@@ -325,6 +325,9 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertSession()->buttonExists('Finish translation request to DGT for Bulgarian, Czech');
     $this->assertCount(2, $this->container->get('oe_translation_poetry.job_queue_factory')->get($node)->getAllJobs());
+    // Assert that this user, because they are the owner of the unprocessed job,
+    // can delete it.
+    $this->assertSession()->linkExistsExact('Delete unprocessed job');
     // Delete the first unprocessed job (index 0).
     $this->clickLink('Delete unprocessed job', 0);
     $this->assertSession()->pageTextContains('Are you sure you want to delete the translation job My first node?');
@@ -334,9 +337,23 @@ class PoetryTranslationRequestTest extends PoetryTranslationTestBase {
     $this->jobStorage->resetCache();
     $this->assertCount(1, $this->jobStorage->loadMultiple());
     $this->assertCount(1, $this->container->get('oe_translation_poetry.job_queue_factory')->get($node)->getAllJobs());
+    // We still should see 1 unprocessed job.
+    $this->assertSession()->linkExistsExact('Delete unprocessed job');
+
+    // Create another translator user and log in. This user needs to be able to
+    // continue the remaining unprocessed job the same way as the original user.
+    $user = $this->createTranslatorUser();
+    $this->drupalLogin($user);
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->buttonExists('Finish translation request to DGT for Czech');
+    // This other user is not the owner of the unprocessed jobs so there should
+    // be no links to delete them.
+    $this->assertSession()->linkNotExistsExact('Delete unprocessed job');
 
     // Finalize the translation for remaining unprocessed job.
     $this->submitForm([], 'Finish translation request to DGT for Czech');
+    // At this point, the queue of the new user has been filled with the
+    // unprocessed jobs started by the other user.
     $this->submitTranslationRequestForQueue($node);
     $this->jobStorage->resetCache();
 
