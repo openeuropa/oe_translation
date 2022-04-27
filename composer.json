@@ -7,6 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=7.4",
+        "cweagans/composer-patches": "~1.4",
         "drupal/core": "^9.2",
         "drupal/tmgmt": "1.11",
         "jakeasmith/http_build_url": "^1.0"
@@ -14,7 +15,6 @@
     "require-dev": {
         "behat/behat": "^3.10",
         "composer/installers": "^1.11",
-        "cweagans/composer-patches": "^1.7",
         "egulias/email-validator": "^2.1.22 || ^3.0",
         "drupal/address": "^1.9",
         "drupal/block_field": "^1.0@RC",
