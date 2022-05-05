@@ -74,14 +74,13 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
     'submitPoetryTranslationRequest',
   ];
 
-  // If we have jobs in the current job queue, we want to disable all the
+  $build = $form_state->getBuildInfo()['args'][0];
+  $unprocessed_languages = $build['#unprocessed_languages'];
+
+  // If we have jobs started for this node, we want to disable all the
   // checkboxes for choosing languages to translate. The user should first
   // either clear the existing jobs or finalize the request.
-  /** @var \Drupal\oe_translation_poetry\PoetryJobQueueFactory $job_queue_factory */
-  $job_queue_factory = \Drupal::service('oe_translation_poetry.job_queue_factory');
-  $entity = $form_state->get('entity');
-  $job_queue = $job_queue_factory->get($entity);
-  if (!empty($job_queue->getAllJobs())) {
+  if (!empty($unprocessed_languages)) {
     // Remove validation since we just need to be redirected to the checkout
     // form regardless.
     $form['#validate'] = [];
@@ -92,11 +91,11 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
         '#disabled' => TRUE,
       ];
     }
+
   }
 
   // If we are not talking about an ongoing request with accepted languages
   // there is nothing else we need to do.
-  $build = $form_state->getBuildInfo()['args'][0];
   if (!isset($build['#accepted_languages'])) {
     return;
   }
