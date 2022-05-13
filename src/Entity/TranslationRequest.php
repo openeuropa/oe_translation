@@ -76,6 +76,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   public static function preCreate(EntityStorageInterface $storage_controller, array &$values) {
     parent::preCreate($storage_controller, $values);
     $values += ['uid' => \Drupal::currentUser()->id()];
+
   }
 
   /**
@@ -293,21 +294,24 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ->setDescription(t('Choose if incoming translations should be auto-accepted.'))
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-      ]);
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['translation_synchronisation'] = BaseFieldDefinition::create('oe_translation_translation_sync')
       ->setLabel(t('Translation synchronisation'))
       ->setDescription(t('The translation synchronisation settings.'))
       ->setDisplayOptions('form', [
         'type' => 'oe_translation_translation_sync_widget',
-      ]);
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['upstream_translations'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Upstream translation'))
       ->setDescription(t('Choose if the translations that come in should be upstreamed to the latest revisions.'))
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-      ]);
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['message'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Message'))
@@ -317,7 +321,8 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
         'settings' => [
           'rows' => 4,
         ],
-      ]);
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['request_status'] = BaseFieldDefinition::create('list_string')
       ->setLabel('Request status')
@@ -330,7 +335,8 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ->setDisplayOptions('form', [
         'type' => 'options_select',
       ])
-      ->setDefaultValue('draft');
+      ->setDefaultValue('draft')
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))

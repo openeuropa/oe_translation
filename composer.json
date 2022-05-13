@@ -83,7 +83,8 @@
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
             },
             "drupal/tmgmt": {
-                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2020-12-03/2942236-5.patch"
+                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2020-12-03/2942236-5.patch",
+                "no-new-revisions": "patches/tmgmt.patch"
             }
         }
     },

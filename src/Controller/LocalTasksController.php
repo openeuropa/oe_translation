@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Controller;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Access\AccessResult;
@@ -13,6 +14,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorManager;
@@ -105,53 +107,33 @@ class LocalTasksController extends ControllerBase {
    *   overview on failure.
    */
   public function createLocalTranslationTask(EntityInterface $entity, Language $source, Language $target): RedirectResponse {
-    /** @var \Drupal\tmgmt\JobInterface $job */
-    $job = $this->entityTypeManager->getStorage('tmgmt_job')->create([
-      'translator' => 'permission',
-      'source_language' => $source->getId(),
-      'target_language' => $target->getId(),
-      'uid' => $this->currentUser->id(),
+    $request = TranslationRequest::create([
+      'bundle' => 'local',
+      'translation_provider' => 'permission',
+      'source_language_code' => $source->getId(),
+      'target_language_codes' => [$target->getId()],
+      'request_status' => 'draft',
     ]);
+    $request->setContentEntity($entity);
 
-    try {
-      // Add the job item.
-      $item = $job->addItem('content', $entity->getEntityTypeId(), $entity->id());
+    /** @var \Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource $plugin */
+    $plugin = \Drupal::service('plugin.manager.tmgmt.source')->createInstance('content');
+    $data = $plugin->extractTranslatableData($entity->getUntranslated());
+    /** @var \Drupal\tmgmt\SegmenterInterface $segmenter */
+    $segmenter = \Drupal::service('tmgmt.segmenter');
+    $data = $segmenter->getSegmentedData($data);
 
-      // Create local task for this job.
-      /** @var \Drupal\tmgmt_local\LocalTaskInterface $local_task */
-      $local_task = $this->entityTypeManager->getStorage('tmgmt_local_task')->create([
-        'uid' => $job->getOwnerId(),
-        'tuid' => $this->currentUser->id(),
-        'tjid' => $job->id(),
-        'title' => $job->label(),
-        'status' => LocalTaskInterface::STATUS_PENDING,
-      ]);
-      $local_task->save();
+    $request->set('field_data', Json::encode($data));
+    $request->save();
 
-      /** @var \Drupal\tmgmt_local\LocalTaskItemInterface $local_item */
-      $local_item = $local_task->addTaskItem($item);
-      $item->active();
-      $job->submitted();
+    $url = $request->toUrl('local-translation');
 
-      $url = $local_item->toUrl();
-      $url->setOption('language', $target);
-
-      // Pass on any destinations to the actually intended form page.
-      if ($destination = $this->request->query->get('destination')) {
-        $this->request->query->remove('destination');
-        $url->setOption('query', ['destination' => $destination]);
-      }
-      return new RedirectResponse($url->toString());
+    // Pass on any destinations to the actually intended form page.
+    if ($destination = $this->request->query->get('destination')) {
+      $this->request->query->remove('destination');
+      $url->setOption('query', ['destination' => $destination]);
     }
-
-    catch (TMGMTException $e) {
-      watchdog_exception('tmgmt', $e);
-      $this->messenger->addError(t('Unable to add job item for target language %name. Make sure the source content is not empty.', [
-        '%name' => $target->getName(),
-      ]));
-
-      return new RedirectResponse($entity->toUrl('drupal:content-translation-overview')->toString());
-    }
+    return new RedirectResponse($url->toString());
   }
 
   /**

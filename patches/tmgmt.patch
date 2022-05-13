@@ -1,0 +1,73 @@
+diff --git a/sources/content/src/Plugin/tmgmt/Source/ContentEntitySource.php b/sources/content/src/Plugin/tmgmt/Source/ContentEntitySource.php
+index b101d7b2..3afd5f1e 100644
+--- a/sources/content/src/Plugin/tmgmt/Source/ContentEntitySource.php
++++ b/sources/content/src/Plugin/tmgmt/Source/ContentEntitySource.php
+@@ -544,18 +544,7 @@ class ContentEntitySource extends SourcePluginBase implements SourcePreviewInter
+             if ($is_target_type_translatable) {
+               // If the field is an embeddable reference and the property is a
+               // content entity, process it recursively.
+-
+-              // If the field is ERR and the target entity supports
+-              // the needs saving interface, do not save it immediately to avoid
+-              // creating two versions when content moderation is used but just
+-              // ensure it will be saved.
+-              $target_save = TRUE;
+-              if ($field->getFieldDefinition()->getType() == 'entity_reference_revisions' && $target_entity instanceof EntityNeedsSaveInterface) {
+-                $target_save = FALSE;
+-                $target_entity->needsSave();
+-              }
+-
+-              $this->doSaveTranslations($target_entity, $field_item[$property], $target_langcode, $item, $target_save);
++              $this->doSaveTranslations($target_entity, $field_item[$property], $target_langcode, $item, $save);
+             }
+             else {
+               $duplicate = $this->createTranslationDuplicate($target_entity, $target_langcode);
+@@ -569,48 +558,6 @@ class ContentEntitySource extends SourcePluginBase implements SourcePreviewInter
+       }
+     }
+ 
+-    if (static::isModeratedEntity($translation)) {
+-      // Use the given moderation status if set. Otherwise, fallback to the
+-      // configured one in TMGMT settings.
+-      if (isset($data['#moderation_state'][0])) {
+-        $moderation_state = $data['#moderation_state'][0];
+-      }
+-      else {
+-        $moderation_info = \Drupal::service('content_moderation.moderation_information');
+-        $workflow = $moderation_info->getWorkflowForEntity($entity);
+-        $moderation_state = \Drupal::config('tmgmt_content.settings')->get('default_moderation_states.' . $workflow->id());
+-      }
+-      if ($moderation_state) {
+-        $translation->set('moderation_state', $moderation_state);
+-      }
+-    }
+-    // Otherwise, try to set a published status.
+-    elseif (isset($data['#published'][0]) && $translation instanceof EntityPublishedInterface) {
+-      if ($data['#published'][0]) {
+-        $translation->setPublished();
+-      }
+-      else {
+-        $translation->setUnpublished();
+-      }
+-    }
+-
+-    if ($entity->getEntityType()->isRevisionable()) {
+-      /** @var \Drupal\Core\Entity\TranslatableRevisionableStorageInterface $storage */
+-      $storage = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId());
+-
+-      if ($storage instanceof TranslatableRevisionableStorageInterface) {
+-        // Always create a new revision of the translation.
+-        $translation = $storage->createRevision($translation, $translation->isDefaultRevision());
+-
+-        if ($entity instanceof RevisionLogInterface) {
+-          $translation->setRevisionLogMessage($this->t('Created by translation job <a href=":url">@label</a>.', [
+-            ':url' => $item->getJob()->toUrl()->toString(),
+-            '@label' => $item->label(),
+-          ]));
+-        }
+-      }
+-    }
+-
+     if ($save) {
+       $translation->save();
+     }

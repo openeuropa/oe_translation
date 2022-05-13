@@ -72,6 +72,9 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
    * which revision of the entity to work with for displaying data and saving.
    */
   protected function getEntity(JobItemInterface $job_item) {
+    if (isset($job_item->translatable_entity)) {
+      return $job_item->translatable_entity;
+    }
     return $this->contentEntitySourceTranslationInfo->getEntityFromJobItem($job_item);
   }
 

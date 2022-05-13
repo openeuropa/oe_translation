@@ -86,6 +86,13 @@ function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInt
  */
 function oe_translation_entity_type_alter(array &$entity_types) {
   foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type_id === 'oe_translation_request') {
+      /** @var EntityTypeInterface $local_translation */
+      $local_translation = $entity_types[$entity_type_id];
+      $local_translation->setFormClass('local_translation', \Drupal\oe_translation\Form\LocalTranslationRequestForm::class);
+      $local_translation->setLinkTemplate('local-translation', '/translation-request/{oe_translation_request}/translate-locally');
+    }
+
     // Change the Job Item class with our own override.
     if ($entity_type_id === 'tmgmt_job_item') {
       $entity_type->setClass(JobItem::class);
