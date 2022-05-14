@@ -22,7 +22,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
    */
   public function extractTranslatableData(FieldItemListInterface $field) {
     $data = [];
-    /* @var \Drupal\Core\Field\FieldDefinitionInterface $field_item */
+    /** @var \Drupal\Core\Field\FieldDefinitionInterface $field_item */
     $field_definition = $field->getFieldDefinition();
 
     foreach ($field as $delta => $field_item) {

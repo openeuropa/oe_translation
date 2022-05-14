@@ -25,7 +25,12 @@ class PoetryRequestIdFieldWidgetTest extends TranslationTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     FieldStorageConfig::create([
@@ -70,7 +75,8 @@ class PoetryRequestIdFieldWidgetTest extends TranslationTestBase {
       'poetry_request_id[0][poetry_request_id][product]' => 'TRA',
     ];
 
-    $this->drupalPostForm('/node/add/page', $values, 'Save');
+    $this->drupalGet('/node/add/page');
+    $this->submitForm($values, 'Save');
     $this->assertSession()->pageTextContains('Page My page has been created');
 
     /** @var \Drupal\node\NodeInterface $node */

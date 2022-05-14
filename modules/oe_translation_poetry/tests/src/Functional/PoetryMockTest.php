@@ -25,7 +25,13 @@ class PoetryMockTest extends BrowserTestBase {
     'oe_translation',
     'oe_translation_poetry',
     'oe_translation_poetry_mock',
+    'dblog',
   ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
 
   /**
    * Tests that requests to Poetry are being mocked.

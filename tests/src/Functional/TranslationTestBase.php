@@ -41,7 +41,12 @@ class TranslationTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
@@ -53,6 +58,8 @@ class TranslationTestBase extends BrowserTestBase {
 
     $this->container->get('content_translation.manager')->setEnabled('node', 'page', TRUE);
     $this->container->get('router.builder')->rebuild();
+
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'content']);
 
     /** @var \Drupal\user\RoleInterface $role */
     $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');

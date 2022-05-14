@@ -3,11 +3,10 @@ description: Integration of the Poetry service into the OpenEuropa translation f
 package: OpenEuropa
 
 type: module
-core: 8.x
+core_version_requirement: ^9.2
 dependencies:
   - oe_translation:oe_translation
   - oe_translation_poetry_html_formatter:oe_translation_poetry_html_formatter
-  - drupal:dblog
   - drupal:datetime
 
 configure: entity.tmgmt_translator.collection

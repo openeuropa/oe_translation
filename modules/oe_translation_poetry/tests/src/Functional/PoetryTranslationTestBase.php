@@ -58,7 +58,12 @@ class PoetryTranslationTestBase extends TranslationTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
     parent::setUp();
 
     // Configure the translator.
@@ -114,9 +119,13 @@ class PoetryTranslationTestBase extends TranslationTestBase {
     }
 
     $target_languages = count($languages) > 1 ? implode(', ', $languages) : array_shift($languages);
-    $expected_title = new FormattableMarkup('Send request to DG Translation for @entity in @target_languages', ['@entity' => $node->label(), '@target_languages' => $target_languages]);
+    $expected_title = new FormattableMarkup('Send request to DG Translation for @entity in @target_languages', [
+      '@entity' => $node->label(),
+      '@target_languages' => $target_languages,
+    ]);
 
-    $this->drupalPostForm($node->toUrl('drupal:content-translation-overview'), $values, 'Request a DGT translation for the selected languages');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->submitForm($values, 'Request a DGT translation for the selected languages');
     $this->assertSession()->pageTextContains($expected_title->__toString());
   }
 
@@ -177,8 +186,10 @@ class PoetryTranslationTestBase extends TranslationTestBase {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node.
+   * @param string $expected_message
+   *   The expected status message on the screen.
    */
-  protected function submitTranslationRequestForQueue(NodeInterface $node): void {
+  protected function submitTranslationRequestForQueue(NodeInterface $node, string $expected_message = 'The request has been sent to DGT.'): void {
     // Submit the request form.
     $date = new \DateTime();
     $date->modify('+ 7 days');
@@ -193,8 +204,8 @@ class PoetryTranslationTestBase extends TranslationTestBase {
       'details[organisation][requester]' => 'responsible requester name',
       'details[comment]' => 'Translation comment',
     ];
-    $this->drupalPostForm(NULL, $values, 'Send request');
-    $this->assertSession()->pageTextContains('The request has been sent to DGT.');
+    $this->submitForm($values, 'Send request');
+    $this->assertSession()->pageTextContains($expected_message);
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
   }
 

@@ -162,7 +162,10 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
       $language = strtolower($target->getLanguage());
       $job = $jobs[$language] ?? NULL;
       if (!$job) {
-        $this->logger->error('There is a missing job for the language @lang and request ID @id', ['@lang' => $language, '@id' => $identifier->getFormattedIdentifier()]);
+        $this->logger->error('There is a missing job for the language @lang and request ID @id', [
+          '@lang' => $language,
+          '@id' => $identifier->getFormattedIdentifier(),
+        ]);
         continue;
       }
 
@@ -213,7 +216,10 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
         continue;
       }
 
-      $job->addMessage('Poetry sent a status of @status for this job: @message', ['@status' => $status->getCode(), '@message' => $status->getMessage()]);
+      $job->addMessage('Poetry sent a status of @status for this job: @message', [
+        '@status' => $status->getCode(),
+        '@message' => $status->getMessage(),
+      ]);
     }
 
     // Save all the jobs in case they were changed.
@@ -317,13 +323,18 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
     $existing_date = $job->get('poetry_request_date_updated')->date ? $job->get('poetry_request_date_updated')->date->getTimestamp() : NULL;
     $date = \DateTime::createFromFormat('d/m/Y H:i', trim($target->getAcceptedDelay()));
     if (!$date) {
-      $this->logger->error('The Poetry request accepted date for job @job is incorrectly formatted: @delay', ['@job' => $job->id(), '@delay' => $target->getAcceptedDelay()]);
+      $this->logger->error('The Poetry request accepted date for job @job is incorrectly formatted: @delay', [
+        '@job' => $job->id(),
+        '@delay' => $target->getAcceptedDelay(),
+      ]);
       return;
     }
 
     $job->set('poetry_request_date_updated', $date->format('Y-m-d\TH:i:s'));
     if ($existing_date !== $date->getTimestamp()) {
-      $job->addMessage('Poetry has updated the date on the job to @date.', ['@date' => $target->getAcceptedDelay()]);
+      $job->addMessage('Poetry has updated the date on the job to @date.', [
+        '@date' => $target->getAcceptedDelay(),
+      ]);
     }
   }
 

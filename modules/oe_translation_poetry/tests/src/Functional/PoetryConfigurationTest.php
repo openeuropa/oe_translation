@@ -13,6 +13,13 @@ use Drupal\Core\Url;
 class PoetryConfigurationTest extends PoetryTranslationTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'dblog',
+  ];
+
+  /**
    * Tests the configuration of the Poetry translator plugin.
    */
   public function testTranslatorConfiguration() : void {
@@ -50,9 +57,8 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
       $form_values['settings[organisation][' . $field . ']'] = $value;
     }
 
-    $this->drupalPostForm(Url::fromRoute('entity.tmgmt_translator.edit_form', ['tmgmt_translator' => $translator->id()]),
-      $form_values,
-      'Save');
+    $this->drupalGet(Url::fromRoute('entity.tmgmt_translator.edit_form', ['tmgmt_translator' => $translator->id()]));
+    $this->submitForm($form_values, 'Save');
     $this->assertSession()->pageTextContains($translator->label() . " configuration has been updated.");
 
     // Log in with a translator user to finalize the translation process.
@@ -89,7 +95,7 @@ class PoetryConfigurationTest extends PoetryTranslationTestBase {
     $values = [
       'details[date]' => $date->format('Y-m-d'),
     ];
-    $this->drupalPostForm(NULL, $values, 'Send request');
+    $this->submitForm($values, 'Send request');
     $this->assertSession()->pageTextContains('The request has been sent to DGT.');
 
     // Check the request sent and assert the saved values where used.

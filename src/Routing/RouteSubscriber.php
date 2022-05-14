@@ -58,6 +58,7 @@ class RouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   protected function alterRoutes(RouteCollection $collection): void {
     foreach ($collection as $route) {
@@ -114,6 +115,15 @@ class RouteSubscriber extends RouteSubscriberBase {
           $route = $collection->get($route_name);
           $route->setRequirement('_access_oe_translation', 'delete');
           $collection->add($route_name, $route);
+        }
+      }
+
+      // Deny access to any user to the sources and cart route.
+      $names = ['tmgmt.source_overview_default', 'tmgmt.cart'];
+      foreach ($names as $name) {
+        $route = $collection->get($name);
+        if ($route) {
+          $route->setRequirement('_access', 'FALSE');
         }
       }
     }

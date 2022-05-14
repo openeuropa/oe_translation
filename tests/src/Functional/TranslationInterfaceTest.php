@@ -30,6 +30,8 @@ class TranslationInterfaceTest extends TranslationTestBase {
     // Assert that we are overriding the overview page.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertSession()->responseContains('Content overview altered');
+    // Assert the hreflang is present on all rows.
+    $this->assertRowHreflang();
     // Assert that our custom route was provided.
     $this->drupalGet(Url::fromRoute('oe_translation_test.test_route', ['node' => $node->id()]));
     $this->assertSession()->responseContains('Route works');
@@ -143,6 +145,37 @@ class TranslationInterfaceTest extends TranslationTestBase {
     \Drupal::service('state')->set('oe_translation_test_enabled_translators', ['menu_link_content']);
     $this->drupalGet($url);
     $this->assertSession()->addressEquals('/en/admin/structure/menu/item/1/edit/translations');
+  }
+
+  /**
+   * Asserts that all rows have the hreflang attribute on the first column.
+   */
+  protected function assertRowHreflang(): void {
+    /** @var \Behat\Mink\Element\NodeElement[] $rows */
+    $rows = $this->getSession()->getPage()->findAll('css', 'tr');
+    if (!$rows) {
+      throw new \Exception('No table rows found');
+    }
+
+    $languages = \Drupal::languageManager()->getLanguages();
+    $expected = [];
+    foreach ($languages as $language) {
+      $expected[$language->getName()] = $language->getId();
+    }
+
+    foreach ($rows as $key => $row) {
+      if ($key == 0) {
+        continue;
+      }
+      $column = $row->findAll('css', 'td')[0];
+      $name = $column->getText();
+      if ($name === 'English (Original language)') {
+        $name = 'English';
+      }
+
+      $hreflang = $column->getAttribute('hreflang');
+      $this->assertEquals($expected[$name], $hreflang);
+    }
   }
 
 }

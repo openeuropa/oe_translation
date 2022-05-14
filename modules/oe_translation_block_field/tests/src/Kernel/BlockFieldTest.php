@@ -27,6 +27,11 @@ class BlockFieldTest extends ContentEntityTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
    * The test entity.
    *
    * @var \Drupal\Core\Entity\EntityInterface
@@ -36,7 +41,7 @@ class BlockFieldTest extends ContentEntityTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->installConfig(['block_field']);

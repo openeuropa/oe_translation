@@ -29,6 +29,22 @@ interface PoetryInterface {
   public function setGlobalIdentifierNumber(string $number): void;
 
   /**
+   * Forces the next request to get a new identifier number.
+   *
+   * @param bool $force
+   *   Whether to force the next request to use a new number or not.
+   */
+  public function forceNewIdentifierNumber(bool $force): void;
+
+  /**
+   * Asserts whether we need to request a new identifier number or not.
+   *
+   * @return bool
+   *   TRUE if a new number is required and FALSE otherwise.
+   */
+  public function isNewIdentifierNumberRequired(): bool;
+
+  /**
    * Returns the identifier for making a translation request for a content.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity

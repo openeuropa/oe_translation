@@ -69,7 +69,10 @@ function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entit
 function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $poetry = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance('poetry');
   $form['actions']['request']['#submit'] = [];
-  $form['actions']['request']['#submit'][] = [$poetry, 'submitPoetryTranslationRequest'];
+  $form['actions']['request']['#submit'][] = [
+    $poetry,
+    'submitPoetryTranslationRequest',
+  ];
 
   // If we have jobs in the current job queue, we want to disable all the
   // checkboxes for choosing languages to translate. The user should first
@@ -101,6 +104,7 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
   $accepted_languages = $build['#accepted_languages'];
   $translated_languages = $build['#translated_languages'];
   $completed_languages = $build['#completed_languages'];
+  $cancelled_languages = $build['#cancelled_languages'];
   $languages = array_merge($accepted_languages, $translated_languages, $completed_languages);
 
   // If the user can make an update request, we need to ensure that all
@@ -138,6 +142,11 @@ function oe_translation_poetry_form_tmgmt_content_translate_form_alter(&$form, F
   // are the languages that have already been submitted so we can remove them
   // from the request we send to Poetry.
   $form_state->set('ongoing_languages', $languages);
+  // When we submit the request to add new languages, we need to also know which
+  // languages in the ongoing request have been cancelled so that we do not
+  // include them in the request for more languages. That will only be possible
+  // if we make an update request.
+  $form_state->set('cancelled_languages', $cancelled_languages);
 }
 
 /**
