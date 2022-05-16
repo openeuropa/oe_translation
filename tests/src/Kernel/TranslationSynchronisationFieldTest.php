@@ -97,7 +97,7 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
       $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
       $build = $builder->viewField($node->get('translation_sync'));
       $output = $this->container->get('renderer')->renderRoot($build);
-      $this->assertContains((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
+      $this->assertStringContainsString((string) TranslationSynchronisationFormatter::getSyncTypeLabel($node->get('translation_sync')->first()), (string) $output);
     }
 
     // Test the languages validation.
@@ -145,7 +145,7 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
 
         $this->assertEquals(1, $violations->count());
         $violation = $violations->get(0);
-        $this->assertEqual('Select at least one language to be approved for synchronizing.', $violation->getMessage());
+        $this->assertEquals('Select at least one language to be approved for synchronizing.', $violation->getMessage());
       }
     }
   }

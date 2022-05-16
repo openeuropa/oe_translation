@@ -35,7 +35,7 @@ class TranslationSynchronisationWidget extends WidgetBase {
       '#description' => $this->t('Select the type of synchronization rule.'),
       '#title' => $this->t('Select type'),
       '#options' => static::getSyncTypeOptions(),
-      '#default_value' => isset($items[$delta]->type) ? $items[$delta]->type : NULL,
+      '#default_value' => $items[$delta]->type ?? NULL,
       '#required' => $element['#required'],
     ];
 
@@ -63,7 +63,7 @@ class TranslationSynchronisationWidget extends WidgetBase {
       '#multiple' => TRUE,
       '#title' => $this->t('Languages'),
       '#description' => $this->t('Select the languages that need to have been approved before they can be synchronized.'),
-      '#default_value' => isset($items[$delta]->configuration['languages']) ? $items[$delta]->configuration['languages'] : NULL,
+      '#default_value' => $items[$delta]->configuration['languages'] ?? NULL,
       '#languages' => LanguageInterface::STATE_CONFIGURABLE,
       '#size' => 10,
       '#states' => [

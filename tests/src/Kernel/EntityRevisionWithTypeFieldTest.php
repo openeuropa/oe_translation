@@ -86,15 +86,15 @@ class EntityRevisionWithTypeFieldTest extends TranslationKernelTestBase {
     $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
     $build = $builder->viewField($node->get('entity_revision_type_item'));
     $output = $this->container->get('renderer')->renderRoot($build);
-    $this->assertContains('Test page', (string) $output);
-    $this->assertNotContains('node-1-1', (string) $output);
+    $this->assertStringContainsString('Test page', (string) $output);
+    $this->assertStringNotContainsString('node-1-1', (string) $output);
 
     $value['entity_revision_id'] = 2;
     $node->set('entity_revision_type_item', $value);
     $build = $builder->viewField($node->get('entity_revision_type_item'));
     $output = $this->container->get('renderer')->renderRoot($build);
-    $this->assertNotContains('Test page', (string) $output);
-    $this->assertContains('node-1-2', (string) $output);
+    $this->assertStringNotContainsString('Test page', (string) $output);
+    $this->assertStringContainsString('node-1-2', (string) $output);
   }
 
 }

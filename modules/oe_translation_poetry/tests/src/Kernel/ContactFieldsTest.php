@@ -153,7 +153,7 @@ class ContactFieldsTest extends TranslationKernelTestBase {
         $builder = $this->container->get('entity_type.manager')->getViewBuilder('node');
         $build = $builder->viewField($node->get($field));
         $output = $this->container->get('renderer')->renderRoot($build);
-        $this->assertContains(implode('<br />', $values), (string) $output);
+        $this->assertStringContainsString(implode('<br />', $values), (string) $output);
       }
     }
   }

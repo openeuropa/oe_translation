@@ -23,7 +23,7 @@ abstract class ContactWidgetBase extends WidgetBase {
       $element[$type] = [
         '#type' => 'textfield',
         '#title' => $label,
-        '#default_value' => isset($items[$delta]->{$type}) ? $items[$delta]->{$type} : NULL,
+        '#default_value' => $items[$delta]->{$type} ?? NULL,
         '#required' => $element['#required'],
       ];
     }
