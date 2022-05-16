@@ -26,7 +26,7 @@ class PoetryTranslationRequestTest extends TranslationKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('oe_translation_request');
     $this->installConfig(['oe_translation_poetry']);

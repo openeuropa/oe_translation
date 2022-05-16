@@ -16,7 +16,7 @@ class TranslationSynchronisationFieldTest extends TranslationKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installSchema('node', ['node_access']);
