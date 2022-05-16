@@ -84,7 +84,12 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
 
     foreach ($scenarios as $scenario => $test_data) {
       // Update the published status based on the scenario.
-      $translation_request->setPublished($test_data['published']);
+      if ($test_data['published']) {
+        $translation_request->setPublished();
+      }
+      else {
+        $translation_request->setUnpublished();
+      }
       $translation_request->save();
 
       $user = $this->drupalCreateUser($test_data['permissions']);
