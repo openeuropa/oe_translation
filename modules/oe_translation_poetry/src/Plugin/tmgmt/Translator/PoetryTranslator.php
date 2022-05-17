@@ -283,6 +283,17 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $collection->add('oe_translation_poetry.job_queue_checkout_add_languages', $route);
 
     $route = new Route(
+      '/admin/content/dgt/confirm_reset',
+      [
+        '_form' => '\Drupal\oe_translation_poetry\Form\GlobalIdentifierNumberResetConfirmForm',
+      ],
+      [
+        '_permission' => 'administer tmgmt',
+      ]
+    );
+    $collection->add('oe_translation_poetry.confirm_number_reset', $route);
+
+    $route = new Route(
       '/poetry/notifications',
       [
         '_controller' => '\Drupal\oe_translation_poetry\Controller\NotificationsController::handle',
@@ -467,6 +478,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $build['#accepted_languages'] = $accepted_languages;
     $build['#translated_languages'] = $translated_languages;
     $build['#submitted_languages'] = $submitted_languages;
+    $build['#cancelled_languages'] = $cancelled_jobs;
     $build['#completed_languages'] = [];
     // Load the completed jobs in the same request. For this we need to get
     // the request ID from one of the accepted jobs in order to filter the
@@ -641,6 +653,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $triggering_element = $form_state->getTriggeringElement();
     $extra_language_request = isset($triggering_element['#op']) && $triggering_element['#op'] === 'add-languages';
     $ongoing_languages = $extra_language_request ? $form_state->get('ongoing_languages') : [];
+    $cancelled_languages = $extra_language_request ? $form_state->get('cancelled_languages') : [];
 
     if ($extra_language_request) {
       // In case we are adding a new language to an ongoing request, we need to
@@ -659,7 +672,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
     $entity = $form_state->get('entity');
     $entity = $entity->isDefaultTranslation() ? $entity : $entity->getUntranslated();
     $job_queue = $this->jobQueueFactory->get($entity);
-    $entity_revision_id = isset($content_item_revision_id) ? $content_item_revision_id : $entity->getRevisionId();
+    $entity_revision_id = $content_item_revision_id ?? $entity->getRevisionId();
     $job_queue->setEntityId($entity->getEntityTypeId(), $entity_revision_id);
     $values = $form_state->getValues();
 
@@ -667,6 +680,14 @@ class PoetryTranslator extends TranslatorPluginBase implements ApplicableTransla
       // We do not want to create jobs for languages that already exist in the
       // original request (ongoing ones or that have been translated).
       if ($extra_language_request && in_array($langcode, array_keys($ongoing_languages))) {
+        continue;
+      }
+
+      // We do not want to create jobs for languages that have been cancelled
+      // in the ongoing request when we are adding new languages to it.
+      if ($extra_language_request && in_array($langcode, array_keys($cancelled_languages))) {
+        $language = $this->languageManager->getLanguage($langcode);
+        $this->messenger->addWarning($this->t('Please be aware that <em>@language</em> has been skipped from the request because it was cancelled in DGT for the ongoing request.', ['@language' => $language->getName()]));
         continue;
       }
 

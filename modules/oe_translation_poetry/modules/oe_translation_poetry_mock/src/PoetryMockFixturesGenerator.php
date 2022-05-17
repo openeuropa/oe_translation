@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_poetry_mock;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\Renderer;
+use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Messages\MessageInterface;
@@ -30,16 +31,26 @@ class PoetryMockFixturesGenerator {
   protected $renderer;
 
   /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * PoetryMockFixturesGenerator constructor.
    *
    * @param \Drupal\oe_translation_poetry\Poetry $poetry
    *   The Poetry service.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
    */
-  public function __construct(Poetry $poetry, Renderer $renderer) {
+  public function __construct(Poetry $poetry, Renderer $renderer, StateInterface $state) {
     $this->poetry = $poetry;
     $this->renderer = $renderer;
+    $this->state = $state;
   }
 
   /**
@@ -71,6 +82,12 @@ class PoetryMockFixturesGenerator {
     }
     if ($identifier->getFormattedIdentifier() === $this->getExistingReference()) {
       $variables['@message'] = 'Error in xmlActions:newRequest: A request with the same references if already in preparation another product exists for this reference.';
+      $response = new FormattableMarkup($error_template, $variables);
+      return (string) $response;
+    }
+    $error = $this->state->get('oe_translation_poetry_mock_error');
+    if ($error) {
+      $variables['@message'] = $error;
       $response = new FormattableMarkup($error_template, $variables);
       return (string) $response;
     }

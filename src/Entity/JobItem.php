@@ -130,7 +130,10 @@ class JobItem extends OriginalJobItem {
         '@source' => $this->getSourceLabel(),
         ':target_url' => $translation_url->toString(),
         '@target' => $translation ? $translation->label() : $this->getSourceLabel(),
-      ] : ['@source' => $this->getSourceLabel(), '@target' => ($translation ? $translation->label() : $this->getSourceLabel())],
+      ] : [
+        '@source' => $this->getSourceLabel(),
+        '@target' => ($translation ? $translation->label() : $this->getSourceLabel()),
+      ],
     ];
   }
 

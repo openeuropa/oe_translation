@@ -36,7 +36,10 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
     $entity = $queue->getEntity();
     $target_languages = $queue->getTargetLanguages();
     $target_languages = implode(', ', $target_languages);
-    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', ['@entity' => $entity->label(), '@target_languages' => $target_languages]);
+    return $this->t('Send request to DG Translation for <em>@entity</em> in <em>@target_languages</em>', [
+      '@entity' => $entity->label(),
+      '@target_languages' => $target_languages,
+    ]);
   }
 
   /**
@@ -92,6 +95,45 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
    *   The form state.
    */
   public function submitRequest(array &$form, FormStateInterface $form_state): void {
+    $entity = $form_state->get('entity');
+    $queue = $this->queueFactory->get($entity);
+    $message = $this->prepareMessage($form_state);
+    try {
+      $client = $this->poetry->getClient();
+      /** @var \EC\Poetry\Messages\Responses\ResponseInterface $response */
+      $response = $client->send($message);
+      $this->handlePoetryResponse($response, $form_state);
+      $identifier = $message->getIdentifier();
+
+      // If we request a new number by setting a sequence, update the global
+      // identifier number with the new number that came for future requests.
+      if ($identifier->getSequence()) {
+        $this->poetry->setGlobalIdentifierNumber($response->getIdentifier()->getNumber());
+        $this->poetry->forceNewIdentifierNumber(FALSE);
+      }
+
+      $this->redirectBack($form_state);
+      $queue->reset();
+      $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
+    }
+    catch (\Exception $exception) {
+      $this->logger->error($exception->getMessage());
+      $this->messenger->addError($this->t('There was an error making the request to DGT.'));
+      $this->redirectBack($form_state);
+      $queue->reset();
+    }
+  }
+
+  /**
+   * Prepares the message to be sent to Poetry.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return \EC\Poetry\Messages\Requests\CreateTranslationRequest
+   *   The message to send to Poetry.
+   */
+  protected function prepareMessage(FormStateInterface $form_state) {
     $entity = $form_state->get('entity');
     $queue = $this->queueFactory->get($entity);
     $translator_settings = $this->poetry->getTranslatorSettings();
@@ -174,29 +216,7 @@ class NewTranslationRequestForm extends PoetryCheckoutFormBase {
         ->setAction('INSERT')
         ->setDelay($formatted_date);
     }
-
-    try {
-      $client = $this->poetry->getClient();
-      /** @var \EC\Poetry\Messages\Responses\ResponseInterface $response */
-      $response = $client->send($message);
-      $this->handlePoetryResponse($response, $form_state);
-
-      // If we request a new number by setting a sequence, update the global
-      // identifier number with the new number that came for future requests.
-      if ($identifier->getSequence()) {
-        $this->poetry->setGlobalIdentifierNumber($response->getIdentifier()->getNumber());
-      }
-
-      $this->redirectBack($form_state);
-      $queue->reset();
-      $this->messenger->addStatus($this->t('The request has been sent to DGT.'));
-    }
-    catch (\Exception $exception) {
-      $this->logger->error($exception->getMessage());
-      $this->messenger->addError($this->t('There was an error making the request to DGT.'));
-      $this->redirectBack($form_state);
-      $queue->reset();
-    }
+    return $message;
   }
 
 }

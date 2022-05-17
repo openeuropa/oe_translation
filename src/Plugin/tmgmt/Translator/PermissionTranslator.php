@@ -264,7 +264,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
         $field = &$form['translation'][$field_name][$field_path];
         // Clean up the translation form element.
         $field['#theme'] = 'local_translation_form_element_group';
-        $definition = isset($field_definitions[$field_name]) ? $field_definitions[$field_name] : NULL;
+        $definition = $field_definitions[$field_name] ?? NULL;
         if (!$definition instanceof FieldDefinitionInterface && isset($data[$field_name]['#label'])) {
           // Try to find from #label.
           $field['#field_name'] = $data[$field_name]['#label'];
@@ -276,9 +276,16 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
           $field['#field_name'] = $definition->getLabel();
         }
 
-        list($field_name, $delta, $column) = explode('|', $field_path);
+        [$field_name, $delta, $column] = explode('|', $field_path);
 
         $field_parents = explode('|', $field_path);
+
+        if (!is_numeric($delta) && isset($data[$field_name][$delta]['#label'])) {
+          // In case we have a more "special" field, like metatag, which doesn't
+          // have a delta, but may have multiple "sections" with labels,
+          // append that label as well to the field name.
+          $field['#field_name'] .= ' - ' . $data[$field_name][$delta]['#label'];
+        }
 
         // When the field has multiple columns they come with
         // a label, then append the column name.
@@ -289,8 +296,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
           }
         }
 
-        // Append the delta in case there are multiple field values.
-        if (count(Element::children($data[$field_name])) > 1) {
+        // Append the delta in case there are multiple field values and if the
+        // delta is numeric (field has a real delta, which happens in most
+        // cases).
+        if (count(Element::children($data[$field_name])) > 1 && is_numeric($delta)) {
           $field['#field_name'] .= ' (' . ($delta + 1) . ')';
         }
 
@@ -363,7 +372,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     }
 
     if (isset($form['actions']['preview'])) {
-      array_unshift($form['actions']['preview']['#submit'], [$this, 'localTaskItemPreview']);
+      array_unshift($form['actions']['preview']['#submit'], [
+        $this,
+        'localTaskItemPreview',
+      ]);
     }
 
     // Add a delete button to delete the job associated with this task.
@@ -372,7 +384,12 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     $delete_url = Url::fromRoute(
       'entity.tmgmt_job.delete_form',
       ['tmgmt_job' => $job->id()],
-      ['attributes' => ['class' => ['button']], 'query' => ['destination' => $destination->toString()]]
+      [
+        'attributes' => [
+          'class' => ['button'],
+        ],
+        'query' => ['destination' => $destination->toString()],
+      ],
     );
 
     if ($delete_url->access()) {
@@ -535,7 +552,10 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
       }
 
       $links = &$build['content_translation_overview']['#rows'][$i][3]['data']['#links'];
-      $url_options = ['language' => $language, 'query' => ['destination' => $destination->toString()]];
+      $url_options = [
+        'language' => $language,
+        'query' => ['destination' => $destination->toString()],
+      ];
 
       // Check if a local task item exists and the current user can edit it.
       if (isset($job_items[$language->getId()]) && ($local_task_item = $this->getLocalTaskItemFromJobItem($job_items[$language->getId()]))) {

@@ -19,13 +19,24 @@ composer install
 ```
 
 A post command hook (`drupal:site-setup`) is triggered automatically after `composer install`.
-It will make sure that the necessary symlinks are properly setup in the development site.
-It will also perform token substitution in development configuration files such as `behat.yml.dist`.
+This will symlink the module in the proper directory within the test site and perform token substitution in test configuration files such as `behat.yml.dist`.
+
+**Please note:** project files and directories are symlinked within the test site by using the
+[OpenEuropa Task Runner's Drupal project symlink](https://github.com/openeuropa/task-runner-drupal-project-symlink) command.
+
+If you add a new file or directory in the root of the project, you need to re-run `drupal:site-setup` in order to make
+sure they are be correctly symlinked.
+
+If you don't want to re-run a full site setup for that, you can simply run:
+
+```
+$ ./vendor/bin/run drupal:symlink-project
+```
 
 * Install test site by running:
 
 ```bash
-./vendor/bin/run drupal:site-install
+$ ./vendor/bin/run drupal:site-install
 ```
 
 The development site web root should be available in the `build` directory.
@@ -97,6 +108,22 @@ To run the behat tests:
 ```bash
 docker-compose exec web ./vendor/bin/behat
 ```
+
+#### Step debugging
+
+To enable step debugging from the command line, pass the `XDEBUG_SESSION` environment variable with any value to
+the container:
+
+```bash
+docker-compose exec -e XDEBUG_SESSION=1 web <your command>
+```
+
+Please note that, starting from XDebug 3, a connection error message will be outputted in the console if the variable is
+set but your client is not listening for debugging connections. The error message will cause false negatives for PHPUnit
+tests.
+
+To initiate step debugging from the browser, set the correct cookie using a browser extension or a bookmarklet
+like the ones generated at https://www.jetbrains.com/phpstorm/marklets/.
 
 ## Contributing
 
