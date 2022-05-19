@@ -6,7 +6,6 @@ namespace Drupal\Tests\oe_translation\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\Tests\tmgmt\Functional\TmgmtTestTrait;
-use Drupal\tmgmt\JobInterface;
 
 /**
  * Tests the Translation Request entity.
@@ -36,7 +35,6 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
 
     $this->installConfig([
       'language',
-      'tmgmt',
       'oe_translation',
       'views',
       'node',
@@ -44,7 +42,6 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
 
     $this->installEntitySchema('node');
     $this->installSchema('node', ['node_access']);
-    $this->installEntitySchema('tmgmt_job');
     $this->installEntitySchema('oe_translation_request');
 
     // Create test bundle.
@@ -87,19 +84,6 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
         'fr',
         'es',
       ],
-      'auto_accept_translations' => TRUE,
-      'upstream_translation' => FALSE,
-      'translation_synchronisation' => [
-        'type' => 'automatic',
-        'configuration' => [
-          'languages' => [
-            'de',
-            'es',
-          ],
-          'date' => $date->getTimestamp(),
-        ],
-      ],
-      'message' => 'The message for the provider',
       'request_status' => 'draft',
     ];
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
@@ -121,19 +105,6 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
       'fr',
       'es',
     ], $translation_request->getTargetLanguageCodes());
-    $this->assertEquals(TRUE, $translation_request->autoAcceptsTranslations());
-    $this->assertEquals(FALSE, $translation_request->upstreamsTranslations());
-    $this->assertEquals([
-      'type' => 'automatic',
-      'configuration' => [
-        'languages' => [
-          'de',
-          'es',
-        ],
-        'date' => $date->getTimestamp(),
-      ],
-    ], $translation_request->getTranslationSync());
-    $this->assertEquals('The message for the provider', $translation_request->getMessage());
     $this->assertEquals('draft', $translation_request->getRequestStatus());
 
     // Update some entity values.
@@ -149,43 +120,12 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
       'el',
     ], $translation_request->getTargetLanguageCodes());
 
-    // Create tmgmt jobs to be referenced.
-    $job1 = $this->createJob('en', 'fr', 1, []);
-    $job1->save();
-    $job2 = $this->createJob('en', 'fr', 1, []);
-    $job2->save();
-    $translation_request->addJob($job1->id());
-    $this->assertEquals(TRUE, $translation_request->hasJob($job1->id()));
-    $this->assertEquals(FALSE, $translation_request->hasJob($job2->id()));
-    $translation_request->addJob($job2->id());
-    $this->assertEquals(TRUE, $translation_request->hasJob($job1->id()));
-    $this->assertEquals(TRUE, $translation_request->hasJob($job2->id()));
-    $this->assertEquals([$job1->id(), $job2->id()], $translation_request->getJobIds());
-    $this->assertCount(2, $translation_request->getJobs());
-    foreach ($translation_request->getJobs() as $job) {
-      $this->assertInstanceOf(JobInterface::class, $job);
-    }
+    $translation_request->setRequestStatus('accepted');
+    $this->assertEquals('accepted', $translation_request->getRequestStatus());
 
-    $translation_request->setAutoAcceptTranslations(FALSE);
-    $this->assertEquals(FALSE, $translation_request->autoAcceptsTranslations());
-    $translation_request->setTranslationSync([
-      'type' => 'manual',
-      'configuration' => [],
-    ]);
-    $this->assertEquals([
-      'type' => 'manual',
-      'configuration' => [],
-    ], $translation_request->getTranslationSync());
-
-    $translation_request->setUpstreamTranslation(TRUE);
-    $this->assertEquals(TRUE, $translation_request->upstreamsTranslations());
-
-    $message_for_provider = $this->randomString();
-    $translation_request->setMessage($message_for_provider);
-    $this->assertEquals($message_for_provider, $translation_request->getMessage());
-
-    $translation_request->setRequestStatus('sent');
-    $this->assertEquals('sent', $translation_request->getRequestStatus());
+    $data_for_translation = $this->randomString();
+    $translation_request->setData($data_for_translation);
+    $this->assertEquals($data_for_translation, $translation_request->getData());
   }
 
 }
