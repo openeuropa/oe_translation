@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Entity;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
@@ -174,6 +175,20 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
+  public function getData(): string {
+    return Json::decode($this->get('data')->value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setData(string $data): TranslationRequestInterface {
+    return $this->set('data', Json::encode($data));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
@@ -208,6 +223,10 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
         'type' => 'options_select',
       ])
       ->setDefaultValue('draft');
+
+    $fields['data'] = BaseFieldDefinition::create('string_long')
+      ->setLabel('Data')
+      ->setDescription(t('The Json encoded data to be translated.'));
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))
