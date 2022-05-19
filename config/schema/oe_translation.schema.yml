@@ -20,17 +20,6 @@ field.value.oe_translation_entity_revision_type_item:
       type: string
       label: Entity Type
 
-field.value.oe_translation_translation_sync:
-  type: mapping
-  label: Default value
-  mapping:
-    type:
-      type: string
-      label: Type
-    configuration:
-      type: string
-      label: Configuration
-
 oe_translation.oe_translation_request_type.*:
   type: config_entity
   label: 'Translation Request type config'
