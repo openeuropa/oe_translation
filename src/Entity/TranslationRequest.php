@@ -175,14 +175,14 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function getData(): string {
+  public function getData(): array {
     return Json::decode($this->get('data')->value);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setData(string $data): TranslationRequestInterface {
+  public function setData(array $data): TranslationRequestInterface {
     return $this->set('data', Json::encode($data));
   }
 

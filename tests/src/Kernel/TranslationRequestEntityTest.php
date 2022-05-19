@@ -123,7 +123,10 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
     $translation_request->setRequestStatus('accepted');
     $this->assertEquals('accepted', $translation_request->getRequestStatus());
 
-    $data_for_translation = $this->randomString();
+    $data_for_translation = [
+      'title' => 'Page title',
+      'description' => 'Page description',
+    ];
     $translation_request->setData($data_for_translation);
     $this->assertEquals($data_for_translation, $translation_request->getData());
   }

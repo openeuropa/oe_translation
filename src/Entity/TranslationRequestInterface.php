@@ -131,20 +131,20 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   /**
    * Gets the decoded json data that should be translated.
    *
-   * @return string
+   * @return array
    *   The decoded json.
    */
-  public function getData(): string;
+  public function getData(): array;
 
   /**
    * Sets the json encoded data that should be translated.
    *
-   * @param string $data
+   * @param array $data
    *   The data to be translated.
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
    *   The called translation request entity.
    */
-  public function setData(string $data): TranslationRequestInterface;
+  public function setData(array $data): TranslationRequestInterface;
 
 }
