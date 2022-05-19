@@ -200,9 +200,9 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
       ->setLabel('Request status')
       ->setSetting('allowed_values', [
         'draft' => t('Draft'),
-        'sent' => t('Sent'),
-        'cancelled' => t('Cancelled'),
-        'finalized' => t('Finalized'),
+        'review' => t('In review'),
+        'accepted' => t('Accepted'),
+        'synchronized' => t('Synchronized'),
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
