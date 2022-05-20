@@ -13,6 +13,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Entity handler for the OpenEuropa translation system.
+ *
+ * @deprecated
  */
 class OeTranslationHandler implements EntityHandlerInterface {
 
