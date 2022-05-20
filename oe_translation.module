@@ -67,6 +67,7 @@ function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInt
   $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
   $job = $job_item->getJob();
   /** @var \Drupal\oe_translation\OeTranslationHandler $handler */
+  // @deprecated handler.
   $handler = \Drupal::entityTypeManager()->getHandler($job_item->getItemType(), 'oe_translation');
   $supported_translators = $handler->getSupportedTranslators();
   try {
@@ -96,7 +97,19 @@ function oe_translation_entity_type_alter(array &$entity_types) {
       $entity_type->setHandlerClass('access', JobAccessHandler::class);
     }
 
+    // Set translator providers.
+    if ($entity_type_id === 'node') {
+      $translators = [
+        'local' => TRUE,
+        'remote' => [
+          'epoetry',
+        ],
+      ];
+      $entity_type->set('oe_translation_translators', $translators);
+    }
+
     // Add the OpenEuropa translation handler to all entity types.
+    // @deprecated handler.
     $entity_type->setHandlerClass('oe_translation', OeTranslationHandler::class);
 
     // Change the moderation handler if set to our own override.

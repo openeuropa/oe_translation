@@ -87,6 +87,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       // Drupal translation management routes.
       foreach ($this->contentTranslationManager->getSupportedEntityTypes() as $entity_type_id => $entity_type) {
         /** @var \Drupal\oe_translation\OeTranslationHandler $handler */
+        // @deprecated handler.
         $handler = $this->entityTypeManager->getHandler($entity_type_id, 'oe_translation');
         $supported_translators = $handler->getSupportedTranslators();
         if (empty($supported_translators)) {

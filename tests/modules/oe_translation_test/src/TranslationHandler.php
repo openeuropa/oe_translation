@@ -13,6 +13,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Test translation handler.
+ *
+ * @deprecated
  */
 class TranslationHandler extends OeTranslationHandler {
 
