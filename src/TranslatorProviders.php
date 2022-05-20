@@ -7,7 +7,7 @@ namespace Drupal\oe_translation;
 use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
- * Checks if an entity type is exposed to any translator provider.
+ * Determines if an entity type is exposed to our translation system.
  */
 class TranslatorProviders implements TranslatorProvidersInterface {
 
@@ -19,7 +19,7 @@ class TranslatorProviders implements TranslatorProvidersInterface {
     if (!$translators) {
       return FALSE;
     }
-    return $translators['local'];
+    return $translators['local'] ?? FALSE;
   }
 
   /**
@@ -30,15 +30,15 @@ class TranslatorProviders implements TranslatorProvidersInterface {
     if (!$translators) {
       return FALSE;
     }
-    return (bool) $translators['remote'];
+    return isset($translators['remote']);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getRemotePlugins(EntityTypeInterface $entity_type): ?array {
+  public function getRemotePlugins(EntityTypeInterface $entity_type): array {
     if (!$this->hasRemote($entity_type)) {
-      return NULL;
+      return [];
     }
     $translators = $this->getTranslators($entity_type);
     return $translators['remote'];
@@ -50,13 +50,13 @@ class TranslatorProviders implements TranslatorProvidersInterface {
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
    *
-   * @return array|bool
+   * @return array
    *   Array containing the configuration, FALSE if there is none.
    */
-  protected function getTranslators(EntityTypeInterface $entity_type): ?array {
+  protected function getTranslators(EntityTypeInterface $entity_type): array {
     $additional = $entity_type->get('additional');
     if (!isset($additional['oe_translation_translators'])) {
-      return FALSE;
+      return [];
     }
     return $additional['oe_translation_translators'];
   }

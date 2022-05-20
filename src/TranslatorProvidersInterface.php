@@ -39,9 +39,9 @@ interface TranslatorProvidersInterface {
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
    *
-   * @return array|null
+   * @return array
    *   Array containing the remote plugins.
    */
-  public function getRemotePlugins(EntityTypeInterface $entity_type): ?array;
+  public function getRemotePlugins(EntityTypeInterface $entity_type): array;
 
 }
