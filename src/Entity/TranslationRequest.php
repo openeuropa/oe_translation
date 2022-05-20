@@ -189,6 +189,13 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
+  public function getLog(): TranslationRequestLogInterface {
+    return $this->get('log')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
@@ -227,6 +234,11 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
     $fields['data'] = BaseFieldDefinition::create('string_long')
       ->setLabel('Data')
       ->setDescription(t('The Json encoded data to be translated.'));
+
+    $fields['log'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel('Translation request log')
+      ->setDescription(t('The Translation request log.'))
+      ->setSetting('target_type', 'oe_translation_request_log');
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))
