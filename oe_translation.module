@@ -96,6 +96,17 @@ function oe_translation_entity_type_alter(array &$entity_types) {
       $entity_type->setHandlerClass('access', JobAccessHandler::class);
     }
 
+    // Set translator providers.
+    if ($entity_type_id === 'node') {
+      $translators = [
+        'local' => TRUE,
+        'remote' => [
+          'epoetry',
+        ],
+      ];
+      $entity_type->set('oe_translation_translators', $translators);
+    }
+
     // Add the OpenEuropa translation handler to all entity types.
     $entity_type->setHandlerClass('oe_translation', OeTranslationHandler::class);
 
