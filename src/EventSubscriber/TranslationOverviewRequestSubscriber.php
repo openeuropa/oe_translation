@@ -8,9 +8,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -46,6 +47,13 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
   protected $languageManager;
 
   /**
+   * The translation providers service.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * TranslationOverviewRequestSubscriber constructor.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
@@ -54,11 +62,14 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
    *   The entity type manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   The translation providers service.
    */
-  public function __construct(RouteMatchInterface $routeMatch, EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
+  public function __construct(RouteMatchInterface $routeMatch, EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, TranslatorProvidersInterface $translatorProviders) {
     $this->routeMatch = $routeMatch;
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -73,7 +84,7 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public function onRequest(GetResponseEvent $event): void {
+  public function onRequest(RequestEvent $event): void {
     if (!preg_match('/^entity.([^\.]+).content_translation_overview$/', $this->routeMatch->getRouteName(), $matches)) {
       return;
     }
@@ -83,13 +94,12 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
     }
 
     $entity_type = $matches[1];
-    if (!$this->entityTypeManager->getDefinition($entity_type)) {
+    if (!$this->entityTypeManager->hasDefinition($entity_type)) {
       return;
     }
 
-    // We only redirect if the entity type uses our TMGMT-based translation.
-    $handler = $this->entityTypeManager->getHandler($entity_type, 'oe_translation');
-    if (!$supported_translations = $handler->getSupportedTranslators()) {
+    $definition = $this->entityTypeManager->getDefinition($entity_type);
+    if (!$this->translatorProviders->hasTranslators($definition)) {
       return;
     }
 

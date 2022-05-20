@@ -83,13 +83,6 @@ pipeline:
     commands:
       - ./vendor/bin/phpunit
 
-  behat:
-    group: test
-    image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
-    environment: *web-environment
-    commands:
-      - ./vendor/bin/behat --strict
-
   debug:
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     commands:

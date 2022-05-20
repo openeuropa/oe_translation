@@ -44,4 +44,23 @@ interface TranslatorProvidersInterface {
    */
   public function getRemotePlugins(EntityTypeInterface $entity_type): array;
 
+  /**
+   * Determines whether the entity type has any translator plugins.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return bool
+   *   TRUE if it has any translator, FALSE otherwise.
+   */
+  public function hasTranslators(EntityTypeInterface $entity_type): bool;
+
+  /**
+   * Returns all the entity type definitions that have any translators.
+   *
+   * @return array
+   *   The definitions.
+   */
+  public function getDefinitions(): array;
+
 }

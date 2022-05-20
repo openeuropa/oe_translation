@@ -14,7 +14,6 @@ use Drupal\tmgmt\JobInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Access\AccessResult;
-use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\oe_translation\LocalTranslatorInterface;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\tmgmt\TranslatorPluginBase;
@@ -31,7 +30,7 @@ use Symfony\Component\Routing\RouteCollection;
  *   map_remote_languages = FALSE
  * )
  */
-class TestTranslatorWithInterfaces extends TranslatorPluginBase implements ApplicableTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface {
+class TestTranslatorWithInterfaces extends TranslatorPluginBase implements ApplicableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface {
 
   /**
    * {@inheritdoc}

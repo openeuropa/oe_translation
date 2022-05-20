@@ -1,7 +1,10 @@
 services:
+  oe_translation.translator_providers:
+    class: Drupal\oe_translation\TranslatorProviders
+    arguments: ['@entity_type.manager']
   oe_translation.route_subscriber:
     class: Drupal\oe_translation\Routing\RouteSubscriber
-    arguments: ['@content_translation.manager', '@entity_type.manager']
+    arguments: ['@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
   oe_translation.translation_provider_routes:
@@ -22,8 +25,6 @@ services:
       - { name: access_check, applies_to: _access_oe_translation }
   oe_translation.request_subscriber:
     class: Drupal\oe_translation\EventSubscriber\TranslationOverviewRequestSubscriber
-    arguments: ['@current_route_match', '@entity_type.manager', '@language_manager']
+    arguments: ['@current_route_match', '@entity_type.manager', '@language_manager', '@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
-  oe_translation.translator_providers:
-    class: Drupal\oe_translation\TranslatorProviders

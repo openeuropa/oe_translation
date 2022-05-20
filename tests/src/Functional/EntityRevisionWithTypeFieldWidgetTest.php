@@ -67,7 +67,8 @@ class EntityRevisionWithTypeFieldWidgetTest extends TranslationTestBase {
       'entity_revision_type_item[0][entity_type]' => 'node',
     ];
 
-    $this->drupalPostForm('/node/add/page', $values, 'Save');
+    $this->drupalGet('/node/add/page');
+    $this->submitForm($values, 'Save');
     $this->assertSession()->pageTextContains('Page My page has been created');
 
     /** @var \Drupal\node\NodeInterface $node */

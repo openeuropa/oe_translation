@@ -13,6 +13,8 @@ use PHPUnit\Framework\Assert;
 
 /**
  * Context specific to TMGMT-based local translation.
+ *
+ * @deprecated
  */
 class LocalTranslationContext extends RawDrupalContext {
 

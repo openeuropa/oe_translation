@@ -13,7 +13,6 @@ use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Breadcrumb\Breadcrumb;
@@ -50,31 +49,6 @@ function oe_translation_form_tmgmt_local_task_item_edit_form_alter(&$form, FormS
     $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($job->getTranslator()->getPluginId());
     if ($translator_plugin instanceof LocalTranslatorInterface) {
       $translator_plugin->localTaskItemFormAlter($form, $form_state);
-    }
-  }
-  catch (PluginNotFoundException $exception) {
-    return;
-  }
-}
-
-/**
- * Implements hook_form_alter() for the Job item edit form.
- *
- * This is the form used to review the translation.
- */
-function oe_translation_form_tmgmt_job_item_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  /** @var \Drupal\tmgmt\JobItemInterface $job_item */
-  $job_item = $form_state->getBuildInfo()['callback_object']->getEntity();
-  $job = $job_item->getJob();
-  /** @var \Drupal\oe_translation\OeTranslationHandler $handler */
-  // @deprecated handler.
-  $handler = \Drupal::entityTypeManager()->getHandler($job_item->getItemType(), 'oe_translation');
-  $supported_translators = $handler->getSupportedTranslators();
-  try {
-    $plugin_id = $job->getTranslator()->getPluginId();
-    $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($plugin_id);
-    if ($translator_plugin instanceof AlterableTranslatorInterface && in_array($plugin_id, $supported_translators)) {
-      $translator_plugin->jobItemFormAlter($form, $form_state);
     }
   }
   catch (PluginNotFoundException $exception) {
@@ -226,15 +200,14 @@ function oe_translation_entity_access(EntityInterface $entity, $operation, Accou
     return AccessResult::neutral();
   }
 
-  $entity_type = $entity->getEntityTypeId();
-  $handler = \Drupal::entityTypeManager()->getHandler($entity_type, 'oe_translation');
-  $supported_translations = $handler->getSupportedTranslators();
-  if (!$supported_translations) {
+  /** @var \Drupal\oe_translation\TranslatorProvidersInterface $translator_providers */
+  $translator_providers = \Drupal::service('oe_translation.translator_providers');
+  if (!$translator_providers->hasTranslators($entity->getEntityType())) {
     return AccessResult::neutral();
   }
 
   // We do not want translations to be manually edited if they are supported
-  // by our TMGMT translators.
+  // by our translation system.
   if (!$entity->isDefaultTranslation()) {
     return AccessResult::forbidden()->addCacheableDependency($entity);
   }
