@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Entity;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the Translation request log entity.
@@ -42,16 +42,12 @@ class TranslationRequestLog extends ContentEntityBase implements TranslationRequ
   /**
    * {@inheritdoc}
    */
-  public function getMessage(): TranslatableMarkup {
+  public function getMessage() {
     $text = $this->message->value;
-    // @codingStandardsIgnoreStart
-    if ($this->variables->first() && $this->variables->first()->toArray()) {
-      return new TranslatableMarkup($text, $this->variables->first()->toArray());
+    if (!$this->variables->isEmpty()) {
+      return new FormattableMarkup($text, $this->variables->first()->toArray());
     }
-    else {
-      return new TranslatableMarkup($text);
-    }
-    // @codingStandardsIgnoreEnd
+    return $text;
   }
 
   /**
@@ -72,7 +68,20 @@ class TranslationRequestLog extends ContentEntityBase implements TranslationRequ
    * {@inheritdoc}
    */
   public function setType(string $type): TranslationRequestLogInterface {
+    if (!array_key_exists($type, TranslationRequestLog::getMessageTypes())) {
+      throw new \Exception("Message type '$type' is not defined.");
+    }
     return $this->set('type', $type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getMessageTypes(): array {
+    return [
+      TranslationRequestLogInterface::INFO => t('info'),
+      TranslationRequestLogInterface::ERROR => t('error'),
+    ];
   }
 
   /**
@@ -90,7 +99,7 @@ class TranslationRequestLog extends ContentEntityBase implements TranslationRequ
 
     $fields['type'] = BaseFieldDefinition::create('string')
       ->setLabel('Message type')
-      ->setDefaultValue(self::INFO);
+      ->setDefaultValue(static::INFO);
 
     $fields['variables'] = BaseFieldDefinition::create('map')
       ->setLabel(t('Variables'));

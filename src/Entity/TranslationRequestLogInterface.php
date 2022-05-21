@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Interface for the 'Translation request log' entity.
@@ -44,10 +43,10 @@ interface TranslationRequestLogInterface extends ContentEntityInterface {
   /**
    * Gets the translation request log message.
    *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   * @return \Drupal\Component\Render\FormattableMarkup|string
    *   The message.
    */
-  public function getMessage(): TranslatableMarkup;
+  public function getMessage();
 
   /**
    * Sets the translation request log message.
@@ -76,7 +75,18 @@ interface TranslationRequestLogInterface extends ContentEntityInterface {
    *
    * @return \Drupal\oe_translation\Entity\TranslationRequestLogInterface
    *   The called translation request log entity.
+   *
+   * @throws \Exception
+   *   Trying to set a type that doesn't exist will throw an exception.
    */
   public function setType(string $type): TranslationRequestLogInterface;
+
+  /**
+   * Retrieves a list of available message types.
+   *
+   * @return array
+   *   Array containing the message types.
+   */
+  public static function getMessageTypes(): array;
 
 }

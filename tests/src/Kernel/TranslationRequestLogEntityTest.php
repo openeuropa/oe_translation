@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
+
 /**
  * Tests the 'Translation request log' entity.
  */
@@ -31,13 +33,14 @@ class TranslationRequestLogEntityTest extends TranslationKernelTestBase {
         '@status' => 'Draft',
       ],
     ]);
-    $translation_request_log->save();
 
     // Assert default type value.
     $this->assertEquals('info', $translation_request_log->getType());
-    $translation_request_log->setType('error');
+    $translation_request_log->setType(TranslationRequestLogInterface::ERROR);
     $this->assertEquals('error', $translation_request_log->getType());
     $this->assertEquals('Draft: The translation request message.', $translation_request_log->getMessage());
+    $translation_request_log->setMessage('The translation request message.');
+    $this->assertEquals('The translation request message.', $translation_request_log->getMessage());
   }
 
 }
