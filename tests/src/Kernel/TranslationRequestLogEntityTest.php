@@ -22,7 +22,7 @@ class TranslationRequestLogEntityTest extends TranslationKernelTestBase {
    * Tests Translation Request entities.
    */
   public function testTranslationRequestLogEntity(): void {
-    // Create a translation request.
+    // Create a translation request log entity.
     $translation_request_log_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_log');
     /** @var \Drupal\oe_translation\Entity\TranslationRequestLogInterface $translation_request_log */
     $translation_request_log = $translation_request_log_storage->create([
