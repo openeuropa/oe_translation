@@ -24,7 +24,6 @@ class TranslationTestBase extends WebDriverTestBase {
   protected static $modules = [
     'system',
     'tmgmt',
-    'tmgmt_local',
     'tmgmt_content',
     'oe_multilingual',
     'node',

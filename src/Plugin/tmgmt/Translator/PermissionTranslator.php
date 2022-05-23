@@ -28,7 +28,6 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
-use Drupal\oe_translation\AlterableTranslatorInterface;
 use Drupal\oe_translation\LocalTranslatorInterface;
 use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\tmgmt\ContinuousTranslatorInterface;
@@ -59,7 +58,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PermissionTranslator extends TranslatorPluginBase implements ApplicableTranslatorInterface, ContinuousTranslatorInterface, AlterableTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface, ContainerFactoryPluginInterface, JobAccessTranslatorInterface {
+class PermissionTranslator extends TranslatorPluginBase implements ApplicableTranslatorInterface, ContinuousTranslatorInterface, RouteProvidingTranslatorInterface, LocalTranslatorInterface, ContainerFactoryPluginInterface, JobAccessTranslatorInterface {
 
   /**
    * The current user.

@@ -19,6 +19,8 @@ use Drupal\tmgmt\Entity\Job;
 
 /**
  * Context specific to TMGMT-based poetry translation.
+ *
+ * @deprecated
  */
 class PoetryTranslationContext extends RawDrupalContext {
 

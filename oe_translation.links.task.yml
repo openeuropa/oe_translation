@@ -24,3 +24,6 @@ entity.oe_translation_request_type.collection:
   title: List of Translation Request Types
   route_name: entity.oe_translation_request_type.collection
   base_route: entity.oe_translation_request_type.collection
+oe_translation.translation_tasks:
+  deriver: 'Drupal\oe_translation\Plugin\Derivative\TranslationLocalTasks'
+  weight: 100
