@@ -148,11 +148,19 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   public function setData(array $data): TranslationRequestInterface;
 
   /**
-   * Retrieves the Translation request log entity.
+   * Retrieves the Translation request log entities.
    *
-   * @return \Drupal\oe_translation\Entity\TranslationRequestLogInterface
-   *   The Translation request log entity.
+   * @return \Drupal\oe_translation\Entity\TranslationRequestLogInterface[]
+   *   Array of Translation request log entities.
    */
-  public function getLog(): TranslationRequestLogInterface;
+  public function getLogMessages(): array;
+
+  /**
+   * Adds a new log message.
+   *
+   * @param \Drupal\oe_translation\Entity\TranslationRequestLogInterface $log
+   *   The translations request log entity to be added.
+   */
+  public function addLogMessage(TranslationRequestLogInterface $log);
 
 }

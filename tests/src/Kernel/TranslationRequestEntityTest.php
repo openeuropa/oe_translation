@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\Tests\tmgmt\Functional\TmgmtTestTrait;
 
 /**
@@ -87,7 +88,7 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
         'es',
       ],
       'request_status' => 'draft',
-      'log' => $this->translationRequestLog->id(),
+      'logs' => [$this->translationRequestLog->id()],
     ];
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
     $translation_request = $translation_request_storage->create($values);
@@ -130,9 +131,19 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
     ];
     $translation_request->setData($data_for_translation);
     $this->assertEquals($data_for_translation, $translation_request->getData());
-    $log = $translation_request->getLog();
-    $this->assertEquals($this->translationRequestLog->getMessage(), $log->getMessage());
-    $this->assertEquals($this->translationRequestLog->getType(), $log->getType());
+    // Create a second translation request log entity.
+    $log_message = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_log')->create([
+      'message' => 'The second translation request message.',
+      'variables' => [],
+      'type' => TranslationRequestLogInterface::ERROR,
+    ]);
+    $log_message->save();
+    $translation_request->addLogMessage($log_message);
+    $logs = $translation_request->getLogMessages();
+    $this->assertEquals('Draft: The translation request message.', $logs[0]->getMessage());
+    $this->assertEquals('info', $logs[0]->getType());
+    $this->assertEquals('The second translation request message.', $logs[1]->getMessage());
+    $this->assertEquals('error', $logs[1]->getType());
   }
 
 }
