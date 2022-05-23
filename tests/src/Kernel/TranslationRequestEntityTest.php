@@ -4,45 +4,39 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\Tests\tmgmt\Functional\TmgmtTestTrait;
 
 /**
  * Tests the Translation Request entity.
  */
-class TranslationRequestEntityTest extends EntityKernelTestBase {
+class TranslationRequestEntityTest extends TranslationKernelTestBase {
 
   use TmgmtTestTrait;
+
+  /**
+   * A translation request job entity to be referenced.
+   *
+   * @var \Drupal\oe_translation\Entity\TranslationRequestLogInterface
+   */
+  protected $translationRequestLog;
 
   /**
    * {@inheritdoc}
    */
   public static $modules = [
     'options',
-    'language',
-    'tmgmt',
-    'content_translation',
-    'oe_translation',
-    'views',
-    'node',
   ];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
-    $this->installConfig([
-      'language',
-      'oe_translation',
-      'views',
-      'node',
-    ]);
-
-    $this->installEntitySchema('node');
     $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('oe_translation_request');
+    $this->installEntitySchema('oe_translation_request_log');
 
     // Create test bundle.
     $type_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_type');
@@ -67,13 +61,22 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
     // Create a new revision.
     $node->setNewRevision(TRUE);
     $node->save();
+
+    // Create a translation request log entity to be referenced.
+    $translation_request_log_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_log');
+    $this->translationRequestLog = $translation_request_log_storage->create([
+      'message' => '@status: The translation request message.',
+      'variables' => [
+        '@status' => 'Draft',
+      ],
+    ]);
+    $this->translationRequestLog->save();
   }
 
   /**
    * Tests Translation Request entities.
    */
   public function testTranslationRequestEntity(): void {
-    $date = new \DateTime('2020-05-08');
     // Create a translation request.
     $translation_request_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request');
     $values = [
@@ -85,6 +88,7 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
         'es',
       ],
       'request_status' => 'draft',
+      'logs' => [$this->translationRequestLog->id()],
     ];
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
     $translation_request = $translation_request_storage->create($values);
@@ -93,8 +97,6 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
     $translation_request->save();
 
     // Assert values are saved and retrieved properly from the entity.
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
-    $translation_request = $translation_request_storage->load($translation_request->id());
     $entity = $translation_request->getContentEntity();
     $this->assertEquals(1, $entity->id());
     $this->assertEquals(2, $entity->getRevisionId());
@@ -129,6 +131,19 @@ class TranslationRequestEntityTest extends EntityKernelTestBase {
     ];
     $translation_request->setData($data_for_translation);
     $this->assertEquals($data_for_translation, $translation_request->getData());
+    // Create a second translation request log entity.
+    $log_message = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_log')->create([
+      'message' => 'The second translation request message.',
+      'variables' => [],
+      'type' => TranslationRequestLogInterface::ERROR,
+    ]);
+    $log_message->save();
+    $translation_request->addLogMessage($log_message);
+    $logs = $translation_request->getLogMessages();
+    $this->assertEquals('Draft: The translation request message.', $logs[0]->getMessage());
+    $this->assertEquals('info', $logs[0]->getType());
+    $this->assertEquals('The second translation request message.', $logs[1]->getMessage());
+    $this->assertEquals('error', $logs[1]->getType());
   }
 
 }
