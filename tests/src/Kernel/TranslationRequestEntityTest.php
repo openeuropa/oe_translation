@@ -101,17 +101,12 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
     $this->assertEquals(1, $entity->id());
     $this->assertEquals(2, $entity->getRevisionId());
     $this->assertEquals('node', $entity->getEntityTypeId());
-    $this->assertEquals('Translation provider', $translation_request->getTranslationProvider());
     $this->assertEquals('en', $translation_request->getSourceLanguageCode());
     $this->assertEquals([
       'fr',
       'es',
     ], $translation_request->getTargetLanguageCodes());
     $this->assertEquals('draft', $translation_request->getRequestStatus());
-
-    // Update some entity values.
-    $translation_request->setTranslationProvider('New translation provider');
-    $this->assertEquals('New translation provider', $translation_request->getTranslationProvider());
 
     $translation_request->setSourceLanguageCode('ro');
     $this->assertEquals('ro', $translation_request->getSourceLanguageCode());

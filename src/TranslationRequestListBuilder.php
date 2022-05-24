@@ -92,7 +92,7 @@ class TranslationRequestListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $entity */
-    $row['id'] = $entity->link();
+    $row['id'] = $entity->toLink();
     $row['uid']['data'] = [
       '#theme' => 'username',
       '#account' => $entity->getOwner(),

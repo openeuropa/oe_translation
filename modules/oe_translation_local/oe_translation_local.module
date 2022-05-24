@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for oe_translation_local.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Breadcrumb\Breadcrumb;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function oe_translation_local_entity_type_alter(array &$entity_types) {
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type_id === 'oe_translation_request') {
+      /** @var \Drupal\Core\Entity\EntityTypeInterface $local_translation */
+      $local_translation = $entity_types[$entity_type_id];
+      $local_translation->setFormClass('local_translation', LocalTranslationRequestForm::class);
+      $local_translation->setLinkTemplate('local-translation', '/translation-request/{oe_translation_request}/translate-locally');
+    }
+  }
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function oe_translation_local_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context) {
+  if ($route_match->getRouteName() !== 'entity.oe_translation_request.local_translation') {
+    return;
+  }
+
+  $links = $breadcrumb->getLinks();
+  array_pop($links);
+  /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+  $translation_request = $route_match->getParameter('oe_translation_request');
+  $entity = $translation_request->getContentEntity();
+  $links[] = $entity->toLink();
+  $links[] = Link::fromTextAndUrl(t('Translate'), $entity->toUrl('drupal:content-translation-overview'));
+  $cache = CacheableMetadata::createFromObject($breadcrumb);
+  $breadcrumb = new Breadcrumb();
+  $breadcrumb->addCacheableDependency($cache);
+  $breadcrumb->setLinks($links);
+}

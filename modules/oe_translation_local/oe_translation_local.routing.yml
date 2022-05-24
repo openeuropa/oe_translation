@@ -1,0 +1,14 @@
+oe_translation_local.create_local_translation_request:
+  path: '/admin/oe_translation/translate-local/{entity_type}/{entity}/{source}/{target}'
+  defaults:
+    _controller: \Drupal\oe_translation_local\Controller\TranslationLocalController::createLocalTranslationRequest
+  requirements:
+    _custom_access: \Drupal\oe_translation_local\Controller\TranslationLocalController::createLocalTranslationRequestAccess
+  options:
+    parameters:
+      entity:
+        type: 'entity:{entity_type}'
+      source:
+        type: language
+      target:
+        type: language

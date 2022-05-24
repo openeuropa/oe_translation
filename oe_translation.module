@@ -8,22 +8,12 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\oe_translation\Access\JobAccessHandler;
-use Drupal\oe_translation\Entity\JobItem;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\ContentEntitySource;
 use Drupal\oe_translation\FieldProcessor\AddressFieldProcessor;
-use Drupal\oe_translation\LocalTranslatorInterface;
-use Drupal\oe_translation\OeTranslationHandler;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
 
@@ -39,38 +29,10 @@ function oe_translation_theme($existing, $type, $theme, $path) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() for the Local Task item edit form.
- */
-function oe_translation_form_tmgmt_local_task_item_edit_form_alter(&$form, FormStateInterface $form_state) {
-  /** @var \Drupal\tmgmt_local\LocalTaskItemInterface $task_item */
-  $task_item = $form_state->getBuildInfo()['callback_object']->getEntity();
-  $job = $task_item->getJobItem()->getJob();
-  try {
-    $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($job->getTranslator()->getPluginId());
-    if ($translator_plugin instanceof LocalTranslatorInterface) {
-      $translator_plugin->localTaskItemFormAlter($form, $form_state);
-    }
-  }
-  catch (PluginNotFoundException $exception) {
-    return;
-  }
-}
-
-/**
  * Implements hook_entity_type_alter().
  */
 function oe_translation_entity_type_alter(array &$entity_types) {
   foreach ($entity_types as $entity_type_id => $entity_type) {
-    // Change the Job Item class with our own override.
-    if ($entity_type_id === 'tmgmt_job_item') {
-      $entity_type->setClass(JobItem::class);
-    }
-
-    // Change the access handler with our own for the Job entity.
-    if ($entity_type_id === 'tmgmt_job') {
-      $entity_type->setHandlerClass('access', JobAccessHandler::class);
-    }
-
     // Set translator providers.
     if ($entity_type_id === 'node') {
       $translators = [
@@ -82,10 +44,6 @@ function oe_translation_entity_type_alter(array &$entity_types) {
       $entity_type->set('oe_translation_translators', $translators);
     }
 
-    // Add the OpenEuropa translation handler to all entity types.
-    // @deprecated handler.
-    $entity_type->setHandlerClass('oe_translation', OeTranslationHandler::class);
-
     // Change the moderation handler if set to our own override.
     if (!$entity_type->hasHandlerClass('moderation')) {
       continue;
@@ -96,55 +54,9 @@ function oe_translation_entity_type_alter(array &$entity_types) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_access() for the Local Task Item.
- */
-function oe_translation_tmgmt_local_task_item_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  $access = AccessResult::neutral();
-
-  /** @var \Drupal\tmgmt\TranslatorInterface[] $translators */
-  $translators = \Drupal::entityTypeManager()->getStorage('tmgmt_translator')->loadMultiple();
-  foreach ($translators as $translator) {
-    $plugin_id = $translator->getPluginId();
-    try {
-      $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($plugin_id);
-      if ($translator_plugin instanceof LocalTranslatorInterface) {
-        $access = $access->orIf($translator_plugin->localTaskItemAccess($entity, $operation, $account))->addCacheableDependency($translator);
-      }
-    }
-    catch (PluginNotFoundException $exception) {
-      continue;
-    }
-  }
-
-  return $access->addCacheableDependency(\Drupal::entityTypeManager()->getStorage('tmgmt_translator')->getEntityType()->getListCacheTags());
-}
-
-/**
- * Implements hook_system_breadcrumb_alter().
- */
-function oe_translation_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context) {
-  if ($route_match->getRouteName() !== 'entity.tmgmt_local_task_item.canonical') {
-    return;
-  }
-
-  /** @var \Drupal\tmgmt\TranslatorInterface[] $translators */
-  $translators = \Drupal::entityTypeManager()->getStorage('tmgmt_translator')->loadMultiple();
-  foreach ($translators as $translator) {
-    $plugin_id = $translator->getPluginId();
-    try {
-      $translator_plugin = \Drupal::service('plugin.manager.tmgmt.translator')->createInstance($plugin_id);
-      if ($translator_plugin instanceof LocalTranslatorInterface) {
-        $translator_plugin->localTaskItemBreadcrumbAlter($breadcrumb, $route_match, $context);
-      }
-    }
-    catch (PluginNotFoundException $exception) {
-      continue;
-    }
-  }
-}
-
-/**
  * Implements template_preprocess_node().
+ *
+ * @todo remove this (adapt) once we do the preview ticket.
  */
 function oe_translation_preprocess_node(&$variables) {
   // Ensure that on the TMGMT preview page, we treat the node as the full page
@@ -154,26 +66,6 @@ function oe_translation_preprocess_node(&$variables) {
   }
 
   $variables['page'] = TRUE;
-}
-
-/**
- * Implements hook_entity_base_field_info().
- */
-function oe_translation_entity_base_field_info(EntityTypeInterface $entity_type) {
-  if ($entity_type->id() === 'tmgmt_job_item') {
-    $fields = [];
-    // Add a field to the Job item to store the entity revision at the moment of
-    // creation.
-    $fields['item_rid'] = BaseFieldDefinition::create('integer')
-      ->setLabel(new TranslatableMarkup('Item revision ID'))
-      ->setSetting('unsigned', TRUE);
-    // Add a field to the Job item to store the entity bundle being translated.
-    // This is needed to be able to inspect field related info if the entity
-    // itself gets deleted.
-    $fields['item_bundle'] = BaseFieldDefinition::create('string')
-      ->setLabel(new TranslatableMarkup('Item bundle'));
-    return $fields;
-  }
 }
 
 /**
@@ -255,20 +147,15 @@ function oe_translation_field_info_alter(&$info) {
 function oe_translation_preprocess_local_translation_form_element_group(&$variables) {
   $element = $variables['element'];
 
-  $header_title = $element['#field_name'];
-
-  $variables['status_message_field'] = strtolower((string) $element['#parent_label'][0]);
-
   $table = [
     '#type' => 'table',
     '#attributes' => [
       'id' => $element['#ajaxid'],
-      'class' => [$element['#zebra']],
     ],
     '#header' => [
       [
-        'data' => $header_title,
-        'colspan' => 4,
+        'data' => implode(' / ', $element['#parent_label']),
+        'colspan' => 2,
       ],
     ],
     '#rows' => [],
@@ -277,16 +164,10 @@ function oe_translation_preprocess_local_translation_form_element_group(&$variab
   $rows = [];
   $rows[] = [
     [
-      'data' => $element['status'],
-    ],
-    [
       'data' => $element['source'],
     ],
     [
       'data' => $element['translation'],
-    ],
-    [
-      'data' => $element['actions'],
     ],
   ];
 
@@ -302,8 +183,6 @@ function oe_translation_tmgmt_source_plugin_info_alter(&$definitions) {
   if (isset($definitions['content'])) {
     // Override the plugin class with ours.
     $definitions['content']['class'] = ContentEntitySource::class;
-    // Set the service to be used for determining the entity translation info.
-    $definitions['content']['entity_translation_info'] = 'oe_translation.content_entity_source_translation_info';
   }
 }
 
@@ -320,6 +199,8 @@ function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $
 
 /**
  * Implements hook_block_view_BASE_BLOCK_ID_alter() for the Page Header block.
+ *
+ * @todo remove (adapt) once we implement the preview ticket.
  */
 function oe_translation_block_view_oe_theme_helper_page_header_alter(array &$build, $block) {
   $build['#pre_render'][] = function (array $build) {

@@ -8,7 +8,7 @@
     "require": {
         "php": ">=7.4",
         "drupal/core": "^9.2",
-        "drupal/tmgmt": "1.11",
+        "drupal/tmgmt": "^1.13",
         "jakeasmith/http_build_url": "^1.0"
     },
     "require-dev": {
@@ -38,7 +38,8 @@
     "_readme": [
         "Explicit requirement for egulias/email-validator due to https://www.drupal.org/project/drupal/issues/3061074#comment-14300579. It can be removed when Drupal core 9.2 support is droppped.",
         "Explicit lower version requirement of drupal/ctools due to Drupal core 9.2 compatibility.",
-        "Explicit requirement of drupal/token module due to PHP7.4 compatbility."
+        "Explicit requirement of drupal/token module due to PHP7.4 compatbility.",
+        "Patching TMGMT to ensure that when a new translation is saved onto the entity, it doesn't create a new revision"
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -83,7 +84,8 @@
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
             },
             "drupal/tmgmt": {
-                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2020-12-03/2942236-5.patch"
+                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2020-12-03/2942236-5.patch",
+                "no-new-revisions": "patches/tmgmt_no_new_revision.patch"
             }
         }
     },

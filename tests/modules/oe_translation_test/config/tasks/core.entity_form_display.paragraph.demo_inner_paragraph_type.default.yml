@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.demo_inner_paragraph_type.ott_inner_paragraph_field
+    - field.field.paragraph.demo_inner_paragraph_type.ott_inner_paragraphs
+    - paragraphs.paragraphs_type.demo_inner_paragraph_type
+id: paragraph.demo_inner_paragraph_type.default
+targetEntityType: paragraph
+bundle: demo_inner_paragraph_type
+mode: default
+content:
+  ott_inner_paragraph_field:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  ott_inner_paragraphs: true
+  status: true

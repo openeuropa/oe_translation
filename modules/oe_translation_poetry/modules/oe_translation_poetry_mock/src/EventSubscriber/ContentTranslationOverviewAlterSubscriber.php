@@ -10,7 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
-use Drupal\oe_translation\Event\ContentTranslationOverviewAlterEvent;
+use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\tmgmt\Entity\Job;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -63,17 +63,17 @@ class ContentTranslationOverviewAlterSubscriber implements EventSubscriberInterf
    */
   public static function getSubscribedEvents() {
     return [
-      ContentTranslationOverviewAlterEvent::NAME => 'alterOverview',
+      ContentTranslationDashboardAlterEvent::NAME => 'alterOverview',
     ];
   }
 
   /**
    * Alters the content translation overview.
    *
-   * @param \Drupal\oe_translation\Event\ContentTranslationOverviewAlterEvent $event
+   * @param \Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent $event
    *   The event.
    */
-  public function alterOverview(ContentTranslationOverviewAlterEvent $event): void {
+  public function alterOverview(ContentTranslationDashboardAlterEvent $event): void {
     $build = $event->getBuild();
     $route_match = $event->getRouteMatch();
     $entity = $route_match->getParameter($event->getEntityTypeId());

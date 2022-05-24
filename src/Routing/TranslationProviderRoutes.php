@@ -4,12 +4,14 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Routing;
 
-use Drupal\oe_translation\RouteProvidingTranslatorInterface;
+use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
 use Drupal\tmgmt\TranslatorManager;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Provider of routes defined by the translation provider plugins.
+ *
+ * @deprecated
  */
 class TranslationProviderRoutes {
 
@@ -41,7 +43,7 @@ class TranslationProviderRoutes {
     $definitions = $this->translatorManager->getDefinitions();
     foreach ($definitions as $plugin_id => $definition) {
       $plugin = $this->translatorManager->createInstance($plugin_id);
-      if (!$plugin instanceof RouteProvidingTranslatorInterface) {
+      if (!$plugin instanceof PoetryTranslator) {
         continue;
       }
 

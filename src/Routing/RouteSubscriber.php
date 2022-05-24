@@ -6,9 +6,7 @@ namespace Drupal\oe_translation\Routing;
 
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
-use Drupal\oe_translation\Controller\JobItemAbortController;
 use Drupal\oe_translation\TranslatorProvidersInterface;
-use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -75,29 +73,9 @@ class RouteSubscriber extends RouteSubscriberBase {
       if ($entity_type->hasLinkTemplate('drupal:content-translation-overview')) {
         $route_name = "entity.$entity_type_id.content_translation_overview";
         $route = $collection->get($route_name);
-        $route->setDefault('_controller', '\Drupal\oe_translation\Controller\ContentTranslationController::overview');
+        $route->setDefault('_controller', '\Drupal\oe_translation\Controller\ContentTranslationDashboardController::overview');
+        $route->setDefault('_title_callback', '\Drupal\oe_translation\Controller\ContentTranslationDashboardController::title');
         $collection->add($route_name, $route);
-      }
-    }
-
-    // Swap the TMGMT Job Item abort form handler to a controller.
-    // @deprecated
-    $route = $collection->get('entity.tmgmt_job_item.abort_form');
-    if ($route instanceof Route) {
-      $route->setDefaults(
-        [
-          '_controller' => JobItemAbortController::class . '::form',
-        ]
-      );
-    }
-
-    // Deny access to any user to the sources and cart route.
-    // @deprecated
-    $names = ['tmgmt.source_overview_default', 'tmgmt.cart'];
-    foreach ($names as $name) {
-      $route = $collection->get($name);
-      if ($route) {
-        $route->setRequirement('_access', 'FALSE');
       }
     }
   }

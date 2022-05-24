@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.demo_inner_paragraph_type.ott_inner_paragraph_field
+    - field.field.paragraph.demo_inner_paragraph_type.ott_inner_paragraphs
+    - paragraphs.paragraphs_type.demo_inner_paragraph_type
+  module:
+    - entity_reference_revisions
+id: paragraph.demo_inner_paragraph_type.default
+targetEntityType: paragraph
+bundle: demo_inner_paragraph_type
+mode: default
+content:
+  ott_inner_paragraph_field:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  ott_inner_paragraphs:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden: {  }
