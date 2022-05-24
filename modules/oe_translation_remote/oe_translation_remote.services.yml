@@ -1,0 +1,6 @@
+services:
+  oe_translation_remote.route_subscriber:
+    class: Drupal\oe_translation_remote\Routing\RouteSubscriber
+    arguments: [ '@oe_translation.translator_providers' ]
+    tags:
+      - { name: event_subscriber }

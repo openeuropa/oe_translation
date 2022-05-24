@@ -65,6 +65,7 @@ class TranslationTestBase extends BrowserTestBase {
     $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
     $permissions = $role->getPermissions();
     $permissions[] = 'administer menu';
+    $permissions[] = 'edit any page content';
     $user = $this->drupalCreateUser($permissions);
 
     $this->drupalLogin($user);
