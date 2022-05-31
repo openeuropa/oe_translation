@@ -1,0 +1,3 @@
+oe_translation_remote.translation_remote_tasks:
+  deriver: 'Drupal\oe_translation_remote\Plugin\Derivative\RemoteTranslationLocalTaskDeriver'
+  weight: 110
