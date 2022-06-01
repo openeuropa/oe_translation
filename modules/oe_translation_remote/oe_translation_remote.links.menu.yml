@@ -1,0 +1,6 @@
+entity.remote_translation_provider.collection:
+  title: 'Remote Translator Provider list'
+  route_name: entity.remote_translation_provider.collection
+  description: 'List Remote Translator Provider entities'
+  parent: system.admin_structure
+  weight: 99

@@ -1,0 +1,5 @@
+entity.remote_translation_provider.add_form:
+  route_name: 'entity.remote_translation_provider.add_form'
+  title: 'Add Remote Translator Provider'
+  appears_on:
+    - entity.remote_translation_provider.collection

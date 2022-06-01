@@ -1,0 +1,9 @@
+name: OpenEuropa Translation Remote Test
+description: Test module for OE Translation Remote.
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^9.2
+
+dependencies:
+  - oe_translation:oe_translation_remote

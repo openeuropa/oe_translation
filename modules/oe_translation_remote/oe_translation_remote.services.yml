@@ -4,3 +4,7 @@ services:
     arguments: [ '@oe_translation.translator_providers' ]
     tags:
       - { name: event_subscriber }
+
+  plugin.manager.oe_translation_remote.remote_translation_provider_manager:
+    class: Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager
+    parent: default_plugin_manager
