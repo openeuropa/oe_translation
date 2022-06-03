@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.workflow_paragraph.field_workflow_paragraph_text
+    - paragraphs.paragraphs_type.workflow_paragraph
+id: paragraph.workflow_paragraph.default
+targetEntityType: paragraph
+bundle: workflow_paragraph
+mode: default
+content:
+  field_workflow_paragraph_text:
+    weight: 0
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+hidden:
+  created: true
+  status: true

@@ -4,15 +4,14 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation;
 
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\oe_translation\Event\ContentEntitySourceEntityEvent;
-use Drupal\tmgmt\JobItemInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\oe_translation\Event\EntityRevisionEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Determines which revision of an entity the translation should go in.
  */
-class ContentEntitySourceTranslationInfo implements EntitySourceTranslationInfoInterface {
+class EntityRevisionInfo implements EntityRevisionInfoInterface {
 
   /**
    * The event dispatcher.
@@ -36,9 +35,10 @@ class ContentEntitySourceTranslationInfo implements EntitySourceTranslationInfoI
    *
    *  This is the entity revision the translation should be saved into.
    */
-  public function getEntityFromJobItem(JobItemInterface $jobItem): ?EntityInterface {
-    $event = new ContentEntitySourceEntityEvent($jobItem);
-    $this->eventDispatcher->dispatch(ContentEntitySourceEntityEvent::EVENT, $event);
+  public function getEntityRevision(ContentEntityInterface $entity, string $target_langcode): ContentEntityInterface {
+    // Throw an event to allow other modules to alter the entity revision.
+    $event = new EntityRevisionEvent($entity, $target_langcode);
+    $this->eventDispatcher->dispatch($event, EntityRevisionEvent::EVENT);
     return $event->getEntity();
   }
 

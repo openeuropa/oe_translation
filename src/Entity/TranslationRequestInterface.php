@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\user\EntityOwnerInterface;
@@ -159,5 +160,20 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    *   The operations links.
    */
   public function getOperationsLinks(): array;
+
+  /**
+   * Generates the operation link to create a new request.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which to generate the link.
+   * @param string $target_langcode
+   *   The target link.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   The cacheable metadata from the context.
+   *
+   * @return array
+   *   The link information.
+   */
+  public static function getCreateOperationLink(ContentEntityInterface $entity, string $target_langcode, CacheableMetadata $cache): array;
 
 }

@@ -6,7 +6,7 @@ namespace Drupal\oe_translation;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\tmgmt\JobItemInterface;
+use Drupal\tmgmt\Entity\JobItem;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource as OriginalContentEntitySource;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -16,11 +16,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ContentEntitySource extends OriginalContentEntitySource implements ContainerFactoryPluginInterface {
 
   /**
-   * The content entity source translation info service.
+   * The entity revision info service.
    *
-   * @var \Drupal\oe_translation\ContentEntitySourceTranslationInfo
+   * @var \Drupal\oe_translation\EntityRevisionInfoInterface
    */
-  protected $contentEntitySourceTranslationInfo;
+  protected $entityRevisionInfo;
 
   /**
    * ContentEntitySource constructor.
@@ -31,12 +31,12 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
    *   The plugin ID.
    * @param array $plugin_definition
    *   The plugin definition.
-   * @param \Drupal\oe_translation\ContentEntitySourceTranslationInfo $contentEntitySourceTranslationInfo
-   *   The content entity source translation info service.
+   * @param \Drupal\oe_translation\EntityRevisionInfoInterface $entityRevisionInfo
+   *   The entity revision info service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, ContentEntitySourceTranslationInfo $contentEntitySourceTranslationInfo) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityRevisionInfoInterface $entityRevisionInfo) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->contentEntitySourceTranslationInfo = $contentEntitySourceTranslationInfo;
+    $this->entityRevisionInfo = $entityRevisionInfo;
   }
 
   /**
@@ -47,7 +47,7 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('oe_translation.content_entity_source_translation_info')
+      $container->get('oe_translation.entity_revision_info')
     );
   }
 
@@ -66,18 +66,36 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
   }
 
   /**
-   * {@inheritdoc}
+   * Method used to delegate the saving of the data to the correct logic.
    *
-   * Overriding the way the entity is retrieved because we are not using job
-   * items and we expect the entity to be set on a fake job item entity.
+   * We want to avoid using job items as much as possible and pass directly the
+   * entity to save the data on.
+   *
+   * @param array $data
+   *   The data to save.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to save on.
+   * @param string $target_langcode
+   *   The target language.
+   *
+   * @return bool
+   *   Whether it was successful.
    */
-  protected function getEntity(JobItemInterface $job_item) {
-    if (isset($job_item->translatable_entity)) {
-      return $job_item->translatable_entity;
-    }
+  public function saveTranslationData(array $data, ContentEntityInterface $entity, string $target_langcode): bool {
+    // Fake a job item cause apparently TMGMT needs it for no reason.
+    $job_item = JobItem::create([]);
 
-    // @deprecated.
-    return $this->contentEntitySourceTranslationInfo->getEntityFromJobItem($job_item);
+    // Use the entity revision info service to resolve the correct revision
+    // onto which to save the translation.
+    $entity = $this->entityRevisionInfo->getEntityRevision($entity, $target_langcode);
+
+    try {
+      $this->doSaveTranslations($entity, $data, $target_langcode, $job_item);
+      return TRUE;
+    }
+    catch (\Exception $exception) {
+      return FALSE;
+    }
   }
 
 }

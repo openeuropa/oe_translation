@@ -1,0 +1,10 @@
+name: OpenEuropa Translation Corporate Workflow Test
+description: Test module for the OpenEuropa Translation Editorial Corporate Workflow
+package: Testing
+type: module
+core_version_requirement: ^9.2
+
+dependencies:
+  - oe_editorial_workflow_demo:oe_editorial_workflow_demo
+  - tmgmt:tmgmt
+  - paragraphs

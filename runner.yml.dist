@@ -21,7 +21,7 @@ drupal:
     # Enable the modules.
     - "./vendor/bin/drush en oe_multilingual -y"
     - "./vendor/bin/drush en oe_multilingual_demo -y"
-    - "./vendor/bin/drush en oe_translation oe_translation_poetry oe_translation_poetry_mock -y"
+    - "./vendor/bin/drush en oe_translation oe_translation_local -y"
     - "./vendor/bin/drush cr"
   settings:
     settings:

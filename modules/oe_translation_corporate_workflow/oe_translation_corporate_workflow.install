@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation Corporate Workflow install file.
+ */
+
+declare(strict_types = 1);
+
+/**
+ * Implements hook_install().
+ */
+function oe_translation_corporate_workflow_install($is_syncing) {
+  // If we are installing from config, we bail out.
+  if ($is_syncing) {
+    return;
+  }
+
+  // Make sure that the oe_translator role has the necessary permissions for
+  // content moderation.
+  $permissions = [
+    'use oe_corporate_workflow transition validated_to_published',
+    'view any unpublished content',
+    'view all revisions',
+    'view latest version',
+  ];
+  /** @var \Drupal\user\RoleInterface $oe_translator */
+  if ($oe_translator = \Drupal::entityTypeManager()->getStorage('user_role')->load('oe_translator')) {
+    foreach ($permissions as $permission) {
+      $oe_translator->grantPermission($permission);
+    }
+    $oe_translator->save();
+  }
+}

@@ -1,0 +1,34 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_workflow_paragraphs
+    - node.type.oe_workflow_demo
+    - paragraphs.paragraphs_type.workflow_paragraph
+  module:
+    - entity_reference_revisions
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: node.oe_workflow_demo.field_workflow_paragraphs
+field_name: field_workflow_paragraphs
+entity_type: node
+bundle: oe_workflow_demo
+label: 'Workflow paragraphs'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      workflow_paragraph: workflow_paragraph
+    target_bundles_drag_drop:
+      workflow_paragraph:
+        enabled: true
+        weight: 2
+field_type: entity_reference_revisions

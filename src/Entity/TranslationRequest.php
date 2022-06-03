@@ -229,6 +229,29 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
+  public static function getCreateOperationLink(ContentEntityInterface $entity, string $target_langcode, CacheableMetadata $cache): array {
+    $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+      'entity_type' => $entity->getEntityTypeId(),
+      'entity' => $entity->getRevisionId(),
+      'source' => $entity->getUntranslated()->language()->getId(),
+      'target' => $target_langcode,
+    ]);
+    $create_access = $url->access(NULL, TRUE);
+    $cache->addCacheableDependency($create_access);
+    $title = t('New translation');
+    if ($create_access->isAllowed()) {
+      return [
+        'title' => $title,
+        'url' => $url,
+      ];
+    }
+
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);

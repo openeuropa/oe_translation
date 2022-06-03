@@ -6,9 +6,14 @@ namespace Drupal\Tests\oe_translation\Traits;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\StorageInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\paragraphs\Entity\Paragraph;
+use Drupal\user\Entity\Role;
+use Drupal\user\UserInterface;
 
 /**
  * Generic trait for testing the translation system.
@@ -171,6 +176,72 @@ trait TranslationsTestTrait {
 
     $entity = $entity_storage->updateFromStorageRecord($entity, $config);
     $entity->save();
+  }
+
+  /**
+   * Creates a local translation request for a given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   * @param string $langcode
+   *   The target language.
+   *
+   * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
+   *   The translation request.
+   */
+  protected function createLocalTranslationRequest(ContentEntityInterface $entity, string $langcode): TranslationRequestInterface {
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $request */
+    $request = $this->entityTypeManager->getStorage('oe_translation_request')
+      ->create([
+        'bundle' => 'local',
+        'source_language_code' => $entity->getUntranslated()->language()->getId(),
+        'target_language_codes' => [$langcode],
+        'request_status' => 'draft',
+      ]);
+    $request->setContentEntity($entity);
+    $data = \Drupal::service('oe_translation.translation_source_manager')->extractData($entity->getUntranslated());
+    $request->setData($data);
+    $request->save();
+
+    return $request;
+  }
+
+  /**
+   * Sets up a user with the translator role that can also create content.
+   *
+   * @return \Drupal\user\UserInterface
+   *   The user.
+   */
+  protected function setUpTranslatorUser(): UserInterface {
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = Role::load('oe_translator');
+    $permissions = $role->getPermissions();
+    $permissions[] = 'administer menu';
+    $permissions[] = 'edit any page content';
+    return $this->drupalCreateUser($permissions);
+  }
+
+  /**
+   * Asserts the existing translations table.
+   *
+   * @param array $languages
+   *   The expected languages.
+   */
+  protected function assertDashboardExistingTranslations(array $languages): void {
+    $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
+    $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
+    $rows = $table->findAll('css', 'tbody tr');
+    foreach ($rows as $row) {
+      $cols = $row->findAll('css', 'td');
+      $hreflang = $row->getAttribute('hreflang');
+      $expected_info = $languages[$hreflang];
+      $language = ConfigurableLanguage::load($hreflang);
+      $this->assertEquals($language->getName(), $cols[0]->getText());
+      $this->assertNotNull($cols[1]->findLink($expected_info['title']));
+      if ($row->getAttribute('hreflang') === 'en') {
+        $this->assertEmpty($cols[2]->getText());
+      }
+    }
   }
 
 }

@@ -9,14 +9,11 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 
 /**
  * Tests the local translation system.
  */
 class LocalTranslationsTest extends TranslationTestBase {
-
-  use TranslationsTestTrait;
 
   /**
    * {@inheritdoc}
@@ -76,7 +73,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $menu_link_content->save();
     $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
       'entity_type' => 'menu_link_content',
-      'entity' => $menu_link_content->id(),
+      'entity' => $menu_link_content->getRevisionId(),
       'source' => 'en',
       'target' => 'fr',
     ]);
@@ -415,29 +412,6 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Assert that in this process, no new node revisions were created.
     $this->assertCount(2, $node_storage->revisionIds($node));
-  }
-
-  /**
-   * Asserts the existing translations table.
-   *
-   * @param array $languages
-   *   The expected languages.
-   */
-  protected function assertDashboardExistingTranslations(array $languages): void {
-    $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
-    $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
-    $rows = $table->findAll('css', 'tbody tr');
-    foreach ($rows as $row) {
-      $cols = $row->findAll('css', 'td');
-      $hreflang = $row->getAttribute('hreflang');
-      $expected_info = $languages[$hreflang];
-      $language = ConfigurableLanguage::load($hreflang);
-      $this->assertEquals($language->getName(), $cols[0]->getText());
-      $this->assertNotNull($cols[1]->findLink($expected_info['title']));
-      if ($row->getAttribute('hreflang') === 'en') {
-        $this->assertEmpty($cols[2]->getText());
-      }
-    }
   }
 
   /**

@@ -24,7 +24,7 @@
         "drupal/ctools": "^3.7",
         "drupal/drupal-extension": "^4.0",
         "drupal/metatag": "^1.16",
-        "drupal/paragraphs": "^1.11",
+        "drupal/paragraphs": "^1.13",
         "drupal/token": "^1.10",
         "drupaltest/behat-traits": "^0.3",
         "drush/drush": "^10.3",
@@ -32,6 +32,8 @@
         "openeuropa/behat-transformation-context": "^0.1",
         "openeuropa/code-review": "^2.0",
         "openeuropa/oe_multilingual": "^1.10",
+        "openeuropa/oe_editorial": "^1",
+        "drupal/entity_version": "^1.0-beta8",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta5",
         "phpspec/prophecy-phpunit": "^1 || ^2"
     },
@@ -62,7 +64,8 @@
     "autoload-dev": {
         "psr-4": {
             "Drupal\\Tests\\oe_translation\\": "./tests/src",
-            "Drupal\\Tests\\oe_translation_poetry\\": "./modules/oe_translation_poetry/tests/src"
+            "Drupal\\Tests\\oe_translation_poetry\\": "./modules/oe_translation_poetry/tests/src",
+            "Drupal\\Tests\\oe_translation_corporate_workflow\\": "./modules/oe_translation_corporate_workflow/tests/src"
         }
     },
     "extra": {

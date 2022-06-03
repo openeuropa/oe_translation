@@ -13,14 +13,6 @@ services:
   oe_translation.translation_provider_routes:
     class: Drupal\oe_translation\Routing\TranslationProviderRoutes
     arguments: ['@plugin.manager.tmgmt.translator']
-  oe_translation.content_entity_source_translation_info:
-    class: Drupal\oe_translation\ContentEntitySourceTranslationInfo
-    arguments: ['@event_dispatcher']
-  oe_translation.content_entity_source_entity_subscriber.default:
-    class: Drupal\oe_translation\EventSubscriber\DefaultContentEntitySourceEntitySubscriber
-    arguments: ['@entity_type.manager']
-    tags:
-      - { name: event_subscriber }
   oe_translation.route_access_checker:
     class: Drupal\oe_translation\Access\TranslationRouteAccess
     arguments: ['@entity_type.manager']
@@ -31,3 +23,6 @@ services:
     arguments: ['@current_route_match', '@entity_type.manager', '@language_manager', '@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
+  oe_translation.entity_revision_info:
+    class: Drupal\oe_translation\EntityRevisionInfo
+    arguments: ['@event_dispatcher']
