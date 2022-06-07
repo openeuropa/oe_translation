@@ -24,7 +24,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     },
  *   },
  *   admin_permission = "administer site configuration",
- *   config_prefix = "remote_translation",
+ *   config_prefix = "remote_translation_provider",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
@@ -39,7 +39,6 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   config_export = {
  *     "id",
  *     "label",
- *     "url",
  *     "plugin",
  *     "plugin_configuration"
  *   }
