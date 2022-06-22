@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.1](https://github.com/openeuropa/oe_translation/tree/0.18.1) (2022-06-22)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.18.0...0.18.1)
+
+**Merged pull requests:**
+
+- EWPP-0000: Remove conflict with oe\_editorial. [\#175](https://github.com/openeuropa/oe_translation/pull/175) ([hernani](https://github.com/hernani))
+
 ## [0.18.0](https://github.com/openeuropa/oe_translation/tree/0.18.0) (2022-06-21)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.17.1..0.18.0)
