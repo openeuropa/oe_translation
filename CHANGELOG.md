@@ -1,11 +1,21 @@
 # Changelog
 
-## [1.17.1](https://github.com/openeuropa/oe_translation/tree/1.17.1) (2022-04-11)
+## [0.18.0](https://github.com/openeuropa/oe_translation/tree/0.18.0) (2022-06-21)
 
-[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.17.0...1.17.1)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.17.1..0.18.0)
 
 **Merged pull requests:**
 
+- EWPP-2104: Handling concurrent unprocessed poetry jobs. [\#160](https://github.com/openeuropa/oe_translation/pull/160) ([upchuk](https://github.com/upchuk))
+- EWPP-2192: Fix dependency from composer patches. [\#161](https://github.com/openeuropa/oe_translation/pull/161) ([yenyasinn](https://github.com/yenyasinn))
+
+## [0.17.1](https://github.com/openeuropa/oe_translation/tree/0.17.1) (2022-04-11)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.17.0...0.17.1)
+
+**Merged pull requests:**
+
+- Prepare release 0.17.1. [\#159](https://github.com/openeuropa/oe_translation/pull/159) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-2076: Strip html tags for dummy test translations. [\#158](https://github.com/openeuropa/oe_translation/pull/158) ([22Alexandra](https://github.com/22Alexandra))
 
 ## [0.17.0](https://github.com/openeuropa/oe_translation/tree/0.17.0) (2022-02-07)
