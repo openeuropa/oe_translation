@@ -5,6 +5,8 @@
  * OpenEuropa Translation install file.
  */
 
+use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -56,4 +58,108 @@ function oe_translation_update_8002(&$sandbox) {
 
   \Drupal::entityDefinitionUpdateManager()
     ->installFieldStorageDefinition('item_bundle', 'tmgmt_job_item', 'oe_translation', $field);
+}
+
+/**
+ * Installs new entity types and modules.
+ */
+function oe_translation_update_9001(): void {
+  // Install the new entity types.
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $translation_request_entity_type = [
+    'id' => 'oe_translation_request',
+    'label' => new TranslatableMarkup('Translation Request'),
+    'label_collection' => new TranslatableMarkup('Translation Requests'),
+    'bundle_label' => new TranslatableMarkup('Translation Request type'),
+    'handlers' => [
+      'list_builder' => 'Drupal\oe_translation\TranslationRequestListBuilder',
+      'views_data' => 'Drupal\views\EntityViewsData',
+      'access' => 'Drupal\oe_translation\Access\TranslationRequestAccessControlHandler',
+      'form' => [
+        'default' => 'Drupal\oe_translation\Form\TranslationRequestForm',
+        'add' => 'Drupal\oe_translation\Form\TranslationRequestForm',
+        'edit' => 'Drupal\oe_translation\Form\TranslationRequestForm',
+        'delete' => 'Drupal\Core\Entity\ContentEntityDeleteForm',
+      ],
+      'route_provider' => [
+        'html' => 'Drupal\oe_translation\Routing\TranslationRequestRouteProvider',
+      ],
+    ],
+    'base_table' => 'oe_translation_request',
+    'admin_permission' => 'administer translation requests',
+    'entity_keys' => [
+      'id' => 'id',
+      'bundle' => 'bundle',
+      'label' => 'id',
+      'uuid' => 'uuid',
+      'created' => 'created',
+      'changed' => 'changed',
+      'published' => 'status',
+      'owner' => 'uid',
+    ],
+    'links' => [
+      'add-form' => '/translation-request/add/{oe_translation_request_type}',
+      'add-page' => '/translation-request/add',
+      'canonical' => '/translation-request/{oe_translation_request}',
+      'collection' => '/admin/content/translation-request',
+      'edit-form' => '/translation-request/{oe_translation_request}/edit',
+      'delete-form' => '/translation-request/{oe_translation_request}/delete',
+      'delete-multiple-form' => '/admin/content/translation-requests/delete',
+    ],
+    'bundle_entity_type' => 'oe_translation_request_type',
+    'field_ui_base_route' => 'entity.oe_translation_request_type.edit_form',
+  ];
+  $translation_request_log_entity_type = [
+    'id' => 'oe_translation_request_log',
+    'label' => new TranslatableMarkup('Translation request log'),
+    'base_table' => 'oe_translation_request_log',
+    'entity_keys' => [
+      'id' => 'id',
+      'label' => 'id',
+      'uuid' => 'uuid',
+    ],
+  ];
+  $translation_request_config_entity_type = [
+    'id' => 'oe_translation_request_type',
+    'label' => new TranslatableMarkup('Translation Request type'),
+    'handlers' => [
+      'form' => [
+        'add' => 'Drupal\oe_translation\Form\TranslationRequestTypeForm',
+        'edit' => 'Drupal\oe_translation\Form\TranslationRequestTypeForm',
+        'delete' => 'Drupal\Core\Entity\EntityDeleteForm',
+      ],
+      'list_builder' => 'Drupal\oe_translation\TranslationRequestTypeListBuilder',
+      'route_provider' => [
+        'html' => 'Drupal\Core\Entity\Routing\AdminHtmlRouteProvider',
+      ],
+    ],
+    'admin_permission' => 'administer translation request types',
+    'bundle_of' => 'oe_translation_request',
+    'config_prefix' => 'oe_translation_request_type',
+    'entity_keys' => [
+      'id' => 'id',
+      'label' => 'label',
+      'uuid' => 'uuid',
+    ],
+    'links' => [
+      'add-form' => '/admin/structure/oe_translation_request_types/add',
+      'edit-form' => '/admin/structure/oe_translation_request_types/manage/{oe_translation_request_type}',
+      'delete-form' => '/admin/structure/oe_translation_request_types/manage/{oe_translation_request_type}/delete',
+      'collection' => '/admin/structure/oe_translation_request_types',
+    ],
+    'config_export' => [
+      'id',
+      'label',
+      'uuid',
+    ],
+  ];
+  $update_manager->installEntityType(new ContentEntityType($translation_request_entity_type));
+  $update_manager->installEntityType(new ConfigEntityType($translation_request_config_entity_type));
+  $update_manager->installEntityType(new ContentEntityType($translation_request_log_entity_type));
+
+  // Install the new modules.
+  \Drupal::service('module_installer')->install([
+    'oe_translation_local',
+    'oe_translation_remote',
+  ]);
 }
