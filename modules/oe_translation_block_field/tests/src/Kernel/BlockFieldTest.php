@@ -24,6 +24,7 @@ class BlockFieldTest extends ContentEntityTestBase {
     'block',
     'block_field',
     'oe_translation_block_field',
+    'oe_translation',
   ];
 
   /**
@@ -83,28 +84,14 @@ class BlockFieldTest extends ContentEntityTestBase {
     ];
     $this->entityTest->save();
 
-    // Initialise a translation job.
-    $job = tmgmt_job_create('en', 'de');
-    $job->translator = 'test_translator';
-    $job->save();
-    $job_item = tmgmt_job_item_create('content', $this->entityTypeId, $this->entityTest->id(), ['tjid' => $job->id()]);
-    $job_item->save();
-
-    // Extract the translatable data from the job item using the content source.
-    $source_plugin = $this->container->get('plugin.manager.tmgmt.source')->createInstance('content');
-    $data = $source_plugin->getData($job_item);
+    /** @var \Drupal\oe_translation\TranslationSourceManagerInterface $manager */
+    $manager = \Drupal::service('oe_translation.translation_source_manager');
+    $data = $manager->extractData($this->entityTest);
     $this->assertEquals($data['field_block_field'][0]['settings__label']['#text'], 'Hello');
 
-    // Set the translation data onto the job item.
-    $data['field_block_field'][0]['settings__label']['#text'] = 'Hello DE';
-    $job_item->addTranslatedData($data);
-    $job_item->save();
-
-    // Accept the translation which saves the data onto the translation job
-    // item.
-    $this->assertTrue($job_item->acceptTranslation());
-    $data = $job_item->getData();
-    $this->assertEquals($data['field_block_field'][0]['settings__label']['#translation']['#text'], 'Hello DE');
+    // Save the translated data onto the entity.
+    $data['field_block_field'][0]['settings__label']['#translation']['#text'] = 'Hello DE';
+    $manager->saveData($data, $this->entityTest, 'de');
 
     // Check that the translation was saved correctly on the entity.
     $this->entityTest = $this->container->get('entity_type.manager')->getStorage($this->entityTypeId)->load($this->entityTest->id());

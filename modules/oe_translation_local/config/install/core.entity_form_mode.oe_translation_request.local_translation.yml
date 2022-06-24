@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation
+id: oe_translation_request.local_translation
+label: 'Local translation'
+targetEntityType: oe_translation_request
+cache: true

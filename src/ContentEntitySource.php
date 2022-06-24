@@ -68,10 +68,15 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
   /**
    * {@inheritdoc}
    *
-   * Overriding the way the the entity is retrieved to allow others to determine
-   * which revision of the entity to work with for displaying data and saving.
+   * Overriding the way the entity is retrieved because we are not using job
+   * items and we expect the entity to be set on a fake job item entity.
    */
   protected function getEntity(JobItemInterface $job_item) {
+    if (isset($job_item->translatable_entity)) {
+      return $job_item->translatable_entity;
+    }
+
+    // @deprecated.
     return $this->contentEntitySourceTranslationInfo->getEntityFromJobItem($job_item);
   }
 

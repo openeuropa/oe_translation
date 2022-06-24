@@ -26,10 +26,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
-use Drupal\oe_translation\ApplicableTranslatorInterface;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
-use Drupal\oe_translation\JobAccessTranslatorInterface;
-use Drupal\oe_translation\RouteProvidingTranslatorInterface;
 use Drupal\oe_translation_poetry\Event\PoetryRequestTypeEvent;
 use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
 use Drupal\oe_translation_poetry\Poetry;
@@ -59,7 +56,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class PoetryTranslator extends TranslatorPluginBase implements ApplicableTranslatorInterface, ContainerFactoryPluginInterface, RouteProvidingTranslatorInterface, JobAccessTranslatorInterface {
+class PoetryTranslator extends TranslatorPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * Status indicating that the translation is ongoing in Poetry.

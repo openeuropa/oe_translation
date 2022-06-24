@@ -1,0 +1,3 @@
+oe_translation_local.translation_tasks:
+  deriver: 'Drupal\oe_translation_local\Plugin\Derivative\LocalTranslationLocalTaskDeriver'
+  weight: 100

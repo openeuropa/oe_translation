@@ -4,16 +4,19 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Event;
 
+use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\EventDispatcher\Event;
 
 /**
- * Event for altering the access to translate content.
+ * Event for determining the access to translate content.
+ *
+ * Rules can differ on whether a given entity should be translatable so we allow
+ * modules to specify it.
  */
 class TranslationAccessEvent extends Event {
 
@@ -48,13 +51,6 @@ class TranslationAccessEvent extends Event {
   protected $account;
 
   /**
-   * The translator plugin ID.
-   *
-   * @var string
-   */
-  protected $plugin;
-
-  /**
    * The access result.
    *
    * @var \Drupal\Core\Access\AccessResultInterface
@@ -66,21 +62,21 @@ class TranslationAccessEvent extends Event {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being translated.
-   * @param string $plugin
-   *   The translator plugin ID.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The account.
-   * @param \Drupal\Core\Language\LanguageInterface $source
+   * @param \Drupal\Core\Access\AccessResultInterface $access
+   *   The existing access result.
+   * @param \Drupal\Core\Language\LanguageInterface|null $source
    *   The source language.
-   * @param \Drupal\Core\Language\LanguageInterface $target
+   * @param \Drupal\Core\Language\LanguageInterface|null $target
    *   The target language.
    */
-  public function __construct(ContentEntityInterface $entity, string $plugin, AccountInterface $account, LanguageInterface $source = NULL, LanguageInterface $target = NULL) {
+  public function __construct(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, LanguageInterface $source = NULL, LanguageInterface $target = NULL) {
     $this->entity = $entity;
-    $this->plugin = $plugin;
     $this->account = $account;
     $this->source = $source;
     $this->target = $target;
+    $this->access = $access;
   }
 
   /**
@@ -161,26 +157,6 @@ class TranslationAccessEvent extends Event {
    */
   public function setAccount(AccountInterface $account): void {
     $this->account = $account;
-  }
-
-  /**
-   * Returns the translator plugin ID.
-   *
-   * @return string
-   *   The translator plugin ID.
-   */
-  public function getPlugin(): string {
-    return $this->plugin;
-  }
-
-  /**
-   * Sets the translator plugin ID.
-   *
-   * @param string $plugin
-   *   The translator plugin ID.
-   */
-  public function setPlugin(string $plugin): void {
-    $this->plugin = $plugin;
   }
 
   /**

@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.oe_translation_request.local_translation
+    - oe_translation.oe_translation_request_type.local
+id: oe_translation_request.local.local_translation
+targetEntityType: oe_translation_request
+bundle: local
+mode: local_translation
+content: {  }
+hidden:
+  request_status: true

@@ -2,6 +2,9 @@ services:
   oe_translation.translator_providers:
     class: Drupal\oe_translation\TranslatorProviders
     arguments: ['@entity_type.manager']
+  oe_translation.translation_source_manager:
+    class: Drupal\oe_translation\TranslationSourceManager
+    arguments: ['@plugin.manager.tmgmt.source']
   oe_translation.route_subscriber:
     class: Drupal\oe_translation\Routing\RouteSubscriber
     arguments: ['@oe_translation.translator_providers']

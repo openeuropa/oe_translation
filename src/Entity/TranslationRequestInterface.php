@@ -15,6 +15,14 @@ use Drupal\Core\Entity\EntityChangedInterface;
 interface TranslationRequestInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface, EntityPublishedInterface {
 
   /**
+   * The statuses of a translation request.
+   */
+  const STATUS_DRAFT = 'draft';
+  const STATUS_REVIEW = 'review';
+  const STATUS_ACCEPTED = 'accepted';
+  const STATUS_SYNCHRONISED = 'synchronized';
+
+  /**
    * Gets the translation request creation timestamp.
    *
    * @return string
@@ -51,25 +59,6 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    *   The called translation request entity.
    */
   public function setContentEntity(ContentEntityInterface $entity): TranslationRequestInterface;
-
-  /**
-   * Gets the translation request provider.
-   *
-   * @return string
-   *   The translation provider.
-   */
-  public function getTranslationProvider(): string;
-
-  /**
-   * Sets the translation request provider.
-   *
-   * @param string $translation_provider
-   *   The translation provider.
-   *
-   * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
-   *   The called translation request entity.
-   */
-  public function setTranslationProvider(string $translation_provider): TranslationRequestInterface;
 
   /**
    * Gets the translation request source language code.
@@ -162,5 +151,13 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    *   The translations request log entity to be added.
    */
   public function addLogMessage(TranslationRequestLogInterface $log);
+
+  /**
+   * Creates an operations links for the entity.
+   *
+   * @return array
+   *   The operations links.
+   */
+  public function getOperationsLinks(): array;
 
 }

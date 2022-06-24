@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Entity;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
@@ -13,6 +14,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Url;
 use Drupal\user\EntityOwnerTrait;
 
 /**
@@ -27,6 +29,7 @@ use Drupal\user\EntityOwnerTrait;
  *     "list_builder" = "Drupal\oe_translation\TranslationRequestListBuilder",
  *     "views_data" = "Drupal\views\EntityViewsData",
  *     "access" = "Drupal\oe_translation\Access\TranslationRequestAccessControlHandler",
+ *     "storage" = "Drupal\oe_translation\TranslationRequestStorage",
  *     "form" = {
  *       "default" = "Drupal\oe_translation\Form\TranslationRequestForm",
  *       "add" = "Drupal\oe_translation\Form\TranslationRequestForm",
@@ -119,20 +122,6 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function getTranslationProvider(): string {
-    return $this->get('translation_provider')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setTranslationProvider(string $translation_provider): TranslationRequestInterface {
-    return $this->set('translation_provider', $translation_provider);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getSourceLanguageCode(): string {
     return $this->get('source_language_code')->value;
   }
@@ -203,6 +192,43 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
+  public function getOperationsLinks(): array {
+    $links = [
+      '#type' => 'operations',
+      '#links' => [],
+    ];
+    $cache = new CacheableMetadata();
+    $edit = $this->toUrl('local-translation');
+    $edit_access = $edit->access(NULL, TRUE);
+    $cache->addCacheableDependency($edit_access);
+    if ($edit_access->isAllowed()) {
+      $links['#links']['edit'] = [
+        'title' => t('Edit started translation request'),
+        'url' => $edit,
+      ];
+    }
+
+    $delete = $this->toUrl('delete-form');
+    $query = $delete->getOption('query');
+    $query['destination'] = Url::fromRoute('<current>')->toString();
+    $delete->setOption('query', $query);
+    $delete_access = $delete->access(NULL, TRUE);
+    $cache->addCacheableDependency($delete_access);
+    if ($delete_access->isAllowed()) {
+      $links['#links']['delete'] = [
+        'title' => t('Delete'),
+        'url' => $delete,
+      ];
+    }
+
+    $cache->applyTo($links);
+
+    return $links;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
@@ -211,10 +237,6 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
     $fields['content_entity'] = BaseFieldDefinition::create('oe_translation_entity_revision_type_item')
       ->setLabel(t('Content entity'))
       ->setDescription(t('The entity being translated.'));
-
-    $fields['translation_provider'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Translation provider'))
-      ->setDescription(t('The TMGMT translator plugin ID.'));
 
     $fields['source_language_code'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Source language'))
@@ -228,15 +250,16 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
     $fields['request_status'] = BaseFieldDefinition::create('list_string')
       ->setLabel('Request status')
       ->setSetting('allowed_values', [
-        'draft' => t('Draft'),
-        'review' => t('In review'),
-        'accepted' => t('Accepted'),
-        'synchronized' => t('Synchronized'),
+        TranslationRequestInterface::STATUS_DRAFT => t('Draft'),
+        TranslationRequestInterface::STATUS_REVIEW => t('In review'),
+        TranslationRequestInterface::STATUS_ACCEPTED => t('Accepted'),
+        TranslationRequestInterface::STATUS_SYNCHRONISED => t('Synchronized'),
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
       ])
-      ->setDefaultValue('draft');
+      ->setDefaultValue('draft')
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['data'] = BaseFieldDefinition::create('string_long')
       ->setLabel('Data')

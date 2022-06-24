@@ -1,0 +1,11 @@
+services:
+  oe_translation_local.route_subscriber:
+    class: Drupal\oe_translation_local\Routing\RouteSubscriber
+    arguments: ['@oe_translation.translator_providers']
+    tags:
+      - { name: event_subscriber }
+  oe_translation_local.event_subscriber.dashboard_alter:
+    class: Drupal\oe_translation_local\EventSubscriber\TranslationDashboardAlterSubscriber
+    arguments: ['@entity_type.manager', '@language_manager']
+    tags:
+      - { name: event_subscriber }

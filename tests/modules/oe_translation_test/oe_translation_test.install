@@ -7,7 +7,6 @@
 
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\paragraphs\Entity\ParagraphsType;
-use Drupal\tmgmt\Entity\Translator;
 
 /**
  * Implements hook_uninstall().
@@ -39,11 +38,5 @@ function oe_translation_test_uninstall() {
     if ($paragraph_type) {
       $paragraph_type->delete();
     }
-  }
-
-  // Delete the test translator.
-  $translator = Translator::load('oe_translation_test_translator');
-  if ($translator) {
-    $translator->delete();
   }
 }

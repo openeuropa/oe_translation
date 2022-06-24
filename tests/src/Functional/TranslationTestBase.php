@@ -34,6 +34,7 @@ class TranslationTestBase extends BrowserTestBase {
     'text',
     'options',
     'oe_translation',
+    'oe_translation_local',
     'oe_translation_test',
   ];
 
