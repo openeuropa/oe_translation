@@ -1,0 +1,22 @@
+oe_translation_remote.remote_translation_provider.*:
+  type: config_entity
+  label: 'Remote Translator Provider config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+    plugin:
+      type: string
+      label: 'Remote translation provider plugin'
+    plugin_configuration:
+      type: oe_translation_remote.remote_translation_provider.plugin.[%parent.plugin]
+      label: 'Remote translation provider plugin settings'
+
+oe_translation_remote.remote_translation_provider.plugin.*:
+  type: mapping
+  label: 'Plugin configuration'

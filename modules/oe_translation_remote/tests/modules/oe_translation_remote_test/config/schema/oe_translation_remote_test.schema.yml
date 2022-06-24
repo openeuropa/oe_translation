@@ -1,0 +1,7 @@
+oe_translation_remote.remote_translation_provider.plugin.remote_two:
+  type: mapping
+  label: Plugin configuration for the Remote Two plugin
+  mapping:
+    configuration_string:
+      type: string
+      label: Test configuration string
