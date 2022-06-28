@@ -55,13 +55,11 @@ function oe_translation_entity_type_alter(array &$entity_types) {
 
 /**
  * Implements template_preprocess_node().
- *
- * @todo remove this (adapt) once we do the preview ticket.
  */
 function oe_translation_preprocess_node(&$variables) {
   // Ensure that on the TMGMT preview page, we treat the node as the full page
   // display.
-  if (\Drupal::service('current_route_match')->getRouteName() !== 'tmgmt_content.job_item_preview') {
+  if (\Drupal::service('current_route_match')->getRouteName() !== 'entity.oe_translation_request.preview') {
     return;
   }
 
@@ -199,14 +197,12 @@ function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $
 
 /**
  * Implements hook_block_view_BASE_BLOCK_ID_alter() for the Page Header block.
- *
- * @todo remove (adapt) once we implement the preview ticket.
  */
 function oe_translation_block_view_oe_theme_helper_page_header_alter(array &$build, $block) {
   $build['#pre_render'][] = function (array $build) {
     // This block is shipped by OpenEuropa Theme and we use this to remove the
     // language switcher from the page header on the entity preview page.
-    if (\Drupal::service('current_route_match')->getRouteName() !== 'tmgmt_content.job_item_preview') {
+    if (\Drupal::service('current_route_match')->getRouteName() !== 'entity.oe_translation_request.preview') {
       return $build;
     }
 
