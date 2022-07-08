@@ -186,7 +186,7 @@ class TranslationLocalController extends ControllerBase {
         'bundle' => 'local',
         'source_language_code' => $source->getId(),
         'target_language_codes' => [$target->getId()],
-        'request_status' => 'review',
+        'request_status' => TranslationRequestInterface::STATUS_DRAFT,
       ]);
     $request->setContentEntity($entity);
 

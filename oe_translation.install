@@ -156,10 +156,4 @@ function oe_translation_update_9001(): void {
   $update_manager->installEntityType(new ContentEntityType($translation_request_entity_type));
   $update_manager->installEntityType(new ConfigEntityType($translation_request_config_entity_type));
   $update_manager->installEntityType(new ContentEntityType($translation_request_log_entity_type));
-
-  // Install the new modules.
-  \Drupal::service('module_installer')->install([
-    'oe_translation_local',
-    'oe_translation_remote',
-  ]);
 }

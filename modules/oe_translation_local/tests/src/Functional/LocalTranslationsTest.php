@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the local translation system.
@@ -61,6 +62,9 @@ class LocalTranslationsTest extends TranslationTestBase {
 
   /**
    * Tests the main local translation flow.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function testSingleTranslationFlow(): void {
     // Assert that the local translation creation URL is not accessible for
@@ -166,6 +170,35 @@ class LocalTranslationsTest extends TranslationTestBase {
       'translate' => TRUE,
     ];
 
+    // Assert that we have the 3 buttons because the oe_translator has all the
+    // permissions.
+    $this->assertSession()->buttonExists('Save as draft');
+    $this->assertSession()->buttonExists('Save and accept');
+    $this->assertSession()->buttonExists('Save and synchronise');
+
+    // Remove the "accept" permission and assert the button is missing.
+    $role = Role::load('oe_translator');
+    $role->revokePermission('accept translation request');
+    $role->save();
+    $this->getSession()->reload();
+    $this->assertSession()->buttonExists('Save as draft');
+    $this->assertSession()->buttonNotExists('Save and accept');
+    $this->assertSession()->buttonExists('Save and synchronise');
+    // Do the same for the sync permission.
+    $role->revokePermission('sync translation request');
+    $role->save();
+    $this->getSession()->reload();
+    $this->assertSession()->buttonExists('Save as draft');
+    $this->assertSession()->buttonNotExists('Save and accept');
+    $this->assertSession()->buttonNotExists('Save and synchronise');
+
+    // Add back the permissions.
+    $role->grantPermission('accept translation request');
+    $role->grantPermission('sync translation request');
+    $role->save();
+    $this->getSession()->reload();
+
+    // Translate each of the fields.
     foreach ($fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       if (!$table_header) {
@@ -185,11 +218,6 @@ class LocalTranslationsTest extends TranslationTestBase {
       }
     }
 
-    // Assert that we have the 3 buttons.
-    $this->assertSession()->buttonExists('Save as draft');
-    $this->assertSession()->buttonExists('Save and accept');
-    $this->assertSession()->buttonExists('Save and synchronise');
-
     // Save the translation as draft.
     $this->getSession()->getPage()->pressButton('Save as draft');
     $this->assertSession()->pageTextContains('The translation request has been saved.');
@@ -208,7 +236,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->clickLink('Dashboard');
     $expected_ongoing = [
       'langcode' => 'fr',
-      'status' => 'review',
+      'status' => 'draft',
       'title' => 'Full translation node',
       'title_url' => $node->toUrl()->toString(),
       'revision' => $node->getRevisionId(),
@@ -254,6 +282,29 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
 
+    // Each form element is disabled because while accepted, we should not
+    // edit.
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+      $this->assertEquals('disabled', $element->getAttribute('disabled'));
+    }
+
+    // Before syncing, save it again as draft to assert that the form elements
+    // become editable again.
+    $this->getSession()->getPage()->pressButton('Save as draft');
+    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
+    $this->clickLink('Edit started translation request');
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+      $this->assertNull($element->getAttribute('disabled'));
+    }
+
+    // Sync directly from draft state.
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation request has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
@@ -318,7 +369,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $revision = $node_storage->loadRevision($first_revision);
     $expected_ongoing = [
       'langcode' => 'fr',
-      'status' => 'review',
+      'status' => 'draft',
       'title' => 'Basic translation node',
       'title_url' => $revision->toUrl('revision')->toString(),
       // It is the initial revision ID.

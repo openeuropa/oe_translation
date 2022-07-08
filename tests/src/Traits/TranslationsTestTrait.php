@@ -215,10 +215,13 @@ trait TranslationsTestTrait {
   protected function setUpTranslatorUser(): UserInterface {
     /** @var \Drupal\user\RoleInterface $role */
     $role = Role::load('oe_translator');
-    $permissions = $role->getPermissions();
-    $permissions[] = 'administer menu';
-    $permissions[] = 'edit any page content';
-    return $this->drupalCreateUser($permissions);
+    $role->grantPermission('administer menu');
+    $role->grantPermission('edit any page content');
+    $role->save();
+    $user = $this->drupalCreateUser();
+    $user->addRole($role->id());
+    $user->save();
+    return $user;
   }
 
   /**
