@@ -11,6 +11,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequest;
@@ -283,7 +284,10 @@ class TranslationLocalController extends ControllerBase {
   public function translateLocalFormTitle(TranslationRequestInterface $oe_translation_request): array {
     $entity = $oe_translation_request->getContentEntity();
     return [
-      '#markup' => $this->t('Translate @title', ['@title' => $entity->label()]),
+      '#markup' => $this->t('Translate @title in @language', [
+        '@title' => $entity->label(),
+        '@language' => $this->getTargetLanguageFromRequest($oe_translation_request)->getName(),
+      ]),
     ];
   }
 
@@ -347,6 +351,21 @@ class TranslationLocalController extends ControllerBase {
     }
 
     return $links;
+  }
+
+  /**
+   * Returns the target language from the translation request.
+   *
+   * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request
+   *   The translation request.
+   *
+   * @return \Drupal\Core\Language\LanguageInterface
+   *   The target language.
+   */
+  protected function getTargetLanguageFromRequest(TranslationRequestInterface $translation_request): LanguageInterface {
+    $languages = $translation_request->getTargetLanguageCodes();
+    $language = reset($languages);
+    return $this->entityTypeManager->getStorage('configurable_language')->load($language);
   }
 
 }

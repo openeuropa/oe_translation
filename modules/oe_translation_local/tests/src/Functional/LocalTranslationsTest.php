@@ -103,6 +103,9 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
 
+    // Assert the title.
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate Full translation node in French');
+
     // Assert we have all the fields there.
     $fields = [];
     $fields['title'] = [

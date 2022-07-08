@@ -119,6 +119,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     ]);
     $form_display->save();
 
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'content']);
     $this->drupalPlaceBlock('local_tasks_block');
 
     $this->user = $this->setUpTranslatorUser();
@@ -245,6 +246,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in French (version 1.0.0)');
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');
 
     // Assert the created request is referencing the validated revision. At
@@ -265,6 +267,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
     $this->clickLink('Edit started translation request');
     $this->assertSession()->addressEquals('/translation-request/1/translate-locally');
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in French (version 1.0.0)');
     $values = [
       'Translation' => 'My node FR',
     ];
@@ -304,6 +307,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node 2 in French (version 2.0.0)');
 
     // The default translation value comes from the previous version
     // translation.
@@ -372,6 +376,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $create_link_published = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a');
     $this->assertEquals('New translation', $create_link_published->getText());
     $create_link_published->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node 2 in French (version 2.0.0)');
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node 2 FR');
     $values = [
       'Translation' => 'My node 2 FR (updated but no actual change cause we already have a translation)',
@@ -388,6 +393,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $create_link_validated = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="3.0.0"] a');
     $this->assertEquals('New translation', $create_link_validated->getText());
     $create_link_validated->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node 3 in French (version 3.0.0)');
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node 2 FR');
     $values = [
       'Translation' => 'My node 3 FR (brand new translation)',
@@ -405,7 +411,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $expected = [];
     $expected[] = [
       'French',
-      'review',
+      'draft',
       'My node 2',
       '10',
       'Yes',
@@ -415,7 +421,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     ];
     $expected[] = [
       'French',
-      'review',
+      'draft',
       'My node 3',
       '14',
       'No',
