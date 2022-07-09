@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_corporate_workflow\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
@@ -208,6 +209,86 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
     $this->assertSession()->pageTextContains('Your content has revisions that are ahead of the latest published version.');
     $this->assertSession()->pageTextContains('However, you are now translating the latest published version of your content: 1.0.0, titled My node.');
+  }
+
+  /**
+   * Tests that the translation dashboard shows the correct translations.
+   */
+  public function testTranslationDashboardExistingTranslations(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+
+    // Translate to FR in version 1.0.0.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in French (version 1.0.0)');
+    $values = [
+      'Translation' => 'My node FR',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Go to the dashboard and assert the table title has been changed.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
+
+    // Create a new draft and validate it.
+    $node = $node_storage->load($node->id());
+    $node->set('title', 'My node 2');
+    $node->set('moderation_state', 'draft');
+    $node->save();
+    $node = $this->moderateNode($node, 'validated');
+
+    // Go to the dashboard and assert our table now has columns indicating
+    // translation info for each version.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertExtendedDashboardExistingTranslations([
+      'en' => [
+        'published_title' => 'My node',
+        'validated_title' => 'My node 2',
+      ],
+      'fr' => [
+        'published_title' => 'My node FR',
+        'validated_title' => 'My node FR',
+      ],
+    ], ['1.0.0', '2.0.0']);
+
+    // Create a translation in IT for the published version.
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="it"] td[data-version="1.0.0"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in Italian (version 1.0.0)');
+    $values = [
+      'Translation' => 'My node IT',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Go back to the dashboard and assert our table got this new language.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertExtendedDashboardExistingTranslations([
+      'en' => [
+        'published_title' => 'My node',
+        'validated_title' => 'My node 2',
+      ],
+      'fr' => [
+        'published_title' => 'My node FR',
+        'validated_title' => 'My node FR',
+      ],
+      'it' => [
+        'published_title' => 'My node IT',
+        // Since we made the IT translation after the new version was created,
+        // we don't have any translations on the new version.
+        'validated_title' => 'N/A',
+      ],
+    ], ['1.0.0', '2.0.0']);
   }
 
   /**
@@ -678,6 +759,50 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $paragraph_translation = $paragraph->getTranslation('fr');
     $this->assertEquals('the paragraph text value - updated', $paragraph->get('field_workflow_paragraph_text')->value);
     $this->assertEquals('the paragraph text value FR 2', $paragraph_translation->get('field_workflow_paragraph_text')->value);
+  }
+
+  /**
+   * Asserts the existing translations table.
+   *
+   * @param array $languages
+   *   The expected languages.
+   * @param array $versions
+   *   The expected versions.
+   */
+  protected function assertExtendedDashboardExistingTranslations(array $languages, array $versions): void {
+    $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
+    $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
+    $header = $table->findAll('css', 'thead th');
+    $this->assertEquals('Language', $header[0]->getText());
+    $this->assertEquals('Title ' . $versions[0], $header[1]->getText());
+    $this->assertEquals('Title ' . $versions[1], $header[2]->getText());
+    $this->assertEquals('Operations ' . $versions[0], $header[3]->getText());
+
+    $rows = $table->findAll('css', 'tbody tr');
+    foreach ($rows as $row) {
+      $cols = $row->findAll('css', 'td');
+      $hreflang = $row->getAttribute('hreflang');
+      $expected_info = $languages[$hreflang];
+      $language = ConfigurableLanguage::load($hreflang);
+      $this->assertEquals($language->getName(), $cols[0]->getText());
+      if ($expected_info['published_title'] === 'N/A') {
+        $this->assertEquals('N/A', $cols[1]->getText());
+      }
+      else {
+        $this->assertNotNull($cols[1]->findLink($expected_info['published_title']));
+      }
+
+      if ($expected_info['validated_title'] === 'N/A') {
+        $this->assertEquals('N/A', $cols[2]->getText());
+      }
+      else {
+        $this->assertNotNull($cols[2]->findLink($expected_info['validated_title']));
+      }
+
+      if ($row->getAttribute('hreflang') === 'en') {
+        $this->assertEmpty($cols[3]->getText());
+      }
+    }
   }
 
 }

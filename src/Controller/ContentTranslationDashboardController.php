@@ -70,11 +70,16 @@ class ContentTranslationDashboardController extends ControllerBase {
     $element = &$build['existing_translations'];
     $element['title'] = [
       '#type' => 'inline_template',
-      '#template' => "<h3>{{ 'Existing translations for the latest default revision' }}</h3>",
+      '#template' => "<h3>{{ 'Existing translations for the latest default revision'|t }}</h3>",
     ];
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $route_match->getParameter($entity_type_id);
+
+    // By default, content translation loads the latest revision but we want
+    // here to show the translations available on the latest default revision.
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->load($entity->id());
+
     $cache->addCacheableDependency($entity);
 
     $translation_languages = $entity->getTranslationLanguages();

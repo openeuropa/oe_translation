@@ -12,6 +12,9 @@ use Drupal\Core\Routing\RouteMatchInterface;
  */
 class ContentTranslationDashboardAlterEvent extends Event {
 
+  /**
+   * The event name.
+   */
   const NAME = 'oe_translation.content_translation_dashboard_alter';
 
   /**
