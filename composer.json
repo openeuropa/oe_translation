@@ -20,7 +20,7 @@
         "drupal/config_devel": "^1.2",
         "drupal/core-composer-scaffold": "^9.3",
         "drupal/core-dev": "^9.3",
-        "drupal/ctools": "^3.7",
+        "drupal/ctools": "3.9.0",
         "drupal/drupal-extension": "^4.0",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.11",
