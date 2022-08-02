@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.19.0](https://github.com/openeuropa/oe_translation/tree/0.19.0) (2022-07-29)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.18.1...0.19.0)
+
+**Merged pull requests:**
+
+- EWPP: Fix ctools version. [\#179](https://github.com/openeuropa/oe_translation/pull/179) ([imanoleguskiza](https://github.com/imanoleguskiza))
+- EWPP-2358: Drupal 9.4 support. [\#174](https://github.com/openeuropa/oe_translation/pull/174) ([yenyasinn](https://github.com/yenyasinn))
+
 ## [0.18.1](https://github.com/openeuropa/oe_translation/tree/0.18.1) (2022-06-22)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.18.0...0.18.1)
 
