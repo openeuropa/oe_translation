@@ -48,6 +48,13 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
       $entity->set('status', $source->get('status')->value);
     }
 
+    // We need to do the same for the moderation state.
+    $translation_state = $entity->get('moderation_state')->value;
+    $untranslated_state = $entity->getUntranslated()->get('moderation_state')->value;
+    if ($translation_state !== $entity->getUntranslated()->get('moderation_state')->value) {
+      $entity->set('moderation_state', $untranslated_state);
+    }
+
     return;
   }
 
@@ -60,9 +67,6 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
       $translation->set('status', $entity->get('status')->value);
     }
   }
-
-  // @todo When introducing the "un-synced" translations, we need to apply
-  // a check to determine whether the entity status stays synced.
 }
 
 /**

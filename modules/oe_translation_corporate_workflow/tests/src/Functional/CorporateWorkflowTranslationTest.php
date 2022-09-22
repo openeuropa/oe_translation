@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_corporate_workflow\Functional;
 
+use Drupal\content_moderation\Entity\ContentModerationState;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -759,6 +761,84 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $paragraph_translation = $paragraph->getTranslation('fr');
     $this->assertEquals('the paragraph text value - updated', $paragraph->get('field_workflow_paragraph_text')->value);
     $this->assertEquals('the paragraph text value FR 2', $paragraph_translation->get('field_workflow_paragraph_text')->value);
+  }
+
+  /**
+   * Tests that moderation state translations are kept in sync with original.
+   */
+  public function testModerationStateSync(): void {
+    // Create a validated node and add a translation.
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'validated');
+    $request = $this->createLocalTranslationRequest($node, 'fr');
+    $this->drupalGet($request->toUrl('local-translation'));
+    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');
+    $values = [
+      'Translation' => 'My node FR',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Assert that the node has two translations and the moderation state entity
+    // also has two translations.
+    $node_storage->resetCache();
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->load($node->id());
+    $this->assertCount(2, $node->getTranslationLanguages());
+    $moderation_state = ContentModerationState::loadFromModeratedEntity($node);
+    $this->assertCount(2, $moderation_state->getTranslationLanguages());
+
+    // Assert that both the node and moderation state translations are
+    // "validated".
+    $assert_translation_state = function (ContentEntityInterface $entity, $state) {
+      foreach ($entity->getTranslationLanguages() as $language) {
+        $translation = $entity->getTranslation($language->getId());
+        $this->assertEquals($state, $translation->get('moderation_state')->value, sprintf('The %s language has the %s state', $language->getName(), $state));
+      }
+    };
+    $assert_translation_state($node, 'validated');
+    $assert_translation_state($moderation_state, 'validated');
+
+    // "Break" the system by deleting the moderation state entity translation.
+    $moderation_state->removeTranslation('fr');
+    ContentModerationState::updateOrCreateFromEntity($moderation_state);
+
+    // Now only the original will be validated, and the translation of the node
+    // becomes "draft" because it no longer is translated. This situation
+    // should not really occur, but if it does, it can break new translations
+    // which when being saved onto the node, cause the moderation state of
+    // the original to be set to draft instead of keeping it on validated.
+    $node_storage->resetCache();
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->load($node->id());
+    $this->assertEquals('validated', $node->get('moderation_state')->value);
+    $this->assertEquals('draft', $node->getTranslation('fr')->get('moderation_state')->value);
+
+    // Create a new translation.
+    $request = $this->createLocalTranslationRequest($node, 'fr');
+    $this->drupalGet($request->toUrl('local-translation'));
+    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');
+    $values = [
+      'Translation' => 'My node FR 2',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Assert the node is still in validated state and the content moderation
+    // state entity got its translation back.
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    $assert_translation_state($node, 'validated');
+    $moderation_state = ContentModerationState::loadFromModeratedEntity($node);
+    $this->assertCount(2, $moderation_state->getTranslationLanguages());
+    $assert_translation_state($moderation_state, 'validated');
   }
 
   /**
