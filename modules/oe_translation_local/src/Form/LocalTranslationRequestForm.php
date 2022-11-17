@@ -246,6 +246,15 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#value' => $this->t('Save and synchronise'),
     ];
 
+    $actions['preview'] = [
+      '#type' => 'submit',
+      '#button_type' => 'secondary',
+      // We need to save the values into the translation before redirecting to
+      // the preview page so we have something to preview.
+      '#submit' => ['::submitForm', '::save', '::preview'],
+      '#value' => $this->t('Preview'),
+    ];
+
     if (!$this->entity->isNew() && $this->entity->hasLinkTemplate('delete-form')) {
       $route_info = $this->entity->toUrl('delete-form');
       $query = $route_info->getOption('query');
@@ -349,6 +358,21 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     }
 
     $this->messenger()->addError($this->t('There was a problem synchronising the translation.'));
+  }
+
+  /**
+   * Redirects the user to the preview path of the translation request.
+   */
+  public function preview(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    $translation_request = $this->entity;
+
+    // For local translations, we only have 1 language.
+    $languages = $translation_request->getTargetLanguageCodes();
+    $language = reset($languages);
+    $url = $translation_request->toUrl('preview');
+    $url->setRouteParameter('language', $language);
+    $form_state->setRedirectUrl($url);
   }
 
   /**
