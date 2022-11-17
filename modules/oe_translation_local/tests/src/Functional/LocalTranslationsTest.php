@@ -64,6 +64,9 @@ class LocalTranslationsTest extends TranslationTestBase {
 
   /**
    * Tests the main local translation flow.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function testSingleTranslationFlow(): void {
     // Assert that the local translation creation URL is not accessible for
@@ -188,10 +191,11 @@ class LocalTranslationsTest extends TranslationTestBase {
       }
     }
 
-    // Assert that we have the 3 buttons.
+    // Assert that we have the 4 buttons.
     $this->assertSession()->buttonExists('Save as draft');
     $this->assertSession()->buttonExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
+    $this->assertSession()->buttonExists('Preview');
 
     // Save the translation as draft.
     $this->getSession()->getPage()->pressButton('Save as draft');
@@ -287,6 +291,29 @@ class LocalTranslationsTest extends TranslationTestBase {
       }
     }
 
+    // Assert that we can preview a translation request.
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+
+    // Add a spanish translation to be previewed.
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="es"] a')->click();
+    foreach ($fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+      $this->assertEquals($data['value'], $element->getText());
+      // Set a translation value.
+      if (isset($data['translate'])) {
+        $element->setValue($data['value'] . ' ES');
+      }
+    }
+    // Preview translation.
+    $this->getSession()->getPage()->pressButton('Preview');
+    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->addressEquals('/translation-request/2/preview/es');
+    $this->assertSession()->pageTextContains('Full translation node ES');
+    $this->assertSession()->pageTextContains('Referenced node ES');
   }
 
   /**

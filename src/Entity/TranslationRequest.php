@@ -60,6 +60,7 @@ use Drupal\user\EntityOwnerTrait;
  *     "edit-form" = "/translation-request/{oe_translation_request}/edit",
  *     "delete-form" = "/translation-request/{oe_translation_request}/delete",
  *     "delete-multiple-form" = "/admin/content/translation-requests/delete",
+ *     "preview" = "/translation-request/{oe_translation_request}/preview/{language}",
  *   },
  *   bundle_entity_type = "oe_translation_request_type",
  *   field_ui_base_route = "entity.oe_translation_request_type.edit_form"
