@@ -1,0 +1,8 @@
+send translation requests:
+  title: 'Send requests to translation provider'
+review translations:
+  title: 'Review translations'
+sync translations:
+  title: 'Sync translations'
+create translation requests:
+  title: 'Create translation requests'
