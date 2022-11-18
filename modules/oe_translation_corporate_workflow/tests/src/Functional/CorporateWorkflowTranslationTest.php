@@ -227,6 +227,16 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'moderation_state' => 'draft',
     ]);
     $node->save();
+    $node = $this->moderateNode($node, 'validated');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
+    // Assert that before we have a published version AND a validated one,
+    // the table looks normal.
+    $this->assertDashboardExistingTranslations([
+      'en' => ['title' => 'My node'],
+    ]);
+
+    // Publish the node.
     $node = $this->moderateNode($node, 'published');
 
     // Translate to FR in version 1.0.0.

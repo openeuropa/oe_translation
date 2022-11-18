@@ -364,7 +364,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     // Preview translation.
     $this->getSession()->getPage()->pressButton('Preview');
     $this->assertSession()->pageTextContains('The translation request has been saved.');
-    $this->assertSession()->addressEquals('/translation-request/2/preview/es');
+    $this->assertSession()->addressEquals('/es/translation-request/2/preview/es');
     $this->assertSession()->pageTextContains('Full translation node ES');
     $this->assertSession()->pageTextContains('Referenced node ES');
   }

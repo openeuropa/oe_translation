@@ -26,3 +26,6 @@ services:
   oe_translation.entity_revision_info:
     class: Drupal\oe_translation\EntityRevisionInfo
     arguments: ['@event_dispatcher']
+  oe_translation.translation_request_operations_provider:
+    class: Drupal\oe_translation\TranslationRequestOperationsProvider
+    arguments: ['@event_dispatcher']

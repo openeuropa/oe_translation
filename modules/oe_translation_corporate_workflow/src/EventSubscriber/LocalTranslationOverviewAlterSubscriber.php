@@ -10,11 +10,11 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_local\Event\TranslationLocalControllerAlterEvent;
+use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -181,7 +181,7 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
           'data-version' => $validated_version,
         ];
         // If we don't have existing requests, we just add a create link.
-        $link = TranslationRequest::getCreateOperationLink($validated, $langcode, $cache);
+        $link = LocalTranslationRequestForm::getCreateOperationLink($validated, $langcode, $cache);
         if ($link) {
           $column['data']['#links']['create'] = $link;
         }
@@ -196,7 +196,6 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
       $translation_request = reset($existing_requests);
       $links = $translation_request->getOperationsLinks();
       $cache->addCacheableDependency(CacheableMetadata::createFromRenderArray($links));
-      $links['#links']['edit']['title'] = $this->t('Edit started translation request');
       $row['data'][] = [
         'data' => $links,
         'data-version' => $validated_version,
@@ -226,6 +225,10 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
     $state = $entity->get('moderation_state')->value;
     if ($state !== 'published') {
       // We bail out if we are not even on a published version.
+      return;
+    }
+
+    if (!$entity->hasField('version') || $entity->get('version')->isEmpty()) {
       return;
     }
 
@@ -271,7 +274,6 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
       // revision.
       $translation_request = reset($existing_requests);
       $links = $translation_request->getOperationsLinks();
-      $links['#links']['edit']['title'] = $this->t('Edit started translation request');
       $row['data'][1]['data'] = $links;
     }
   }

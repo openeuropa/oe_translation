@@ -143,8 +143,15 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing translations'|t }}</h3>";
 
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+    if ($entity->get('moderation_state')->value !== 'published') {
+      // If we don't yet have a published version, we bail out as we don't
+      // need to do anything.
+      return;
+    }
 
+    // Load the default version.
     $published_version = $this->getEntityVersion($entity);
+
     // Load the latest entity version and see if it's validated.
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value !== 'validated') {

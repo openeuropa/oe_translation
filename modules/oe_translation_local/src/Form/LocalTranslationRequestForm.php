@@ -7,6 +7,8 @@ namespace Drupal\oe_translation_local\Form;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -117,6 +119,39 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     }
 
     return $form;
+  }
+
+  /**
+   * Generates the operation link to create a new request.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which to generate the link.
+   * @param string $target_langcode
+   *   The target link.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   The cacheable metadata from the context.
+   *
+   * @return array
+   *   The link information.
+   */
+  public static function getCreateOperationLink(ContentEntityInterface $entity, string $target_langcode, CacheableMetadata $cache): array {
+    $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+      'entity_type' => $entity->getEntityTypeId(),
+      'entity' => $entity->getRevisionId(),
+      'source' => $entity->getUntranslated()->language()->getId(),
+      'target' => $target_langcode,
+    ]);
+    $create_access = $url->access(NULL, TRUE);
+    $cache->addCacheableDependency($create_access);
+    $title = t('New translation');
+    if ($create_access->isAllowed()) {
+      return [
+        'title' => $title,
+        'url' => $url,
+      ];
+    }
+
+    return [];
   }
 
   /**
@@ -372,6 +407,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     $language = reset($languages);
     $url = $translation_request->toUrl('preview');
     $url->setRouteParameter('language', $language);
+    $url->setOption('language', $this->entityTypeManager->getStorage('configurable_language')->load($language));
     $form_state->setRedirectUrl($url);
   }
 

@@ -14,12 +14,12 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\oe_translation_local\Event\TranslationLocalControllerAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation\TranslatorProvidersInterface;
+use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -333,7 +333,6 @@ class TranslationLocalController extends ControllerBase {
       // operations links for the entity.
       $translation_request = reset($translation_requests);
       $links = $translation_request->getOperationsLinks();
-      $links['#links']['edit']['title'] = $this->t('Edit started translation request');
     }
     else {
       $links = [
@@ -343,7 +342,7 @@ class TranslationLocalController extends ControllerBase {
       // If there are no translations requests already for this language, we
       // can add a link to start one.
       $cache = new CacheableMetadata();
-      $link = TranslationRequest::getCreateOperationLink($entity, $langcode, $cache);
+      $link = LocalTranslationRequestForm::getCreateOperationLink($entity, $langcode, $cache);
       $cache->applyTo($links);
       if ($link) {
         $links['#links']['create'] = $link;
