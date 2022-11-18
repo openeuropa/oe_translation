@@ -46,4 +46,14 @@ class TranslationRequestRouteProvider extends AdminHtmlRouteProvider {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function getCanonicalRoute(EntityTypeInterface $entity_type) {
+    $route = parent::getCanonicalRoute($entity_type);
+    // Make the canonical route an admin one.
+    $route->setOption('_admin_route', TRUE);
+    return $route;
+  }
+
 }

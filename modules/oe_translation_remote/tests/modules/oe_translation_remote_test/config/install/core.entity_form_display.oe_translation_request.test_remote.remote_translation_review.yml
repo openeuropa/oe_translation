@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.oe_translation_request.remote_translation_review
+    - field.field.oe_translation_request.test_remote.request_status
+    - field.field.oe_translation_request.test_remote.target_languages
+    - field.field.oe_translation_request.test_remote.translated_data
+    - field.field.oe_translation_request.test_remote.translator_provider
+    - oe_translation.oe_translation_request_type.test_remote
+id: oe_translation_request.test_remote.remote_translation_review
+targetEntityType: oe_translation_request
+bundle: test_remote
+mode: remote_translation_review
+content: {  }
+hidden:
+  request_status: true
+  target_languages: true
+  translated_data: true
+  translator_provider: true

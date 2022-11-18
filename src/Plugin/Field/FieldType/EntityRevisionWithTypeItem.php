@@ -14,7 +14,7 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "oe_translation_entity_revision_type_item",
  *   label = @Translation("Entity revision with type"),
- *   category = @Translation("OpenEuropa"),
+ *   category = @Translation("OE Translation"),
  *   default_formatter = "oe_translation_entity_revision_type_formatter",
  *   default_widget = "oe_translation_entity_revision_type_widget",
  *   list_class = "Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList",

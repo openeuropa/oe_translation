@@ -1,0 +1,10 @@
+oe_translation_remote_test.mock_translate_request:
+  path: '/oe-translation-remote-test/mock-translate-request/{oe_translation_request}/{langcode}'
+  defaults:
+    _controller: '\Drupal\oe_translation_remote_test\Controller\RemoteTranslationTestController::translateRequest'
+  requirements:
+    _permission: 'translate any entity'
+  options:
+    parameters:
+      oe_translation_request:
+        type: entity:oe_translation_request

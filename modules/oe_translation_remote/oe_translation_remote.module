@@ -1,0 +1,205 @@
+<?php
+
+/**
+ * @file
+ * OE Translation remote module file.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Breadcrumb\Breadcrumb;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\oe_translation_remote\Form\RemoteTranslationReviewForm;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function oe_translation_remote_entity_type_alter(array &$entity_types) {
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type_id === 'oe_translation_request') {
+      /** @var \Drupal\Core\Entity\EntityTypeInterface $remote_translation */
+      $remote_translation = $entity_types[$entity_type_id];
+      $remote_translation->setFormClass('remote_translation_review', RemoteTranslationReviewForm::class);
+      $remote_translation->setLinkTemplate('remote-translation-review', '/translation-request/{oe_translation_request}/review');
+    }
+  }
+}
+
+/**
+ * Select list allowed options callback for the request statuses.
+ */
+function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, bool $cacheable) {
+  $options = [
+    TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE => t('Active'),
+    TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED => t('Finished'),
+  ];
+
+  // @todo Implement event subscriber to provide other options.
+  return $options;
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function oe_translation_remote_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context) {
+  $routes = [
+    'entity.oe_translation_request.canonical',
+    'entity.oe_translation_request.remote_translation_review',
+  ];
+  if (!in_array($route_match->getRouteName(), $routes)) {
+    return;
+  }
+
+  if ($route_match->getRouteName() !== 'entity.oe_translation_request.canonical') {
+    // The canonical path already has the defaults.
+    _oe_translation_default_breadcrumb_links($breadcrumb, $route_match, $context);
+  }
+
+  /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+  $translation_request = $route_match->getParameter('oe_translation_request');
+  $entity = $translation_request->getContentEntity();
+  $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
+  if (in_array($translation_request->bundle(), $bundles)) {
+    $breadcrumb->addLink(Link::fromTextAndUrl(t('Remote translations'), Url::fromRoute('entity.' . $entity->getEntityTypeId() . '.remote_translation', [$entity->getEntityTypeId() => $entity->id()])));
+  }
+
+  // For the route to review, we need an extra link to the translation
+  // request.
+  if ($route_match->getRouteName() === 'entity.oe_translation_request.remote_translation_review') {
+    $breadcrumb->addLink($translation_request->toLink());
+  }
+
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function oe_translation_remote_oe_translation_request_presave(EntityInterface $entity) {
+  /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $entity */
+  $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
+  if (!in_array($entity->bundle(), $bundles)) {
+    return;
+  }
+
+  // If all languages are in review, mark the entire request as translated. This
+  // is because at this point, the remote translator has done its job and sent
+  // translations for each language in the request.
+  $translated_statuses = [
+    TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
+    TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED,
+  ];
+  _oe_translation_remote_calculate_request_status($entity, $translated_statuses, TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED);
+
+  // If all languages have been synchronised, mark the entire request as
+  // finished.
+  _oe_translation_remote_calculate_request_status($entity, [TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED], TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+}
+
+/**
+ * Changes the request status when all language statuses become the same.
+ *
+ * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+ *   The translation request.
+ * @param array $language_statuses
+ *   The expected language statuses.
+ * @param string $request_status
+ *   The request status to set.
+ */
+function _oe_translation_remote_calculate_request_status(ContentEntityInterface $entity, array $language_statuses, string $request_status): void {
+  foreach ($entity->getTargetLanguages() as $target_language_status) {
+    if (!in_array($target_language_status->getStatus(), $language_statuses)) {
+      // Directly bail out if at least one is not in the expected status.
+      return;
+    }
+  }
+
+  $entity->setRequestStatus($request_status);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ */
+function oe_translation_remote_oe_translation_request_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
+  if (!in_array($entity->bundle(), $bundles)) {
+    return AccessResult::neutral();
+  }
+
+  if ($operation !== 'view') {
+    return AccessResult::neutral();
+  }
+
+  $permissions = [
+    'accept translation request',
+    'sync translation request',
+  ];
+
+  foreach ($permissions as $permission) {
+    if ($account->hasPermission($permission)) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+  }
+  return AccessResult::neutral()->cachePerPermissions();
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function oe_translation_remote_entity_extra_field_info() {
+  $extra = [];
+
+  $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
+  foreach ($bundles as $bundle) {
+    $extra['oe_translation_request'][$bundle]['display']['meta'] = [
+      'label' => t('Meta'),
+      'description' => t('Meta information about the request in a table format.'),
+      'weight' => -100,
+      'visible' => TRUE,
+    ];
+  }
+
+  return $extra;
+}
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_view().
+ */
+function oe_translation_remote_oe_translation_request_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $entity */
+  $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
+  if (!in_array($entity->bundle(), $bundles)) {
+    return;
+  }
+
+  if ($display->getComponent('meta')) {
+    $header = [
+      'request_status' => t('Request status'),
+      'provider' => t('Translator'),
+    ];
+
+    $row = [];
+
+    $row['request_status'] = $entity->getRequestStatus();
+    $row['provider'] = $entity->getTranslatorProvider()->label();
+
+    $build['meta'] = [
+      '#theme' => 'table',
+      '#attributes' => ['class' => ['request-status-meta-table']],
+      '#header' => $header,
+      '#rows' => [$row],
+      '#weight' => -100,
+    ];
+  }
+
+  // Mark the elements as unsorted so if we render this entity inside the
+  // form, they still get sorted. The form builder assumes things are sorted
+  // and doesn't sort them otherwise.
+  $build['#sorted'] = FALSE;
+}
