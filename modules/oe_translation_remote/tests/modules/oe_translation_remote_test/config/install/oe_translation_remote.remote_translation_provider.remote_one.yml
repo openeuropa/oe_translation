@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+id: remote_one
+label: 'Remote one'
+plugin: remote_one
+plugin_configuration: {  }

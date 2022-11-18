@@ -20,3 +20,20 @@ oe_translation_remote.remote_translation_provider.*:
 oe_translation_remote.remote_translation_provider.plugin.*:
   type: mapping
   label: 'Plugin configuration'
+
+field.value.oe_translation_remote_translated_data:
+  type: mapping
+  label: Default value
+  mapping:
+    value:
+      type: label
+      label: Value
+
+oe_translation.oe_translation_request_type.*.third_party.oe_translation_remote:
+  type: mapping
+  label: 'Remote translation settings'
+  mapping:
+    remote_bundle:
+      type: boolean
+      label: 'Remote bundle'
+      description: 'Whether the bundle is to be used for a remote translator'

@@ -8,9 +8,9 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 
@@ -36,17 +36,13 @@ function oe_translation_local_system_breadcrumb_alter(Breadcrumb &$breadcrumb, R
     return;
   }
 
-  $links = $breadcrumb->getLinks();
-  array_pop($links);
+  _oe_translation_default_breadcrumb_links($breadcrumb, $route_match, $context);
   /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
   $translation_request = $route_match->getParameter('oe_translation_request');
   $entity = $translation_request->getContentEntity();
-  $links[] = $entity->toLink();
-  $links[] = Link::fromTextAndUrl(t('Translate'), $entity->toUrl('drupal:content-translation-overview'));
-  $cache = CacheableMetadata::createFromObject($breadcrumb);
-  $breadcrumb = new Breadcrumb();
-  $breadcrumb->addCacheableDependency($cache);
-  $breadcrumb->setLinks($links);
+  if ($translation_request->bundle() === 'local') {
+    $breadcrumb->addLink(Link::fromTextAndUrl(t('Local translations'), Url::fromRoute('entity.' . $entity->getEntityTypeId() . '.local_translation', [$entity->getEntityTypeId() => $entity->id()])));
+  }
 }
 
 /**

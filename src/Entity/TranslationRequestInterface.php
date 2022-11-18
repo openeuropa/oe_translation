@@ -72,25 +72,6 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   public function setSourceLanguageCode(string $source_language_code): TranslationRequestInterface;
 
   /**
-   * Gets the translation request status.
-   *
-   * @return string
-   *   The request status.
-   */
-  public function getRequestStatus(): string;
-
-  /**
-   * Sets the translation request status.
-   *
-   * @param string $request_status
-   *   The status.
-   *
-   * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
-   *   The called translation request entity.
-   */
-  public function setRequestStatus(string $request_status): TranslationRequestInterface;
-
-  /**
    * Gets the decoded json data that should be translated.
    *
    * @return array

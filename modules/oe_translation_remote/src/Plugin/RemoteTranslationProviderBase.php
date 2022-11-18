@@ -6,26 +6,80 @@ namespace Drupal\oe_translation_remote\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_remote\RemoteTranslationProviderInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for remote_translation_provider plugins.
  */
-abstract class RemoteTranslationProviderBase extends PluginBase implements RemoteTranslationProviderInterface, ConfigurableInterface {
+abstract class RemoteTranslationProviderBase extends PluginBase implements RemoteTranslationProviderInterface, ConfigurableInterface, ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
   use DependencySerializationTrait;
 
   /**
+   * The entity being translated.
+   *
+   * @var \Drupal\Core\Entity\ContentEntityInterface
+   */
+  protected $entity;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The translation source manager.
+   *
+   * @var \Drupal\oe_translation\TranslationSourceManagerInterface
+   */
+  protected $translationSourceManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->setConfiguration($configuration);
+    $this->languageManager = $languageManager;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->translationSourceManager = $translationSourceManager;
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('language_manager'),
+      $container->get('entity_type.manager'),
+      $container->get('oe_translation.translation_source_manager'),
+      $container->get('messenger')
+    );
   }
 
   /**
@@ -84,11 +138,27 @@ abstract class RemoteTranslationProviderBase extends PluginBase implements Remot
   /**
    * {@inheritdoc}
    */
-  public function submitRequest(FormStateInterface $form_state) {}
+  public function getEntity(): ContentEntityInterface {
+    return $this->entity;
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function submitRequestToProvider(FormStateInterface $form_state) {}
+  public function setEntity(ContentEntityInterface $entity): void {
+    $this->entity = $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitRequestToProvider(FormStateInterface $form_state): void {}
 
 }

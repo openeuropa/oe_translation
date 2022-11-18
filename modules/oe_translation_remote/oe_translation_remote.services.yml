@@ -8,3 +8,16 @@ services:
   plugin.manager.oe_translation_remote.remote_translation_provider_manager:
     class: Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager
     parent: default_plugin_manager
+    arguments: ['@entity_type.manager']
+
+  oe_translation_remote.event_subscriber.dashboard_alter:
+    class: Drupal\oe_translation_remote\EventSubscriber\TranslationDashboardAlterSubscriber
+    arguments: ['@entity_type.manager', '@plugin.manager.oe_translation_remote.remote_translation_provider_manager']
+    tags:
+      - { name: event_subscriber }
+
+  oe_translation_remote.event_subscriber.operations_provider:
+    class: Drupal\oe_translation_remote\EventSubscriber\TranslationRequestOperationsProviderSubscriber
+    arguments: ['@plugin.manager.oe_translation_remote.remote_translation_provider_manager']
+    tags:
+      - { name: event_subscriber }

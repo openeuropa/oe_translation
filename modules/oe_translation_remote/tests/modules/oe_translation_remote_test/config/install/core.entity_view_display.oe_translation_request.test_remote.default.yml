@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.oe_translation_request.test_remote.request_status
+    - field.field.oe_translation_request.test_remote.target_languages
+    - field.field.oe_translation_request.test_remote.translated_data
+    - field.field.oe_translation_request.test_remote.translator_provider
+    - oe_translation.oe_translation_request_type.test_remote
+  module:
+    - oe_translation_remote
+id: oe_translation_request.test_remote.default
+targetEntityType: oe_translation_request
+bundle: test_remote
+mode: default
+content:
+  meta:
+    settings: {  }
+    third_party_settings: {  }
+    weight: -100
+    region: content
+  target_languages:
+    type: oe_translation_remote_language_list
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  request_status: true
+  translated_data: true
+  translator_provider: true

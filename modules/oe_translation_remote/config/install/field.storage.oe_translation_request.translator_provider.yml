@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation
+    - oe_translation_remote
+id: oe_translation_request.translator_provider
+field_name: translator_provider
+entity_type: oe_translation_request
+type: entity_reference
+settings:
+  target_type: remote_translation_provider
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -246,4 +246,19 @@ trait TranslationsTestTrait {
     }
   }
 
+  /**
+   * Asserts the request status table.
+   *
+   * @param array $columns
+   *   The expected columns.
+   */
+  protected function assertRequestStatusTable(array $columns): void {
+    $table = $this->getSession()->getPage()->find('css', 'table.request-status-meta-table');
+    $this->assertCount(count($columns), $table->findAll('css', 'tbody tr td'));
+    $table_columns = $table->findAll('css', 'tbody td');
+    foreach ($columns as $delta => $column) {
+      $this->assertEquals($column, $table_columns[$delta]->getText());
+    }
+  }
+
 }
