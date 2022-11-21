@@ -20,6 +20,7 @@ use Drupal\oe_translation_local\Event\TranslationLocalControllerAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation\TranslatorProvidersInterface;
 use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -181,15 +182,14 @@ class TranslationLocalController extends ControllerBase {
    *   The target language.
    */
   public function createLocalTranslationRequest(ContentEntityInterface $entity, Language $source, Language $target): RedirectResponse {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $request */
     $request = $this->entityTypeManager->getStorage('oe_translation_request')
       ->create([
         'bundle' => 'local',
         'source_language_code' => $source->getId(),
-        'target_language_codes' => [$target->getId()],
-        'request_status' => TranslationRequestInterface::STATUS_DRAFT,
       ]);
     $request->setContentEntity($entity);
+    $request->setTargetLanguage($target->getId());
 
     $data = $this->translationSourceManager->extractData($entity->getUntranslated());
     $request->setData($data);
@@ -309,8 +309,9 @@ class TranslationLocalController extends ControllerBase {
     /** @var \Drupal\oe_translation\TranslationRequestStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('oe_translation_request');
     $translation_requests = $storage->getTranslationRequestsForEntityRevision($entity, 'local');
-    return array_filter($translation_requests, function (TranslationRequestInterface $translation_request) use ($langcode) {
-      return in_array($langcode, $translation_request->getTargetLanguageCodes()) && $translation_request->getRequestStatus() !== TranslationRequestInterface::STATUS_SYNCHRONISED;
+    return array_filter($translation_requests, function (TranslationRequestLocal $translation_request) use ($langcode) {
+      $target = $translation_request->getTargetLanguageWithStatus();
+      return $langcode === $target->getLangcode() && $target->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED;
     });
   }
 
@@ -355,16 +356,15 @@ class TranslationLocalController extends ControllerBase {
   /**
    * Returns the target language from the translation request.
    *
-   * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request
+   * @param \Drupal\oe_translation_local\TranslationRequestLocal $translation_request
    *   The translation request.
    *
    * @return \Drupal\Core\Language\LanguageInterface
    *   The target language.
    */
-  protected function getTargetLanguageFromRequest(TranslationRequestInterface $translation_request): LanguageInterface {
-    $languages = $translation_request->getTargetLanguageCodes();
-    $language = reset($languages);
-    return $this->entityTypeManager->getStorage('configurable_language')->load($language);
+  protected function getTargetLanguageFromRequest(TranslationRequestLocal $translation_request): LanguageInterface {
+    $language = $translation_request->getTargetLanguageWithStatus();
+    return $this->entityTypeManager->getStorage('configurable_language')->load($language->getLangcode());
   }
 
 }

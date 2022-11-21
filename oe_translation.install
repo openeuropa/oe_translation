@@ -10,6 +10,9 @@ use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\oe_translation\Entity\TranslationRequest;
+use Drupal\oe_translation\Entity\TranslationRequestLog;
+use Drupal\oe_translation\Entity\TranslationRequestType;
 
 /**
  * Implements hook_install().
@@ -105,10 +108,12 @@ function oe_translation_update_9001(): void {
       'edit-form' => '/translation-request/{oe_translation_request}/edit',
       'delete-form' => '/translation-request/{oe_translation_request}/delete',
       'delete-multiple-form' => '/admin/content/translation-requests/delete',
+      'preview' => "/translation-request/{oe_translation_request}/preview/{language}",
     ],
     'bundle_entity_type' => 'oe_translation_request_type',
     'field_ui_base_route' => 'entity.oe_translation_request_type.edit_form',
   ];
+
   $translation_request_log_entity_type = [
     'id' => 'oe_translation_request_log',
     'label' => new TranslatableMarkup('Translation request log'),
@@ -153,7 +158,16 @@ function oe_translation_update_9001(): void {
       'uuid',
     ],
   ];
-  $update_manager->installEntityType(new ContentEntityType($translation_request_entity_type));
-  $update_manager->installEntityType(new ConfigEntityType($translation_request_config_entity_type));
-  $update_manager->installEntityType(new ContentEntityType($translation_request_log_entity_type));
+  $translation_request = new ContentEntityType($translation_request_entity_type);
+  $translation_request->setClass(TranslationRequest::class);
+  $update_manager->installEntityType($translation_request);
+
+  $translation_request_type = new ConfigEntityType($translation_request_config_entity_type);
+  $translation_request_type->setClass(TranslationRequestType::class);
+  $update_manager->installEntityType($translation_request_type);
+
+  $translation_request_log = new ContentEntityType($translation_request_log_entity_type);
+  $translation_request_log->setClass(TranslationRequestLog::class);
+  $update_manager->installEntityType($translation_request_log);
+
 }

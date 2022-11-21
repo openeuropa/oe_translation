@@ -190,14 +190,13 @@ trait TranslationsTestTrait {
    *   The translation request.
    */
   protected function createLocalTranslationRequest(ContentEntityInterface $entity, string $langcode): TranslationRequestInterface {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $request */
     $request = $this->entityTypeManager->getStorage('oe_translation_request')
       ->create([
         'bundle' => 'local',
         'source_language_code' => $entity->getUntranslated()->language()->getId(),
-        'target_language_codes' => [$langcode],
-        'request_status' => 'draft',
       ]);
+    $request->setTargetLanguage($langcode);
     $request->setContentEntity($entity);
     $data = \Drupal::service('oe_translation.translation_source_manager')->extractData($entity->getUntranslated());
     $request->setData($data);

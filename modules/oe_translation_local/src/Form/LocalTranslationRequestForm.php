@@ -17,9 +17,9 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\filter\Entity\FilterFormat;
-use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 use Drupal\tmgmt\Data;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -92,9 +92,10 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'container',
     ];
 
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
-    $langcode = $translation_request->getTargetLanguageCodes()[0];
+    $target = $translation_request->getTargetLanguageWithStatus();
+    $langcode = $target->getLangcode();
     $existing_translation_data = [];
 
     // Get the data from the translation request. It may happen we are editing
@@ -109,7 +110,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     }
 
     // Disable the element if the translation request is accepted.
-    $disable = $translation_request->getRequestStatus() === TranslationRequestInterface::STATUS_ACCEPTED;
+    $disable = $target->getStatus() === TranslationRequestLocal::STATUS_LANGUAGE_ACCEPTED;
     // Need to keep the first hierarchy. So the flattening must take place
     // inside the foreach loop.
     foreach (Element::children($data) as $key) {
@@ -255,7 +256,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
 
     $actions['save_as_draft'] = [
@@ -269,7 +270,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::accept', '::save'],
-      '#access' => $translation_request->getRequestStatus() === TranslationRequestInterface::STATUS_DRAFT && $this->currentUser->hasPermission('accept translation request'),
+      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() === TranslationRequestLocal::STATUS_LANGUAGE_DRAFT && $this->currentUser->hasPermission('accept translation request'),
       '#value' => $this->t('Save and accept'),
     ];
 
@@ -277,7 +278,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::save', '::synchronise'],
-      '#access' => $translation_request->getRequestStatus() !== TranslationRequestInterface::STATUS_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
+      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
       '#value' => $this->t('Save and synchronise'),
     ];
 
@@ -358,9 +359,9 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * Callback for the "Save and accept" button. It gets followed by save.
    */
   public function accept(array &$form, FormStateInterface $form_state): void {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
-    $translation_request->setRequestStatus(TranslationRequestInterface::STATUS_ACCEPTED);
+    $translation_request->updateTargetLanguageStatus(TranslationRequestLocal::STATUS_LANGUAGE_ACCEPTED);
   }
 
   /**
@@ -369,9 +370,9 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * Callback for the "Save as draft" button. It gets followed by save.
    */
   public function markDraft(array &$form, FormStateInterface $form_state): void {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
-    $translation_request->setRequestStatus(TranslationRequestInterface::STATUS_DRAFT);
+    $translation_request->updateTargetLanguageStatus(TranslationRequestLocal::STATUS_LANGUAGE_DRAFT);
   }
 
   /**
@@ -380,13 +381,13 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * Callback for the "Save and accept" button. It gets followed by save.
    */
   public function synchronise(array &$form, FormStateInterface $form_state): void {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
 
     $entity = $translation_request->getContentEntity();
-    $saved = $this->translationSourceManager->saveData($translation_request->getData(), $entity, $translation_request->getTargetLanguageCodes()[0]);
+    $saved = $this->translationSourceManager->saveData($translation_request->getData(), $entity, $translation_request->getTargetLanguageWithStatus()->getLangcode());
     if ($saved) {
-      $translation_request->setRequestStatus(TranslationRequestInterface::STATUS_SYNCHRONISED);
+      $translation_request->updateTargetLanguageStatus(TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED);
       $translation_request->save();
       $this->messenger()->addStatus($this->t('The translation has been synchronised.'));
       return;
@@ -399,12 +400,10 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * Redirects the user to the preview path of the translation request.
    */
   public function preview(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
 
-    // For local translations, we only have 1 language.
-    $languages = $translation_request->getTargetLanguageCodes();
-    $language = reset($languages);
+    $language = $translation_request->getTargetLanguageWithStatus()->getLangcode();
     $url = $translation_request->toUrl('preview');
     $url->setRouteParameter('language', $language);
     $url->setOption('language', $this->entityTypeManager->getStorage('configurable_language')->load($language));
@@ -460,7 +459,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   The form state.
    */
   protected function addRedirect(FormStateInterface $form_state): void {
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
     $entity = $translation_request->getContentEntity();
     $entity_type_id = $entity->getEntityTypeId();
