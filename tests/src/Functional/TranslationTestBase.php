@@ -5,11 +5,14 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 
 /**
  * Base class for functional tests.
  */
 class TranslationTestBase extends BrowserTestBase {
+
+  use TranslationsTestTrait;
 
   /**
    * The entity type manager.
@@ -62,12 +65,7 @@ class TranslationTestBase extends BrowserTestBase {
     $this->drupalPlaceBlock('page_title_block', ['region' => 'content']);
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'content']);
 
-    /** @var \Drupal\user\RoleInterface $role */
-    $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
-    $permissions = $role->getPermissions();
-    $permissions[] = 'administer menu';
-    $user = $this->drupalCreateUser($permissions);
-
+    $user = $this->setUpTranslatorUser();
     $this->drupalLogin($user);
   }
 

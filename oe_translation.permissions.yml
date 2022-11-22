@@ -10,6 +10,10 @@ view translation request:
   title: View translation request
 view unpublished translation request:
   title: View unpublished translation request
+accept translation request:
+  title: Accept translation request
+sync translation request:
+  title: Synchronize translation request
 
 permission_callbacks:
   - \Drupal\oe_translation\TranslationRequestPermissions::translationRequestTypePermissions

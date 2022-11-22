@@ -2,20 +2,17 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation\Event;
+namespace Drupal\oe_translation_local\Event;
 
 use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
- * Event used for altering the content translation overview list page.
+ * Event used for altering the local translation overview list page.
  */
-class ContentTranslationDashboardAlterEvent extends Event {
+class TranslationLocalControllerAlterEvent extends Event {
 
-  /**
-   * The event name.
-   */
-  const NAME = 'oe_translation.content_translation_dashboard_alter';
+  const NAME = 'oe_translation_local.translation_local_overview_alter';
 
   /**
    * The build array.
@@ -39,7 +36,7 @@ class ContentTranslationDashboardAlterEvent extends Event {
   protected $entityTypeId;
 
   /**
-   * ContentTranslationDaashboardAlterEvent constructor.
+   * TranslationLocalControllerAlterEvent constructor.
    *
    * @param array $build
    *   The build array.

@@ -1,0 +1,172 @@
+From 10ab10cc07c1a9051cbd6fe827a458e4e35e8654 Mon Sep 17 00:00:00 2001
+From: nagyad <joevagyok@gmail.com>
+Date: Fri, 31 Jul 2020 14:31:58 +0200
+Subject: [PATCH] EWPP-34: Improve functional test performance during
+ development.
+
+---
+ .../Core/Test/FunctionalTestSetupTrait.php    | 86 +++++++++++++++++++
+ core/tests/Drupal/Tests/BrowserTestBase.php   | 45 ++++++++++
+ 2 files changed, 131 insertions(+)
+
+diff --git a/core/lib/Drupal/Core/Test/FunctionalTestSetupTrait.php b/core/lib/Drupal/Core/Test/FunctionalTestSetupTrait.php
+index a10af1e48c..898dea29ac 100644
+--- a/core/lib/Drupal/Core/Test/FunctionalTestSetupTrait.php
++++ b/core/lib/Drupal/Core/Test/FunctionalTestSetupTrait.php
+@@ -698,4 +698,90 @@ protected function getDatabaseTypes() {
+     return $database_types;
+   }
+ 
++  /**
++   * Installs Drupal using SQL dump.
++   */
++  protected function installDrupalFromDump() {
++    $this->restoreDatabase();
++    $this->initUserSession();
++    $this->prepareSettings();
++
++    $connection_info = Database::getConnectionInfo('default');
++
++    $databases['default']['default'] = (object) [
++      'value' =>  $connection_info['default'],
++      'required' => TRUE,
++    ];
++
++    $settings['databases'] = $databases;
++    $settings['settings']['hash_salt'] = (object) [
++      'value' => $this->databasePrefix,
++      'required' => TRUE,
++    ];
++
++    $settings['settings']['hash_salt'] = (object) [
++      'value' => $this->databasePrefix,
++      'required' => TRUE,
++    ];
++    $this->writeSettings($settings);
++
++    $autoloader = require './autoload.php';
++    $this->kernel = new DrupalKernel('prod', $autoloader);
++    $request = Request::createFromGlobals();
++    DrupalKernel::bootEnvironment();
++    $site_path = DrupalKernel::findSitePath($request);
++    $this->kernel->setSitePath($site_path);
++    Settings::initialize($this->kernel->getAppRoot(), $this->kernel->getSitePath(), $autoloader);
++    $this->kernel->boot()->preHandle($request);
++    $this->container = $this->kernel->getContainer();
++
++    // The value comes with the dump from previous installation.
++    \Drupal::configFactory()->getEditable('system.file')
++      ->set('path.temporary', $this->tempFilesDirectory)
++      ->save();
++    \Drupal::service('file_system')->prepareDirectory($this->tempFilesDirectory, FileSystemInterface::MODIFY_PERMISSIONS | FileSystemInterface::CREATE_DIRECTORY);
++  }
++
++  /**
++   * Dumps database structure and contents of test site.
++   */
++  protected function dumpDatabase() {
++    $connection_info = Database::getConnectionInfo('default');
++
++    $user = $connection_info['default']['username'];
++    $db = $connection_info['default']['database'];
++
++    switch ($connection_info['default']['driver']) {
++      case 'mysql':
++        $tables = \Drupal::database()
++          ->query("SHOW TABLES LIKE '$this->databasePrefix%'")
++          ->fetchCol();
++        $tables_param = implode(' ', $tables);
++        exec("mysqldump -h mysql -u$user $db $tables_param | sed 's/$this->databasePrefix/default_db_prefix_/' > {$this->dumpFile}");
++        break;
++
++      default:
++        throw new \LogicException('This database driver is not supported yet.');
++    }
++  }
++
++  /**
++   * Restores database structure and contents of test site.
++   */
++  protected function restoreDatabase() {
++    $connection_info = Database::getConnectionInfo('default');
++
++    $user = $connection_info['default']['username'];
++    $db = $connection_info['default']['database'];
++
++    switch ($connection_info['default']['driver']) {
++      case 'mysql':
++        exec("sed 's/default_db_prefix_/$this->databasePrefix/' $this->dumpFile | mysql -h mysql -u$user $db");
++        break;
++
++      default:
++        throw new \LogicException('This database driver is not supported yet.');
++    }
++  }
++
+ }
+diff --git a/core/tests/Drupal/Tests/BrowserTestBase.php b/core/tests/Drupal/Tests/BrowserTestBase.php
+index afea7671e1..6cfaee148c 100644
+--- a/core/tests/Drupal/Tests/BrowserTestBase.php
++++ b/core/tests/Drupal/Tests/BrowserTestBase.php
+@@ -73,6 +73,13 @@ abstract class BrowserTestBase extends TestCase {
+    */
+   protected $databasePrefix;
+ 
++  /**
++   * Path to SQL dump file.
++   *
++   * @var string
++   */
++  protected $dumpFile;
++
+   /**
+    * Time limit in seconds for the test.
+    *
+@@ -571,6 +578,44 @@ protected function getOptions($select, Element $container = NULL) {
+    * Installs Drupal into the Simpletest site.
+    */
+   public function installDrupal() {
++    if (getenv('BROWSERTEST_CACHE_DB')) {
++      $this->initDumpFile();
++      if (file_exists($this->dumpFile)) {
++        $this->installDrupalFromDump();
++      }
++      else {
++        $this->installDrupalFromProfile();
++        $this->dumpDatabase();
++      }
++    }
++    else {
++      $this->installDrupalFromProfile();
++    }
++  }
++
++  /**
++   * Determines a proper file name for SQL dump.
++   */
++  protected function initDumpFile() {
++    $class = get_class($this);
++    $modules = [];
++    while ($class) {
++      if (property_exists($class, 'modules')) {
++        $modules = array_merge($modules, $class::$modules);
++      }
++      $class = get_parent_class($class);
++    }
++    sort($modules);
++    array_unique($modules);
++    $cache_dir = getenv('BROWSERTEST_CACHE_DIR') ?: sys_get_temp_dir() . '/test_dumps/' . \Drupal::VERSION;
++    is_dir($cache_dir) || mkdir($cache_dir, 0777, TRUE);
++    $this->dumpFile = $cache_dir . '/_' . implode('-', $modules) . '.sql';
++  }
++
++  /**
++   * Installs Drupal using installation profile.
++   */
++  protected function installDrupalFromProfile() {
+     $this->initUserSession();
+     $this->prepareSettings();
+     $this->doInstall();
+-- 
+2.25.1
+

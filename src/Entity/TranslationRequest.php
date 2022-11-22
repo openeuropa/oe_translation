@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Entity;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
@@ -14,7 +13,6 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\Url;
 use Drupal\user\EntityOwnerTrait;
 
 /**
@@ -194,37 +192,7 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function getOperationsLinks(): array {
-    $links = [
-      '#type' => 'operations',
-      '#links' => [],
-    ];
-    $cache = new CacheableMetadata();
-    $edit = $this->toUrl('local-translation');
-    $edit_access = $edit->access(NULL, TRUE);
-    $cache->addCacheableDependency($edit_access);
-    if ($edit_access->isAllowed()) {
-      $links['#links']['edit'] = [
-        'title' => t('Edit started translation request'),
-        'url' => $edit,
-      ];
-    }
-
-    $delete = $this->toUrl('delete-form');
-    $query = $delete->getOption('query');
-    $query['destination'] = Url::fromRoute('<current>')->toString();
-    $delete->setOption('query', $query);
-    $delete_access = $delete->access(NULL, TRUE);
-    $cache->addCacheableDependency($delete_access);
-    if ($delete_access->isAllowed()) {
-      $links['#links']['delete'] = [
-        'title' => t('Delete'),
-        'url' => $delete,
-      ];
-    }
-
-    $cache->applyTo($links);
-
-    return $links;
+    return \Drupal::service('oe_translation.translation_request_operations_provider')->getOperationsLinks($this);
   }
 
   /**

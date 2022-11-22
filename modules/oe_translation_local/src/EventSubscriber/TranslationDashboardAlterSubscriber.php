@@ -72,7 +72,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       '#template' => "<h3>{{ 'Open local translation requests' }}</h3>",
     ];
 
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
     $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
     /** @var \Drupal\oe_translation\TranslationRequestStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('oe_translation_request');
@@ -93,12 +93,12 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     }
 
     $header = [
-      $this->t('Language'),
-      $this->t('Status'),
-      $this->t('Title'),
-      $this->t('Revision ID'),
-      $this->t('Default revision'),
-      $this->t('Operations'),
+      'language' => $this->t('Language'),
+      'status' => $this->t('Status'),
+      'title' => $this->t('Title'),
+      'revision_id' => $this->t('Revision ID'),
+      'default_revision' => $this->t('Default revision'),
+      'operations' => $this->t('Operations'),
     ];
 
     $rows = [];
@@ -125,6 +125,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $rows[] = [
         'data' => $row,
         'hreflang' => $language->getId(),
+        'data-revision-id' => $entity->getRevisionId(),
       ];
     }
 

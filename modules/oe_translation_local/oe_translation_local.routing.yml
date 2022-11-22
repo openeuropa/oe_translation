@@ -7,7 +7,7 @@ oe_translation_local.create_local_translation_request:
   options:
     parameters:
       entity:
-        type: 'entity:{entity_type}'
+        type: 'entity_revision:{entity_type}'
       source:
         type: language
       target:

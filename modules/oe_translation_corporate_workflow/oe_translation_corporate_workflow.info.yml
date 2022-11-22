@@ -1,0 +1,10 @@
+name: OpenEuropa Translation Corporate Workflow
+description: Integrates the editorial workflow with OE Translation
+package: OpenEuropa
+type: module
+core_version_requirement: ^9.2
+
+dependencies:
+  - oe_editorial_corporate_workflow:oe_editorial_corporate_workflow
+  - oe_translation:oe_translation
+  - oe_editorial_entity_version:oe_editorial_entity_version

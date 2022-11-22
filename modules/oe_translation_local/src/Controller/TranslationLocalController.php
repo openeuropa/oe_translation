@@ -11,12 +11,15 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation\Event\TranslationAccessEvent;
+use Drupal\oe_translation_local\Event\TranslationLocalControllerAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation\TranslatorProvidersInterface;
+use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -124,7 +127,6 @@ class TranslationLocalController extends ControllerBase {
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $route_match->getParameter($entity_type_id);
-    $entity = $this->getEntity($entity);
 
     $cache = CacheableMetadata::createFromObject($entity);
 
@@ -160,7 +162,12 @@ class TranslationLocalController extends ControllerBase {
 
     $cache->applyTo($build);
 
-    return $build;
+    // Dispatch an event to allow other modules to alter the overview.
+    $entity_type_id = $entity_type_id ?? '';
+    $event = new TranslationLocalControllerAlterEvent($build, $route_match, $entity_type_id);
+    $this->eventDispatcher->dispatch(TranslationLocalControllerAlterEvent::NAME, $event);
+
+    return $event->getBuild();
   }
 
   /**
@@ -174,14 +181,13 @@ class TranslationLocalController extends ControllerBase {
    *   The target language.
    */
   public function createLocalTranslationRequest(ContentEntityInterface $entity, Language $source, Language $target): RedirectResponse {
-    $entity = $this->getEntity($entity);
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $request */
     $request = $this->entityTypeManager->getStorage('oe_translation_request')
       ->create([
         'bundle' => 'local',
         'source_language_code' => $source->getId(),
         'target_language_codes' => [$target->getId()],
-        'request_status' => 'review',
+        'request_status' => TranslationRequestInterface::STATUS_DRAFT,
       ]);
     $request->setContentEntity($entity);
 
@@ -221,7 +227,8 @@ class TranslationLocalController extends ControllerBase {
     $cache = new CacheableMetadata();
     $cache->addCacheContexts(['user.permissions']);
     if (!$has_permission) {
-      return AccessResult::forbidden('The user is missing the translation permission.')->addCacheableDependency($cache);
+      $access = AccessResult::forbidden('The user is missing the translation permission.')->addCacheableDependency($cache);
+      return $this->dispatchLocalTranslationAccessEvent($entity, $account, $access, $source, $target);
     }
 
     // Check that the entity type is using our translation system and it has
@@ -231,14 +238,38 @@ class TranslationLocalController extends ControllerBase {
     }
 
     // Check that there are no translation requests already for this entity.
-    $entity = $this->getEntity($entity);
     $translation_requests = $this->getLocalTranslationRequests($entity, $target->getId());
     $cache->addCacheTags(['oe_translation_request_list']);
     if (!$translation_requests) {
-      return AccessResult::allowed()->addCacheableDependency($cache);
+      $access = AccessResult::allowed()->addCacheableDependency($cache);
+      return $this->dispatchLocalTranslationAccessEvent($entity, $account, $access, $source, $target);
     }
 
-    return AccessResult::forbidden('There is already a translation request for this entity version.')->addCacheableDependency($cache);
+    $access = AccessResult::forbidden('There is already a translation request for this entity version.')->addCacheableDependency($cache);
+    return $this->dispatchLocalTranslationAccessEvent($entity, $account, $access, $source, $target);
+  }
+
+  /**
+   * Dispatches an event to allow others to have a say in the access.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user.
+   * @param \Drupal\Core\Access\AccessResultInterface $access
+   *   The existing access.
+   * @param \Drupal\Core\Language\Language $source
+   *   The source language.
+   * @param \Drupal\Core\Language\Language $target
+   *   The target language.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access.
+   */
+  protected function dispatchLocalTranslationAccessEvent(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, Language $source = NULL, Language $target = NULL): AccessResultInterface {
+    $event = new TranslationAccessEvent($entity, $account, $access, $source, $target);
+    $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
+    return $event->getAccess();
   }
 
   /**
@@ -253,7 +284,10 @@ class TranslationLocalController extends ControllerBase {
   public function translateLocalFormTitle(TranslationRequestInterface $oe_translation_request): array {
     $entity = $oe_translation_request->getContentEntity();
     return [
-      '#markup' => $this->t('Translate @title', ['@title' => $entity->label()]),
+      '#markup' => $this->t('Translate @title in @language', [
+        '@title' => $entity->label(),
+        '@language' => $this->getTargetLanguageFromRequest($oe_translation_request)->getName(),
+      ]),
     ];
   }
 
@@ -299,7 +333,6 @@ class TranslationLocalController extends ControllerBase {
       // operations links for the entity.
       $translation_request = reset($translation_requests);
       $links = $translation_request->getOperationsLinks();
-      $links['#links']['edit']['title'] = $this->t('Edit started translation request');
     }
     else {
       $links = [
@@ -308,21 +341,11 @@ class TranslationLocalController extends ControllerBase {
       ];
       // If there are no translations requests already for this language, we
       // can add a link to start one.
-      $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
-        'entity_type' => $entity->getEntityTypeId(),
-        'entity' => $entity->id(),
-        'source' => $entity->getUntranslated()->language()->getId(),
-        'target' => $langcode,
-      ]);
-      $create_access = $url->access(NULL, TRUE);
-      $title = $this->t('New translation');
-      $cache = CacheableMetadata::createFromObject($create_access);
+      $cache = new CacheableMetadata();
+      $link = LocalTranslationRequestForm::getCreateOperationLink($entity, $langcode, $cache);
       $cache->applyTo($links);
-      if ($create_access->isAllowed()) {
-        $links['#links']['create'] = [
-          'title' => $title,
-          'url' => $url,
-        ];
+      if ($link) {
+        $links['#links']['create'] = $link;
       }
     }
 
@@ -330,21 +353,18 @@ class TranslationLocalController extends ControllerBase {
   }
 
   /**
-   * Determines the correct entity revision to translate.
+   * Returns the target language from the translation request.
    *
-   * We consider, by default, the latest defaul revision but we allow others
-   * to alter this.
+   * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request
+   *   The translation request.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   *
-   * @return \Drupal\Core\Entity\ContentEntityInterface
-   *   The entity.
+   * @return \Drupal\Core\Language\LanguageInterface
+   *   The target language.
    */
-  protected function getEntity(ContentEntityInterface $entity): ContentEntityInterface {
-    // @todo , throw an event and allow others to alter the entity.
-    $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
-    return $storage->load($entity->id());
+  protected function getTargetLanguageFromRequest(TranslationRequestInterface $translation_request): LanguageInterface {
+    $languages = $translation_request->getTargetLanguageCodes();
+    $language = reset($languages);
+    return $this->entityTypeManager->getStorage('configurable_language')->load($language);
   }
 
 }

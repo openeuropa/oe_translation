@@ -7,11 +7,14 @@ namespace Drupal\oe_translation_local\Form;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
@@ -47,13 +50,21 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   protected $translationSourceManager;
 
   /**
+   * The current user account.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, Data $tmgmt_data, TranslationSourceManagerInterface $translation_source_manager) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, Data $tmgmt_data, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->tmgmtData = $tmgmt_data;
     $this->translationSourceManager = $translation_source_manager;
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -66,7 +77,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $container->get('datetime.time'),
       $container->get('entity_type.manager'),
       $container->get('tmgmt.data'),
-      $container->get('oe_translation.translation_source_manager')
+      $container->get('oe_translation.translation_source_manager'),
+      $container->get('current_user')
     );
   }
 
@@ -96,15 +108,50 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $existing_translation_data = $existing_translation ? $this->translationSourceManager->extractData($existing_translation) : [];
     }
 
+    // Disable the element if the translation request is accepted.
+    $disable = $translation_request->getRequestStatus() === TranslationRequestInterface::STATUS_ACCEPTED;
     // Need to keep the first hierarchy. So the flattening must take place
     // inside the foreach loop.
     foreach (Element::children($data) as $key) {
       $data_flattened = $this->tmgmtData->flatten($data[$key], $key);
       $existing_translation_data_flattened = $existing_translation_data ? $this->tmgmtData->flatten($existing_translation_data[$key], $key) : [];
-      $form['translation'][$key] = $this->translationFormElement($data_flattened, $existing_translation_data_flattened);
+      $form['translation'][$key] = $this->translationFormElement($data_flattened, $existing_translation_data_flattened, $disable);
     }
 
     return $form;
+  }
+
+  /**
+   * Generates the operation link to create a new request.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which to generate the link.
+   * @param string $target_langcode
+   *   The target link.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   The cacheable metadata from the context.
+   *
+   * @return array
+   *   The link information.
+   */
+  public static function getCreateOperationLink(ContentEntityInterface $entity, string $target_langcode, CacheableMetadata $cache): array {
+    $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+      'entity_type' => $entity->getEntityTypeId(),
+      'entity' => $entity->getRevisionId(),
+      'source' => $entity->getUntranslated()->language()->getId(),
+      'target' => $target_langcode,
+    ]);
+    $create_access = $url->access(NULL, TRUE);
+    $cache->addCacheableDependency($create_access);
+    $title = t('New translation');
+    if ($create_access->isAllowed()) {
+      return [
+        'title' => $title,
+        'url' => $url,
+      ];
+    }
+
+    return [];
   }
 
   /**
@@ -114,13 +161,15 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   The data.
    * @param array $existing_translation_data
    *   Existing entity translation data.
+   * @param bool $disable
+   *   Whether to disable all translation elements.
    *
    * @return array
    *   The form element.
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
-  protected function translationFormElement(array $data, array $existing_translation_data) {
+  protected function translationFormElement(array $data, array $existing_translation_data, bool $disable) {
     $element = [];
 
     foreach (Element::children($data) as $key) {
@@ -174,7 +223,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
         '#default_value' => $translation_value,
         '#title' => $this->t('Translation'),
         '#rows' => $rows,
-        '#allow_focus' => TRUE,
+        '#allow_focus' => !$disable,
+        '#disabled' => $disable,
       ];
 
       // Check if the field has a text format and ensure the element uses one
@@ -211,7 +261,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     $actions['save_as_draft'] = [
       '#type' => 'submit',
       '#button_type' => 'primary',
-      '#submit' => ['::submitForm', '::save'],
+      '#submit' => ['::submitForm', '::markDraft', '::save'],
       '#value' => $this->t('Save as draft'),
     ];
 
@@ -219,7 +269,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::accept', '::save'],
-      '#access' => $translation_request->getRequestStatus() === TranslationRequestInterface::STATUS_REVIEW,
+      '#access' => $translation_request->getRequestStatus() === TranslationRequestInterface::STATUS_DRAFT && $this->currentUser->hasPermission('accept translation request'),
       '#value' => $this->t('Save and accept'),
     ];
 
@@ -227,7 +277,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::save', '::synchronise'],
-      '#access' => $translation_request->getRequestStatus() !== TranslationRequestInterface::STATUS_SYNCHRONISED,
+      '#access' => $translation_request->getRequestStatus() !== TranslationRequestInterface::STATUS_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
       '#value' => $this->t('Save and synchronise'),
     ];
 
@@ -303,7 +353,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   }
 
   /**
-   * Sets the status to accept.
+   * Sets the status to accepted.
    *
    * Callback for the "Save and accept" button. It gets followed by save.
    */
@@ -311,6 +361,17 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
     $translation_request = $this->entity;
     $translation_request->setRequestStatus(TranslationRequestInterface::STATUS_ACCEPTED);
+  }
+
+  /**
+   * Sets the status to draft.
+   *
+   * Callback for the "Save as draft" button. It gets followed by save.
+   */
+  public function markDraft(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    $translation_request = $this->entity;
+    $translation_request->setRequestStatus(TranslationRequestInterface::STATUS_DRAFT);
   }
 
   /**
@@ -346,6 +407,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     $language = reset($languages);
     $url = $translation_request->toUrl('preview');
     $url->setRouteParameter('language', $language);
+    $url->setOption('language', $this->entityTypeManager->getStorage('configurable_language')->load($language));
     $form_state->setRedirectUrl($url);
   }
 
