@@ -15,14 +15,6 @@ use Drupal\Core\Entity\EntityChangedInterface;
 interface TranslationRequestInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface, EntityPublishedInterface {
 
   /**
-   * The statuses of a translation request.
-   */
-  const STATUS_DRAFT = 'draft';
-  const STATUS_REVIEW = 'review';
-  const STATUS_ACCEPTED = 'accepted';
-  const STATUS_SYNCHRONISED = 'synchronized';
-
-  /**
    * Gets the translation request creation timestamp.
    *
    * @return string
@@ -78,25 +70,6 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
    *   The called translation request entity.
    */
   public function setSourceLanguageCode(string $source_language_code): TranslationRequestInterface;
-
-  /**
-   * Gets the translation request target language codes.
-   *
-   * @return array
-   *   The target language codes.
-   */
-  public function getTargetLanguageCodes(): array;
-
-  /**
-   * Sets the translation request target language codes.
-   *
-   * @param array $target_language_codes
-   *   The translation request target language codes.
-   *
-   * @return \Drupal\oe_translation\Entity\TranslationRequestInterface
-   *   The called translation request entity.
-   */
-  public function setTargetLanguageCodes(array $target_language_codes): TranslationRequestInterface;
 
   /**
    * Gets the translation request status.

@@ -30,3 +30,14 @@ oe_translation.oe_translation_request_type.*:
     label:
       type: label
       label: 'Label'
+
+field.value.oe_translation_language_with_status:
+  type: mapping
+  label: Default value
+  mapping:
+    langcode:
+      type: string
+      label: Language code
+    status:
+      type: string
+      label: The status

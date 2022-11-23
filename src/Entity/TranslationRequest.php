@@ -135,20 +135,6 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function getTargetLanguageCodes(): array {
-    return $this->get('target_language_codes')->isEmpty() ? [] : array_column($this->get('target_language_codes')->getValue(), 'value');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setTargetLanguageCodes(array $target_language_codes): TranslationRequestInterface {
-    return $this->set('target_language_codes', $target_language_codes);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getRequestStatus(): string {
     return $this->get('request_status')->value;
   }
@@ -210,25 +196,6 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
     $fields['source_language_code'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Source language'))
       ->setDescription(t('The language code of the entity type being translated.'));
-
-    $fields['target_language_codes'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Target languages'))
-      ->setDescription(t('The language codes this request is for.'))
-      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
-
-    $fields['request_status'] = BaseFieldDefinition::create('list_string')
-      ->setLabel('Request status')
-      ->setSetting('allowed_values', [
-        TranslationRequestInterface::STATUS_DRAFT => t('Draft'),
-        TranslationRequestInterface::STATUS_REVIEW => t('In review'),
-        TranslationRequestInterface::STATUS_ACCEPTED => t('Accepted'),
-        TranslationRequestInterface::STATUS_SYNCHRONISED => t('Synchronized'),
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'options_select',
-      ])
-      ->setDefaultValue('draft')
-      ->setDisplayConfigurable('form', TRUE);
 
     $fields['data'] = BaseFieldDefinition::create('string_long')
       ->setLabel('Data')

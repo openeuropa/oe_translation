@@ -11,8 +11,8 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
-use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
@@ -564,9 +564,10 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     }
 
     // Assert there are no more non-synced translation requests.
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal[] $requests */
     $requests = TranslationRequest::loadMultiple();
     foreach ($requests as $request) {
-      $this->assertEquals(TranslationRequestInterface::STATUS_SYNCHRONISED, $request->getRequestStatus());
+      $this->assertEquals(TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED, $request->getTargetLanguageWithStatus()->getStatus());
     }
   }
 

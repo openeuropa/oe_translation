@@ -12,6 +12,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\oe_translation_local\Form\LocalTranslationRequestForm;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 
 /**
  * Implements hook_entity_type_alter().
@@ -46,4 +47,13 @@ function oe_translation_local_system_breadcrumb_alter(Breadcrumb &$breadcrumb, R
   $breadcrumb = new Breadcrumb();
   $breadcrumb->addCacheableDependency($cache);
   $breadcrumb->setLinks($links);
+}
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function oe_translation_local_entity_bundle_info_alter(array &$bundles): void {
+  if (isset($bundles['oe_translation_request']['local'])) {
+    $bundles['oe_translation_request']['local']['class'] = TranslationRequestLocal::class;
+  }
 }

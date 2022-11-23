@@ -8,8 +8,8 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -77,9 +77,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\oe_translation\TranslationRequestStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('oe_translation_request');
 
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal[] $translation_requests */
     $translation_requests = $storage->getTranslationRequestsForEntity($current_entity, 'local');
-    $translation_requests = array_filter($translation_requests, function (TranslationRequestInterface $translation_request) {
-      return $translation_request->getRequestStatus() !== TranslationRequestInterface::STATUS_SYNCHRONISED;
+    $translation_requests = array_filter($translation_requests, function (TranslationRequestLocal $translation_request) {
+      return $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED;
     });
 
     $cache->addCacheTags(['oe_translation_request_list']);
@@ -104,10 +105,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $rows = [];
     foreach ($translation_requests as $translation_request) {
       $entity = $translation_request->getContentEntity();
-      $language = $this->languageManager->getLanguage($translation_request->getTargetLanguageCodes()[0]);
+      $language = $this->languageManager->getLanguage($translation_request->getTargetLanguageWithStatus()->getLangcode());
       $row = [
         'language' => $language->getName(),
-        'status' => $translation_request->getRequestStatus(),
+        'status' => $translation_request->getTargetLanguageWithStatus()->getStatus(),
         'title' => [
           'data' => [
             '#type' => 'link',

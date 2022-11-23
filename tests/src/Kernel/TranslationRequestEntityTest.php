@@ -83,11 +83,6 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
       'bundle' => 'request',
       'translation_provider' => 'Translation provider',
       'source_language_code' => 'en',
-      'target_language_codes' => [
-        'fr',
-        'es',
-      ],
-      'request_status' => 'draft',
       'logs' => [$this->translationRequestLog->id()],
     ];
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
@@ -102,23 +97,9 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
     $this->assertEquals(2, $entity->getRevisionId());
     $this->assertEquals('node', $entity->getEntityTypeId());
     $this->assertEquals('en', $translation_request->getSourceLanguageCode());
-    $this->assertEquals([
-      'fr',
-      'es',
-    ], $translation_request->getTargetLanguageCodes());
-    $this->assertEquals('draft', $translation_request->getRequestStatus());
 
     $translation_request->setSourceLanguageCode('ro');
     $this->assertEquals('ro', $translation_request->getSourceLanguageCode());
-
-    $translation_request->setTargetLanguageCodes(['de', 'el']);
-    $this->assertEquals([
-      'de',
-      'el',
-    ], $translation_request->getTargetLanguageCodes());
-
-    $translation_request->setRequestStatus('accepted');
-    $this->assertEquals('accepted', $translation_request->getRequestStatus());
 
     $data_for_translation = [
       'title' => 'Page title',
