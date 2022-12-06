@@ -12,6 +12,31 @@ use Drupal\Core\Field\FieldItemInterface;
 interface ContactItemInterface extends FieldItemInterface {
 
   /**
+   * Value for the 'contact_type' setting: Requester.
+   */
+  const REQUESTER = 'Requester';
+
+  /**
+   * Value for the 'contact_type' setting: Author.
+   */
+  const AUTHOR = 'Author';
+
+  /**
+   * Value for the 'contact_type' setting: Recipient.
+   */
+  const RECIPIENT = 'Recipient';
+
+  /**
+   * Value for the 'contact_type' setting: Webmaster.
+   */
+  const WEBMASTER = 'Webmaster';
+
+  /**
+   * Value for the 'contact_type' setting: Editor.
+   */
+  const EDITOR = 'Editor';
+
+  /**
    * Returns the contact types of this field type.
    *
    * @return array

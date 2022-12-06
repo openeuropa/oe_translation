@@ -22,31 +22,6 @@ use Drupal\Core\TypedData\DataDefinition;
 class ContactItem extends FieldItemBase implements ContactItemInterface {
 
   /**
-   * Value for the 'contact_type' setting: Requester.
-   */
-  const REQUESTER = 'Requester';
-
-  /**
-   * Value for the 'contact_type' setting: Author.
-   */
-  const AUTHOR = 'Author';
-
-  /**
-   * Value for the 'contact_type' setting: Recipient.
-   */
-  const RECIPIENT = 'Recipient';
-
-  /**
-   * Value for the 'contact_type' setting: Webmaster.
-   */
-  const WEBMASTER = 'Webmaster';
-
-  /**
-   * Value for the 'contact_type' setting: Editor.
-   */
-  const EDITOR = 'Editor';
-
-  /**
    * {@inheritdoc}
    */
   public function isEmpty() {
@@ -64,7 +39,7 @@ class ContactItem extends FieldItemBase implements ContactItemInterface {
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties['contact'] = DataDefinition::create('string')
       ->setLabel(t('Contact'))
-      ->setDescription(t('The contact information about the Poetry request.'))
+      ->setDescription(t('The contact information about the ePoetry request.'))
       ->setRequired(TRUE);
     $properties['contact_type'] = DataDefinition::create('string')
       ->setLabel(t('Contact type'))
