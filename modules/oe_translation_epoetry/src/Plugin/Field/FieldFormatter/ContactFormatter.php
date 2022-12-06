@@ -2,21 +2,23 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_poetry\Plugin\Field\FieldFormatter;
+namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 
 /**
- * Plugin implementation of the 'Organisational Contact' formatter.
+ * Plugin implementation of the 'Contact' formatter.
  *
  * @FieldFormatter(
- *   id = "oe_translation_poetry_organisation_contact_formatter",
- *   label = @Translation("Organisational Contact Formatter"),
- *   field_types = {"oe_translation_poetry_organisation_contact"}
+ *   id = "oe_transalation_epoetry_contact_formatter",
+ *   label = @Translation("Contact"),
+ *   field_types = {
+ *     "oe_transalation_epoetry_contact"
+ *   }
  * )
  */
-class OrganisationalContactFormatter extends FormatterBase {
+class ContactFormatter extends FormatterBase {
 
   /**
    * {@inheritdoc}
@@ -27,12 +29,12 @@ class OrganisationalContactFormatter extends FormatterBase {
     }
 
     $elements = [];
+    $types = $items[0]->contactTypes();
     foreach ($items as $delta => $item) {
       $elements[$delta] = [
         '#markup' => implode('<br />', [
-          $item->responsible,
-          $item->author,
-          $item->requester,
+          $types[$item->contact_type] ?? '',
+          !empty($item->contact) ? $item->contact : '',
         ]),
       ];
     }

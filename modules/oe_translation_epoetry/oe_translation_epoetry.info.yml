@@ -1,0 +1,8 @@
+name: OpenEuropa Translation ePoetry
+description: Integration of the ePoetry service into the OpenEuropa translation framework.
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^9.2
+dependencies:
+  - oe_translation:oe_translation
