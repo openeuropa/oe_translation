@@ -21,37 +21,6 @@ field.value.poetry_request_id:
       type: string
       label: Product
 
-field.value.oe_translation_poetry_personal_contact:
-  type: mapping
-  label: Default value
-  mapping:
-    author:
-      type: string
-      label: Author
-    secretary:
-      type: string
-      label: Secretary
-    contact:
-      type: string
-      label: Contact
-    responsible:
-      type: string
-      label: Responsible
-
-field.value.oe_translation_poetry_organisation_contact:
-  type: mapping
-  label: Default value
-  mapping:
-    responsible:
-      type: string
-      label: Responsible
-    author:
-      type: string
-      label: Author
-    requester:
-      type: string
-      label: Requester
-
 tmgmt.translator.settings.poetry:
   type: mapping
   mapping:

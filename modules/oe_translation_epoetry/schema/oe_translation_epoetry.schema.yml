@@ -1,0 +1,10 @@
+field.value.oe_transalation_epoetry_contact:
+  type: mapping
+  label: Default value
+  mapping:
+    contact_type:
+      type: string
+      label: Contact type
+    contact:
+      type: string
+      label: Contact

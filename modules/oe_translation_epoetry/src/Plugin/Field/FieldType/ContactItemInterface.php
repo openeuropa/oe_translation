@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_poetry\Plugin\Field\FieldType;
+namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemInterface;
 
 /**
- * Represents a Poetry contact field item.
+ * Interface class for the Contact item field type.
  */
 interface ContactItemInterface extends FieldItemInterface {
 
@@ -15,7 +15,7 @@ interface ContactItemInterface extends FieldItemInterface {
    * Returns the contact types of this field type.
    *
    * @return array
-   *   The contact type value labels keyed by their machine names.
+   *   The contact type values.
    */
   public static function contactTypes(): array;
 
