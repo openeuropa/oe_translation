@@ -13,8 +13,8 @@ use Drupal\Core\TypedData\DataDefinition;
  *
  * @FieldType(
  *   id = "oe_transalation_epoetry_contact",
- *   label = @Translation("Contact"),
- *   category = @Translation("OpenEuropa"),
+ *   label = @Translation("ePoetry contact"),
+ *   category = @Translation("OE Translation"),
  *   default_widget = "oe_transalation_epoetry_contact_widget",
  *   default_formatter = "oe_transalation_epoetry_contact_formatter"
  * )
@@ -80,9 +80,9 @@ class ContactItem extends FieldItemBase implements ContactItemInterface {
     return [
       self::AUTHOR,
       self::REQUESTER,
+      self::RECIPIENT,
       self::EDITOR,
       self::WEBMASTER,
-      self::RECIPIENT,
     ];
   }
 

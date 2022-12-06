@@ -7,7 +7,7 @@ namespace Drupal\oe_translation_poetry\EventSubscriber;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
-use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
+use Drupal\oe_translation_poetry_html_formatter\ContentFormatterInterface;
 use Drupal\tmgmt\Entity\Job;
 use Drupal\tmgmt\JobInterface;
 use Drupal\tmgmt\JobItemInterface;
@@ -44,7 +44,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
   /**
    * The content formatter.
    *
-   * @var \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface
+   * @var \Drupal\oe_translation_poetry_html_formatter\ContentFormatterInterface
    */
   protected $contentFormatter;
 
@@ -55,10 +55,10 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
    *   The entity type manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger.
-   * @param \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface $contentFormatter
+   * @param \Drupal\oe_translation_poetry_html_formatter\ContentFormatterInterface $contentFormatter
    *   The content formatter.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LoggerChannelFactoryInterface $loggerChannelFactory, PoetryContentFormatterInterface $contentFormatter) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LoggerChannelFactoryInterface $loggerChannelFactory, ContentFormatterInterface $contentFormatter) {
     $this->entityTypeManager = $entityTypeManager;
     $this->logger = $loggerChannelFactory->get('poetry');
     $this->contentFormatter = $contentFormatter;

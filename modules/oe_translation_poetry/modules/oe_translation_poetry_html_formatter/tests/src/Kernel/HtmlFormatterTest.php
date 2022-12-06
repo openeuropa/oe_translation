@@ -142,7 +142,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
    * Tests that the formatter exports a correctly formatted Poetry html.
    */
   public function testHtmlFormatterExport() {
-    /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
+    /** @var \Drupal\oe_translation_poetry_html_formatter\HtmlFormatter $formatter */
     $formatter = $this->container->get('oe_translation_poetry.html_formatter');
 
     /** @var \Drupal\Core\Render\Markup $export */
@@ -155,7 +155,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
    * Tests that the formatter can import a correctly formatted Poetry html.
    */
   public function testHtmlFormatterImport() {
-    /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
+    /** @var \Drupal\oe_translation_poetry_html_formatter\HtmlFormatter $formatter */
     $formatter = $this->container->get('oe_translation_poetry.html_formatter');
     $actual_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
     $expected_data = [

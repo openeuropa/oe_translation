@@ -29,12 +29,11 @@ class ContactFormatter extends FormatterBase {
     }
 
     $elements = [];
-    $types = $items[0]->contactTypes();
     foreach ($items as $delta => $item) {
       $elements[$delta] = [
         '#markup' => implode('<br />', [
-          $types[$item->contact_type] ?? '',
-          !empty($item->contact) ? $item->contact : '',
+          $item->contact_type,
+          $item->contact,
         ]),
       ];
     }

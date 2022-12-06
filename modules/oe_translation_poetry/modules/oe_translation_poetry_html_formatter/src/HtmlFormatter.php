@@ -20,7 +20,7 @@ use Drupal\tmgmt\JobInterface;
  *
  * @see \Drupal\tmgmt_file\Plugin\tmgmt_file\Format\Html
  */
-class PoetryHtmlFormatter implements PoetryContentFormatterInterface {
+class HtmlFormatter implements ContentFormatterInterface {
 
   /**
    * The TMGMT Data manager.

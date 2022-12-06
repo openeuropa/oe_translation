@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: epoetry
+label: 'ePoetry'
+third_party_settings:
+  oe_translation_remote:
+    remote_bundle: true

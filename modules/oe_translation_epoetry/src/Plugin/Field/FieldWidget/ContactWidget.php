@@ -28,7 +28,7 @@ class ContactWidget extends WidgetBase {
       '#type' => 'select',
       '#title' => $this->t('Contact type'),
       '#default_value' => $items[$delta]->contact_type ?? NULL,
-      '#options' => $types,
+      '#options' => array_combine($types, $types),
       '#empty_value' => '_none',
     ];
     $element['contact'] = [

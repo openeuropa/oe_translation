@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.auto_accept
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: oe_translation_request.epoetry.auto_accept
+field_name: auto_accept
+entity_type: oe_translation_request
+bundle: epoetry
+label: 'Auto accept translations'
+description: 'Choose if incoming translations should be auto-accepted'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

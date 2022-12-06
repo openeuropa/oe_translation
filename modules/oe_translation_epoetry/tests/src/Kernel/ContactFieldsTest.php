@@ -15,7 +15,6 @@ class ContactFieldsTest extends TranslationKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'oe_translation_poetry_html_formatter',
     'oe_translation_epoetry',
   ];
 
@@ -56,23 +55,9 @@ class ContactFieldsTest extends TranslationKernelTestBase {
           'contact' => '',
         ],
       ],
-      'only-contact_type' => [
-        'field_values' => [
-          'contact_type' => '',
-          'contact' => 'Contact information.',
-        ],
-        'expected' => '<br />Contact information.',
-      ],
-      'only-contact' => [
-        'field_values' => [
-          'contact_type' => 3,
-          'contact' => '',
-        ],
-        'expected' => 'Webmaster<br />',
-      ],
       'both-values' => [
         'field_values' => [
-          'contact_type' => 2,
+          'contact_type' => 'Editor',
           'contact' => 'Contact information of the Editor.',
         ],
         'expected' => 'Editor<br />Contact information of the Editor.',

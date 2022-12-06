@@ -15,7 +15,6 @@
         "behat/behat": "^3.10",
         "composer/installers": "^1.11",
         "cweagans/composer-patches": "^1.7",
-        "egulias/email-validator": "^2.1.22 || ^3.0",
         "drupal/address": "^1.9",
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
@@ -23,25 +22,32 @@
         "drupal/core-dev": "^9.2",
         "drupal/ctools": "^3.7",
         "drupal/drupal-extension": "^4.0",
+        "drupal/entity_version": "^1.0-beta8",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.13",
         "drupal/token": "^1.10",
         "drupaltest/behat-traits": "^0.3",
         "drush/drush": "^10.3",
         "ec-europa/oe-poetry-client": "^0.6",
+        "egulias/email-validator": "^2.1.22 || ^3.0",
         "openeuropa/behat-transformation-context": "^0.1",
         "openeuropa/code-review": "^2.0",
-        "openeuropa/oe_multilingual": "^1.10",
+        "openeuropa/epoetry-client": "dev-master",
         "openeuropa/oe_editorial": "^1",
-        "drupal/entity_version": "^1.0-beta8",
+        "openeuropa/oe_multilingual": "^1.10",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta5",
-        "phpspec/prophecy-phpunit": "^1 || ^2"
+        "phpspec/prophecy-phpunit": "^1 || ^2",
+        "symfony/property-access": "~4",
+        "symfony/property-info": "~4"
     },
     "_readme": [
         "Explicit requirement for egulias/email-validator due to https://www.drupal.org/project/drupal/issues/3061074#comment-14300579. It can be removed when Drupal core 9.2 support is droppped.",
         "Explicit lower version requirement of drupal/ctools due to Drupal core 9.2 compatibility.",
         "Explicit requirement of drupal/token module due to PHP7.4 compatbility.",
-        "Patching TMGMT to ensure that when a new translation is saved onto the entity, it doesn't create a new revision"
+        "Patching TMGMT to ensure that when a new translation is saved onto the entity, it doesn't create a new revision",
+        "Autoload for OpenEuropa\\EPoetry\\Tests\\ temporarily until we stop using the Mock authentication.",
+        "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation. Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791.",
+        "Requireding symfony propery-access and propery-info for the ePoetry mock for the serializer that uses them."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -51,6 +57,10 @@
         "post-update-cmd": "./vendor/bin/run drupal:site-setup"
     },
     "repositories": {
+        "epoetry-client": {
+            "type": "vcs",
+            "url": "https://github.com/openeuropa/epoetry-client"
+        },
         "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
@@ -58,7 +68,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Drupal\\oe_translation\\": "./src/"
+            "Drupal\\oe_translation\\": "./src/",
+            "OpenEuropa\\EPoetry\\Tests\\": "./vendor/openeuropa/epoetry-client/tests/",
+            "Symfony\\Component\\PropertyInfo\\": "./vendor/symfony/property-info/",
+            "Symfony\\Component\\PropertyAccess\\": "./vendor/symfony/property-access/"
         }
     },
     "autoload-dev": {
@@ -89,6 +102,9 @@
             "drupal/tmgmt": {
                 "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2022-07-07/2942236-7.patch",
                 "no-new-revisions": "patches/tmgmt_no_new_revision.patch"
+            },
+            "drupal/core": {
+                "stop_propagation": "patches/stop-propagation.patch"
             }
         }
     },

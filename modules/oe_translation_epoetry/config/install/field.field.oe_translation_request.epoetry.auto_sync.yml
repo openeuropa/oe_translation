@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.auto_sync
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: oe_translation_request.epoetry.auto_sync
+field_name: auto_sync
+entity_type: oe_translation_request
+bundle: epoetry
+label: 'Automatic synchronisation'
+description: 'Choose if accepted translations should be automatically synchronised with the content (i.e. copied over onto the main content)'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

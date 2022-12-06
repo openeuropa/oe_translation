@@ -1,0 +1,6 @@
+<S:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:S="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns0="http://eu.europa.ec.dgt.epoetry">
+   <env:Header/>
+   <S:Body>
+      @response
+   </S:Body>
+</S:Envelope>

@@ -1,0 +1,30 @@
+field.value.oe_transalation_epoetry_contact:
+  type: mapping
+  label: Default value
+  mapping:
+    contact_type:
+      type: string
+      label: Contact type
+    contact:
+      type: string
+      label: Contact
+
+oe_translation_remote.remote_translation_provider.plugin.epoetry:
+  type: mapping
+  label: Plugin configuration for the ePoetry plugin
+  mapping:
+    contacts:
+      type: sequence
+      label: Contacts
+      sequence:
+        type: string
+        label: Contact (keyed by type of contact)
+    auto_accept:
+      type: boolean
+      label: Auto-accept translations
+    title_prefix:
+      type: string
+      label: Title prefix
+    site_id:
+      type: string
+      label: The site ID

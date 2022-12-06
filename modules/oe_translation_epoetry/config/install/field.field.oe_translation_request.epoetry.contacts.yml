@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.contacts
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - oe_translation_epoetry
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: oe_translation_request.epoetry.contacts
+field_name: contacts
+entity_type: oe_translation_request
+bundle: epoetry
+label: Contacts
+description: 'The contacts for this request.'
+required: true
+translatable: false
+default_value:
+  -
+    contact_type: _none
+    contact: ''
+  -
+    contact_type: _none
+    contact: ''
+default_value_callback: ''
+settings: {  }
+field_type: oe_transalation_epoetry_contact

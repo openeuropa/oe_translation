@@ -13,7 +13,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\oe_translation_poetry\Poetry;
 use Drupal\oe_translation_poetry\PoetryJobQueueFactory;
-use Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface;
+use Drupal\oe_translation_poetry_html_formatter\ContentFormatterInterface;
 use Drupal\tmgmt\JobInterface;
 use EC\Poetry\Messages\Components\Identifier;
 use EC\Poetry\Messages\Responses\ResponseInterface;
@@ -48,7 +48,7 @@ abstract class PoetryCheckoutFormBase extends FormBase {
   /**
    * The content formatter.
    *
-   * @var \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface
+   * @var \Drupal\oe_translation_poetry_html_formatter\ContentFormatterInterface
    */
   protected $contentFormatter;
 
@@ -75,14 +75,14 @@ abstract class PoetryCheckoutFormBase extends FormBase {
    *   The Poetry client.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
-   * @param \Drupal\oe_translation_poetry_html_formatter\PoetryContentFormatterInterface $contentFormatter
+   * @param \Drupal\oe_translation_poetry_html_formatter\ContentFormatterInterface $contentFormatter
    *   The content formatter.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, PoetryContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(PoetryJobQueueFactory $queueFactory, Poetry $poetry, MessengerInterface $messenger, ContentFormatterInterface $contentFormatter, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager) {
     $this->queueFactory = $queueFactory;
     $this->poetry = $poetry;
     $this->messenger = $messenger;
