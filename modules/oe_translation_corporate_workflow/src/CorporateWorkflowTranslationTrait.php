@@ -32,4 +32,28 @@ trait CorporateWorkflowTranslationTrait {
     return implode('.', $version);
   }
 
+  /**
+   * Query for the revisions in the same major and minor.
+   *
+   * Given a revision, this is meant to return the published revision and the
+   * validated one from the same major and minor version.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  protected function queryRevisionsInSameMajorAndMinor(ContentEntityInterface $entity): array {
+    /** @var \Drupal\entity_version\Plugin\Field\FieldType\EntityVersionItem $original_version */
+    $original_version = $entity->get('version')->first();
+    $original_major = $original_version->get('major')->getValue();
+    $original_minor = $original_version->get('minor')->getValue();
+    return $this->entityTypeManager->getStorage($entity->getEntityTypeId())
+      ->getQuery()
+      ->condition($entity->getEntityType()->getKey('id'), $entity->id())
+      ->condition('version.major', $original_major)
+      ->condition('version.minor', $original_minor)
+      ->accessCheck(FALSE)
+      ->allRevisions()
+      ->execute();
+  }
+
 }

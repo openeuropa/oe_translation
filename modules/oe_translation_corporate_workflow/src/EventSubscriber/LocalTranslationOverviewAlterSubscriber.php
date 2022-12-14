@@ -235,19 +235,7 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
     // Query for the revisions in the same major and minor as the currently
     // published revision. This will yield the validated and published
     // (current) one.
-    /** @var \Drupal\entity_version\Plugin\Field\FieldType\EntityVersionItem $original_version */
-    $original_version = $entity->get('version')->first();
-    $original_major = $original_version->get('major')->getValue();
-    $original_minor = $original_version->get('minor')->getValue();
-    $results = $this->entityTypeManager->getStorage($entity->getEntityTypeId())
-      ->getQuery()
-      ->condition($entity->getEntityType()->getKey('id'), $entity->id())
-      ->condition('version.major', $original_major)
-      ->condition('version.minor', $original_minor)
-      ->accessCheck(FALSE)
-      ->allRevisions()
-      ->execute();
-
+    $results = $this->queryRevisionsInSameMajorAndMinor($entity);
     if (count($results) !== 2) {
       // There should be two results: the validated revision and the published
       // one.
