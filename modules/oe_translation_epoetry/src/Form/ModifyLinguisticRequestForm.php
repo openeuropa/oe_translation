@@ -99,9 +99,13 @@ class ModifyLinguisticRequestForm extends FormBase {
       return AccessResult::forbidden()->addCacheableDependency($cache);
     }
 
-    // We only allow to add new languages if the request is accepted. The API
-    // allows other statuses as well but we try to simplify.
-    $allowed = $translation_request->getEpoetryRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED && $translation_request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE;
+    // We only allow to add new languages if the request is accepted or
+    // suspended.
+    $states = [
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED,
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
+    ];
+    $allowed = in_array($translation_request->getEpoetryRequestStatus(), $states) && $translation_request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE;
     if ($allowed) {
       return AccessResult::allowed()->addCacheableDependency($cache);
     }

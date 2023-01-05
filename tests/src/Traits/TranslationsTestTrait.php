@@ -125,12 +125,15 @@ trait TranslationsTestTrait {
   /**
    * Creates a test node with minimal field values.
    *
+   * @param string $bundle
+   *   The node bundle.
+   *
    * @return \Drupal\node\NodeInterface
    *   The created node.
    */
-  protected function createBasicTestNode(): NodeInterface {
+  protected function createBasicTestNode(string $bundle = 'oe_demo_translatable_page'): NodeInterface {
     $node = Node::create([
-      'type' => 'oe_demo_translatable_page',
+      'type' => $bundle,
       'title' => 'Basic translation node',
     ]);
 

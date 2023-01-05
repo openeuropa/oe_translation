@@ -1,0 +1,23 @@
+<notification>
+  <notificationType>ProductDelivery</notificationType>
+  <product>
+    <productReference>
+      <requestReference>
+        <requesterCode>{{ request_id.code }}</requesterCode>
+        <year>{{ request_id.year }}</year>
+        <number>{{ request_id.number }}</number>
+        <part>{{ request_id.part }}</part>
+        <version>{{ request_id.version }}</version>
+        <productType>{{ request_id.service }}</productType>
+      </requestReference>
+      <language>{{ language }}</language>
+    </productReference>
+    <status>{{ status }}</status>
+    <file>
+      {{ file }}
+    </file>
+    <name>{{ name }}</name>
+    <format>{{ format }}</format>
+  </product>
+  <planningSector>{{ planning_sector }}</planningSector>
+</notification>

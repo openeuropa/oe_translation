@@ -8,3 +8,8 @@ services:
   oe_translation_epoetry.new_version_request_handler:
     class: Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandler
     arguments: ['@entity_type.manager']
+  oe_translation_epoetry.notifications_subscriber:
+    class: Drupal\oe_translation_epoetry\EventSubscriber\NotificationsSubscriber
+    arguments: ['@entity_type.manager', '@oe_translation_epoetry.html_formatter']
+    tags:
+      - { name: event_subscriber }

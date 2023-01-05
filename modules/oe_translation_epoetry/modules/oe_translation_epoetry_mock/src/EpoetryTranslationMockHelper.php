@@ -4,13 +4,94 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_epoetry_mock;
 
+use Drupal\Core\Render\RenderContext;
+use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
+use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 
 /**
  * Helper class to deal with requests until we have notifications set up.
  */
 class EpoetryTranslationMockHelper extends TestRemoteTranslationMockHelper {
+
+  /**
+   * The PHPUnit test database prefix.
+   *
+   * We set this from the outside in case we are using this helper from within
+   * a test.
+   *
+   * @var string
+   */
+  public static $databasePrefix;
+
+  /**
+   * Adds dummy translation request values for a given language.
+   *
+   * @param \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $request
+   *   The translation request.
+   * @param string $langcode
+   *   The langcode.
+   * @param string|null $suffix
+   *   An extra suffix to append to the translation.
+   */
+  public static function translateRequest(TranslationRequestRemoteInterface $request, string $langcode, ?string $suffix = NULL): void {
+    $data = $request->getData();
+
+    foreach ($data as $field => &$info) {
+      if (!is_array($info)) {
+        continue;
+      }
+
+      static::translateFieldData($info, $langcode, $suffix);
+    }
+
+    // Set the translated data onto the request as the original so that we can
+    // export it using the content exporter.
+    $request->setData($data);
+    $exported = \Drupal::service('oe_translation_epoetry.html_formatter')->export($request);
+
+    $values = [
+      '#request_id' => $request->getRequestId(),
+      '#language' => $langcode,
+      '#status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SENT,
+      '#file' => base64_encode((string) $exported),
+      '#name' => $request->getContentEntity()->label(),
+      '#format' => 'HTML',
+    ];
+
+    \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values) {
+      $build = [
+        '#theme' => 'product_delivery',
+      ] + $values;
+
+      $notification = (string) \Drupal::service('renderer')->renderRoot($build);
+
+      static::performNotification($notification);
+    });
+
+  }
+
+  /**
+   * Recursively sets translated data to field values.
+   *
+   * @param array $data
+   *   The data.
+   * @param string $langcode
+   *   The langcode.
+   * @param string|null $suffix
+   *   An extra suffix to append to the translation.
+   */
+  protected static function translateFieldData(array &$data, string $langcode, ?string $suffix = NULL): void {
+    parent::translateFieldData($data, $langcode, $suffix);
+
+    // Set the translation value onto the original.
+    if (isset($data['#translation']['#text']) && $data['#translation']['#text'] != "") {
+      $data['#text'] = $data['#translation']['#text'];
+    }
+  }
 
   /**
    * Notifies the request.
@@ -27,14 +108,81 @@ class EpoetryTranslationMockHelper extends TestRemoteTranslationMockHelper {
 
     switch ($type) {
       case 'RequestStatusChange':
-        $request->setEpoetryRequestStatus($notification['status']);
+        $values = [
+          '#request_id' => $request->getRequestId(),
+          '#planning_agent' => 'test',
+          '#planning_sector' => 'DGT',
+          '#status' => $notification['status'],
+          '#message' => sprintf('The request status has been changed to %s', $notification['status']),
+        ];
+        if (isset($notification['message']) && $notification['message']) {
+          $values['#message'] = $notification['message'];
+        }
+
+        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values) {
+            $build = [
+              '#theme' => 'request_status_change',
+            ] + $values;
+
+            $notification = (string) \Drupal::service('renderer')->renderRoot($build);
+            static::performNotification($notification);
+        });
+
         break;
 
       case 'ProductStatusChange':
-        $language = $notification['language'];
-        $request->updateTargetLanguageStatus($language, $notification['status']);
+        $values = [
+          '#request_id' => $request->getRequestId(),
+          // @todo use the language mapper.
+          '#language' => strtoupper($notification['language']),
+          '#status' => $notification['status'],
+        ];
+
+        if ($notification['status'] === TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING) {
+          $values['#accepted_deadline'] = TRUE;
+        }
+
+        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values) {
+            $build = [
+              '#theme' => 'product_status_change',
+            ] + $values;
+
+            $notification = (string) \Drupal::service('renderer')->renderRoot($build);
+            static::performNotification($notification);
+        });
+
+        break;
+
+      case 'ProductDelivery':
+        static::translateRequest($request, $notification['language']);
         break;
     }
+  }
+
+  /**
+   * Calls the notification endpoint with a message.
+   *
+   * This mimics notification requests sent by ePoetry.
+   *
+   * @param string $notification
+   *   The notification message.
+   */
+  protected static function performNotification(string $notification): void {
+    $url = Url::fromRoute('oe_translation_epoetry.notifications_endpoint')->setAbsolute()->toString();
+    if (Settings::get('epoetry_notifications_endpoint')) {
+      $url = Settings::get('epoetry_notifications_endpoint');
+    }
+    $client = new \SoapClient(NULL, [
+      'cache_wsdl' => WSDL_CACHE_NONE,
+      'location' => $url,
+      'uri' => 'http://eu.europa.ec.dgt.epoetry',
+    ]);
+
+    if (static::$databasePrefix) {
+      $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua(static::$databasePrefix));
+    }
+
+    $client->receiveNotification(new \SoapParam(new \SoapVar($notification, XSD_ANYXML), 'notification'));
   }
 
 }

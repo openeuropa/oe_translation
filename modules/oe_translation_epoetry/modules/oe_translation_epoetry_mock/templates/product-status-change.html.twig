@@ -1,0 +1,20 @@
+<notification>
+  <notificationType>ProductStatusChange</notificationType>
+  <product>
+    <productReference>
+      <requestReference>
+        <requesterCode>{{ request_id.code }}</requesterCode>
+        <year>{{ request_id.year }}</year>
+        <number>{{ request_id.number }}</number>
+        <part>{{ request_id.part }}</part>
+        <version>{{ request_id.version }}</version>
+        <productType>{{ request_id.service }}</productType>
+      </requestReference>
+      <language>{{ language }}</language>
+    </productReference>
+    <status>{{ status }}</status>
+    {% if accepted_deadline %}
+      <acceptedDeadline>2050-04-04T12:51:00.000+02:00</acceptedDeadline>
+    {% endif %}
+  </product>
+</notification>

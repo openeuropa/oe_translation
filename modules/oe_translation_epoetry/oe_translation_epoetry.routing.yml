@@ -23,3 +23,10 @@ oe_translation_epoetry.modify_linguistic_request:
     parameters:
       translation_request:
         type: entity:oe_translation_request
+
+oe_translation_epoetry.notifications_endpoint:
+  path: '/translation-request/epoetry/notifications'
+  defaults:
+    _controller: Drupal\oe_translation_epoetry\Controller\EpoetryController::notifications
+  requirements:
+    _permission: 'access content'

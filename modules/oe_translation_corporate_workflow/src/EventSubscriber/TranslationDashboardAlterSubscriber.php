@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -36,16 +37,26 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected $languageManager;
 
   /**
+   * The moderation information service.
+   *
+   * @var \Drupal\content_moderation\ModerationInformationInterface
+   */
+  protected $moderationInformation;
+
+  /**
    * Creates a new TranslationDashboardAlterSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
+   * @param \Drupal\content_moderation\ModerationInformationInterface $moderationInformation
+   *   The moderation information service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, ModerationInformationInterface $moderationInformation) {
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
+    $this->moderationInformation = $moderationInformation;
   }
 
   /**
@@ -74,6 +85,12 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
     $entity = $this->entityTypeManager->getStorage($event->getEntityTypeId())->load($entity->id());
+
+    /** @var \Drupal\workflows\WorkflowInterface $workflow */
+    $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+      return;
+    }
 
     // Alter the existing translations table.
     $this->alterExistingTranslationsTable($build, $entity);

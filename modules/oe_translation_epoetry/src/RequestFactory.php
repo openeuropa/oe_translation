@@ -259,7 +259,7 @@ class RequestFactory extends RequestClientFactory {
     $content = $this->formatter->export($request);
     $original_document = (new OriginalDocumentIn())
       ->setTrackChanges(FALSE)
-      ->setFileName($entity->label())
+      ->setFileName(str_replace(' ', '-', $entity->label()) . '.html')
       ->setContent((string) $content)
       ->setComment($entity->toUrl('revision')->setAbsolute()->toString())
       ->setLinguisticSections($linguistic_sections);

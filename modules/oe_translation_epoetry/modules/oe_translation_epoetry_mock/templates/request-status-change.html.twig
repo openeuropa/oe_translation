@@ -1,0 +1,20 @@
+<notification>
+  <notificationType>RequestStatusChange</notificationType>
+  <linguisticRequest>
+    <requestReference>
+      <requesterCode>{{ request_id.code }}</requesterCode>
+      <year>{{ request_id.year }}</year>
+      <number>{{ request_id.number }}</number>
+      <part>{{ request_id.part }}</part>
+      <version>{{ request_id.version }}</version>
+      <productType>{{ request_id.service }}</productType>
+    </requestReference>
+    <status>{{ status }}</status>
+  </linguisticRequest>
+  {% if message %}
+    <message>{{ message }}</message>
+  {% endif %}
+  <planningAgent>{{ planning_agent }}</planningAgent>
+  <planningSector>{{ planning_sector }}</planningSector>
+</notification>
+

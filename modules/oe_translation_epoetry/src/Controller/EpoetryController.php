@@ -9,9 +9,17 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use OpenEuropa\EPoetry\NotificationServerFactory;
+use OpenEuropa\EPoetry\Serializer\Serializer;
+use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
+use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Controller for ePoetry routes.
@@ -39,6 +47,31 @@ class EpoetryController extends ControllerBase {
     return new static(
       $container->get('oe_translation_epoetry.new_version_request_handler')
     );
+  }
+
+  /**
+   * Notifications callback for ePoetry.
+   *
+   * Handles the SOAP requests from ePoetry that change statuses or deliver
+   * translations.
+   *
+   * @todo add basic access check.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current Symfony request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The Symfony response containing the SOAP envelope.
+   */
+  public function notifications(Request $request): Response {
+    $callback = Url::fromRoute('oe_translation_epoetry.notifications_endpoint')->setAbsolute()->toString();
+    $server_factory = new NotificationServerFactory($callback, \Drupal::service('event_dispatcher'), \Drupal::logger('epoetry'), new Serializer());
+    $psr_factory = new Psr17Factory();
+    $psr_http_factory = new PsrHttpFactory($psr_factory, $psr_factory, $psr_factory, $psr_factory);
+    $psr_request = $psr_http_factory->createRequest($request);
+    $response = $server_factory->handle($psr_request);
+    $http_foundation_factory = new HttpFoundationFactory();
+    return $http_foundation_factory->createResponse($response);
   }
 
   /**

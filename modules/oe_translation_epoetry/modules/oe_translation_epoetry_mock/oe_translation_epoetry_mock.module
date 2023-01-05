@@ -16,6 +16,42 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
+ * Implements hook_theme().
+ */
+function oe_translation_epoetry_mock_theme() {
+  return [
+    'request_status_change' => [
+      'variables' => [
+        'status' => NULL,
+        'planning_agent' => NULL,
+        'planning_sector' => NULL,
+        'message' => NULL,
+        'request_id' => [],
+      ],
+    ],
+    'product_status_change' => [
+      'variables' => [
+        'status' => NULL,
+        'language' => NULL,
+        'request_id' => [],
+        'accepted_deadline' => NULL,
+      ],
+    ],
+    'product_delivery' => [
+      'variables' => [
+        'status' => NULL,
+        'language' => NULL,
+        'request_id' => [],
+        'planning_sector' => NULL,
+        'file' => NULL,
+        'name' => NULL,
+        'format' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
  * Implement template_preprocess_table__remote_language_list().
  */
 function oe_translation_epoetry_mock_preprocess_table__remote_language_list(array &$variables) {
@@ -76,9 +112,12 @@ function oe_translation_epoetry_mock_preprocess_table__remote_language_list(arra
     if ($current_status_key > 1) {
       $row['cells']['operations']['content']['#links'][] = [
         'title' => 'Translate (mock)',
-        'url' => Url::fromRoute('oe_translation_remote_test.mock_translate_request', [
+        'url' => Url::fromRoute('oe_translation_epoetry_mock.notify', [
           'oe_translation_request' => $id,
-          'langcode' => $langcode,
+          'notification' => Json::encode([
+            'type' => 'ProductDelivery',
+            'language' => $langcode,
+          ]),
         ], [
           'query' => [
             'destination' => Url::fromRoute('<current>')->toString(),
@@ -136,6 +175,7 @@ function oe_translation_epoetry_mock_oe_translation_request_view_alter(array &$b
         'notification' => Json::encode([
           'type' => 'RequestStatusChange',
           'status' => $status,
+          'message' => $status === 'Rejected' ? 'We cannot processes this request' : NULL,
         ]),
       ],
         [

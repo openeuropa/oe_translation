@@ -83,6 +83,52 @@ class HtmlFormatter implements ContentFormatterInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function import(string $file, TranslationRequestInterface $request): array {
+    // Flatted the entire original request data so we have the original bits
+    // as well to combine with the translation values.
+    $request_data = [$request->id() => $request->getData()];
+    $flattened_request_data = $this->tmgmtData->flatten($request_data);
+
+    // Start a fresh array of translation data so that we can only include
+    // things that actually have translation values. This is to avoid
+    // duplicating a lot of storage data.
+    $translation_data = [];
+
+    $dom = new \DOMDocument();
+    $dom->loadHTML($file);
+    $xml = simplexml_import_dom($dom);
+
+    if (!$xml) {
+      return [];
+    }
+
+    foreach ($xml->xpath("//div[@class='atom']") as $atom) {
+      $key = $this->decodeIdSafeBase64((string) $atom['id']);
+      $dom->loadXML($atom->asXML());
+      $node = $dom->getElementsByTagName('div')->item(0);
+
+      if (!isset($flattened_request_data[$key])) {
+        continue;
+      }
+
+      $translation_data[$key] = $flattened_request_data[$key];
+      $translation_data[$key]['#translation'] = ['#text' => ''];
+      foreach ($node->childNodes as $child) {
+        if ($child->nodeType === XML_TEXT_NODE) {
+          $translation_data[$key]['#translation']['#text'] .= $child->nodeValue;
+        }
+        else {
+          $translation_data[$key]['#translation']['#text'] .= $dom->saveXml($child);
+        }
+      }
+    }
+
+    return $this->tmgmtData->unflatten($translation_data);
+  }
+
+  /**
    * Returns base64 encoded data that is safe for use in xml ids.
    *
    * @param string $data
