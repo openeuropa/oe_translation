@@ -3,6 +3,8 @@
 The OpenEuropa Translation provides the translation capabilities for
 OpenEuropa contents and translatable items.
 
+You can read the user guide [here](https://github.com/openeuropa/oe_translation/blob/2.x/USER_GUIDE.md).
+
 ## Development setup
 
 You can build the development site by running the following steps:
