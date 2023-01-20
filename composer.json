@@ -9,35 +9,52 @@
         "php": ">=8.0",
         "cweagans/composer-patches": "~1.4",
         "drupal/core": "^9.4",
-        "drupal/tmgmt": "1.11",
+        "drupal/tmgmt": "1.14",
         "jakeasmith/http_build_url": "^1.0"
     },
     "require-dev": {
         "behat/behat": "^3.10",
+        "behat/mink-selenium2-driver": "^1.5",
         "composer/installers": "^1.11",
         "drupal/address": "^1.9",
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
         "drupal/core-composer-scaffold": "^9.4",
-        "drupal/ctools": "3.9.0",
-        "drupal/drupal-extension": "^4.0",
+        "drupal/ctools": "^3.9",
+        "drupal/drupal-extension": "dev-master as 4.0",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.11",
         "drupal/token": "^1.10",
         "drupaltest/behat-traits": "^0.3",
-        "drush/drush": "^10.3",
-        "fabpot/goutte": "^3.3",
-        "ec-europa/oe-poetry-client": "^0.6",
-        "openeuropa/behat-transformation-context": "^0.1",
-        "openeuropa/code-review": "^2.0",
-        "openeuropa/oe_multilingual": "^1.10",
-        "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta5",
-        "phpspec/prophecy-phpunit": "^1 || ^2"
+        "drush/drush": "^11.1",
+        "ec-europa/oe-poetry-client": "dev-master",
+        "guzzlehttp/guzzle": "^7.0",
+        "masterminds/html5": "^2.7.6",
+        "mikey179/vfsstream": "^1.6.10",
+        "openeuropa/behat-transformation-context": "dev-master",
+        "openeuropa/code-review": "2.x-dev",
+        "openeuropa/oe_multilingual": "dev-master",
+        "openeuropa/task-runner-drupal-project-symlink": "1.x-dev",
+        "phpspec/prophecy-phpunit": "^2",
+        "pimple/pimple": "^3.5",
+        "symfony/css-selector": "^4.4.24",
+        "symfony/dom-crawler": "^4.4.44",
+        "symfony/http-foundation": "^4.4.30",
+        "symfony/phpunit-bridge": "^6.0",
+        "symfony/routing": "^4.4.30",
+        "symfony/validator": "^4.4.30",
+        "symfony/yaml": "^4.4.29"
     },
     "_readme": [
-        "Explicit minimum version requirement of fabpot/goutte due to Drupal 9.3 compatibility.",
-        "Explicit lower version requirement of drupal/ctools due to Drupal core 9.3 compatibility.",
-        "Explicit requirement of drupal/token module due to PHP7.4 compatbility."
+        "Explicit requirement of token module due to lower versions declaring optional parameters before the require one on token_tokens() function.",
+        "Explicit minimum version requirement of symfony/phpunit-bridge to replace drupal/core-dev testing classes and traits.",
+        "Use master branch of drupal/drupal-extension to replace fabpot/goutte with behat/mink-browserkit-driver and the rest of the behat required dependencies.",
+        "Explicit minimum version requirement of symfony/phpunit-bridge to replace drupal/core-dev testing classes and traits.",
+        "Explicit minimum version requirement of symfony packages due to lower versions missing return type on various methods being incompatible with PHP 8.1 parent methods.",
+        "Explicit minimum version requirement of mikey179/vfsstream due to lower versions missing return type on vfsStreamDirectory::getIterator() method.",
+        "Explicit minimum version requirement of masterminds/html5 due to lower versions passing NULL parameters instead of string when calling DOMImplementation::createDocument() method.",
+        "Explicit minimum version requirement of guzzlehttp/guzzle due to lower versions missing return type on CookieJar::getIterator() and CookieJar::count() methods.",
+        "Explicit minimum version requirement of pimple/pimple due to lower versions missing return type on various methods."
     ],
     "scripts": {
         "post-install-cmd": "./vendor/bin/run drupal:site-setup",
@@ -79,7 +96,7 @@
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
             },
             "drupal/tmgmt": {
-                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2020-12-03/2942236-5.patch"
+                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2022-07-07/2942236-7.patch"
             }
         }
     },
