@@ -9,7 +9,7 @@
         "php": ">=8.0",
         "cweagans/composer-patches": "~1.4",
         "drupal/core": "^9.4",
-        "drupal/tmgmt": "1.14",
+        "drupal/tmgmt": "1.11",
         "jakeasmith/http_build_url": "^1.0"
     },
     "require-dev": {
@@ -54,7 +54,8 @@
         "Explicit minimum version requirement of mikey179/vfsstream due to lower versions missing return type on vfsStreamDirectory::getIterator() method.",
         "Explicit minimum version requirement of masterminds/html5 due to lower versions passing NULL parameters instead of string when calling DOMImplementation::createDocument() method.",
         "Explicit minimum version requirement of guzzlehttp/guzzle due to lower versions missing return type on CookieJar::getIterator() and CookieJar::count() methods.",
-        "Explicit minimum version requirement of pimple/pimple due to lower versions missing return type on various methods."
+        "Explicit minimum version requirement of pimple/pimple due to lower versions missing return type on various methods.",
+        "Use local patch for tmgmt locked version 1.11 for PHP8.1 compatiblity."
     ],
     "scripts": {
         "post-install-cmd": "./vendor/bin/run drupal:site-setup",
@@ -96,7 +97,8 @@
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
             },
             "drupal/tmgmt": {
-                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2022-07-07/2942236-7.patch"
+                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2020-12-03/2942236-5.patch",
+                "PHP8.1": "patches/tmgmt.patch"
             }
         }
     },
