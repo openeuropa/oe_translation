@@ -90,7 +90,12 @@ class MockController extends ControllerBase {
       // @todo handle this.
       throw new NotFoundHttpException();
     }
-    $method = key($xml->Body->children());
+    $children = (array) $xml->Body->children();
+    if (!$children) {
+      throw new NotFoundHttpException();
+    }
+
+    $method = key($children);
     if (!method_exists($handler, $method)) {
       // @todo handle this.
       throw new NotFoundHttpException();
