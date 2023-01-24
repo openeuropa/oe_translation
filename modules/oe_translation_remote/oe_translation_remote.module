@@ -5,6 +5,8 @@
  * OE Translation remote module file.
  */
 
+declare(strict_types = 1);
+
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -25,7 +27,7 @@ function oe_translation_remote_entity_type_alter(array &$entity_types) {
   foreach ($entity_types as $entity_type_id => $entity_type) {
     if ($entity_type_id === 'oe_translation_request') {
       /** @var \Drupal\Core\Entity\EntityTypeInterface $remote_translation */
-      $remote_translation = $entity_types[$entity_type_id];
+      $remote_translation = $entity_type;
       $remote_translation->setFormClass('remote_translation_review', RemoteTranslationReviewForm::class);
       $remote_translation->setLinkTemplate('remote-translation-review', '/translation-request/{oe_translation_request}/review');
     }
@@ -35,7 +37,7 @@ function oe_translation_remote_entity_type_alter(array &$entity_types) {
 /**
  * Select list allowed options callback for the request statuses.
  */
-function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, bool $cacheable) {
+function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, bool $cacheable): array {
   $options = [
     TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE => t('Active'),
     TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED => t('Finished'),

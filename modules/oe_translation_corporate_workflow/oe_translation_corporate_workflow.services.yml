@@ -21,5 +21,6 @@ services:
       - { name: event_subscriber }
   oe_translation_corporate_workflow.route_subscriber:
     class: Drupal\oe_translation_corporate_workflow\Routing\RouteSubscriber
+    arguments: ['@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }

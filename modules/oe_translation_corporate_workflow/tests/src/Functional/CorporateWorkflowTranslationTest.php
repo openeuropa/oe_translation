@@ -19,7 +19,7 @@ use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 
 /**
- * Tests the translation revision capability.
+ * Tests the local translation revision capability.
  *
  * Using the corporate workflow, translations can only be started from the
  * validated state, i.e. when a new major version is created.

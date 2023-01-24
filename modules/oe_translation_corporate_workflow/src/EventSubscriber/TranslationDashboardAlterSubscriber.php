@@ -80,7 +80,12 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     // Alter the local translation table.
     if (isset($build['local_translation']['table'])) {
-      $this->alterLocalTranslationTable($build, $entity);
+      $this->alterTranslationTable($build['local_translation']['table'], $entity);
+    }
+
+    // Alter the remote translation table.
+    if (isset($build['remote_translation']['table'])) {
+      $this->alterTranslationTable($build['remote_translation']['table'], $entity);
     }
 
     $cache->applyTo($build);
@@ -88,16 +93,15 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Alters the local translation table.
+   * Alters the local or remote translation table.
    *
-   * @param array $build
-   *   The render array.
+   * @param array $table
+   *   The table render array.
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The current entity.
    */
-  protected function alterLocalTranslationTable(array &$build, ContentEntityInterface $entity): void {
+  protected function alterTranslationTable(array &$table, ContentEntityInterface $entity): void {
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
-    $table = &$build['local_translation']['table'];
     $header = [];
     foreach ($table['#header'] as $key => $col) {
       if ($key === 'operations') {
