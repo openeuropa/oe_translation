@@ -6,8 +6,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=7.4",
-        "drupal/core": "^9.2",
+        "php": ">=8.0",
+        "drupal/core": "^9.4",
         "drupal/tmgmt": "^1.14",
         "jakeasmith/http_build_url": "^1.0"
     },
@@ -19,7 +19,7 @@
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
         "drupal/core-composer-scaffold": "^9.2",
-        "drupal/core-dev": "^9.2",
+        "drupal/core-dev": "^9.4",
         "drupal/ctools": "^3.7",
         "drupal/drupal-extension": "^4.0",
         "drupal/entity_version": "^1.0-beta8",
@@ -38,7 +38,9 @@
         "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta5",
         "phpspec/prophecy-phpunit": "^1 || ^2",
         "symfony/property-access": "~4",
-        "symfony/property-info": "~4"
+        "symfony/property-info": "~4",
+        "php-soap/psr18-transport": "~1.2",
+        "symfony/serializer": "~4.4.47"
     },
     "_readme": [
         "Explicit requirement for egulias/email-validator due to https://www.drupal.org/project/drupal/issues/3061074#comment-14300579. It can be removed when Drupal core 9.2 support is droppped.",
@@ -47,7 +49,8 @@
         "Patching TMGMT to ensure that when a new translation is saved onto the entity, it doesn't create a new revision",
         "Autoload for OpenEuropa\\EPoetry\\Tests\\ temporarily until we stop using the Mock authentication.",
         "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation. Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791.",
-        "Requireding symfony propery-access and propery-info for the ePoetry mock for the serializer that uses them."
+        "Requireding symfony propery-access and propery-info for the ePoetry mock for the serializer that uses them.",
+        "Requiring minimum versions of php-soap/psr18-transport and symfony/serializer for the epoetry client which needs them for lowest dependencies."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -57,10 +60,6 @@
         "post-update-cmd": "./vendor/bin/run drupal:site-setup"
     },
     "repositories": {
-        "epoetry-client": {
-            "type": "vcs",
-            "url": "https://github.com/openeuropa/epoetry-client"
-        },
         "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"

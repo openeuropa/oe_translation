@@ -7,6 +7,7 @@ dependencies:
     - field.field.oe_translation_request.epoetry.auto_sync
     - field.field.oe_translation_request.epoetry.contacts
     - field.field.oe_translation_request.epoetry.deadline
+    - field.field.oe_translation_request.epoetry.epoetry_status
     - field.field.oe_translation_request.epoetry.message
     - field.field.oe_translation_request.epoetry.request_id
     - field.field.oe_translation_request.epoetry.request_status
@@ -52,6 +53,8 @@ content:
 hidden:
   accepted_deadline: true
   contacts: true
+  epoetry_status: true
+  field_epoetry_status: true
   field_request_id: true
   request_id: true
   request_status: true

@@ -9,7 +9,10 @@ declare(strict_types = 1);
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
+use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -49,6 +52,7 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   }
 
   $header = &$build['meta']['#header'];
+  $header['epoetry_request_status'] = t('ePoetry request status');
   $header['request_id'] = t('Request ID');
   $header['auto_accept'] = t('Auto-accept translations');
   $header['auto_sync'] = t('Auto-sync translations');
@@ -56,6 +60,7 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   $header['accepted_deadline'] = t('Accepted deadline');
   $row = &$build['meta']['#rows'][0];
 
+  $row['epoetry_request_status'] = $entity->getEpoetryRequestStatus();
   $row['request_id'] = $entity->getRequestId(TRUE);
   $row['auto_accept'] = $entity->isAutoAccept() ? t('Yes') : t('No');
   $plugin_auto_accept = $entity->getTranslatorProvider()->getProviderConfiguration()['auto_accept'];
@@ -72,4 +77,77 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   $build['comment'][] = [
     '#markup' => $entity->getMessage() ?? t('No message sent.'),
   ];
+
+  /** @var \Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface $new_version_handler */
+  $new_version_handler = \Drupal::service('oe_translation_epoetry.new_version_request_handler');
+
+  $build['update_request'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Request an update'),
+    '#access' => $new_version_handler->canCreateRequest($entity),
+  ];
+
+  $build['update_request'][] = [
+    '#markup' => '<p>' . $new_version_handler->getInfoMessage($entity) . '</p>',
+  ];
+
+  $build['update_request'][] = [
+    '#type' => 'link',
+    '#title' => t('Update'),
+    '#url' => Url::fromRoute('oe_translation_epoetry.new_version_request', [
+      'translation_request' => $entity->id(),
+    ], [
+      'query' => [
+        'destination' => Url::fromRoute('entity.' . $entity->getContentEntity()->getEntityTypeId() . '.remote_translation', [$entity->getContentEntity()->getEntityTypeId() => $entity->getContentEntity()->id()])->toString(),
+      ],
+      'attributes' => ['class' => ['button', 'button--primary']],
+    ]),
+  ];
+
+  $url = Url::fromRoute('oe_translation_epoetry.modify_linguistic_request', [
+    'translation_request' => $entity->id(),
+  ], [
+    'query' => [
+      'destination' => Url::fromRoute('entity.' . $entity->getContentEntity()
+        ->getEntityTypeId() . '.remote_translation', [
+          $entity->getContentEntity()
+            ->getEntityTypeId() => $entity->getContentEntity()->id(),
+        ])->toString(),
+    ],
+    'attributes' => ['class' => ['button', 'button--primary']],
+  ]);
+
+  $build['modify_request'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Add new languages'),
+    '#access' => $url->access(),
+  ];
+
+  $build['modify_request'][] = [
+    '#markup' => '<p>' . t('Update this request to add new languages. <strong>Important</strong>: you can only add additional languages, you cannot cancel existing ones.') . '</p>',
+  ];
+
+  $build['modify_request'][] = [
+    '#type' => 'link',
+    '#title' => t('Add new languages'),
+    '#url' => $url,
+  ];
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function oe_translation_epoetry_oe_translation_request_presave(TranslationRequestInterface $entity) {
+  if (!$entity instanceof TranslationRequestEpoetryInterface) {
+    return;
+  }
+  // Mark the request status to Finished if we get a Suspended or Cancelled
+  // ePoetry status update.
+  $epoetry_status = $entity->getEpoetryRequestStatus();
+  if (in_array($epoetry_status, [
+    TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
+    TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED,
+  ])) {
+    $entity->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_FINISHED);
+  }
 }

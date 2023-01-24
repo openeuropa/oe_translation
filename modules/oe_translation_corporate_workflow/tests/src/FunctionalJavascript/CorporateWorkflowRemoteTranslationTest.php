@@ -166,7 +166,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'active',
+      'Active',
       'Remote one',
       '1.0.0',
       'validated',
@@ -183,7 +183,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $expected_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'active',
+      'status' => 'Active',
       'title' => 'My node',
       // The URL is of the validated revision from hence it came.
       'title_url' => $validated->toUrl('revision')->toString(),
@@ -195,7 +195,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertOngoingTranslations([$expected_ongoing]);
     $this->clickLink('Remote translations');
     $this->assertRequestStatusTable([
-      'active',
+      'Active',
       'Remote one',
       '1.0.0',
       'validated',
@@ -218,20 +218,20 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // be made.
     $this->assertSession()->fieldEnabled('Translator');
     $this->assertRequestStatusTable([
-      'translated',
+      'Translated',
       'Remote one',
       '1.0.0',
       'validated',
     ]);
 
     $this->clickLink('Dashboard');
-    $expected_ongoing['status'] = 'translated';
+    $expected_ongoing['status'] = 'Translated';
     $this->assertOngoingTranslations([$expected_ongoing]);
 
     // Sync the translation onto the node.
     $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table')->clickLink('View');
     $this->assertRequestStatusTable([
-      'translated',
+      'Translated',
       'Remote one',
       '1.0.0',
       'validated',
@@ -339,7 +339,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // We now have 2 request for this node.
     $this->assertCount(2, $requests);
     $request = array_pop($requests);
-    $this->assertEquals('active', $request->getRequestStatus());
+    $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals($published_revision_id, $request->getContentEntity()->getRevisionId());
 
     $this->getSession()->reload();
@@ -347,7 +347,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 
     $first_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'translated',
+      'status' => 'Translated',
       'title' => 'My node',
       'title_url' => $node->toUrl()->toString(),
       'revision' => $published_revision_id,
@@ -356,7 +356,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
       'state' => 'published',
     ];
     $second_ongoing = $first_ongoing;
-    $second_ongoing['status'] = 'active';
+    $second_ongoing['status'] = 'Active';
     $this->assertOngoingTranslations([$first_ongoing, $second_ongoing]);
 
     // Validate the draft and assert we still cannot request a new translation
@@ -392,14 +392,14 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertCount(3, $requests);
     // Get the active request and assert the new validated revision was used.
     $request = array_pop($requests);
-    $this->assertEquals('active', $request->getRequestStatus());
+    $this->assertEquals('Active', $request->getRequestStatus());
     $validated_revision_id = $node_storage->getLatestRevisionId($node->id());
     $validated = $node_storage->loadRevision($validated_revision_id);
     $this->assertEquals($validated_revision_id, $request->getContentEntity()->getRevisionId());
-    $second_ongoing['status'] = 'translated';
+    $second_ongoing['status'] = 'Translated';
     $third_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'active',
+      'status' => 'Active',
       'title' => 'My node 2',
       'title_url' => $validated->toUrl('revision')->toString(),
       'revision' => $validated_revision_id,
@@ -426,7 +426,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->getSession()->getPage()->pressButton('Save and synchronize');
     $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
     // Only 2 are left.
-    $third_ongoing['status'] = 'translated';
+    $third_ongoing['status'] = 'Translated';
     $this->assertOngoingTranslations([$second_ongoing, $third_ongoing]);
     // Assert the translation value.
     $node_storage->resetCache();
@@ -447,7 +447,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // Only 1 is left, so now we don't have the requests table but directly
     // the last request meta information.
     $this->assertRequestStatusTable([
-      'translated',
+      'Translated',
       'Remote one',
       '2.0.0',
       'validated',

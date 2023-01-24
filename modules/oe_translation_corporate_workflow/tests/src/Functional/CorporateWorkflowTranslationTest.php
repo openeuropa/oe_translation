@@ -504,7 +504,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $expected = [];
     $expected[] = [
       'French',
-      'draft',
+      'Draft',
       'My node 2',
       '10',
       'Yes',
@@ -514,7 +514,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     ];
     $expected[] = [
       'French',
-      'draft',
+      'Draft',
       'My node 3',
       '14',
       'No',
