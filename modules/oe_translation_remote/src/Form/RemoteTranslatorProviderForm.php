@@ -21,18 +21,18 @@ class RemoteTranslatorProviderForm extends EntityForm {
    *
    * @var \Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager
    */
-  protected $remoteTranslationProviderManager;
+  protected $providerManager;
 
   /**
    * Constructs a RemoteTranslatorProviderForm object.
    *
-   * @param \Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager $remoteTranslationProviderManager
+   * @param \Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager $providerManager
    *   The Remote translation provider manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(RemoteTranslationProviderManager $remoteTranslationProviderManager, MessengerInterface $messenger) {
-    $this->remoteTranslationProviderManager = $remoteTranslationProviderManager;
+  public function __construct(RemoteTranslationProviderManager $providerManager, MessengerInterface $messenger) {
+    $this->providerManager = $providerManager;
     $this->messenger = $messenger;
   }
 
@@ -72,7 +72,7 @@ class RemoteTranslatorProviderForm extends EntityForm {
       '#disabled' => !$translator->isNew(),
     ];
 
-    $definitions = $this->remoteTranslationProviderManager->getDefinitions();
+    $definitions = $this->providerManager->getDefinitions();
     $options = [];
     foreach ($definitions as $id => $definition) {
       $options[$id] = $definition['label'];
@@ -111,7 +111,7 @@ class RemoteTranslatorProviderForm extends EntityForm {
 
     if ($plugin_id) {
       $existing_config = $translator->getProviderConfiguration();
-      $plugin = $this->remoteTranslationProviderManager->createInstance($plugin_id, $existing_config);
+      $plugin = $this->providerManager->createInstance($plugin_id, $existing_config);
 
       $form['plugin_configuration']['#type'] = 'details';
       $form['plugin_configuration']['#title'] = $this->t('Plugin configuration for <em>@plugin</em>', ['@plugin' => $plugin->getPluginDefinition()['label']]);
@@ -174,7 +174,7 @@ class RemoteTranslatorProviderForm extends EntityForm {
         'plugin_configuration',
         $plugin_id,
       ], []);
-      $plugin = $this->remoteTranslationProviderManager->createInstance($plugin_id, $plugin_configuration);
+      $plugin = $this->providerManager->createInstance($plugin_id, $plugin_configuration);
 
       if (isset($form['plugin_configuration'][$plugin_id])) {
         $subform_state = SubformState::createForSubform($form['plugin_configuration'][$plugin_id], $form_state->getCompleteForm(), $form_state);

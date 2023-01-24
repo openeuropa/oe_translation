@@ -7,11 +7,16 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Breadcrumb\Breadcrumb;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation\ContentEntitySource;
 use Drupal\oe_translation\FieldProcessor\AddressFieldProcessor;
 use Drupal\oe_translation\TranslationModerationHandler;
@@ -212,4 +217,38 @@ function oe_translation_block_view_oe_theme_helper_page_header_alter(array &$bui
 
     return $build;
   };
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function oe_translation_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context) {
+  // Prepare some basic breadcrumb links for the translation request entities.
+  if ($route_match->getRouteName() === 'entity.oe_translation_request.canonical') {
+    _oe_translation_default_breadcrumb_links($breadcrumb, $route_match, $context);
+  }
+}
+
+/**
+ * Prepares base breadcrumb links for translation pages.
+ *
+ * @param \Drupal\Core\Breadcrumb\Breadcrumb $breadcrumb
+ *   The breadcrumb.
+ * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+ *   The route match.
+ * @param array $context
+ *   The context.
+ */
+function _oe_translation_default_breadcrumb_links(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context): void {
+  $links = [];
+  $links[] = Link::fromTextAndUrl(t('Home'), Url::fromRoute('<front>'));
+  /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+  $translation_request = $route_match->getParameter('oe_translation_request');
+  $entity = $translation_request->getContentEntity();
+  $links[] = $entity->toLink();
+  $links[] = Link::fromTextAndUrl(t('Translate'), $entity->toUrl('drupal:content-translation-overview'));
+  $cache = CacheableMetadata::createFromObject($breadcrumb);
+  $breadcrumb = new Breadcrumb();
+  $breadcrumb->addCacheableDependency($cache);
+  $breadcrumb->setLinks($links);
 }

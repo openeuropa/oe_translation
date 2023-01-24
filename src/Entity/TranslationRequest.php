@@ -135,20 +135,6 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
-  public function getRequestStatus(): string {
-    return $this->get('request_status')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRequestStatus(string $request_status): TranslationRequestInterface {
-    return $this->set('request_status', $request_status);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getData(): array {
     return Json::decode($this->get('data')->value);
   }

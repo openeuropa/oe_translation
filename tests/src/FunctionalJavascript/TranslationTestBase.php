@@ -58,18 +58,10 @@ class TranslationTestBase extends WebDriverTestBase {
     $this->container->get('content_translation.manager')->setEnabled('node', 'page', TRUE);
     $this->container->get('router.builder')->rebuild();
 
+    $this->drupalPlaceBlock('system_breadcrumb_block', ['region' => 'content']);
     $this->drupalPlaceBlock('page_title_block', ['region' => 'content']);
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'content']);
     $this->drupalPlaceBlock('local_actions_block', ['region' => 'content']);
-
-    /** @var \Drupal\user\RoleInterface $role */
-    $role = $this->entityTypeManager->getStorage('user_role')->load('oe_translator');
-    $permissions = $role->getPermissions();
-    $permissions[] = 'administer menu';
-    $permissions[] = 'edit any page content';
-    $user = $this->drupalCreateUser($permissions);
-
-    $this->drupalLogin($user);
   }
 
 }

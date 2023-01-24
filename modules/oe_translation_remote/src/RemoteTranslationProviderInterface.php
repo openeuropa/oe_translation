@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_remote;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 
@@ -21,19 +22,52 @@ interface RemoteTranslationProviderInterface extends PluginFormInterface {
   public function label(): string;
 
   /**
-   * Creates or updates a translation request entity.
+   * Gets the translated entity.
    *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The entity.
    */
-  public function submitRequest(FormStateInterface $form_state);
+  public function getEntity(): ContentEntityInterface;
+
+  /**
+   * Sets the translated entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function setEntity(ContentEntityInterface $entity): void;
+
+  /**
+   * Prepares the form for creating a new translation request form.
+   *
+   * @param array $form
+   *   The subform.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   The form elements.
+   */
+  public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array;
 
   /**
    * Sends the translation request entity to the translation provider.
    *
+   * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
-  public function submitRequestToProvider(FormStateInterface $form_state);
+  public function submitRequestToProvider(array &$form, FormStateInterface $form_state): void;
+
+  /**
+   * Validates the translation request before sending translation provider.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public function validateRequest(array &$form, FormStateInterface $form_state): void;
 
 }

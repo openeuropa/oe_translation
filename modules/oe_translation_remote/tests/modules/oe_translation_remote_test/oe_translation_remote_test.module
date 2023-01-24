@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * OE Translation remote module file.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Url;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+use Drupal\oe_translation_remote_test\TranslationRequestTestRemote;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function oe_translation_remote_test_entity_bundle_info_alter(array &$bundles): void {
+  if (isset($bundles['oe_translation_request']['test_remote'])) {
+    $bundles['oe_translation_request']['test_remote']['class'] = TranslationRequestTestRemote::class;
+  }
+}
+
+/**
+ * Implement template_preprocess_table__remote_language_list().
+ */
+function oe_translation_remote_test_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestTestRemote::load($id);
+  if (!$request) {
+    throw new NotFoundHttpException();
+  }
+
+  if ($request->bundle() !== 'test_remote') {
+    return;
+  }
+
+  foreach ($variables['rows'] as &$row) {
+    $langcode = (string) $row['attributes']['hreflang'];
+    $language = $request->getTargetLanguage($langcode);
+    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE) {
+      continue;
+    }
+
+    $row['cells']['operations']['content']['#links'][] = [
+      'title' => 'Translate (mock)',
+      'url' => Url::fromRoute('oe_translation_remote_test.mock_translate_request', [
+        'oe_translation_request' => $id,
+        'langcode' => $langcode,
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+}
