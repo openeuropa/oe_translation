@@ -4,4 +4,6 @@ dependencies: {  }
 id: epoetry
 label: 'ePoetry'
 plugin: epoetry
-plugin_configuration: {  }
+plugin_configuration:
+  contacts: { }
+  auto_accept: false

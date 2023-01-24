@@ -4,10 +4,12 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItemInterface;
@@ -40,12 +42,20 @@ class Epoetry extends RemoteTranslationProviderBase {
   protected $requestFactory;
 
   /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
 
     $this->requestFactory = $requestFactory;
+    $this->state = $state;
   }
 
   /**
@@ -60,7 +70,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       $container->get('entity_type.manager'),
       $container->get('oe_translation.translation_source_manager'),
       $container->get('messenger'),
-      $container->get('oe_translation_epoetry.request_factory')
+      $container->get('oe_translation_epoetry.request_factory'),
+      $container->get('state')
     );
   }
 
@@ -148,6 +159,23 @@ class Epoetry extends RemoteTranslationProviderBase {
   public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
     $languages = $this->languageManager->getLanguages();
     $entity = $this->getEntity();
+
+    // Check if we have already made requests to ePoetry for this node, because
+    // if we did, we need to use a different request type and inform the user.
+    // To determine the last request, we first check the form state as it may
+    // already be set by NewVersionCreateForm in case this is a request during
+    // an ongoing one.
+    $last_request = $form_state->get('epoetry_last_request');
+    if (!$last_request) {
+      $last_request = $this->getLastRequest($entity);
+    }
+    if ($last_request) {
+      $form_state->set('epoetry_last_request', $last_request);
+      $form['info'] = [
+        '#markup' => $this->t('You are making a request for a new version. The previous version was translated with the <strong>@id</strong> request ID.', ['@id' => $last_request->getRequestId(TRUE)]),
+      ];
+    }
+
     $source_language = $entity->language()->getId();
     unset($languages[$source_language]);
 
@@ -274,22 +302,133 @@ class Epoetry extends RemoteTranslationProviderBase {
 
     // Send it to DGT and update its status.
     try {
-      // Create the request object from the request entity.
-      $object = $this->requestFactory->createTranslationRequest($request);
-      // Send the request object.
-      $response = $this->requestFactory->getRequestClient()->createLinguisticRequest($object);
-      // We don't update the request status because if the request is fine, it
-      // will become "SenttoDG" which for us is "active";.
-      $request_id = static::requestIdFromResponse($response->getReturn());
-      $request->setRequestId($request_id);
-      $this->messenger->addStatus($this->t('The translation request has been sent to DGT.'));
+      $this->createAndSendRequestObject($request, $form, $form_state);
     }
-    catch (\Exception $exception) {
+    catch (\Throwable $exception) {
       // @todo handle error.
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
       $this->messenger->addError($this->t('There was a problem sending the request to DGT.'));
+      watchdog_exception('epoetry', $exception);
     }
     $request->save();
+  }
+
+  /**
+   * Creates the and sends the request object to ePoetry.
+   *
+   * The type of request depends on the scenario:
+   *
+   * - if we are making the first request, we use the CreateLinguisticRequest
+   * - if we are making a new request for an entity for which we have already
+   * made requests, we use the CreateNewVersion request. If we reach 99
+   * versions, we reset and again use CreateLinguisticRequest.
+   * - if we are making a new request to a node for which we haven't made a
+   * request before, we use the addNewPartToDossier request to add a new part
+   * to the existing dossier (whose number we keep in State). If we reach 30
+   * parts, we reset and use again the CreateLinguisticRequest to create a
+   * new dossier.
+   *
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
+   *   The request.
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  protected function createAndSendRequestObject(TranslationRequestEpoetryInterface $request, array $form, FormStateInterface $form_state): void {
+    $last_request = $form_state->get('epoetry_last_request');
+    if (!$last_request instanceof TranslationRequestEpoetryInterface) {
+      $dossiers = $this->state->get('oe_translation_epoetry.dossiers', []);
+      // If we are not making a new version request, we need to check if
+      // we have a number set in the system, we need to add a new part
+      // the existing dossier for any new nodes. This is because that is how
+      // DGT expects we send requests.
+      if ($this->newPartNeeded($request, $form, $form_state)) {
+        $object = $this->requestFactory->addNewPartToDossierRequest($request);
+        $response = $this->requestFactory->getRequestClient()->addNewPartToDossier($object);
+        // If we made an addPartToDossier request, we need to increment the
+        // part in the dossier stored in our State system.
+        $dossier = $response->getReturn()->getRequestReference()->getDossier();
+        $number = $dossier->getNumber();
+        $dossiers[$number]['part'] = $dossiers[$number]['part'] + 1;
+        $this->state->set('oe_translation_epoetry.dossiers', $dossiers);
+      }
+      else {
+        $object = $this->requestFactory->createLinguisticRequest($request);
+        $response = $this->requestFactory->getRequestClient()->createLinguisticRequest($object);
+        // If we made a new CreateLinguisticRequest, it means we started a new
+        // dossier so keep the generated number in the state. Together, we will
+        // keep also the last generated part for this number. But first, we just
+        // initialize it.
+        $dossier = $response->getReturn()->getRequestReference()->getDossier();
+        $number = $dossier->getNumber();
+        $dossiers[$number] = [
+          'part' => 0,
+          'code' => $dossier->getRequesterCode(),
+          'year' => $dossier->getYear(),
+        ];
+        $this->state->set('oe_translation_epoetry.dossiers', $dossiers);
+      }
+    }
+    else {
+      $object = $this->requestFactory->createNewVersionRequest($request, $last_request);
+      $response = $this->requestFactory->getRequestClient()->createNewVersion($object);
+
+      if ($form_state->get('create_new_version_ongoing')) {
+        // If we are creating a new version request from an ongoing state,
+        // mark the old request as finished.
+        // @see NewVersionCreateForm.
+        $last_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+        $last_request->save();
+        $this->messenger->addStatus($this->t('The old request with the id <strong>@old</strong> has been marked as Finished.', ['@old' => $last_request->getRequestId(TRUE)]));
+        // @todo , log and reference the old request in the new one.
+      }
+    }
+
+    $request_id = static::requestIdFromResponse($response->getReturn());
+    $request->setRequestId($request_id);
+
+    // At this stage, the request still stays active. However, we set the
+    // status coming from ePoetry for its specific request status.
+    $request->setEpoetryRequestStatus($response->getReturn()->getRequestDetails()->getStatus());
+    $this->messenger->addStatus($this->t('The translation request has been sent to DGT.'));
+  }
+
+  /**
+   * Determines if we need to make a request by adding a new part to a dossier.
+   *
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
+   *   The request.
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return bool
+   *   Whether we add a new part to a dossier.
+   */
+  protected function newPartNeeded(TranslationRequestEpoetryInterface $request, array $form, FormStateInterface $form_state): bool {
+    $dossiers = $this->state->get('oe_translation_epoetry.dossiers', []);
+    if (empty($dossiers)) {
+      // If we don't yet have any numbers, we create a new linguistic request.
+      return FALSE;
+    }
+
+    $dossiers = array_reverse($dossiers, TRUE);
+    // We check the last number and if it's corresponding last part is 30,
+    // we reset.
+    $dossier = current($dossiers);
+    // Before returning, set the reference values onto the request so we can
+    // use in the RequestFactory.
+    $request->setRequestId([
+      'code' => $dossier['code'],
+      'year' => $dossier['year'],
+      'number' => key($dossiers),
+      'version' => 0,
+      'part' => 0,
+      'service' => 'TRA',
+    ]);
+    return $dossier['part'] < 30;
   }
 
   /**
@@ -318,6 +457,36 @@ class Epoetry extends RemoteTranslationProviderBase {
       'part' => $part,
       'service' => $type,
     ];
+  }
+
+  /**
+   * Returns the last translation requested sent for this entity.
+   *
+   * In the query, we don't look for the status because at this point, we have
+   * already checked that there is nothing ongoing.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface|null
+   *   The request entity or NULL if none.
+   */
+  protected function getLastRequest(ContentEntityInterface $entity): ?TranslationRequestEpoetryInterface {
+    $ids = $this->entityTypeManager->getStorage('oe_translation_request')
+      ->getQuery()
+      ->condition('content_entity__entity_type', $entity->getEntityTypeId())
+      ->condition('content_entity__entity_id', $entity->id())
+      ->condition('bundle', 'epoetry')
+      ->sort('id', 'DESC')
+      ->range(0, 1)
+      ->execute();
+
+    if (!$ids) {
+      return NULL;
+    }
+
+    $id = reset($ids);
+    return $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
   }
 
 }

@@ -4,12 +4,16 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_epoetry_mock\Controller;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_epoetry_mock\MockServer;
 use OpenEuropa\EPoetry\Serializer\Serializer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -94,7 +98,7 @@ class MockController extends ControllerBase {
 
     $response_object = $handler->{$method}($xml);
     $serializer = new Serializer();
-    $xml_string = $serializer->serialize($response_object, 'xml', ['xml_root_node_name' => 'ns0:createLinguisticRequestResponse']);
+    $xml_string = $serializer->serialize($response_object, 'xml', ['xml_root_node_name' => 'ns0:' . $method . 'Response']);
     $xml_string = trim(str_replace('<?xml version="1.0"?>', '', $xml_string));
 
     $wrapper = file_get_contents(drupal_get_path('module', 'oe_translation_epoetry_mock') . '/fixtures/response_wrapper.xml');
@@ -104,6 +108,38 @@ class MockController extends ControllerBase {
     $response->headers->set('Content-type', 'application/xml; charset=utf-8');
 
     return $response;
+  }
+
+  /**
+   * Notifies a request.
+   *
+   * Used until we have the notifications endpoint in place.
+   *
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $oe_translation_request
+   *   The ePoetry request entity.
+   * @param string $notification
+   *   The JSON encoded notification string.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request object.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect response.
+   */
+  public function notify(TranslationRequestEpoetryInterface $oe_translation_request, string $notification, Request $request): RedirectResponse {
+    $notification = Json::decode($notification);
+    EpoetryTranslationMockHelper::notifyRequest($oe_translation_request, $notification);
+    $oe_translation_request->save();
+    $this->messenger()
+      ->addStatus($this->t('The translation request for @label has been updated.',
+        [
+          '@label' => $oe_translation_request->getContentEntity()->label(),
+        ]));
+    $destination = $request->query->get('destination');
+    if (!$destination) {
+      throw new NotFoundHttpException();
+    }
+
+    return new RedirectResponse($destination);
   }
 
 }

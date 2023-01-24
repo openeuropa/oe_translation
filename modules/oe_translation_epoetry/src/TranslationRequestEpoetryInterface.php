@@ -36,10 +36,8 @@ interface TranslationRequestEpoetryInterface extends TranslationRequestRemoteInt
    * These are specific ePoetry statuses that can exist during the course of
    * a translation cycle. Not all may be used but these are the ones the system
    * provides.
-   *
-   * When a new request is made to ePoetry, the response status we get is
-   * "SenttoDGT", which for us will be the global status STATUS_REQUEST_ACTIVE.
    */
+  const STATUS_REQUEST_SENT = 'SenttoDGT';
   const STATUS_REQUEST_ACCEPTED = 'Accepted';
   const STATUS_REQUEST_REJECTED = 'Rejected';
   const STATUS_REQUEST_CANCELLED = 'Cancelled';
@@ -181,5 +179,21 @@ interface TranslationRequestEpoetryInterface extends TranslationRequestRemoteInt
    *   The request ID values.
    */
   public function getRequestId(bool $formatted = FALSE): string|array;
+
+  /**
+   * Returns the ePoetry request status.
+   */
+  public function getEpoetryRequestStatus(): ?string;
+
+  /**
+   * Sets the ePoetry request status.
+   *
+   * @param string $status
+   *   The status.
+   *
+   * @return \Drupal\oe_translation_remote\TranslationRequestRemoteInterface
+   *   The current request.
+   */
+  public function setEpoetryRequestStatus(string $status): TranslationRequestRemoteInterface;
 
 }

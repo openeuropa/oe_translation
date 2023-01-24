@@ -126,7 +126,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
       'source_language_code' => $node->language()->getId(),
       'target_languages' => [
         'langcode' => 'fr',
-        'status' => 'active',
+        'status' => 'Active',
       ],
       'translator_provider' => 'epoetry',
       'request_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE,

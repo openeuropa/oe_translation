@@ -47,9 +47,7 @@ commands:
       file: "build/sites/default/settings.override.php"
       text: |
         $settings["epoetry.service_url"] = getenv('EPOETRY_SERVICE_URL');
-        $settings["epoetry.notification_url"] = getenv('EPOETRY_NOTIFICATION_URL');
         $settings["epoetry.application_name"] = getenv('EPOETRY_APPLICATION_NAME');
-        $settings["epoetry.template"] = getenv('EPOETRY_TEMPLATE');
     # Generate settings.testing.php, it will be used when running functional tests.
     - { task: "process-php", type: "write", config: "drupal.settings", source: "${drupal.root}/sites/default/default.settings.php", destination: "${drupal.root}/sites/default/settings.testing.php", override: true }
     - task: "append"
@@ -58,6 +56,5 @@ commands:
         $settings["epoetry.service_url"] = getenv('EPOETRY_SERVICE_URL');
         $settings["epoetry.notification_url"] = getenv('EPOETRY_NOTIFICATION_URL');
         $settings["epoetry.application_name"] = getenv('EPOETRY_APPLICATION_NAME');
-        $settings["epoetry.template"] = getenv('EPOETRY_TEMPLATE');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }

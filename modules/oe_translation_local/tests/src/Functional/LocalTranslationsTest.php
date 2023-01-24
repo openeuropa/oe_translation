@@ -245,7 +245,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->clickLink('Dashboard');
     $expected_ongoing = [
       'langcode' => 'fr',
-      'status' => 'draft',
+      'status' => 'Draft',
       'title' => 'Full translation node',
       'title_url' => $node->toUrl()->toString(),
       'revision' => $node->getRevisionId(),
@@ -281,7 +281,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Assert the status change of the request on the dashboard.
     $this->clickLink('Dashboard');
-    $expected_ongoing['status'] = 'accepted';
+    $expected_ongoing['status'] = 'Accepted';
     $this->assertDashboardOngoingTranslations([$expected_ongoing]);
 
     // Edit and sync the translation. This time from the dashboard.
@@ -401,7 +401,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $revision = $node_storage->loadRevision($first_revision);
     $expected_ongoing = [
       'langcode' => 'fr',
-      'status' => 'draft',
+      'status' => 'Draft',
       'title' => 'Basic translation node',
       'title_url' => $revision->toUrl('revision')->toString(),
       // It is the initial revision ID.

@@ -5,6 +5,9 @@
  * OE Translation ePoetry mock module file.
  */
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -24,31 +27,128 @@ function oe_translation_epoetry_mock_preprocess_table__remote_language_list(arra
     return;
   }
 
+  $statuses = [
+    TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+    TranslationRequestEpoetryInterface::STATUS_LANGUAGE_EPOETRY_ACCEPTED,
+    TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
+    TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY,
+  ];
+
   foreach ($variables['rows'] as &$row) {
     $langcode = (string) $row['attributes']['hreflang'];
     $language = $request->getTargetLanguage($langcode);
-    $statuses = [
-      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
-      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_EPOETRY_ACCEPTED,
-      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
-      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY,
-    ];
-    if (!in_array($language->getStatus(), $statuses)) {
-      continue;
+
+    $current_status_key = array_search($language->getStatus(), $statuses);
+
+    // Notify with language status change.
+    foreach ($statuses as $key => $status) {
+      if ($status === TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE) {
+        // We don't update to this status.
+        continue;
+      }
+
+      if ($current_status_key >= $key) {
+        continue;
+      }
+
+      $row['cells']['operations']['content']['#links'][] = [
+        'title' => sprintf('Update status to %s (mock)', $status),
+        'url' => Url::fromRoute('oe_translation_epoetry_mock.notify', [
+          'oe_translation_request' => $id,
+          'notification' => Json::encode([
+            'type' => 'ProductStatusChange',
+            'language' => $langcode,
+            'status' => $status,
+          ]),
+        ], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')->toString(),
+          ],
+        ]),
+      ];
     }
 
-    // @todo until we have the notifications endpoint, we just set some
-    // translated data onto the entity.
-    $row['cells']['operations']['content']['#links'][] = [
-      'title' => 'Translate (mock)',
-      'url' => Url::fromRoute('oe_translation_remote_test.mock_translate_request', [
-        'oe_translation_request' => $id,
-        'langcode' => $langcode,
-      ], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')->toString(),
-        ],
-      ]),
+    // The translation notification can come only once the language status
+    // is at least ongoing. We don't know if it becomes ready to be sent before
+    // it actually arrives.
+    if ($current_status_key > 1) {
+      $row['cells']['operations']['content']['#links'][] = [
+        'title' => 'Translate (mock)',
+        'url' => Url::fromRoute('oe_translation_remote_test.mock_translate_request', [
+          'oe_translation_request' => $id,
+          'langcode' => $langcode,
+        ], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')->toString(),
+          ],
+        ]),
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_view_alter().
+ */
+function oe_translation_epoetry_mock_oe_translation_request_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->bundle() !== 'epoetry') {
+    return;
+  }
+
+  /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $entity */
+  if (!isset($build['meta'])) {
+    return;
+  }
+
+  if ($entity->getRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE) {
+    return;
+  }
+
+  $statuses = [];
+  if ($entity->getEpoetryRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_SENT) {
+    $statuses = [
+      'Accepted' => 'Accept',
+      'Rejected' => 'Reject',
     ];
   }
+
+  if ($entity->getEpoetryRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED) {
+    $statuses = [
+      'Cancelled' => 'Cancel',
+      'Suspended' => 'Suspend',
+      'Executed' => 'Execute',
+    ];
+  }
+
+  if (!$statuses) {
+    return;
+  }
+
+  foreach ($statuses as $status => $label) {
+    $operations[$status] = [
+      'title' => $label,
+      'url' => Url::fromRoute('oe_translation_epoetry_mock.notify', [
+        'oe_translation_request' => $entity->id(),
+        'notification' => Json::encode([
+          'type' => 'RequestStatusChange',
+          'status' => $status,
+        ]),
+      ],
+        [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')->toString(),
+          ],
+        ]),
+    ];
+  }
+
+  $header = &$build['meta']['#header'];
+  $header['mock_operations'] = t('Mock operations');
+  $row = &$build['meta']['#rows'][0];
+  $row['mock_operations'] = [
+    'data' => [
+      '#type' => 'operations',
+      '#links' => $operations,
+    ],
+  ];
 }

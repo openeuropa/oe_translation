@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_remote\RemoteTranslationRequestEntityTrait;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
  * Bundle class for the ePoetry TranslationRequest entity.
@@ -144,6 +145,22 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
       return !is_array($value);
     });
     return $formatted ? $this->get('request_id')->first()->toReference($values) : $values;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEpoetryRequestStatus(): ?string {
+    return $this->get('epoetry_status')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setEpoetryRequestStatus(string $status): TranslationRequestRemoteInterface {
+    $this->set('epoetry_status', $status);
+
+    return $this;
   }
 
 }
