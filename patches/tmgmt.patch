@@ -1,0 +1,20 @@
+Subject: [PATCH] Bail out of no value is provided.
+---
+Index: sources/content/src/MetatagsFieldProcessor.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/sources/content/src/MetatagsFieldProcessor.php b/sources/content/src/MetatagsFieldProcessor.php
+--- a/sources/content/src/MetatagsFieldProcessor.php	(revision b2e53f8b7f5a09ca2c276914f82608d3badc5353)
++++ b/sources/content/src/MetatagsFieldProcessor.php	(date 1674470875538)
+@@ -14,6 +14,9 @@
+    * {@inheritdoc}
+    */
+   public function extractTranslatableData(FieldItemListInterface $field) {
++		if (!$field->value) {
++			return;
++		}
+ 
+     $metatag_manager = \Drupal::service('metatag.manager');
+     $meta_tag_values = unserialize($field->value);
