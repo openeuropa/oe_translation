@@ -1,0 +1,6 @@
+oe_translation_epoetry_mock.server:
+  path: 'epoetry-mock/server'
+  defaults:
+    _controller: \Drupal\oe_translation_epoetry_mock\Controller\MockController::server
+  requirements:
+    _permission: 'access content'

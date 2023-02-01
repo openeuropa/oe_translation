@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation
+    - oe_translation_epoetry
+id: oe_translation_request.request_id
+field_name: request_id
+entity_type: oe_translation_request
+type: epoetry_request_id
+settings: {  }
+module: oe_translation_epoetry
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

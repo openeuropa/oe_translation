@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.message
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: oe_translation_request.epoetry.message
+field_name: message
+entity_type: oe_translation_request
+bundle: epoetry
+label: Message
+description: 'A message for the translators.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

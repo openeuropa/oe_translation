@@ -92,7 +92,8 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
    * {@inheritdoc}
    */
   public function setCreatedTime(int $timestamp): TranslationRequestInterface {
-    return $this->set('created', $timestamp);
+    $this->set('created', $timestamp);
+    return $this;
   }
 
   /**

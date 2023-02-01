@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * OE Translation ePoetry mock module file.
+ */
+
+use Drupal\Core\Url;
+use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
+use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+/**
+ * Implement template_preprocess_table__remote_language_list().
+ */
+function oe_translation_epoetry_mock_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestEpoetry::load($id);
+  if (!$request) {
+    throw new NotFoundHttpException();
+  }
+
+  if ($request->bundle() !== 'epoetry') {
+    return;
+  }
+
+  foreach ($variables['rows'] as &$row) {
+    $langcode = (string) $row['attributes']['hreflang'];
+    $language = $request->getTargetLanguage($langcode);
+    $statuses = [
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_EPOETRY_ACCEPTED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY,
+    ];
+    if (!in_array($language->getStatus(), $statuses)) {
+      continue;
+    }
+
+    // @todo until we have the notifications endpoint, we just set some
+    // translated data onto the entity.
+    $row['cells']['operations']['content']['#links'][] = [
+      'title' => 'Translate (mock)',
+      'url' => Url::fromRoute('oe_translation_remote_test.mock_translate_request', [
+        'oe_translation_request' => $id,
+        'langcode' => $langcode,
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+}

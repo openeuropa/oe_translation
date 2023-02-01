@@ -1,0 +1,47 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.oe_translation_request.epoetry.accepted_deadline
+    - field.field.oe_translation_request.epoetry.auto_accept
+    - field.field.oe_translation_request.epoetry.auto_sync
+    - field.field.oe_translation_request.epoetry.contacts
+    - field.field.oe_translation_request.epoetry.deadline
+    - field.field.oe_translation_request.epoetry.message
+    - field.field.oe_translation_request.epoetry.request_id
+    - field.field.oe_translation_request.epoetry.request_status
+    - field.field.oe_translation_request.epoetry.target_languages
+    - field.field.oe_translation_request.epoetry.translated_data
+    - field.field.oe_translation_request.epoetry.translator_provider
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - oe_translation_remote
+id: oe_translation_request.epoetry.default
+targetEntityType: oe_translation_request
+bundle: epoetry
+mode: default
+content:
+  meta:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  target_languages:
+    type: oe_translation_remote_language_list
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  accepted_deadline: true
+  auto_accept: true
+  auto_sync: true
+  contacts: true
+  deadline: true
+  field_request_id: true
+  message: true
+  request_id: true
+  request_status: true
+  translated_data: true
+  translator_provider: true

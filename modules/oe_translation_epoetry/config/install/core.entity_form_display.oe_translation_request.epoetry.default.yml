@@ -1,0 +1,60 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.oe_translation_request.epoetry.accepted_deadline
+    - field.field.oe_translation_request.epoetry.auto_accept
+    - field.field.oe_translation_request.epoetry.auto_sync
+    - field.field.oe_translation_request.epoetry.contacts
+    - field.field.oe_translation_request.epoetry.deadline
+    - field.field.oe_translation_request.epoetry.message
+    - field.field.oe_translation_request.epoetry.request_id
+    - field.field.oe_translation_request.epoetry.request_status
+    - field.field.oe_translation_request.epoetry.target_languages
+    - field.field.oe_translation_request.epoetry.translated_data
+    - field.field.oe_translation_request.epoetry.translator_provider
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - datetime
+id: oe_translation_request.epoetry.default
+targetEntityType: oe_translation_request
+bundle: epoetry
+mode: default
+content:
+  auto_accept:
+    type: boolean_checkbox
+    weight: 1
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  auto_sync:
+    type: boolean_checkbox
+    weight: 2
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  deadline:
+    type: datetime_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  message:
+    type: string_textarea
+    weight: 3
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  accepted_deadline: true
+  contacts: true
+  field_request_id: true
+  request_id: true
+  request_status: true
+  target_languages: true
+  translated_data: true
+  translator_provider: true
