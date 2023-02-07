@@ -218,7 +218,7 @@ class RemoteTranslationTest extends TranslationTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'active',
+      'Active',
       'Remote one',
     ]);
 
@@ -228,7 +228,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     foreach (['bg', 'fr'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'active',
+        'status' => 'Active',
         'review' => FALSE,
       ];
     }
@@ -240,9 +240,9 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestTestRemote::class, $request);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'active'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'active'), $target_languages['fr']);
-    $this->assertEquals('active', $request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('bg', 'Active'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
+    $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals('remote_one', $request->getTranslatorProvider()->id());
 
     // Check that for another node, we can make a new request.
@@ -267,10 +267,10 @@ class RemoteTranslationTest extends TranslationTestBase {
     $request_storage->resetCache();
     $request = $request_storage->load($request->id());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'review'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'active'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('bg', 'Review'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
     // Only one language has been translated so the request is still active.
-    $this->assertEquals('active', $request->getRequestStatus());
+    $this->assertEquals('Active', $request->getRequestStatus());
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
@@ -278,14 +278,14 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Assert the request status table is still active because only one
     // language has been translated.
     $this->assertRequestStatusTable([
-      'active',
+      'Active',
       'Remote one',
     ]);
 
     // Assert that the Bulgarian translation can now be reviewed because
     // it is marked as such and the user has the correct permissions.
     $expected_languages['bg']['review'] = TRUE;
-    $expected_languages['bg']['status'] = 'review';
+    $expected_languages['bg']['status'] = 'Review';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
     // Review the Bulgarian translation.
@@ -387,7 +387,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->addressEquals('/en/translation-request/' . $request->id() . '/review/bg');
 
     $this->getSession()->getPage()->clickLink('Translation request for Full translation node');
-    $expected_languages['bg']['status'] = 'accepted';
+    $expected_languages['bg']['status'] = 'Accepted';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
     // Assert that we don't yet have translations.
@@ -400,7 +400,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Ongoing remote translation requests');
     $expected_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'active',
+      'status' => 'Active',
       'title' => 'Full translation node',
       'title_url' => $node->toUrl()->toString(),
       'revision' => $node->getRevisionId(),
@@ -415,13 +415,13 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->pressButton('Save and synchronize');
     $this->assertSession()->pageTextContains('The translation in Bulgarian has been synchronized.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
-    $expected_languages['bg']['status'] = 'synchronized';
+    $expected_languages['bg']['status'] = 'Synchronized';
     $expected_languages['bg']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     // The request status has not changed.
     $request_storage->resetCache();
     $request = $request_storage->load($request->id());
-    $this->assertEquals('active', $request->getRequestStatus());
+    $this->assertEquals('Active', $request->getRequestStatus());
 
     // Now we have a node translation.
     $node_storage->resetCache();
@@ -442,25 +442,25 @@ class RemoteTranslationTest extends TranslationTestBase {
     $request_storage->resetCache();
     $request = $request_storage->load($request->id());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'synchronized'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'review'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('bg', 'Synchronized'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Review'), $target_languages['fr']);
     // Both languages have been translated so the request is has been marked
     // as translated.
-    $this->assertEquals('translated', $request->getRequestStatus());
+    $this->assertEquals('Translated', $request->getRequestStatus());
 
     $this->drupalGet('/node/' . $node->id() . '/translations/remote');
 
     // Assert that the request table has been updated to show that the status
     // is now translated.
     $this->assertRequestStatusTable([
-      'translated',
+      'Translated',
       'Remote one',
     ]);
 
     $expected_languages['bg']['review'] = FALSE;
-    $expected_languages['bg']['status'] = 'synchronized';
+    $expected_languages['bg']['status'] = 'Synchronized';
     $expected_languages['fr']['review'] = TRUE;
-    $expected_languages['fr']['status'] = 'review';
+    $expected_languages['fr']['status'] = 'Review';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronize');
@@ -469,16 +469,16 @@ class RemoteTranslationTest extends TranslationTestBase {
     // By now, the request has been synced entirely so it won't show up
     // anymore so we have to manually go to it.
     $this->drupalGet($request->toUrl());
-    $expected_languages['fr']['status'] = 'synchronized';
+    $expected_languages['fr']['status'] = 'Synchronized';
     $expected_languages['fr']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     // The request status has changed because all languages have been synced.
     $request_storage->resetCache();
     $request = $request_storage->load($request->id());
-    $this->assertEquals('finished', $request->getRequestStatus());
+    $this->assertEquals('Finished', $request->getRequestStatus());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'synchronized'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'synchronized'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('bg', 'Synchronized'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Synchronized'), $target_languages['fr']);
 
     // We now also have the FR translation.
     $node_storage->resetCache();
@@ -532,7 +532,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $revision = $node_storage->loadRevision($first_revision);
     $expected_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'active',
+      'status' => 'Active',
       'title' => 'Basic translation node',
       'title_url' => $revision->toUrl('revision')->toString(),
       // It is the initial revision ID.
@@ -571,7 +571,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Assert we see both the active and translated requests.
     $translated_request = $expected_ongoing;
     $ongoing_request = $expected_ongoing;
-    $translated_request['status'] = 'translated';
+    $translated_request['status'] = 'Translated';
     $ongoing_request['title'] = 'Updated basic translation node';
     $ongoing_request['title_url'] = $node->toUrl()->toString();
     $ongoing_request['revision'] = $node->getRevisionId();
@@ -587,7 +587,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->clickLink('Remote translations');
 
     // We now have 2 requests on the remote translations page, both translated.
-    $ongoing_request['status'] = 'translated';
+    $ongoing_request['status'] = 'Translated';
     $this->assertOngoingTranslations([$translated_request, $ongoing_request]);
 
     // Sync the latest translation request.
@@ -647,28 +647,6 @@ class RemoteTranslationTest extends TranslationTestBase {
 
     // Assert that in this process, no new node revisions were created.
     $this->assertCount(2, $node_storage->revisionIds($node));
-  }
-
-  /**
-   * Asserts the ongoing translations table.
-   *
-   * @param array $languages
-   *   The expected languages.
-   */
-  protected function assertOngoingTranslations(array $languages): void {
-    $table = $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table');
-    $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
-    $rows = $table->findAll('css', 'tbody tr');
-    foreach ($rows as $key => $row) {
-      $cols = $row->findAll('css', 'td');
-      $expected_info = $languages[$key];
-      $this->assertEquals($expected_info['translator'], $cols[0]->getText());
-      $this->assertEquals($expected_info['status'], $cols[1]->getText());
-      $this->assertEquals($expected_info['title_url'], $cols[2]->findLink($expected_info['title'])->getAttribute('href'));
-      $this->assertEquals($expected_info['revision'], $cols[3]->getText());
-      $this->assertEquals($expected_info['is_default'], $cols[4]->getText());
-      $this->assertTrue($cols[5]->hasLink('View'));
-    }
   }
 
 }

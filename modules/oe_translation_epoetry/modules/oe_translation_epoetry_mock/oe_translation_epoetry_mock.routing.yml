@@ -4,3 +4,14 @@ oe_translation_epoetry_mock.server:
     _controller: \Drupal\oe_translation_epoetry_mock\Controller\MockController::server
   requirements:
     _permission: 'access content'
+
+oe_translation_epoetry_mock.notify:
+  path: 'epoetry-mock/notify/{oe_translation_request}/{notification}'
+  defaults:
+    _controller: \Drupal\oe_translation_epoetry_mock\Controller\MockController::notify
+  requirements:
+    _csrf_token: 'TRUE'
+  options:
+    parameters:
+      oe_translation_request:
+        type: entity:oe_translation_request

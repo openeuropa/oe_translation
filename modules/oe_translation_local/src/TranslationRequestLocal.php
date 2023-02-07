@@ -15,9 +15,9 @@ class TranslationRequestLocal extends TranslationRequest {
   /**
    * The statuses of a translation request language.
    */
-  const STATUS_LANGUAGE_DRAFT = 'draft';
-  const STATUS_LANGUAGE_ACCEPTED = 'accepted';
-  const STATUS_LANGUAGE_SYNCHRONISED = 'synchronized';
+  const STATUS_LANGUAGE_DRAFT = 'Draft';
+  const STATUS_LANGUAGE_ACCEPTED = 'Accepted';
+  const STATUS_LANGUAGE_SYNCHRONISED = 'Synchronized';
 
   /**
    * Returns the target language.

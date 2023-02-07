@@ -1,0 +1,25 @@
+oe_translation_epoetry.new_version_request:
+  path: '/translation-request/epoetry/new-version-request/{translation_request}'
+  defaults:
+    _form: Drupal\oe_translation_epoetry\Form\NewVersionCreateForm
+  requirements:
+    _custom_access: Drupal\oe_translation_epoetry\Controller\EpoetryController::createNewVersionRequestAccess
+    _csrf_token: 'TRUE'
+  options:
+    _admin_route: TRUE
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request
+
+oe_translation_epoetry.modify_linguistic_request:
+  path: '/translation-request/epoetry/modify-linguistic-request/{translation_request}'
+  defaults:
+    _form: Drupal\oe_translation_epoetry\Form\ModifyLinguisticRequestForm
+  requirements:
+    _custom_access: Drupal\oe_translation_epoetry\Form\ModifyLinguisticRequestForm::access
+    _csrf_token: 'TRUE'
+  options:
+    _admin_route: TRUE
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request

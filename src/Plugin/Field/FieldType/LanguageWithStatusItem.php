@@ -61,7 +61,7 @@ class LanguageWithStatusItem extends FieldItemBase {
       'status' => [
         'type' => 'varchar',
         'description' => 'The language status',
-        'length' => 12,
+        'length' => 255,
       ],
     ];
 
@@ -75,14 +75,28 @@ class LanguageWithStatusItem extends FieldItemBase {
    */
   public function setValue($values, $notify = TRUE) {
     if ($values instanceof LanguageWithStatus) {
-      $value = [];
-      $value['langcode'] = $values->getLangcode();
-      $value['status'] = $values->getStatus();
-      parent::setValue($value, $notify);
+      parent::setValue($this->createValue($values), $notify);
       return;
     }
 
     parent::setValue($values, $notify);
+  }
+
+  /**
+   * Creates an individual value array from the object.
+   *
+   * @param \Drupal\oe_translation\LanguageWithStatus $language_with_status
+   *   The object.
+   *
+   * @return array
+   *   The value array.
+   */
+  protected function createValue(LanguageWithStatus $language_with_status): array {
+    $value = [];
+    $value['langcode'] = $language_with_status->getLangcode();
+    $value['status'] = $language_with_status->getStatus();
+
+    return $value;
   }
 
 }

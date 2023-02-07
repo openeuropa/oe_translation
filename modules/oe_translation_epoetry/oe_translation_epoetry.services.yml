@@ -5,3 +5,6 @@ services:
   oe_translation_epoetry.html_formatter:
     class: Drupal\oe_translation_epoetry\ContentFormatter\HtmlFormatter
     arguments: ['@tmgmt.data', '@renderer', '@entity_type.manager']
+  oe_translation_epoetry.new_version_request_handler:
+    class: Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandler
+    arguments: ['@entity_type.manager']
