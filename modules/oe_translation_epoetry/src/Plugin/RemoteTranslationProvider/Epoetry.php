@@ -155,6 +155,9 @@ class Epoetry extends RemoteTranslationProviderBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
     $languages = $this->languageManager->getLanguages();
@@ -174,6 +177,11 @@ class Epoetry extends RemoteTranslationProviderBase {
       $form['info'] = [
         '#markup' => $this->t('You are making a request for a new version. The previous version was translated with the <strong>@id</strong> request ID.', ['@id' => $last_request->getRequestId(TRUE)]),
       ];
+
+      // Add an extra message if the previous version was rejected.
+      if ($last_request->getEpoetryRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED) {
+        $form['info']['#markup'] .= ' <strong>' . $this->t('The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.') . '</strong>';
+      }
     }
 
     $source_language = $entity->language()->getId();
@@ -326,6 +334,9 @@ class Epoetry extends RemoteTranslationProviderBase {
    * to the existing dossier (whose number we keep in State). If we reach 30
    * parts, we reset and use again the CreateLinguisticRequest to create a
    * new dossier.
+   * - if we are making a request for a node for which a request had been made
+   * before BUT was rejected by ePoetry, we use resubmitRequest to try it
+   * again under the same number/part/version.
    *
    * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
    *   The request.
@@ -370,8 +381,17 @@ class Epoetry extends RemoteTranslationProviderBase {
       }
     }
     else {
-      $object = $this->requestFactory->createNewVersionRequest($request, $last_request);
-      $response = $this->requestFactory->getRequestClient()->createNewVersion($object);
+      // If we are doing with an existing translation request, we need to check
+      // if it was rejected, because if it was, we need to use resubmitRequest
+      // instead of createNewVersion.
+      if ($last_request->getEpoetryRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED) {
+        $object = $this->requestFactory->createNewVersionRequest($request, $last_request);
+        $response = $this->requestFactory->getRequestClient()->createNewVersion($object);
+      }
+      else {
+        $object = $this->requestFactory->resubmitRequest($request, $last_request);
+        $response = $this->requestFactory->getRequestClient()->resubmitRequest($object);
+      }
 
       if ($form_state->get('create_new_version_ongoing')) {
         // If we are creating a new version request from an ongoing state,

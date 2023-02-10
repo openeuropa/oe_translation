@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_epoetry_mock;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -25,6 +26,8 @@ use OpenEuropa\EPoetry\Request\Type\Products;
 use OpenEuropa\EPoetry\Request\Type\RequestDetailsIn;
 use OpenEuropa\EPoetry\Request\Type\RequestDetailsOut;
 use OpenEuropa\EPoetry\Request\Type\RequestReferenceOut;
+use OpenEuropa\EPoetry\Request\Type\ResubmitRequest;
+use OpenEuropa\EPoetry\Request\Type\ResubmitRequestResponse;
 use OpenEuropa\EPoetry\Serializer\Serializer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -49,16 +52,26 @@ class MockServer implements ContainerInjectionInterface {
   protected $state;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new MockServer.
    *
    * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
    *   The path resolver.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(ExtensionPathResolver $pathResolver, StateInterface $state) {
+  public function __construct(ExtensionPathResolver $pathResolver, StateInterface $state, EntityTypeManagerInterface $entityTypeManager) {
     $this->pathResolver = $pathResolver;
     $this->state = $state;
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -67,7 +80,8 @@ class MockServer implements ContainerInjectionInterface {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('extension.path.resolver'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -108,6 +122,68 @@ class MockServer implements ContainerInjectionInterface {
     $response = new CreateLinguisticRequestResponse();
     $response->setReturn($linguistic_request);
     $this->state->set('oe_translation_epoetry_mock.last_request_reference', $new_request_reference);
+    return $response;
+  }
+
+  /**
+   * Returns a mock response for the resubmitRequest.
+   *
+   * @param \SimpleXMLElement $xml_request
+   *   The linguistic request.
+   *
+   * @return \OpenEuropa\EPoetry\Request\Type\ResubmitRequestResponse
+   *   The linguistic request response object.
+   */
+  public function resubmitRequest(\SimpleXMLElement $xml_request): ResubmitRequestResponse {
+    $serializer = new Serializer();
+    /** @var \OpenEuropa\EPoetry\Request\Type\ResubmitRequest $resubmit_request */
+    $resubmit_request = $serializer->deserialize($xml_request->Body->resubmitRequest->asXml(), ResubmitRequest::class, 'xml');
+
+    $request_reference_in = $resubmit_request->getResubmitRequest()->getRequestReference();
+    $dossier_in = $request_reference_in->getDossier();
+
+    $request_details_in = $resubmit_request->getResubmitRequest()->getRequestDetails();
+    $request_details_out = $this->toRequestDetailsOut($request_details_in, $resubmit_request->getApplicationName());
+
+    // Find the rejected translation request so we can determine the version.
+    $ids = $this->entityTypeManager->getStorage('oe_translation_request')->getQuery()
+      ->condition('bundle', 'epoetry')
+      ->condition('request_id.code', $dossier_in->getRequesterCode())
+      ->condition('request_id.year', $dossier_in->getYear())
+      ->condition('request_id.number', $dossier_in->getNumber())
+      ->condition('request_id.part', $request_reference_in->getPart())
+      ->condition('epoetry_status', TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED)
+      ->sort('id', 'DESC')
+      ->accessCheck(FALSE)
+      ->execute();
+
+    if (!$ids) {
+      throw new NotFoundHttpException();
+    }
+
+    $id = reset($ids);
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
+    $request_id = $request->getRequestId();
+
+    $dossier = (new DossierReference())
+      ->setNumber($dossier_in->getNumber())
+      ->setRequesterCode($dossier_in->getRequesterCode())
+      ->setYear($dossier_in->getYear());
+
+    $request_reference = (new RequestReferenceOut())
+      ->setDossier($dossier)
+      ->setPart($request_reference_in->getPart())
+      ->setProductType('TRA')
+      ->setVersion((int) $request_id['version']);
+
+    $linguistic_request = new LinguisticRequestOut();
+    $linguistic_request->setRequestDetails($request_details_out);
+    $linguistic_request->setRequestReference($request_reference);
+
+    $response = new ResubmitRequestResponse();
+    $response->setReturn($linguistic_request);
+
     return $response;
   }
 
@@ -191,13 +267,13 @@ class MockServer implements ContainerInjectionInterface {
       ->setVersion(0)
       ->setProductType('TRA');
 
-    $ids = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getQuery()
+    $ids = $this->entityTypeManager->getStorage('oe_translation_request')->getQuery()
       ->condition('bundle', 'epoetry')
       ->condition('request_id.code', $dossier_in->getRequesterCode())
       ->condition('request_id.year', $dossier_in->getYear())
       ->condition('request_id.number', $dossier_in->getNumber())
       ->condition('request_id.part', $reference_in->getPart())
-      ->condition('epoetry_status', TranslationRequestEpoetryInterface::STATUS_LANGUAGE_EPOETRY_ACCEPTED)
+      ->condition('epoetry_status', TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED)
       ->accessCheck(FALSE)
       ->execute();
 
@@ -207,7 +283,7 @@ class MockServer implements ContainerInjectionInterface {
 
     // We expect this to be here.
     $id = reset($ids);
-    $request_entity = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->load($id);
+    $request_entity = $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
 
     // Create an original linguistic request from the found entity so we can
     // extract outbound details from it.

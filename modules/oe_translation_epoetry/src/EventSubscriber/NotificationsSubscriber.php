@@ -353,6 +353,9 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       ->condition('request_id.number', $reference->getNumber())
       ->condition('request_id.part', $reference->getPart())
       ->condition('request_id.version', $reference->getVersion())
+      // It should not be rejected because we can have multiple requests with
+      // the same IDs if one was rejected.
+      ->condition('epoetry_status', TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED, '!=')
       ->accessCheck(FALSE)
       ->execute();
 

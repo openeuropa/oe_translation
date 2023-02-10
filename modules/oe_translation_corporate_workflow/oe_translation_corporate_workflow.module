@@ -297,6 +297,14 @@ function oe_translation_corporate_workflow_entity_presave(EntityInterface $entit
  * Implements hook_entity_ENTITY_TYPE_view_alter().
  */
 function oe_translation_corporate_workflow_oe_translation_request_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  $content_entity = $entity->getContentEntity();
+
+  /** @var \Drupal\workflows\WorkflowInterface $workflow */
+  $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($content_entity);
+  if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    return;
+  }
+
   /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $entity */
   $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
   if (!in_array($entity->bundle(), $bundles)) {
@@ -313,7 +321,6 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
   $row = &$build['meta']['#rows'][0];
   $version = '';
 
-  $content_entity = $entity->getContentEntity();
   $version_field_setting = Drupal::entityTypeManager()->getStorage('entity_version_settings')->load($content_entity->getEntityTypeId() . '.' . $content_entity->bundle());
   if ($version_field_setting) {
     $version_field = $version_field_setting->getTargetField();
