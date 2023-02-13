@@ -14,6 +14,7 @@ dependencies:
     - field.field.oe_translation_request.epoetry.target_languages
     - field.field.oe_translation_request.epoetry.translated_data
     - field.field.oe_translation_request.epoetry.translator_provider
+    - field.field.oe_translation_request.epoetry.update_of
     - oe_translation.oe_translation_request_type.epoetry
   module:
     - oe_translation_remote
@@ -48,3 +49,4 @@ hidden:
   request_status: true
   translated_data: true
   translator_provider: true
+  update_of: true

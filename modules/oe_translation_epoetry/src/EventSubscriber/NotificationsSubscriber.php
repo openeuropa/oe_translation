@@ -5,6 +5,9 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_epoetry\EventSubscriber;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -17,6 +20,7 @@ use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeOngoingEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeReadyToBeSentEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeRequestedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeSentEvent;
+use OpenEuropa\EPoetry\Notification\Event\Request\BaseEvent as RequestBaseEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeAcceptedEvent as RequestStatusChangeAcceptedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeCancelledEvent as RequestStatusChangeCancelledEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeSuspendedEvent as RequestStatusChangeSuspendedEvent;
@@ -46,16 +50,36 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   protected $contentFormatter;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * The logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * Constructs a new NotificationsSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $contentFormatter
    *   The content formatter.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->entityTypeManager = $entityTypeManager;
     $this->contentFormatter = $contentFormatter;
+    $this->languageManager = $languageManager;
+    $this->logger = $loggerChannelFactory->get('oe_translation_epoetry');
   }
 
   /**
@@ -175,18 +199,22 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($product->getProductReference()->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-
-      // @todo log.
+      $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
     $language = $product->getProductReference()->getLanguage();
     // @todo handle language mapping.
-    $language = strtolower($language);
+    $langcode = strtolower($language);
+    $language = $this->languageManager->getLanguage($langcode);
 
-    $translation_request->updateTargetLanguageStatus($language, $status);
+    $translation_request->updateTargetLanguageStatus($langcode, $status);
+    $translation_request->log('The <strong>@language</strong> product status has been updated to <strong>@status</strong>.', [
+      '@language' => $language->getName(),
+      '@status' => $status,
+    ]);
     $translation_request->save();
-    // @todo log.
     $event->setSuccessResponse('The language status has been updated successfully.');
   }
 
@@ -201,23 +229,24 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($product->getProductReference()->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-
-      // @todo log.
+      $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
     $language = $product->getProductReference()->getLanguage();
     // @todo handle language mapping.
-    $language = strtolower($language);
+    $langcode = strtolower($language);
+    $language = $this->languageManager->getLanguage($langcode);
 
     // Process the translated file.
     $file = $product->getFile();
     $data = $this->contentFormatter->import($file, $translation_request);
-    $translation_request->setTranslatedData($language, reset($data));
-    $translation_request->updateTargetLanguageStatus($language, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW);
+    $translation_request->setTranslatedData($langcode, reset($data));
+    $translation_request->updateTargetLanguageStatus($langcode, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW);
+    $translation_request->log('The <strong>@language</strong> translation has been delivered.', ['@language' => $language->getName()]);
     $translation_request->save();
     $event->setSuccessResponse('The translation has been saved.');
-    // @todo log.
   }
 
   /**
@@ -231,16 +260,17 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($linguistic_request->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-      // @todo log.
+      $reference = $this->formatRequestReference($linguistic_request->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
     // Set the ePoetry request status but keep the request active.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
     $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE);
+    $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
-    // @todo log.
   }
 
   /**
@@ -254,16 +284,16 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($linguistic_request->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-
-      // @todo log.
+      $reference = $this->formatRequestReference($linguistic_request->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
     // Set the ePoetry request status and finish the request if it was rejected.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED);
     $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+    $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
-    // @todo log and log also the reason why it was rejected.
     $event->setSuccessResponse('The translation request status has been updated successfully.');
   }
 
@@ -278,16 +308,16 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($linguistic_request->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-
-      // @todo log.
+      $reference = $this->formatRequestReference($linguistic_request->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
     // Set the ePoetry request status and finish the request if it was executed.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED);
     $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+    $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
-    // @todo log and log also the reason why it was rejected.
     $event->setSuccessResponse('The translation request status has been updated successfully.');
   }
 
@@ -302,8 +332,8 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($linguistic_request->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-
-      // @todo log.
+      $reference = $this->formatRequestReference($linguistic_request->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
@@ -311,8 +341,8 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     // cancelled.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED);
     $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+    $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
-    // @todo log and log also the reason why it was rejected.
     $event->setSuccessResponse('The translation request status has been updated successfully.');
   }
 
@@ -327,15 +357,15 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request = $this->getTranslationRequest($linguistic_request->getRequestReference());
     if (!$translation_request) {
       $event->setErrorResponse('Missing translation request');
-
-      // @todo log.
+      $reference = $this->formatRequestReference($linguistic_request->getRequestReference());
+      $this->logger->error('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', ['@reference' => $reference]);
       return;
     }
 
     // Set the ePoetry request status.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED);
+    $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
-    // @todo log and log also the reason why it was rejected.
     $event->setSuccessResponse('The translation request status has been updated successfully.');
   }
 
@@ -367,6 +397,64 @@ class NotificationsSubscriber implements EventSubscriberInterface {
 
     $id = reset($ids);
     return $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
+  }
+
+  /**
+   * Formats the request reference into a readable string.
+   *
+   * @param \OpenEuropa\EPoetry\Notification\Type\RequestReference $reference
+   *   The reference.
+   *
+   * @return string
+   *   The string reference.
+   */
+  protected function formatRequestReference(RequestReference $reference): string {
+    $values = [
+      $reference->getRequesterCode(),
+      $reference->getYear(),
+      $reference->getNumber(),
+      $reference->getVersion(),
+      $reference->getPart(),
+      $reference->getProductType(),
+    ];
+
+    return implode('/', $values);
+  }
+
+  /**
+   * Logs the message for the request status change event.
+   *
+   * @param \OpenEuropa\EPoetry\Notification\Event\Request\BaseEvent $event
+   *   The event.
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
+   *   The request.
+   */
+  protected function logRequestStatusChangeEvent(RequestBaseEvent $event, TranslationRequestEpoetryInterface $request): void {
+    $message = 'The request has been <strong>@status</strong> by ePoetry.';
+    $variables = ['@status' => $event->getLinguisticRequest()->getStatus()];
+    if ($event->getPlanningAgent()) {
+      $message .= ' Planning agent: <strong>@agent</strong>.';
+      $variables['@agent'] = $event->getPlanningAgent();
+    }
+    if ($event->getPlanningSector()) {
+      $message .= ' Planning sector: <strong>@sector</strong>.';
+      $variables['@sector'] = $event->getPlanningSector();
+    }
+    if ($event->getMessage()) {
+      $message .= ' Message: <strong>@message</strong>.';
+      $variables['@message'] = $event->getMessage();
+    }
+
+    $type = TranslationRequestLogInterface::INFO;
+    // Change the type of if it's not a normal/expected happy path.
+    if (in_array($event->getLinguisticRequest()->getStatus(), [
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED,
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED,
+    ])) {
+      $type = TranslationRequestLogInterface::WARNING;
+    }
+    $request->log($message, $variables, $type);
   }
 
 }

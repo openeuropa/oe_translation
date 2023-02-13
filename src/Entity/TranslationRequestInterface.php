@@ -107,6 +107,18 @@ interface TranslationRequestInterface extends ContentEntityInterface, EntityOwne
   public function addLogMessage(TranslationRequestLogInterface $log);
 
   /**
+   * Creates and sets a log message.
+   *
+   * @param string $message
+   *   The message.
+   * @param array $variables
+   *   The message variables.
+   * @param string $type
+   *   The type.
+   */
+  public function log(string $message, array $variables = [], string $type = TranslationRequestLogInterface::INFO): void;
+
+  /**
    * Creates an operations links for the entity.
    *
    * @return array

@@ -14,6 +14,7 @@ dependencies:
     - field.field.oe_translation_request.epoetry.target_languages
     - field.field.oe_translation_request.epoetry.translated_data
     - field.field.oe_translation_request.epoetry.translator_provider
+    - field.field.oe_translation_request.epoetry.update_of
     - oe_translation.oe_translation_request_type.epoetry
   module:
     - datetime
@@ -61,3 +62,4 @@ hidden:
   target_languages: true
   translated_data: true
   translator_provider: true
+  update_of: true

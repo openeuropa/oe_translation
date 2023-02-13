@@ -16,6 +16,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
@@ -168,6 +169,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $translation_request = $this->entity;
     $language = $form_state->get('language');
     $translation_request->updateTargetLanguageStatus($language->id(), TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED);
+    $translation_request->log('The <strong>@language</strong> translation has been accepted.', ['@language' => $language->getName()]);
     $translation_request->save();
     $this->messenger->addStatus($this->t('The translation in @language has been accepted.', ['@language' => $language->label()]));
   }
@@ -189,17 +191,22 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $data = $translation_request->getTranslatedData();
     $language_data = $data[$language->id()] ?? [];
     if (!$language_data) {
+      $translation_request->log('An attempt to sync the <strong>@language</strong> translation has failed because there was no data to synchronize.', ['@language' => $language->getName()], TranslationRequestLogInterface::ERROR);
+      $translation_request->save();
       $this->messenger()->addError($this->t('There was no data to synchronize.'));
       return;
     }
 
     $saved = $this->translationSourceManager->saveData($language_data, $entity, $language->id());
     if (!$saved) {
-      $this->messenger()->addError($this->t('There was a problem synchronising the translation.'));
+      $translation_request->log('An attempt to sync the <strong>@language</strong> translation has failed.', ['@language' => $language->getName()], TranslationRequestLogInterface::ERROR);
+      $translation_request->save();
+      $this->messenger()->addError($this->t('There was a problem synchronising the translation. Check the global site logs for the error.'));
       return;
     }
 
     $translation_request->updateTargetLanguageStatus($language->id(), TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED);
+    $translation_request->log('The <strong>@language</strong> translation has been synchronised with the content.', ['@language' => $language->getName()]);
     $translation_request->save();
     $this->messenger->addStatus($this->t('The translation in @language has been synchronized.', ['@language' => $language->label()]));
     $form_state->setRedirect('entity.' . $entity->getEntityTypeId() . '.remote_translation', [$entity->getEntityTypeId() => $entity->id()]);

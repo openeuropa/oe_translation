@@ -18,6 +18,7 @@ use OpenEuropa\EPoetry\Request\Type\CreateLinguisticRequestResponse;
 use OpenEuropa\EPoetry\Request\Type\CreateNewVersion;
 use OpenEuropa\EPoetry\Request\Type\CreateNewVersionResponse;
 use OpenEuropa\EPoetry\Request\Type\DossierReference;
+use OpenEuropa\EPoetry\Request\Type\InformativeMessages;
 use OpenEuropa\EPoetry\Request\Type\LinguisticRequestOut;
 use OpenEuropa\EPoetry\Request\Type\ModifyLinguisticRequest;
 use OpenEuropa\EPoetry\Request\Type\ModifyLinguisticRequestResponse;
@@ -118,6 +119,7 @@ class MockServer implements ContainerInjectionInterface {
     $linguistic_request = new LinguisticRequestOut();
     $linguistic_request->setRequestDetails($request_details_out);
     $linguistic_request->setRequestReference($request_reference);
+    $linguistic_request->setInformativeMessages((new InformativeMessages())->addMessage('We have received your createLinguisticRequest. We will process it soon.'));
 
     $response = new CreateLinguisticRequestResponse();
     $response->setReturn($linguistic_request);
@@ -180,6 +182,7 @@ class MockServer implements ContainerInjectionInterface {
     $linguistic_request = new LinguisticRequestOut();
     $linguistic_request->setRequestDetails($request_details_out);
     $linguistic_request->setRequestReference($request_reference);
+    $linguistic_request->setInformativeMessages((new InformativeMessages())->addMessage('We have received your resubmitRequest. We will process it soon.'));
 
     $response = new ResubmitRequestResponse();
     $response->setReturn($linguistic_request);
@@ -232,6 +235,7 @@ class MockServer implements ContainerInjectionInterface {
     $linguistic_request = new LinguisticRequestOut();
     $linguistic_request->setRequestDetails($request_details_out);
     $linguistic_request->setRequestReference($reference_out);
+    $linguistic_request->setInformativeMessages((new InformativeMessages())->addMessage('We have received your createNewVersionRequest. We will process it soon.'));
 
     $response = new CreateNewVersionResponse();
     $response->setReturn($linguistic_request);
@@ -303,6 +307,7 @@ class MockServer implements ContainerInjectionInterface {
     $linguistic_request = new LinguisticRequestOut();
     $linguistic_request->setRequestDetails($request_details_out);
     $linguistic_request->setRequestReference($reference_out);
+    $linguistic_request->setInformativeMessages((new InformativeMessages())->addMessage('We have received your modifyLinguisticRequest. We will process it soon.'));
 
     $response = new ModifyLinguisticRequestResponse();
     $response->setReturn($linguistic_request);
@@ -347,6 +352,7 @@ class MockServer implements ContainerInjectionInterface {
     $linguistic_request = new LinguisticRequestOut();
     $linguistic_request->setRequestDetails($request_details_out);
     $linguistic_request->setRequestReference($request_reference);
+    $linguistic_request->setInformativeMessages((new InformativeMessages())->addMessage('We have received your addNewPartToDossier. We will process it soon.'));
 
     $response = new AddNewPartToDossierResponse();
     $response->setReturn($linguistic_request);
