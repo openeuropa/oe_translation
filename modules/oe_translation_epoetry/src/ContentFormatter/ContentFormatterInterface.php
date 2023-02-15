@@ -27,4 +27,17 @@ interface ContentFormatterInterface {
    */
   public function export(TranslationRequestInterface $request): MarkupInterface;
 
+  /**
+   * Converts an exported file content back to the translated data.
+   *
+   * @param string $file
+   *   An HTML string to import.
+   * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
+   *   The request.
+   *
+   * @return array
+   *   Translated data array.
+   */
+  public function import(string $file, TranslationRequestInterface $request): array;
+
 }

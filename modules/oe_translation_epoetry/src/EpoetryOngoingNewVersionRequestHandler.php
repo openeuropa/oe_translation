@@ -41,6 +41,7 @@ class EpoetryOngoingNewVersionRequestHandler implements EpoetryOngoingNewVersion
     // request.
     $access = in_array($request->getEpoetryRequestStatus(), [
       TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED,
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
     ]);
 
     if (!$access) {

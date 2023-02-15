@@ -76,7 +76,7 @@
     "autoload-dev": {
         "psr-4": {
             "Drupal\\Tests\\oe_translation\\": "./tests/src",
-            "Drupal\\Tests\\oe_translation_poetry\\": "./modules/oe_translation_poetry/tests/src",
+            "Drupal\\Tests\\oe_translation_epoetry\\": "./modules/oe_translation_epoetry/tests/src",
             "Drupal\\Tests\\oe_translation_corporate_workflow\\": "./modules/oe_translation_corporate_workflow/tests/src"
         }
     },
@@ -114,7 +114,8 @@
             "cweagans/composer-patches": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "drupal/core-composer-scaffold": true,
-            "phpro/grumphp": true
+            "phpro/grumphp": true,
+            "php-http/discovery": false
         },
         "discard-changes": true
     }

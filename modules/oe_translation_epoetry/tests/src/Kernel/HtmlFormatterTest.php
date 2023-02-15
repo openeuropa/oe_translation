@@ -147,9 +147,75 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
 
     /** @var \Drupal\Core\Render\Markup $export */
     $export = $formatter->export($this->request);
-    $expected = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content.html');
+    $expected = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-original.html');
     $expected = str_replace('@request_id', $this->request->id(), $expected);
     $this->assertEquals($expected, $export);
+  }
+
+  /**
+   * Test the HTML content formatter.
+   */
+  public function testHtmlContentImporter(): void {
+    /** @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $formatter */
+    $formatter = $this->container->get('oe_translation_epoetry.html_formatter');
+
+    $formatted_content = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-translated.html');
+
+    $actual_data = $formatter->import($formatted_content, $this->request);
+
+    $expected_data = [
+      1 => [
+        'title' => [
+          0 => [
+            'value' => [
+              '#text' => 'English title',
+              '#translate' => TRUE,
+              '#max_length' => 255,
+              '#parent_label' => [
+                0 => 'Title',
+              ],
+              '#translation' => [
+                '#text' => 'French title',
+              ],
+            ],
+          ],
+        ],
+        'translatable_text_field' => [
+          0 => [
+            'value' => [
+              '#text' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
+              '#translate' => TRUE,
+              '#max_length' => 255,
+              '#format' => 'html',
+              '#parent_label' => [
+                0 => 'translatable_text_field',
+              ],
+              '#translation' => [
+                '#text' => '<h1>This is a FR heading</h1><p>This is a FR paragraph</p>',
+              ],
+            ],
+          ],
+        ],
+        'translatable_text_field_plain' => [
+          0 => [
+            'value' => [
+              '#text' => 'plain text field value',
+              '#translate' => TRUE,
+              '#max_length' => 255,
+              '#format' => 'plain_text',
+              '#parent_label' => [
+                0 => 'translatable_text_field_plain',
+              ],
+              '#translation' => [
+                '#text' => 'plain text FR field value',
+              ],
+            ],
+          ],
+        ],
+      ],
+    ];
+
+    $this->assertEquals($expected_data, $actual_data);
   }
 
 }

@@ -128,7 +128,6 @@ class MockController extends ControllerBase {
   public function notify(TranslationRequestEpoetryInterface $oe_translation_request, string $notification, Request $request): RedirectResponse {
     $notification = Json::decode($notification);
     EpoetryTranslationMockHelper::notifyRequest($oe_translation_request, $notification);
-    $oe_translation_request->save();
     $this->messenger()
       ->addStatus($this->t('The translation request for @label has been updated.',
         [

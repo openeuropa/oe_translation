@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -54,6 +55,13 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
   protected $entityRevisionInfo;
 
   /**
+   * The moderation information service.
+   *
+   * @var \Drupal\content_moderation\ModerationInformationInterface
+   */
+  protected $moderationInformation;
+
+  /**
    * Creates a new LocalTranslationOverviewAlterSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -64,12 +72,15 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
    *   The messenger service.
    * @param \Drupal\oe_translation\EntityRevisionInfoInterface $entityRevisionInfo
    *   The entity revision info service.
+   * @param \Drupal\content_moderation\ModerationInformationInterface $moderationInformation
+   *   The moderation information service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, MessengerInterface $messenger, EntityRevisionInfoInterface $entityRevisionInfo) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, MessengerInterface $messenger, EntityRevisionInfoInterface $entityRevisionInfo, ModerationInformationInterface $moderationInformation) {
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
     $this->messenger = $messenger;
     $this->entityRevisionInfo = $entityRevisionInfo;
+    $this->moderationInformation = $moderationInformation;
   }
 
   /**
@@ -91,6 +102,12 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
+
+    /** @var \Drupal\workflows\WorkflowInterface $workflow */
+    $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+      return;
+    }
 
     // We need to print some message explaining to the user what they are
     // translating in terms of version.

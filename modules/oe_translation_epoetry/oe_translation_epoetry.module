@@ -10,9 +10,7 @@ declare(strict_types = 1);
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
-use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
-use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -132,22 +130,4 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
     '#title' => t('Add new languages'),
     '#url' => $url,
   ];
-}
-
-/**
- * Implements hook_ENTITY_TYPE_presave().
- */
-function oe_translation_epoetry_oe_translation_request_presave(TranslationRequestInterface $entity) {
-  if (!$entity instanceof TranslationRequestEpoetryInterface) {
-    return;
-  }
-  // Mark the request status to Finished if we get a Suspended or Cancelled
-  // ePoetry status update.
-  $epoetry_status = $entity->getEpoetryRequestStatus();
-  if (in_array($epoetry_status, [
-    TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
-    TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED,
-  ])) {
-    $entity->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_FINISHED);
-  }
 }
