@@ -1,0 +1,5 @@
+oe_translation_epoetry_mock.mock_settings:
+  title: ePoetry mock settings
+  parent: system.admin_config_system
+  route_name: oe_translation_epoetry_mock.mock_settings
+  weight: 10

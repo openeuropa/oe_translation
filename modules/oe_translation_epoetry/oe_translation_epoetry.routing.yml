@@ -30,3 +30,14 @@ oe_translation_epoetry.notifications_endpoint:
     _controller: Drupal\oe_translation_epoetry\Controller\EpoetryController::notifications
   requirements:
     _permission: 'access content'
+
+oe_translation_epoetry.failed_to_finished:
+  path: '/translation-request/epoetry/failed-to-finish/{translation_request}'
+  defaults:
+    _controller: Drupal\oe_translation_epoetry\Controller\EpoetryController::finishFailedRequest
+  requirements:
+    _custom_access: Drupal\oe_translation_epoetry\Controller\EpoetryController::finishFailedRequestAccess
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request

@@ -8,6 +8,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_epoetry_mock\MockServer;
@@ -38,16 +39,26 @@ class MockController extends ControllerBase {
   protected $classResolver;
 
   /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * The controller constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $classResolver
    *   The class resolver.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $classResolver) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $classResolver, StateInterface $state) {
     $this->entityTypeManager = $entity_type_manager;
     $this->classResolver = $classResolver;
+    $this->state = $state;
   }
 
   /**
@@ -56,7 +67,8 @@ class MockController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('class_resolver')
+      $container->get('class_resolver'),
+      $container->get('state')
     );
   }
 
@@ -75,6 +87,15 @@ class MockController extends ControllerBase {
     $request_xml = file_get_contents("php://input");
     if ($request_xml == "") {
       throw new NotFoundHttpException();
+    }
+
+    $error_response = $this->state->get('oe_translation_epoetry_mock_response_error', []);
+    if ($error_response) {
+      $wrapper = file_get_contents(drupal_get_path('module', 'oe_translation_epoetry_mock') . '/fixtures/error_wrapper.xml');
+      $wrapper = str_replace(['@code', '@string'], $error_response, $wrapper);
+      $response = new Response($wrapper);
+      $response->headers->set('Content-type', 'application/xml; charset=utf-8');
+      return $response;
     }
 
     $xml = str_ireplace([

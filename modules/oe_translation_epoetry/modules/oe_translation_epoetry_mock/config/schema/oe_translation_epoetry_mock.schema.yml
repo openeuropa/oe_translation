@@ -1,0 +1,19 @@
+oe_translation_epoetry_mock.settings:
+  type: config_object
+  label: 'OpenEuropa Translation ePoetry Mock settings'
+  mapping:
+    endpoint:
+      type: string
+      label: 'Endpoint'
+    notifications_endpoint:
+      type: string
+      label: 'Notifications endpoint'
+    notifications_username:
+      type: string
+      label: 'Notifications username'
+    notifications_password:
+      type: string
+      label: 'Notifications password'
+    application_name:
+      type: string
+      label: 'Application name'

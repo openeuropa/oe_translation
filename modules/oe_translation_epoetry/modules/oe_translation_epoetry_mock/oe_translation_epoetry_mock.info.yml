@@ -6,4 +6,3 @@ type: module
 core_version_requirement: ^9.2
 dependencies:
   - oe_translation_epoetry:oe_translation_epoetry
-  - oe_translation_remote_test:oe_translation_remote_test

@@ -13,3 +13,7 @@ services:
     arguments: ['@entity_type.manager', '@oe_translation_epoetry.html_formatter', '@language_manager', '@logger.factory']
     tags:
       - { name: event_subscriber }
+  oe_translation_epoetry.event_subscriber.operations_provider:
+    class: Drupal\oe_translation_epoetry\EventSubscriber\TranslationRequestOperationsProviderSubscriber
+    tags:
+      - { name: event_subscriber }

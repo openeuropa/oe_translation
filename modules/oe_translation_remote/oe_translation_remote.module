@@ -40,6 +40,7 @@ function oe_translation_remote_entity_type_alter(array &$entity_types) {
 function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, bool $cacheable): array {
   $options = [
     TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE => t('Active'),
+    TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => t('Failed & Finished'),
     TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED => t('Finished'),
   ];
 
@@ -191,9 +192,14 @@ function oe_translation_remote_oe_translation_request_view(array &$build, Entity
     $row['request_status'] = $entity->getRequestStatus();
     $row['provider'] = $entity->getTranslatorProvider()->label();
 
+    $classes = ['request-status-meta-table'];
+    if ($entity->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED) {
+      $classes[] = 'color-error';
+    }
+
     $build['meta'] = [
       '#theme' => 'table',
-      '#attributes' => ['class' => ['request-status-meta-table']],
+      '#attributes' => ['class' => $classes],
       '#header' => $header,
       '#rows' => [$row],
       '#weight' => -100,

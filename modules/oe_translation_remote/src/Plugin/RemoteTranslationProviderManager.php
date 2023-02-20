@@ -99,6 +99,7 @@ class RemoteTranslationProviderManager extends DefaultPluginManager {
       if (!$statuses) {
         $statuses = [
           TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED,
+          TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
         ];
       }
 

@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItemInterface;
@@ -92,6 +93,19 @@ class Epoetry extends RemoteTranslationProviderBase {
   /**
    * {@inheritdoc}
    */
+  public function setConfiguration(array $configuration) {
+    $default_configuration = $this->defaultConfiguration();
+    // Only include configuration that is defined in the default configuration
+    // array.
+    $configuration = array_filter($configuration, function ($value, $key) use ($default_configuration) {
+      return isset($default_configuration[$key]);
+    }, ARRAY_FILTER_USE_BOTH);
+    $this->configuration = $configuration + $default_configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $contacts = $this->configuration['contacts'];
 
@@ -132,6 +146,36 @@ class Epoetry extends RemoteTranslationProviderBase {
       '#default_value' => $this->configuration['auto_accept'],
     ];
 
+    $form['dossiers_wrapper'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('ePoetry dossiers'),
+    ];
+    $form['dossiers_wrapper']['dossiers'] = [
+      '#theme' => 'item_list',
+      '#items' => [],
+    ];
+
+    $dossiers = array_reverse(RequestFactory::getEpoetryDossiers(), TRUE);
+    $i = 1;
+    foreach ($dossiers as $number => $dossier) {
+      $form['dossiers_wrapper']['dossiers']['#items'][] = new FormattableMarkup('@current Number @number / Code @code / Year @year / Part @part @reset', [
+        '@number' => $number,
+        '@code' => $dossier['code'],
+        '@year' => $dossier['year'],
+        '@part' => $dossier['part'],
+        '@current' => $i == 1 ? '[CURRENT]' : '',
+        '@reset' => $i == 1 && isset($dossier['reset']) ? '[SET TO RESET]' : '',
+      ]);
+
+      $i++;
+    }
+
+    $form['dossiers_wrapper']['reset'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Reset current dossier'),
+      '#description' => $this->t('Check this box and save if you would like to reset the current dossier so that the next request generates a new dossier.'),
+    ];
+
     return $form;
   }
 
@@ -153,6 +197,15 @@ class Epoetry extends RemoteTranslationProviderBase {
     $this->configuration['auto_accept'] = (bool) $form_state->getValue('auto_accept');
     $this->configuration['title_prefix'] = $form_state->getValue('title_prefix');
     $this->configuration['site_id'] = $form_state->getValue('site_id');
+
+    $reset_dossier = (bool) $form_state->getValue(['dossiers_wrapper', 'reset']);
+    if ($reset_dossier) {
+      $dossiers = array_reverse(RequestFactory::getEpoetryDossiers(), TRUE);
+      $number = key($dossiers);
+      $dossier = &$dossiers[$number];
+      $dossier['reset'] = TRUE;
+      RequestFactory::setEpoetryDossiers($dossiers);
+    }
   }
 
   /**
@@ -315,10 +368,9 @@ class Epoetry extends RemoteTranslationProviderBase {
       $this->createAndSendRequestObject($request, $form, $form_state);
     }
     catch (\Throwable $exception) {
-      // @todo handle error in
-      // https://citnet.tech.ec.europa.eu/CITnet/jira/browse/EWPP-3037.
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
       $this->messenger->addError($this->t('There was a problem sending the request to ePoetry.'));
+      $request->log('There was a problem with this request: <strong>@message</strong>', ['@message' => $exception->getMessage()], TranslationRequestLogInterface::ERROR);
     }
     $request->save();
   }
@@ -350,13 +402,14 @@ class Epoetry extends RemoteTranslationProviderBase {
    */
   protected function createAndSendRequestObject(TranslationRequestEpoetryInterface $request, array $form, FormStateInterface $form_state): void {
     $last_request = $form_state->get('epoetry_last_request');
-    if (!$last_request instanceof TranslationRequestEpoetryInterface) {
+    if (!$last_request instanceof TranslationRequestEpoetryInterface || $this->dossierResetNeeded()) {
       $dossiers = RequestFactory::getEpoetryDossiers();
       // If we are not making a new version request, we need to check if
       // we have a number set in the system, we need to add a new part
       // the existing dossier for any new nodes. This is because that is how
-      // ePoetry expects we send requests.
-      if ($this->newPartNeeded($request, $form, $form_state)) {
+      // ePoetry expects we send requests. Of course, if we don't need to reset
+      // the dossier.
+      if ($this->newPartNeeded($request, $form, $form_state) && !$this->dossierResetNeeded()) {
         $object = $this->requestFactory->addNewPartToDossierRequest($request);
         $response = $this->requestFactory->getRequestClient()->addNewPartToDossier($object);
         // If we made an addPartToDossier request, we need to increment the
@@ -388,9 +441,9 @@ class Epoetry extends RemoteTranslationProviderBase {
       }
     }
     else {
-      // If we are doing with an existing translation request, we need to check
-      // if it was rejected, because if it was, we need to use resubmitRequest
-      // instead of createNewVersion.
+      // If we are dealing with an existing translation request, we need to
+      // check if it was rejected, because if it was, we need to use
+      // resubmitRequest instead of createNewVersion.
       if ($last_request->getEpoetryRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED) {
         $object = $this->requestFactory->createNewVersionRequest($request, $last_request);
         $response = $this->requestFactory->getRequestClient()->createNewVersion($object);
@@ -447,9 +500,9 @@ class Epoetry extends RemoteTranslationProviderBase {
     }
 
     $dossiers = array_reverse($dossiers, TRUE);
+    $dossier = current($dossiers);
     // We check the last number and if it's corresponding last part is 30,
     // we reset.
-    $dossier = current($dossiers);
     // Before returning, set the reference values onto the request so we can
     // use in the RequestFactory.
     $request->setRequestId([
@@ -461,6 +514,27 @@ class Epoetry extends RemoteTranslationProviderBase {
       'service' => 'TRA',
     ]);
     return $dossier['part'] < 30;
+  }
+
+  /**
+   * Checks if we need to reset the current dossier.
+   *
+   * This happens when an admin edits the poetry translator and indicates that
+   * the current dossier needs to be reset so that the immediate next request
+   * because a createLinguisticRequest.
+   *
+   * @return bool
+   *   Whether to reset the current dossier.
+   */
+  protected function dossierResetNeeded(): bool {
+    $dossiers = RequestFactory::getEpoetryDossiers();
+    if (empty($dossiers)) {
+      return FALSE;
+    }
+
+    $dossiers = array_reverse($dossiers, TRUE);
+    $dossier = current($dossiers);
+    return isset($dossier['reset']);
   }
 
   /**
@@ -494,9 +568,6 @@ class Epoetry extends RemoteTranslationProviderBase {
   /**
    * Returns the last translation requested sent for this entity.
    *
-   * In the query, we don't look for the status because at this point, we have
-   * already checked that there is nothing ongoing.
-   *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    *
@@ -509,6 +580,13 @@ class Epoetry extends RemoteTranslationProviderBase {
       ->condition('content_entity__entity_type', $entity->getEntityTypeId())
       ->condition('content_entity__entity_id', $entity->id())
       ->condition('bundle', 'epoetry')
+      // Filter out the requests which have failed because those don't have
+      // any request IDs. Other statuses we don't need to include as by this
+      // point we already checked there is nothing ongoing.
+      ->condition('request_status', [
+        TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED,
+        TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
+      ], 'NOT IN')
       ->sort('id', 'DESC')
       ->range(0, 1)
       ->execute();
