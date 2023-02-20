@@ -61,7 +61,7 @@ function oe_translation_epoetry_mock_preprocess_table__remote_language_list(arra
     throw new NotFoundHttpException();
   }
 
-  if ($request->bundle() !== 'epoetry') {
+  if ($request->bundle() !== 'epoetry' || $request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_FAILED) {
     return;
   }
 

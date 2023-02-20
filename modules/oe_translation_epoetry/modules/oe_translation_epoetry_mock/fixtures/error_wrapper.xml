@@ -1,0 +1,9 @@
+<S:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+   <env:Header/>
+   <S:Body>
+      <ns0:Fault xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.w3.org/2003/05/soap-envelope">
+         <faultcode>@code</faultcode>
+         <faultstring>@string</faultstring>
+      </ns0:Fault>
+   </S:Body>
+</S:Envelope>

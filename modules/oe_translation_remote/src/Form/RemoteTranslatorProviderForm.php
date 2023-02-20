@@ -174,6 +174,7 @@ class RemoteTranslatorProviderForm extends EntityForm {
         'plugin_configuration',
         $plugin_id,
       ], []);
+
       $plugin = $this->providerManager->createInstance($plugin_id, $plugin_configuration);
 
       if (isset($form['plugin_configuration'][$plugin_id])) {

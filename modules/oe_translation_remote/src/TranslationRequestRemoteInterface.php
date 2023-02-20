@@ -36,11 +36,14 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
    * job is done.
    * FINISHED: all the language translations have been synced.
    * FAILED: the request failed upon initial send.
+   * FAILED_FINISHED: the request failed upon initial send and was marked as
+   * finished.
    */
   const STATUS_REQUEST_ACTIVE = 'Active';
   const STATUS_REQUEST_TRANSLATED = 'Translated';
   const STATUS_REQUEST_FINISHED = 'Finished';
   const STATUS_REQUEST_FAILED = 'Failed';
+  const STATUS_REQUEST_FAILED_FINISHED = 'Failed & Finished';
 
   /**
    * Returns the request status.
