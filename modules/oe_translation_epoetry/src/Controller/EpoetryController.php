@@ -12,7 +12,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
-use Nyholm\Psr7\Factory\Psr17Factory;
+use Http\Discovery\Psr17Factory;
 use OpenEuropa\EPoetry\NotificationServerFactory;
 use OpenEuropa\EPoetry\Serializer\Serializer;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
