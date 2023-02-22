@@ -28,6 +28,7 @@ use OpenEuropa\EPoetry\Request\Type\ProductRequestIn;
 use OpenEuropa\EPoetry\Request\Type\Products;
 use OpenEuropa\EPoetry\Request\Type\RequestDetailsIn;
 use OpenEuropa\EPoetry\Request\Type\RequestReferenceIn;
+use OpenEuropa\EPoetry\Request\Type\ResubmitRequest;
 use OpenEuropa\EPoetry\RequestClientFactory;
 use OpenEuropa\EPoetry\Tests\Authentication\MockAuthentication;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -139,6 +140,34 @@ class RequestFactory extends RequestClientFactory {
       ->setTemplateName('WEBTRA');
 
     return $linguistic_request;
+  }
+
+  /**
+   * Creates a resubmitRequest from a rejected our ePoetry translation request.
+   *
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
+   *   The ePoetry translation request entity.
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $rejected_request
+   *   The rejected request.
+   *
+   * @return \OpenEuropa\EPoetry\Request\Type\ResubmitRequest
+   *   A resubmit request object.
+   */
+  public function resubmitRequest(TranslationRequestEpoetryInterface $request, TranslationRequestEpoetryInterface $rejected_request): ResubmitRequest {
+    $request_details = $this->toRequestDetails($request);
+    $reference = $this->toRequestReference($rejected_request, RequestReferenceIn::class);
+
+    $linguistic_request_in = new LinguisticRequestIn();
+    $linguistic_request_in->setRequestDetails($request_details);
+    $linguistic_request_in->setRequestReference($reference);
+
+    $resubmit_request = new ResubmitRequest();
+    $resubmit_request
+      ->setResubmitRequest($linguistic_request_in)
+      ->setApplicationName(static::getEpoetryApplicationName())
+      ->setTemplateName('WEBTRA');
+
+    return $resubmit_request;
   }
 
   /**

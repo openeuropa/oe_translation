@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation_epoetry\FunctionalJavascript;
 
 use Drupal\node\Entity\Node;
+use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
@@ -1268,6 +1269,145 @@ class EpoetryTranslationTest extends TranslationTestBase {
       }
       $this->assertEquals($status, $request->getTargetLanguage('fr')->getStatus());
     }
+  }
+
+  /**
+   * Tests resubmitting rejected requests.
+   */
+  public function testResubmitRejectedRequests(): void {
+    $request_storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
+    $node = $this->createBasicTestNode();
+    // Create a rejected request, just so we have one in the system for the
+    // node.
+    $request = $this->createNodeTranslationRequest($node, TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, [
+      [
+        'langcode' => 'fr',
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+      ],
+    ]);
+    $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED);
+    $request->save();
+
+    // Now create a new request for this node that is active. Note that because
+    // the previous request was rejected, the request ID can stay identical
+    // as this would be technically a resubmit request.
+    $request = $this->createNodeTranslationRequest($node, TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE, [
+      [
+        'langcode' => 'fr',
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+      ],
+    ]);
+    $request->save();
+
+    // Go to the remote translation dashboard and assert we have the active
+    // request we cannot make a new request, as expected under the normal
+    // flow.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->assertRequestStatusTable([
+      'Active',
+      'ePoetry',
+      'SenttoDGT',
+      'DIGIT/' . date('Y') . '/2000/0/0/TRA',
+      'No',
+      'No',
+      '2035-Oct-10',
+      'N/A',
+      // The mock link tu accept the request.
+      'Accept',
+    ]);
+    $this->assertSession()->fieldDisabled('Translator');
+    // We also don't see any message of a rejected request.
+    $this->assertSession()->pageTextNotContains('had been rejected');
+
+    // Reject the request.
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::notifyRequest($request, [
+      'type' => 'RequestStatusChange',
+      'status' => 'Rejected',
+      'message' => 'Please fix your content',
+    ]);
+    $request_storage->resetCache();
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
+    $request = $request_storage->load($request->id());
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED, $request->getEpoetryRequestStatus());
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+
+    // Go to the remote translation dashboard and assert there are no requests
+    // visible, we can make a new translation, but we also have a message
+    // stating that we had a rejected request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->assertNull($this->getSession()->getPage()->find('css', 'table.request-status-meta-table'));
+    $this->assertSession()->pageTextContains('The last ePoetry translation request with the ID DIGIT/' . date('Y') . '/2000/0/0/TRA had been rejected. You can resubmit to correct it.');
+    $this->assertSession()->fieldEnabled('Translator');
+
+    // Make a new request to "correct" the reason why it was rejected. This can
+    // be done even without making a change to the content.
+    $select = $this->assertSession()->selectExists('Translator');
+    $select->selectOption('epoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('New translation request using ePoetry');
+    $this->assertSession()->pageTextContains('You are making a request for a new version. The previous version was translated with the DIGIT/' . date('Y') . '/2000/0/0/TRA request ID. The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.');
+    $this->getSession()->getPage()->checkField('French');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+
+    // Assert that the XML request we built is correct.
+    $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
+    $this->assertCount(1, $requests);
+    $xml = reset($requests);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:resubmitRequest><resubmitRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 3</internalReference><requestedDeadline>2032-10-10T12:00:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMyIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDM8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0zIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzNdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTTExYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T12:00:00+00:00" trackChanges="false"><language>fr</language></product></products></requestDetails></resubmitRequest><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:resubmitRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+
+    // Assert that we got back a correct response and our request was correctly
+    // updated.
+    $requests = TranslationRequest::loadMultiple();
+    // We have 3 requests in total: the first rejected, the second active which
+    // was rejected and the third which is active now.
+    $this->assertCount(3, $requests);
+    $request = end($requests);
+    $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $request);
+    $this->assertEquals('en', $request->getSourceLanguageCode());
+    $target_languages = $request->getTargetLanguages();
+    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
+    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
+    $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
+    $this->assertNull($request->getAcceptedDeadline());
+    $this->assertFalse($request->isAutoAccept());
+    $this->assertFalse($request->isAutoSync());
+    $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
+    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $request->getRequestId(TRUE));
+    $this->assertEquals([
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ], $request->getContacts());
+
+    // Assert the request status table.
+    $this->assertRequestStatusTable([
+      'Active',
+      'ePoetry',
+      'SenttoDGT',
+     // The ID is the same as the previous was rejected.
+      'DIGIT/' . date('Y') . '/2000/0/0/TRA',
+      'No',
+      'No',
+      '2032-Oct-10',
+      'N/A',
+     // The mock link tu accept the request.
+      'Accept',
+    ]);
   }
 
 }

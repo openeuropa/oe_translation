@@ -9,8 +9,10 @@ declare(strict_types = 1);
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
+use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -130,4 +132,38 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
     '#title' => t('Add new languages'),
     '#url' => $url,
   ];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Print a warning on the translation form if the previous epoetry request was
+ * rejected.
+ */
+function oe_translation_epoetry_form_oe_translation_remote_new_form_alter(array &$form, FormStateInterface $form_state) {
+  if ($form_state->getUserInput()) {
+    // We don't want to run this on Ajax rebuild.
+    return;
+  }
+  $entity = $form['#entity'];
+
+  $ids = \Drupal::entityTypeManager()->getStorage('oe_translation_request')
+    ->getQuery()
+    ->condition('content_entity__entity_type', $entity->getEntityTypeId())
+    ->condition('content_entity__entity_id', $entity->id())
+    ->condition('bundle', 'epoetry')
+    ->sort('id', 'DESC')
+    ->range(0, 1)
+    ->execute();
+
+  if (!$ids) {
+    return;
+  }
+
+  $id = reset($ids);
+  /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+  $request = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->load($id);
+  if ($request->getEpoetryRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED) {
+    \Drupal::messenger()->addWarning(t('The last ePoetry translation request with the ID <strong>@id</strong> had been rejected. You can resubmit to correct it.', ['@id' => $request->getRequestId(TRUE)]));
+  }
 }
