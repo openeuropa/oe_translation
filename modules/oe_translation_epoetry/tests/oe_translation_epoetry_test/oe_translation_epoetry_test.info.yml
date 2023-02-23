@@ -1,0 +1,7 @@
+name: OpenEuropa Translation ePoetry Test
+description: Test module for the ePoetry integration
+package: Testing
+type: module
+core_version_requirement: ^9.4
+dependencies:
+  - oe_translation:oe_translation_epoetry

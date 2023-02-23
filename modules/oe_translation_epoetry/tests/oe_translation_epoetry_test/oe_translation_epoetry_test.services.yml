@@ -1,0 +1,6 @@
+services:
+  oe_translation_epoetry_test.on_behalf_of_subscriber:
+    class: Drupal\oe_translation_epoetry_test\EventSubscriber\OnBehalfOfSubscriber
+    arguments: ['@state']
+    tags:
+      - { name: event_subscriber }

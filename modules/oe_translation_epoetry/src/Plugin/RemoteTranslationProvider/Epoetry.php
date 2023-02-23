@@ -13,6 +13,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
+use Drupal\oe_translation_epoetry\Event\OnBehalfOfEvent;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItemInterface;
 use Drupal\oe_translation_epoetry\RequestFactory;
@@ -23,6 +24,7 @@ use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\EPoetry\Request\Type\LinguisticRequestOut;
 use Phpro\SoapClient\Type\ResultInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides the ePoetry translator provider plugin.
@@ -52,13 +54,23 @@ class Epoetry extends RemoteTranslationProviderBase {
   protected $state;
 
   /**
-   * {@inheritdoc}
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state) {
+  protected $eventDispatcher;
+
+  /**
+   * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state, EventDispatcherInterface $eventDispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
 
     $this->requestFactory = $requestFactory;
     $this->state = $state;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -74,7 +86,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       $container->get('oe_translation.translation_source_manager'),
       $container->get('messenger'),
       $container->get('oe_translation_epoetry.request_factory'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -87,6 +100,7 @@ class Epoetry extends RemoteTranslationProviderBase {
       'auto_accept' => FALSE,
       'title_prefix' => '',
       'site_id' => '',
+      'on_behalf' => '',
     ] + parent::defaultConfiguration();
   }
 
@@ -137,6 +151,13 @@ class Epoetry extends RemoteTranslationProviderBase {
       '#default_value' => $this->configuration['site_id'],
       '#description' => $this->t('This site ID used in the title of translation requests.'),
       '#required' => TRUE,
+    ];
+
+    $form['on_behalf'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('On behalf of'),
+      '#default_value' => $this->configuration['on_behalf'],
+      '#description' => $this->t('Configure the default DG on behalf of which requests will be sent. This can be overridden per request. Each request needs to send this value so omitting it here will still make it require on the request page.'),
     ];
 
     $form['auto_accept'] = [
@@ -197,6 +218,7 @@ class Epoetry extends RemoteTranslationProviderBase {
     $this->configuration['auto_accept'] = (bool) $form_state->getValue('auto_accept');
     $this->configuration['title_prefix'] = $form_state->getValue('title_prefix');
     $this->configuration['site_id'] = $form_state->getValue('site_id');
+    $this->configuration['on_behalf'] = $form_state->getValue('on_behalf');
 
     $reset_dossier = (bool) $form_state->getValue(['dossiers_wrapper', 'reset']);
     if ($reset_dossier) {
@@ -306,6 +328,21 @@ class Epoetry extends RemoteTranslationProviderBase {
         '#required' => TRUE,
       ];
     }
+
+    $default_value = $this->configuration['on_behalf'];
+    $event = new OnBehalfOfEvent();
+    $this->eventDispatcher->dispatch($event, OnBehalfOfEvent::NAME);
+    if ($event->getValue()) {
+      $default_value = $event->getValue();
+    }
+    $form['on_behalf'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('On behalf of'),
+      '#default_value' => $default_value,
+      '#description' => $this->t('The DG on behalf of which requests will be sent. This needs to be a valid acronym of the DG in question.'),
+      '#required' => TRUE,
+    ];
+
     return $form;
   }
 
