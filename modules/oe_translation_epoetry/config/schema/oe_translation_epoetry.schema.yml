@@ -28,3 +28,6 @@ oe_translation_remote.remote_translation_provider.plugin.epoetry:
     site_id:
       type: string
       label: The site ID
+    on_behalf:
+      type: string
+      label: On behalf of
