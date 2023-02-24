@@ -77,6 +77,9 @@ function oe_translation_epoetry_mock_preprocess_table__remote_language_list(arra
     $language = $request->getTargetLanguage($langcode);
 
     $current_status_key = array_search($language->getStatus(), $statuses);
+    if ($current_status_key === FALSE) {
+      continue;
+    }
 
     // Notify with language status change.
     foreach ($statuses as $key => $status) {

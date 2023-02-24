@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.update_of
+    - oe_translation.oe_translation_request_type.epoetry
+  module:
+    - tmgmt_content
+third_party_settings:
+  tmgmt_content:
+    excluded: false
+id: oe_translation_request.epoetry.update_of
+field_name: update_of
+entity_type: oe_translation_request
+bundle: epoetry
+label: 'Update of'
+description: 'The translation request for which this is an update.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:oe_translation_request'
+  handler_settings:
+    target_bundles:
+      epoetry: epoetry
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

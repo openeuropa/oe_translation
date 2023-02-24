@@ -5,9 +5,12 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Render\Markup;
 
 /**
  * Defines the Translation request log entity.
@@ -42,12 +45,12 @@ class TranslationRequestLog extends ContentEntityBase implements TranslationRequ
   /**
    * {@inheritdoc}
    */
-  public function getMessage() {
+  public function getMessage(): MarkupInterface {
     $text = $this->message->value;
     if (!$this->variables->isEmpty()) {
       return new FormattableMarkup($text, $this->variables->first()->toArray());
     }
-    return $text;
+    return Markup::create(Xss::filterAdmin($this->message->value));
   }
 
   /**
@@ -81,6 +84,7 @@ class TranslationRequestLog extends ContentEntityBase implements TranslationRequ
     return [
       TranslationRequestLogInterface::INFO => t('info'),
       TranslationRequestLogInterface::ERROR => t('error'),
+      TranslationRequestLogInterface::WARNING => t('warning'),
     ];
   }
 

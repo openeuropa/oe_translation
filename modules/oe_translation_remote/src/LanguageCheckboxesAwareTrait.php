@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_remote;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\oe_translation_remote_test\TranslationRequestTestRemote;
 
 /**
  * Used by remote translation providers that pick a language.
@@ -44,7 +43,8 @@ trait LanguageCheckboxesAwareTrait {
   /**
    * Returns the submitted languages from the form state.
    *
-   * Each language gets the TranslationRequestTestRemote::STATUS_LANGUAGE_ACTIVE
+   * Each language gets the
+   * TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACTIVE
    * status on it by default.
    *
    * @param array $form
@@ -62,7 +62,7 @@ trait LanguageCheckboxesAwareTrait {
       if ($value === 1) {
         $languages[] = [
           'langcode' => $langcode,
-          'status' => TranslationRequestTestRemote::STATUS_LANGUAGE_ACTIVE,
+          'status' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACTIVE,
         ];
       }
     }

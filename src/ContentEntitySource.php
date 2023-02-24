@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\tmgmt\Entity\JobItem;
 use Drupal\tmgmt_content\Plugin\tmgmt\Source\ContentEntitySource as OriginalContentEntitySource;
@@ -23,6 +24,13 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
   protected $entityRevisionInfo;
 
   /**
+   * The logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * ContentEntitySource constructor.
    *
    * @param array $configuration
@@ -33,10 +41,13 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
    *   The plugin definition.
    * @param \Drupal\oe_translation\EntityRevisionInfoInterface $entityRevisionInfo
    *   The entity revision info service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityRevisionInfoInterface $entityRevisionInfo) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityRevisionInfoInterface $entityRevisionInfo, LoggerChannelFactoryInterface $loggerChannelFactory) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityRevisionInfo = $entityRevisionInfo;
+    $this->logger = $loggerChannelFactory->get('oe_translation');
   }
 
   /**
@@ -47,7 +58,8 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('oe_translation.entity_revision_info')
+      $container->get('oe_translation.entity_revision_info'),
+      $container->get('logger.factory')
     );
   }
 
@@ -94,6 +106,7 @@ class ContentEntitySource extends OriginalContentEntitySource implements Contain
       return TRUE;
     }
     catch (\Exception $exception) {
+      $this->logger->error($exception->getMessage());
       return FALSE;
     }
   }

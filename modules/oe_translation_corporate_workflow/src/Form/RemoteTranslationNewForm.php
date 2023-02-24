@@ -168,6 +168,12 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       return $requests;
     }
 
+    /** @var \Drupal\workflows\WorkflowInterface $workflow */
+    $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+      return $requests;
+    }
+
     $state = $entity->get('moderation_state')->value;
     if ($state !== 'published') {
       return $requests;
@@ -194,6 +200,12 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
    */
   protected function buildExistingRequestsForm(array $form, FormStateInterface $form_state, ContentEntityInterface $entity, array $requests): array {
     $form = parent::buildExistingRequestsForm($form, $form_state, $entity, $requests);
+
+    /** @var \Drupal\workflows\WorkflowInterface $workflow */
+    $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+      return $form;
+    }
 
     if (count($requests) === 1) {
       $request = reset($requests);

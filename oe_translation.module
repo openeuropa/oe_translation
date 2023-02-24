@@ -18,6 +18,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\ContentEntitySource;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\FieldProcessor\AddressFieldProcessor;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\tmgmt_content\DefaultFieldProcessor;
@@ -251,4 +253,57 @@ function _oe_translation_default_breadcrumb_links(Breadcrumb &$breadcrumb, Route
   $breadcrumb = new Breadcrumb();
   $breadcrumb->addCacheableDependency($cache);
   $breadcrumb->setLinks($links);
+}
+
+/**
+ * Creates a table of log messages for the request.
+ *
+ * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
+ *   The request.
+ *
+ * @return array
+ *   The log messages.
+ */
+function _oe_translation_create_request_logs_tables(TranslationRequestInterface $request): array {
+  $logs = $request->getLogMessages();
+  if (!$logs) {
+    return [];
+  }
+
+  $table = [
+    '#type' => 'table',
+    '#attributes' => [
+      'class' => ['translation-request-log-messages'],
+    ],
+    '#header' => [
+      '#',
+      t('Type'),
+      t('Message'),
+      t('Date'),
+    ],
+  ];
+
+  $rows = [];
+  $i = 1;
+  foreach ($logs as $log) {
+    $class_map = [
+      TranslationRequestLogInterface::ERROR => 'color-error',
+      TranslationRequestLogInterface::WARNING => 'color-warning',
+    ];
+    $class = $class_map[$log->getType()] ?? NULL;
+    $row = [
+      $i,
+      ucfirst($log->getType()),
+      $log->getMessage(),
+      \Drupal::service('date.formatter')->format($log->getCreatedTime(), 'short'),
+    ];
+    $rows[] = [
+      'data' => $row,
+      'class' => $class ? [$class] : [],
+    ];
+    $i++;
+  }
+
+  $table['#rows'] = $rows;
+  return $table;
 }

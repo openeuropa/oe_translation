@@ -60,7 +60,7 @@ class RequestFactory extends RequestClientFactory {
    *   The content formatter.
    */
   public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, ClientInterface $guzzle, ContentFormatterInterface $formatter) {
-    $logger = $loggerChannelFactory->get('epoetry');
+    $logger = $loggerChannelFactory->get('oe_translation_epoetry');
     $endpoint = static::getEpoetryServiceUrl();
     $this->formatter = $formatter;
     if (!$endpoint) {

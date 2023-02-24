@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_epoetry\FunctionalJavascript;
 
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\LanguageWithStatus;
@@ -11,6 +12,7 @@ use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
+use Drupal\oe_translation_epoetry_mock\Logger\MockLogger;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
@@ -20,6 +22,8 @@ use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 
 /**
  * Tests the remote translations via ePoetry.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class EpoetryTranslationTest extends TranslationTestBase {
 
@@ -265,7 +269,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Put a smaller message and send.
     $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
     // Assert that the XML request we built is correct.
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
@@ -314,6 +319,17 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert the message.
     $this->assertSession()->pageTextContains('Message to provider');
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The request has been sent successfully using the createLinguisticRequest request type. The dossier number started is 1001.',
+      ],
+      2 => [
+        'Info',
+        'Message from ePoetry: We have received your createLinguisticRequest. We will process it soon.',
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
 
     // We have the table of languages of this last request, all active but
     // none yet translated.
@@ -365,6 +381,17 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['fr']['status'] = 'Accepted';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
+    // Assert the extra logs.
+    $expected_logs[3] = [
+      'Info',
+      'The request has been Accepted by ePoetry. Planning agent: test. Planning sector: DGT. Message: The request status has been changed to Accepted.',
+    ];
+    $expected_logs[4] = [
+      'Info',
+      'The French product status has been updated to Accepted.',
+    ];
+    $this->assertLogMessagesTable($expected_logs);
+
     // Send the translation.
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
     $this->getSession()->reload();
@@ -372,7 +399,22 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['fr']['review'] = TRUE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
-    // Sync the translation.
+    // Assert the extra logs.
+    $expected_logs[5] = [
+      'Info',
+      'The French translation has been delivered.',
+    ];
+    $this->assertLogMessagesTable($expected_logs);
+
+    // Sync the translation (first accept it).
+    $this->getSession()->getPage()->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and accept');
+    $this->drupalGet($request->toUrl());
+    $expected_logs[6] = [
+      'Info',
+      'The French translation has been accepted.',
+    ];
+    $this->assertLogMessagesTable($expected_logs);
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronize');
     $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
@@ -380,6 +422,11 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['fr']['status'] = 'Synchronized';
     $expected_languages['fr']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $expected_logs[7] = [
+      'Info',
+      'The French translation has been synchronised with the content.',
+    ];
+    $this->assertLogMessagesTable($expected_logs);
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('fr'));
     $this->assertEquals('Basic translation node - fr', $node->getTranslation('fr')->label());
@@ -434,7 +481,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $this->getSession()->getPage()->fillField($field, $value);
     }
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
     // Assert that the XML request we built is correct and it's using the
     // addNewPart.
@@ -452,6 +499,19 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'year' => date('Y'),
       ],
     ], $dossiers);
+
+    // Assert the log messages.
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The request has been sent successfully using the addNewPartToDossierRequest request type.',
+      ],
+      2 => [
+        'Info',
+        'Message from ePoetry: We have received your addNewPartToDossier. We will process it soon.',
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
 
     // Now create yet another node and translate it. The parts should increment.
     $third_node = $this->createBasicTestNode();
@@ -471,7 +531,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $this->getSession()->getPage()->fillField($field, $value);
     }
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(2, $requests);
     $xml = end($requests);
@@ -507,7 +567,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $this->getSession()->getPage()->fillField($field, $value);
     }
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
     // Assert that the XML request we built is correct and it's using the
     // createNewLinguisticRequest.
@@ -581,7 +641,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     }
 
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
     // Assert that the XML request we built is correct.
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
@@ -644,6 +704,19 @@ class EpoetryTranslationTest extends TranslationTestBase {
       ];
     }
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+
+    // Assert the log messages.
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The request has been sent successfully using the createNewVersionRequest request type.',
+      ],
+      2 => [
+        'Info',
+        'Message from ePoetry: We have received your createNewVersionRequest. We will process it soon.',
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
   }
 
   /**
@@ -652,7 +725,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
    * In essence, tests that all criteria are met before a user can make a
    * createNewVersion request for an ongoing translation request. It doesn't
    * cover the cases in which a given request has already been translated by
-   * DGT.
+   * ePoetry.
    */
   public function testAccessOngoingCreateVersion(): void {
     $cases = [
@@ -797,7 +870,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     }
 
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
     $this->assertSession()->pageTextContains(sprintf('The old request with the id %s has been marked as Finished.', $request->getRequestId(TRUE)));
 
     // We are back where we came from.
@@ -875,6 +948,36 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Editor' => 'test_editor2',
     ], $update_request->getContacts());
 
+    // Assert we see information about the request we replaced.
+    $old_request_id = 'DIGIT/' . date('Y') . '/2000/0/0/TRA';
+    $this->assertSession()->pageTextContains('Updated request');
+    $this->assertSession()->pageTextContains('The current request was created as an update to a previous one (' . $old_request_id . ') which was still ongoing in ePoetry with at least 1 language. That request has been marked as Finished and was replaced with the current one.');
+    $this->clickLink($old_request_id);
+    // Assert that on the old request, we see the log message pointing to the
+    // new one.
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('This request has been marked as Finished and has been replaced by an updated one: New request');
+    // Go back to where we were.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+
+    // Assert the logs.
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The request has been sent successfully using the createNewVersionRequest request type.',
+      ],
+      2 => [
+        'Info',
+        'Message from ePoetry: We have received your createNewVersionRequest. We will process it soon.',
+      ],
+      3 => [
+        'Info',
+        'The request has replaced an ongoing translation request which has now been marked as Finished: ' . $old_request_id . '.',
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
+
     // Now test that we can make update requests to ongoing requests even if
     // we have already a translated request (not yet synced).
     // Start by translating directly this new request so we have a translated
@@ -912,7 +1015,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $this->getSession()->getPage()->fillField($field, $value);
     }
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
     $expected_ongoing_one = [
       'translator' => 'ePoetry',
       'status' => 'Translated',
@@ -964,7 +1067,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     }
 
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
     $this->assertSession()->pageTextContains(sprintf('The old request with the id %s has been marked as Finished.', $request->getRequestId(TRUE)));
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
     // We still have the translated request and now a new, updated request for
@@ -1122,7 +1225,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->checkField('German');
     $this->getSession()->getPage()->pressButton('Save and send');
 
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
     // We are back where we came from.
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
@@ -1182,6 +1285,20 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertCount(1, $requests);
     $xml = reset($requests);
     $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:modifyLinguisticRequest><modifyLinguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>2023</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><contacts xsi:type="ns1:contacts"><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><products xsi:type="ns1:products"><product requestedDeadline="2035-10-10T12:00:00+00:00" trackChanges="false"><language>de</language></product></products></requestDetails></modifyLinguisticRequest><applicationName>digit</applicationName></ns1:modifyLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+
+    // Assert the logs. This set of logs is missing the initial ones because
+    // we created the request programatically.
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The modifyLinguisticRequest has been sent to ePoetry for adding the following extra languages: German.',
+      ],
+      2 => [
+        'Info',
+        'Message from ePoetry: We have received your modifyLinguisticRequest. We will process it soon.',
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
   }
 
   /**
@@ -1204,6 +1321,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Suspended' => 'Active',
     ];
 
+    // Keep track of all the log messages because we are sending notifications
+    // to the same request entity.
+    $expected_logs = [];
+    $i = 1;
     foreach ($statuses as $epoetry_status => $request_status) {
       EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
       $notification = [
@@ -1220,12 +1341,39 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $request = $storage->load($request->id());
       $this->assertEquals($request_status, $request->getRequestStatus(), sprintf('The request status for %s is correct', $epoetry_status));
       $this->assertEquals($epoetry_status, $request->getEpoetryRequestStatus());
-      // @todo assert the rejection message once we log it.
+
+      $log_type = in_array($epoetry_status, ['Accepted', 'Executed']) ? 'Info' : 'Warning';
+      $log_message = sprintf('The request has been %s by ePoetry. Planning agent: test. Planning sector: DGT. Message: The request status has been changed to %s.', $epoetry_status, $epoetry_status);
+      if ($epoetry_status == 'Rejected') {
+        $log_message = sprintf('The request has been %s by ePoetry. Planning agent: test. Planning sector: DGT. Message: We are sorry.', $epoetry_status);
+      }
+
+      $expected_logs[$i] = [
+        $log_type,
+        $log_message,
+      ];
+
+      $this->assertLogMessagesValues($request, $expected_logs);
+
       // Reset the statuses for the next iteration.
       $request->setRequestStatus('Active');
       $request->setEpoetryRequestStatus('SenttoDGT');
       $request->save();
+      $i++;
     }
+
+    // Delete the request and send some notifications to assert we are logging
+    // the fact that we cannot find the request.
+    $request->delete();
+    $notification = [
+      'type' => 'RequestStatusChange',
+      'status' => 'Accepted',
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $log = MockLogger::getLogs()[0];
+    $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
+    $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
+    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
   }
 
   /**
@@ -1250,8 +1398,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Suspended',
     ];
 
+    // Keep track of all the log messages because we are sending notifications
+    // to the same request entity.
+    $expected_logs = [];
+    $i = 1;
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
     foreach ($statuses as $status) {
-      EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
       $notification = [
         'type' => 'ProductStatusChange',
         'status' => $status,
@@ -1268,7 +1420,43 @@ class EpoetryTranslationTest extends TranslationTestBase {
         $status = 'Active';
       }
       $this->assertEquals($status, $request->getTargetLanguage('fr')->getStatus());
+
+      if ($status !== 'Requested') {
+        // We don't do anything for this status so we don't log anything.
+        continue;
+      }
+
+      $log_type = in_array($status, ['Accepted', 'Executed']) ? 'Warning' : 'Info';
+      $log_message = sprintf('The French product status has been updated to %s.', $status);
+
+      $expected_logs[$i] = [
+        $log_type,
+        $log_message,
+      ];
+
+      $this->assertLogMessagesValues($request, $expected_logs);
+      $i++;
     }
+
+    // Delete the request and send some notifications to assert we are logging
+    // the fact that we cannot find the request.
+    $request->delete();
+    $notification = [
+      'type' => 'ProductStatusChange',
+      'status' => 'Accepted',
+      'language' => 'fr',
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $log = MockLogger::getLogs()[0];
+    $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
+    $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
+    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
+    MockLogger::clearLogs();
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $log = MockLogger::getLogs()[0];
+    $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
+    $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
+    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
   }
 
   /**
@@ -1328,10 +1516,19 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'message' => 'Please fix your content',
     ]);
     $request_storage->resetCache();
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
     $request = $request_storage->load($request->id());
     $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED, $request->getEpoetryRequestStatus());
     $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+
+    // Assert the rejected request has logged the information.
+    $this->assertLogMessagesValues($request, [
+      // It doesn't contain the initial logs as we created the request manually.
+      1 => [
+        'Warning',
+        'The request has been Rejected by ePoetry. Planning agent: test. Planning sector: DGT. Message: Please fix your content.',
+      ],
+    ]);
 
     // Go to the remote translation dashboard and assert there are no requests
     // visible, we can make a new translation, but we also have a message
@@ -1361,7 +1558,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     }
 
     $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('The translation request has been sent to DGT.');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
     // Assert that the XML request we built is correct.
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
@@ -1408,6 +1605,63 @@ class EpoetryTranslationTest extends TranslationTestBase {
      // The mock link tu accept the request.
       'Accept',
     ]);
+
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The request has been sent successfully using the resubmitRequest request type.',
+      ],
+      2 => [
+        'Info',
+        'Message from ePoetry: We have received your resubmitRequest. We will process it soon.',
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
+  }
+
+  /**
+   * Asserts the log messages table output.
+   *
+   * @param array $logs
+   *   The log information array keyed by the number with type and message.
+   */
+  protected function assertLogMessagesTable(array $logs): void {
+    $table = $this->getSession()->getPage()->find('css', 'table.translation-request-log-messages');
+    $rows = $table->findAll('css', 'tbody tr');
+    $this->assertCount(count($logs), $rows);
+    $actual = [];
+    foreach ($rows as $row) {
+      $cols = $row->findAll('css', 'td');
+      $actual[(int) $cols[0]->getHtml()] = [
+        $cols[1]->getHtml(),
+        strip_tags($cols[2]->getHtml()),
+      ];
+    }
+
+    $this->assertEquals($logs, $actual);
+  }
+
+  /**
+   * Asserts the logs messages in the entity.
+   *
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
+   *   The request.
+   * @param array $logs
+   *   The expected logs.
+   */
+  protected function assertLogMessagesValues(TranslationRequestEpoetryInterface $request, array $logs): void {
+    $actual = [];
+    $i = 1;
+    foreach ($request->getLogMessages() as $log) {
+      $actual[$i] = [
+        ucfirst($log->getType()),
+        strip_tags((string) $log->getMessage()),
+      ];
+
+      $i++;
+    }
+
+    $this->assertEquals($logs, $actual);
   }
 
 }

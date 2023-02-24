@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -19,6 +20,7 @@ use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderBase;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\EPoetry\Request\Type\LinguisticRequestOut;
+use Phpro\SoapClient\Type\ResultInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -305,17 +307,18 @@ class Epoetry extends RemoteTranslationProviderBase {
     $request->setMessage($values['message'][0]['value']);
     $request->setContacts($values['contacts']);
 
-    // Save the request before dispatching it to DGT.
+    // Save the request before dispatching it to ePoetry.
     $request->save();
 
-    // Send it to DGT and update its status.
+    // Send it to ePoetry and update its status.
     try {
       $this->createAndSendRequestObject($request, $form, $form_state);
     }
     catch (\Throwable $exception) {
-      // @todo handle error.
+      // @todo handle error in
+      // https://citnet.tech.ec.europa.eu/CITnet/jira/browse/EWPP-3037.
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
-      $this->messenger->addError($this->t('There was a problem sending the request to DGT.'));
+      $this->messenger->addError($this->t('There was a problem sending the request to ePoetry.'));
     }
     $request->save();
   }
@@ -352,7 +355,7 @@ class Epoetry extends RemoteTranslationProviderBase {
       // If we are not making a new version request, we need to check if
       // we have a number set in the system, we need to add a new part
       // the existing dossier for any new nodes. This is because that is how
-      // DGT expects we send requests.
+      // ePoetry expects we send requests.
       if ($this->newPartNeeded($request, $form, $form_state)) {
         $object = $this->requestFactory->addNewPartToDossierRequest($request);
         $response = $this->requestFactory->getRequestClient()->addNewPartToDossier($object);
@@ -362,6 +365,8 @@ class Epoetry extends RemoteTranslationProviderBase {
         $number = $dossier->getNumber();
         $dossiers[$number]['part'] = $dossiers[$number]['part'] + 1;
         RequestFactory::setEpoetryDossiers($dossiers);
+        $request->log('The request has been sent successfully using the <strong>addNewPartToDossierRequest</strong> request type.');
+        $this->logInformativeMessages($response, $request);
       }
       else {
         $object = $this->requestFactory->createLinguisticRequest($request);
@@ -377,6 +382,8 @@ class Epoetry extends RemoteTranslationProviderBase {
           'code' => $dossier->getRequesterCode(),
           'year' => $dossier->getYear(),
         ];
+        $request->log('The request has been sent successfully using the <strong>createLinguisticRequest</strong> request type. The dossier number started is <strong>@number</strong>.', ['@number' => $dossier->getNumber()]);
+        $this->logInformativeMessages($response, $request);
         RequestFactory::setEpoetryDossiers($dossiers);
       }
     }
@@ -387,20 +394,26 @@ class Epoetry extends RemoteTranslationProviderBase {
       if ($last_request->getEpoetryRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED) {
         $object = $this->requestFactory->createNewVersionRequest($request, $last_request);
         $response = $this->requestFactory->getRequestClient()->createNewVersion($object);
+        $request->log('The request has been sent successfully using the <strong>createNewVersionRequest</strong> request type.');
+        $this->logInformativeMessages($response, $request);
       }
       else {
         $object = $this->requestFactory->resubmitRequest($request, $last_request);
         $response = $this->requestFactory->getRequestClient()->resubmitRequest($object);
+        $request->log('The request has been sent successfully using the <strong>resubmitRequest</strong> request type.');
+        $this->logInformativeMessages($response, $request);
       }
 
       if ($form_state->get('create_new_version_ongoing')) {
         // If we are creating a new version request from an ongoing state,
         // mark the old request as finished.
         // @see NewVersionCreateForm.
-        $last_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
-        $last_request->save();
         $this->messenger->addStatus($this->t('The old request with the id <strong>@old</strong> has been marked as Finished.', ['@old' => $last_request->getRequestId(TRUE)]));
-        // @todo , log and reference the old request in the new one.
+        $last_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+        $request->set('update_of', $last_request);
+        $request->log('The request has replaced an ongoing translation request which has now been marked as Finished: <strong>@last_request</strong>.', ['@last_request' => $last_request->getRequestId(TRUE)]);
+        $last_request->log('This request has been marked as Finished and has been replaced by an updated one: <strong>@new_request</strong>', ['@new_request' => $request->toLink(t('New request'))->toString()]);
+        $last_request->save();
       }
     }
 
@@ -410,7 +423,7 @@ class Epoetry extends RemoteTranslationProviderBase {
     // At this stage, the request still stays active. However, we set the
     // status coming from ePoetry for its specific request status.
     $request->setEpoetryRequestStatus($response->getReturn()->getRequestDetails()->getStatus());
-    $this->messenger->addStatus($this->t('The translation request has been sent to DGT.'));
+    $this->messenger->addStatus($this->t('The translation request has been sent to ePoetry.'));
   }
 
   /**
@@ -506,6 +519,22 @@ class Epoetry extends RemoteTranslationProviderBase {
 
     $id = reset($ids);
     return $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
+  }
+
+  /**
+   * Logs the ePoetry informative messages from the response.
+   *
+   * @param \Phpro\SoapClient\Type\ResultInterface $response
+   *   The response.
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
+   *   The local translation request.
+   */
+  protected function logInformativeMessages(ResultInterface $response, TranslationRequestEpoetryInterface $request): void {
+    if ($response->getReturn()->getInformativeMessages()->hasMessage()) {
+      foreach ($response->getReturn()->getInformativeMessages()->getMessage() as $message) {
+        $request->log((new FormattableMarkup('Message from ePoetry: <strong>@message</strong>', ['@message' => $message]))->__toString());
+      }
+    }
   }
 
 }

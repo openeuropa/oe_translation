@@ -10,6 +10,6 @@ services:
     arguments: ['@entity_type.manager']
   oe_translation_epoetry.notifications_subscriber:
     class: Drupal\oe_translation_epoetry\EventSubscriber\NotificationsSubscriber
-    arguments: ['@entity_type.manager', '@oe_translation_epoetry.html_formatter']
+    arguments: ['@entity_type.manager', '@oe_translation_epoetry.html_formatter', '@language_manager', '@logger.factory']
     tags:
       - { name: event_subscriber }

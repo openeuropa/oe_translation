@@ -164,6 +164,32 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
+  public function log(string $message, array $variables = [], string $type = TranslationRequestLogInterface::INFO): void {
+    $log = TranslationRequestLog::create([
+      'message' => $message,
+      'variables' => $variables,
+      'type' => $type,
+    ]);
+
+    $this->addLogMessage($log);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    $logs = $this->getLogMessages();
+    foreach ($logs as $log) {
+      if ($log->isNew()) {
+        $log->save();
+      }
+    }
+    parent::preSave($storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getOperationsLinks(): array {
     return \Drupal::service('oe_translation.translation_request_operations_provider')->getOperationsLinks($this);
   }

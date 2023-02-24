@@ -78,6 +78,28 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
     '#markup' => $entity->getMessage() ?? t('No message sent.'),
   ];
 
+  $previous_request = $entity->get('update_of')->entity;
+  if ($previous_request instanceof TranslationRequestEpoetryInterface) {
+    $build['update_request_of'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Updated request'),
+      0 => [
+        '#markup' => t('The current request was created as an update to a previous one (<strong>@request_id</strong>) which was still ongoing in ePoetry with at least 1 language. That request has been marked as Finished and was replaced with the current one.', [
+          '@request_id' => $previous_request->toLink($previous_request->getRequestId(TRUE))->toString(),
+        ]),
+      ],
+    ];
+  }
+
+  $logs = _oe_translation_create_request_logs_tables($entity);
+  if ($logs) {
+    $build['logs'] = [
+      '#type' => 'details',
+      '#title' => t('Log messages'),
+      0 => $logs,
+    ];
+  }
+
   /** @var \Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface $new_version_handler */
   $new_version_handler = \Drupal::service('oe_translation_epoetry.new_version_request_handler');
 

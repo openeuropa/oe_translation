@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Entity;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
@@ -20,6 +21,11 @@ interface TranslationRequestLogInterface extends ContentEntityInterface {
    * Error message type.
    */
   const ERROR = 'error';
+
+  /**
+   * Warning message type.
+   */
+  const WARNING = 'warning';
 
   /**
    * Gets the translation request log creation timestamp.
@@ -46,7 +52,7 @@ interface TranslationRequestLogInterface extends ContentEntityInterface {
    * @return \Drupal\Component\Render\FormattableMarkup|string
    *   The message.
    */
-  public function getMessage();
+  public function getMessage(): MarkupInterface;
 
   /**
    * Sets the translation request log message.
@@ -62,7 +68,7 @@ interface TranslationRequestLogInterface extends ContentEntityInterface {
   /**
    * Gets the message type.
    *
-   * @return int
+   * @return string
    *   Message type.
    */
   public function getType(): string;

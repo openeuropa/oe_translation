@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_epoetry\Form;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -13,6 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
@@ -164,31 +166,48 @@ class ModifyLinguisticRequestForm extends FormBase {
     /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $translation_request */
     $translation_request = $form_state->get('translation_request');
     $new_languages = $this->getSubmittedLanguages($form, $form_state);
-    // Backup the existing target languages and set only the new ones onto the
-    // entity because the constructed request must include only those.
-    $target_languages = $translation_request->getTargetLanguages();
-    $translation_request->set('target_languages', []);
-    foreach ($new_languages as $delta => $values) {
-      $translation_request->updateTargetLanguageStatus($values['langcode'], $values['status']);
+    $new_language_labels = [];
+    foreach ($new_languages as $new_language) {
+      $new_language_labels[] = $this->languageManager->getLanguage($new_language['langcode'])->getName();
     }
 
     try {
+      // Backup the existing target languages and set only the new ones onto the
+      // entity because the constructed request must include only those.
+      $target_languages = $translation_request->getTargetLanguages();
+      $translation_request->set('target_languages', []);
+      foreach ($new_languages as $delta => $values) {
+        $translation_request->updateTargetLanguageStatus($values['langcode'], $values['status']);
+      }
+
       $object = $this->requestFactory->modifyLinguisticRequestRequest($translation_request);
-      $this->requestFactory->getRequestClient()->modifyLinguisticRequest($object);
+      $response = $this->requestFactory->getRequestClient()->modifyLinguisticRequest($object);
       // Set back the target languages we removed before making the request.
       foreach ($translation_request->getTargetLanguages() as $language_with_status) {
         $target_languages[$language_with_status->getLangcode()] = $language_with_status;
       }
       $translation_request->set('target_languages', array_values($target_languages));
 
+      // Log the request.
+      $translation_request->log('The <strong>modifyLinguisticRequest</strong> has been sent to ePoetry for adding the following extra languages: <strong>@languages</strong>.', ['@languages' => implode(', ', $new_language_labels)]);
+      if ($response->getReturn()->getInformativeMessages()->hasMessage()) {
+        foreach ($response->getReturn()->getInformativeMessages()->getMessage() as $message) {
+          $translation_request->log((new FormattableMarkup('Message from ePoetry: <strong>@message</strong>', ['@message' => $message]))->__toString());
+        }
+      }
       // We save without updating the status of the request.
       $translation_request->save();
-      $this->messenger->addStatus($this->t('The translation request has been sent to DGT.'));
+      $this->messenger->addStatus($this->t('The translation request has been sent to ePoetry.'));
     }
     catch (\Throwable $exception) {
-      // @todo handle error.
-      $this->messenger->addError($this->t('There was a problem sending the request to DGT.'));
-      // If this fails, we log but we don't change the request status.
+      $this->messenger->addError($this->t('There was a problem sending the request to ePoetry.'));
+
+      // We log but we don't change any statuses.
+      $translation_request->log('There was an error with the <strong>modifyLinguisticRequest</strong> for adding the following extra languages: <strong>@languages</strong>. The error: @error', [
+        '@languages' => implode(', ', $new_language_labels),
+        '@error' => $exception->getMessage(),
+      ], TranslationRequestLogInterface::ERROR);
+      $translation_request->save();
     }
   }
 
