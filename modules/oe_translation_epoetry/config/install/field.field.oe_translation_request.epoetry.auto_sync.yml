@@ -13,8 +13,8 @@ id: oe_translation_request.epoetry.auto_sync
 field_name: auto_sync
 entity_type: oe_translation_request
 bundle: epoetry
-label: 'Automatic synchronisation'
-description: 'Choose if accepted translations should be automatically synchronised with the content (i.e. copied over onto the main content)'
+label: 'Auto sync translations'
+description: 'Choose if incoming translations should be automatically synchronised with the content (i.e. copied over onto the main content)'
 required: false
 translatable: false
 default_value:

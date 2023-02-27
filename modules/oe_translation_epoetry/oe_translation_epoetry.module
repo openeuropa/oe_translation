@@ -55,7 +55,7 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   $header['epoetry_request_status'] = t('ePoetry request status');
   $header['request_id'] = t('Request ID');
   $header['auto_accept'] = t('Auto-accept translations');
-  $header['auto_sync'] = t('Auto-sync translations');
+  $header['auto_sync'] = t('Auto sync translations');
   $header['requested_deadline'] = t('Requested deadline');
   $header['accepted_deadline'] = t('Accepted deadline');
   $row = &$build['meta']['#rows'][0];

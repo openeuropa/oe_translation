@@ -171,7 +171,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // because the provider is not yet configured.
     $this->assertSession()->fieldEnabled('Auto accept translations');
     $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-accept-value .description', 'Choose if incoming translations should be auto-accepted');
-    $this->assertSession()->fieldExists('Automatic synchronisation');
+    $this->assertSession()->fieldExists('Auto sync translations');
     // The deadline field has a "Date" hidden label.
     $this->assertSession()->fieldExists('Date');
     $this->assertSession()->fieldExists('Message');
@@ -416,10 +416,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ];
     $this->assertLogMessagesTable($expected_logs);
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
-    $expected_languages['fr']['status'] = 'Synchronized';
+    $expected_languages['fr']['status'] = 'Synchronised';
     $expected_languages['fr']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     $expected_logs[7] = [
@@ -1911,6 +1911,154 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('There was a problem sending the request to ePoetry.');
     $this->getSession()->getPage()->find('css', 'summary')->click();
     $this->assertSession()->pageTextContains('Phpro\SoapClient\Exception\SoapException: Client certificate authentication failed due to the following error');
+  }
+
+  /**
+   * Tests that we can configure requests to auto-accept upon delivery.
+   */
+  public function testAutoAccept(): void {
+    // Create a test node.
+    $node = $this->createBasicTestNode();
+
+    // Create a request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $select = $this->assertSession()->selectExists('Translator');
+    $select->selectOption('epoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->checkField('Bulgarian');
+    $this->getSession()->getPage()->checkField('Auto accept translations');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+
+    // Accept and translate the language.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'bg');
+    $this->getSession()->reload();
+
+    $expected_languages = [];
+    $expected_languages['bg'] = [
+      'langcode' => 'bg',
+      // The language has been automatically accepted.
+      'status' => 'Accepted',
+      'review' => TRUE,
+    ];
+    $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('The Bulgarian translation has been automatically accepted.');
+    $this->assertSession()->pageTextNotContains('The Bulgarian translation has been accepted.');
+
+    // Set the global setting to auto-accept all requests and make a new
+    // request for a new node. This time, don't check the auto-accept.
+    $provider = RemoteTranslatorProvider::load('epoetry');
+    $configuration = $provider->getProviderConfiguration();
+    $configuration['auto_accept'] = TRUE;
+    $provider->setProviderConfiguration($configuration);
+    $provider->save();
+
+    // Create a test node.
+    $node = $this->createBasicTestNode();
+
+    // Create a request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $select = $this->assertSession()->selectExists('Translator');
+    $select->selectOption('epoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->checkField('French');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+
+    // Translate the language.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $this->getSession()->reload();
+
+    $expected_languages = [];
+    $expected_languages['fr'] = [
+      'langcode' => 'fr',
+     // The language has been automatically accepted.
+      'status' => 'Accepted',
+      'review' => TRUE,
+    ];
+    $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('The French translation has been automatically accepted.');
+    $this->assertSession()->pageTextNotContains('The French translation has been accepted.');
+  }
+
+  /**
+   * Tests that we can configure requests to auto-sync upon delivery.
+   */
+  public function testAutoSync(): void {
+    // Create a test node.
+    $node = $this->createBasicTestNode();
+
+    // Create a request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $select = $this->assertSession()->selectExists('Translator');
+    $select->selectOption('epoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->checkField('Bulgarian');
+    $this->getSession()->getPage()->checkField('Auto sync translations');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+
+    // Translate the language.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'bg');
+    $this->drupalGet($request->toUrl());
+
+    $expected_languages = [];
+    $expected_languages['bg'] = [
+      'langcode' => 'bg',
+      'status' => 'Synchronised',
+      'review' => FALSE,
+    ];
+    $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('The Bulgarian translation has been automatically synchronised with the content.');
+    $this->assertSession()->pageTextNotContains('The Bulgarian translation has been synchronised with the content.');
   }
 
   /**
