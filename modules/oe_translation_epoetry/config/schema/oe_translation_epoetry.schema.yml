@@ -28,3 +28,9 @@ oe_translation_remote.remote_translation_provider.plugin.epoetry:
     site_id:
       type: string
       label: The site ID
+    language_mapping:
+      type: sequence
+      label: The language mapping
+      sequence:
+        type: string
+        label: The language code

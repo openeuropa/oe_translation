@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_epoetry_mock;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
+use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -38,6 +39,8 @@ class EpoetryTranslationMockHelper {
    */
   public static function translateRequest(TranslationRequestRemoteInterface $request, string $langcode, ?string $suffix = NULL): void {
     $data = $request->getData();
+
+    $langcode = EpoetryLanguageMapper::getEpoetryLanguageCode($langcode, $request);
 
     foreach ($data as $field => &$info) {
       if (!is_array($info)) {
@@ -159,8 +162,7 @@ class EpoetryTranslationMockHelper {
       case 'ProductStatusChange':
         $values = [
           '#request_id' => $request->getRequestId(),
-          // @todo use the language mapper.
-          '#language' => strtoupper($notification['language']),
+          '#language' => EpoetryLanguageMapper::getEpoetryLanguageCode($notification['language'], $request),
           '#status' => $notification['status'],
         ];
 

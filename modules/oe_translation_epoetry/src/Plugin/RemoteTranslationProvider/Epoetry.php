@@ -13,6 +13,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
+use Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItemInterface;
 use Drupal\oe_translation_epoetry\RequestFactory;
@@ -23,6 +24,7 @@ use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\EPoetry\Request\Type\LinguisticRequestOut;
 use Phpro\SoapClient\Type\ResultInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides the ePoetry translator provider plugin.
@@ -52,13 +54,23 @@ class Epoetry extends RemoteTranslationProviderBase {
   protected $state;
 
   /**
-   * {@inheritdoc}
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state) {
+  protected $eventDispatcher;
+
+  /**
+   * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state, EventDispatcherInterface $eventDispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
 
     $this->requestFactory = $requestFactory;
     $this->state = $state;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -74,7 +86,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       $container->get('oe_translation.translation_source_manager'),
       $container->get('messenger'),
       $container->get('oe_translation_epoetry.request_factory'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -87,6 +100,7 @@ class Epoetry extends RemoteTranslationProviderBase {
       'auto_accept' => FALSE,
       'title_prefix' => '',
       'site_id' => '',
+      'language_mapping' => [],
     ] + parent::defaultConfiguration();
   }
 
@@ -146,6 +160,19 @@ class Epoetry extends RemoteTranslationProviderBase {
       '#default_value' => $this->configuration['auto_accept'],
     ];
 
+    $form['language_mapping'] = [
+      '#title' => $this->t('Language mapping'),
+      '#type' => 'fieldset',
+    ];
+
+    foreach ($this->languageManager->getLanguages() as $language) {
+      $form['language_mapping'][$language->getId()] = [
+        '#type' => 'textfield',
+        '#title' => $language->getName(),
+        '#default_value' => $this->configuration['language_mapping'][$language->getId()] ?? strtoupper($language->getId()),
+      ];
+    }
+
     $form['dossiers_wrapper'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('ePoetry dossiers'),
@@ -197,6 +224,7 @@ class Epoetry extends RemoteTranslationProviderBase {
     $this->configuration['auto_accept'] = (bool) $form_state->getValue('auto_accept');
     $this->configuration['title_prefix'] = $form_state->getValue('title_prefix');
     $this->configuration['site_id'] = $form_state->getValue('site_id');
+    $this->configuration['language_mapping'] = $form_state->getValue('language_mapping');
 
     $reset_dossier = (bool) $form_state->getValue(['dossiers_wrapper', 'reset']);
     if ($reset_dossier) {
@@ -215,7 +243,6 @@ class Epoetry extends RemoteTranslationProviderBase {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
-    $languages = $this->languageManager->getLanguages();
     $entity = $this->getEntity();
 
     // Check if we have already made requests to ePoetry for this node, because
@@ -239,19 +266,10 @@ class Epoetry extends RemoteTranslationProviderBase {
       }
     }
 
-    $source_language = $entity->language()->getId();
-    unset($languages[$source_language]);
-
-    $form['languages'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Languages'),
-    ];
-    foreach ($languages as $language) {
-      $form['languages'][$language->getId()] = [
-        '#type' => 'checkbox',
-        '#title' => $language->getName(),
-      ];
-    }
+    $languages = $this->languageManager->getLanguages();
+    $event = new AvailableLanguagesAlterEvent($languages);
+    $this->eventDispatcher->dispatch($event, AvailableLanguagesAlterEvent::NAME);
+    $this->addLanguageCheckboxes($form, $form_state, $event->getLanguages());
 
     $request = $this->entityTypeManager->getStorage('oe_translation_request')->create([
       'bundle' => 'epoetry',
