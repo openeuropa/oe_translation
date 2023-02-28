@@ -446,7 +446,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $type = TranslationRequestLogInterface::INFO;
-    // Change the type of if it's not a normal/expected happy path.
+    // Change the type of it it's not a normal/expected happy path.
     if (in_array($event->getLinguisticRequest()->getStatus(), [
       TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED,
       TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,

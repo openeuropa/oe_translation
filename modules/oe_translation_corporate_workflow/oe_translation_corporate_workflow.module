@@ -29,6 +29,13 @@ function oe_translation_corporate_workflow_theme($existing, $type, $theme, $path
  * Implements hook_ENTITY_TYPE_presave().
  */
 function oe_translation_corporate_workflow_node_presave(EntityInterface $entity): void {
+  /** @var \Drupal\workflows\WorkflowInterface $workflow */
+  $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
+  if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    // We only care about content using the corporate workflow.
+    return;
+  }
+
   if (isset($entity->translation_drop) && $entity->translation_drop === TRUE && $entity->moderation_state->value === 'validated') {
     foreach ($entity->getTranslationLanguages(FALSE) as $langcode => $language) {
       $entity->removeTranslation($langcode);
@@ -73,6 +80,13 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
  * Implements hook_ENTITY_TYPE_view_alter() for the Node entity.
  */
 function oe_translation_corporate_workflow_node_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  /** @var \Drupal\workflows\WorkflowInterface $workflow */
+  $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
+  if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    // We only care about content using the corporate workflow.
+    return;
+  }
+
   // If we are rendering a translation, we should hide the content moderation
   // block because the workflow needs to be controlled from the source entity.
   if ($entity->isDefaultTranslation()) {
@@ -186,6 +200,13 @@ function oe_translation_corporate_workflow_entity_revision_create(ContentEntityI
 function oe_translation_corporate_workflow_form_content_moderation_entity_moderation_form_alter(array &$form, FormStateInterface $form_state) {
   $entity = $form_state->get('entity');
   if (!$entity instanceof ContentEntityInterface || !$entity->getTranslationLanguages(FALSE)) {
+    return;
+  }
+
+  /** @var \Drupal\workflows\WorkflowInterface $workflow */
+  $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
+  if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    // We only care about content using the corporate workflow.
     return;
   }
 

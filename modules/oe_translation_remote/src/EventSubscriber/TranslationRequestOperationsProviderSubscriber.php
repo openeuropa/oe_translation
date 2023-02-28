@@ -42,7 +42,7 @@ class TranslationRequestOperationsProviderSubscriber implements EventSubscriberI
   }
 
   /**
-   * Adds the local translations operations.
+   * Adds the view link to the operations.
    *
    * @param \Drupal\oe_translation\Event\TranslationRequestOperationsProviderEvent $event
    *   The event.

@@ -10,12 +10,11 @@ use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 
 /**
  * Helper class to deal with requests until we have notifications set up.
  */
-class EpoetryTranslationMockHelper extends TestRemoteTranslationMockHelper {
+class EpoetryTranslationMockHelper {
 
   /**
    * The PHPUnit test database prefix.
@@ -77,15 +76,42 @@ class EpoetryTranslationMockHelper extends TestRemoteTranslationMockHelper {
   /**
    * Recursively sets translated data to field values.
    *
+   * @todo refactor to reuse the logic from TestRemoteTranslationMockHelper.
+   *
    * @param array $data
    *   The data.
    * @param string $langcode
    *   The langcode.
    * @param string|null $suffix
    *   An extra suffix to append to the translation.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   protected static function translateFieldData(array &$data, string $langcode, ?string $suffix = NULL): void {
-    parent::translateFieldData($data, $langcode, $suffix);
+    if (!isset($data['#text'])) {
+      foreach ($data as $field => &$info) {
+        if (!is_array($info)) {
+          continue;
+        }
+        static::translateFieldData($info, $langcode, $suffix);
+      }
+
+      return;
+    }
+
+    if (isset($data['#translate']) && $data['#translate'] === FALSE) {
+      return;
+    }
+
+    // Check whether this is a new translation or not by checking for a
+    // stored translation for the field.
+    if (isset($data['#translation'])) {
+      $data['#translation']['#text'] = $data['#translation']['#text'] . ' OVERRIDDEN';
+      return;
+    }
+
+    $append = $suffix ? $langcode . ' - ' . $suffix : $langcode;
+    $data['#translation']['#text'] = $data['#text'] . ' - ' . $append;
 
     // Set the translation value onto the original.
     if (isset($data['#translation']['#text']) && $data['#translation']['#text'] != "") {
@@ -169,14 +195,28 @@ class EpoetryTranslationMockHelper extends TestRemoteTranslationMockHelper {
    */
   protected static function performNotification(string $notification): void {
     $url = Url::fromRoute('oe_translation_epoetry.notifications_endpoint')->setAbsolute()->toString();
+    $config = \Drupal::config('oe_translation_epoetry_mock.settings');
+    $notifications_endpoint = $config->get('notifications_endpoint');
+    if ($notifications_endpoint && $notifications_endpoint !== '') {
+      $url = $notifications_endpoint;
+    }
     if (Settings::get('epoetry_notifications_endpoint')) {
       $url = Settings::get('epoetry_notifications_endpoint');
     }
-    $client = new \SoapClient(NULL, [
+
+    $options = [
       'cache_wsdl' => WSDL_CACHE_NONE,
       'location' => $url,
       'uri' => 'http://eu.europa.ec.dgt.epoetry',
-    ]);
+    ];
+    $username = $config->get('notifications_username');
+    $password = $config->get('notifications_password');
+    if ($username && $password && $username != "" && $password != "") {
+      $options['login'] = $username;
+      $options['password'] = $password;
+    }
+
+    $client = new \SoapClient(NULL, $options);
 
     if (static::$databasePrefix) {
       $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua(static::$databasePrefix));

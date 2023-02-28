@@ -15,3 +15,11 @@ oe_translation_epoetry_mock.notify:
     parameters:
       oe_translation_request:
         type: entity:oe_translation_request
+
+oe_translation_epoetry_mock.mock_settings:
+  path: '/admin/config/system/epoetry-mock-settings'
+  defaults:
+    _title: 'ePoetry mock settings'
+    _form: 'Drupal\oe_translation_epoetry_mock\Form\MockSettings'
+  requirements:
+    _permission: 'administer site configuration'

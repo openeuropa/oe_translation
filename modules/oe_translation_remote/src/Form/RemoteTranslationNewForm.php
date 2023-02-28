@@ -366,7 +366,7 @@ class RemoteTranslationNewForm extends FormBase {
   /**
    * Checks access to create a new translation request.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface|null $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The current entity.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
@@ -386,6 +386,7 @@ class RemoteTranslationNewForm extends FormBase {
     $statuses = [
       TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
       TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED,
+      TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
     ];
     $translation_requests = $this->providerManager->getExistingTranslationRequests($entity, FALSE, $statuses);
     $cache->addCacheTags(['oe_translation_request_list']);

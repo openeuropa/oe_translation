@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -120,6 +121,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $rows[] = [
         'data' => $row,
         'data-revision-id' => $entity->getRevisionId(),
+        'class' => $translation_request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED ? ['color-error'] : [],
       ];
     }
 

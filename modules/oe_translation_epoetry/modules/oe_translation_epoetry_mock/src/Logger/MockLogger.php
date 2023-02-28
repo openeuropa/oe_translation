@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\oe_translation_epoetry_mock\Logger;
 
 use Drupal\Core\Logger\RfcLoggerTrait;

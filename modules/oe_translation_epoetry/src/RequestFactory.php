@@ -10,6 +10,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
 use GuzzleHttp\ClientInterface;
 use Http\Adapter\Guzzle7\Client;
+use OpenEuropa\EPoetry\Authentication\AuthenticationInterface;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier;
 use OpenEuropa\EPoetry\Request\Type\ContactPersonIn;
 use OpenEuropa\EPoetry\Request\Type\Contacts;
@@ -30,7 +31,6 @@ use OpenEuropa\EPoetry\Request\Type\RequestDetailsIn;
 use OpenEuropa\EPoetry\Request\Type\RequestReferenceIn;
 use OpenEuropa\EPoetry\Request\Type\ResubmitRequest;
 use OpenEuropa\EPoetry\RequestClientFactory;
-use OpenEuropa\EPoetry\Tests\Authentication\MockAuthentication;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -69,8 +69,7 @@ class RequestFactory extends RequestClientFactory {
       // @todo handle failure.
     }
 
-    // @todo provide authentication mechanism.
-    $authentication = new MockAuthentication('ticket');
+    $authentication = $this->getAuthentication();
     $http_client = new Client($guzzle);
     parent::__construct($endpoint, $authentication, $eventDispatcher, $logger, $http_client);
   }
@@ -101,10 +100,11 @@ class RequestFactory extends RequestClientFactory {
    * These are the State-stored dossier values for all the ePoetry requests
    * that have been made on the current site.
    *
-   * @return string|null
+   * @return array
    *   The ePoetry dossiers.
    */
-  public static function getEpoetryDossiers(): ?array {
+  public static function getEpoetryDossiers(): array {
+    \Drupal::state()->resetCache();
     return \Drupal::state()->get('oe_translation_epoetry.dossiers', []);
   }
 
@@ -143,7 +143,7 @@ class RequestFactory extends RequestClientFactory {
   }
 
   /**
-   * Creates a resubmitRequest from a rejected our ePoetry translation request.
+   * Creates a resubmitRequest from a rejected ePoetry translation request.
    *
    * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
    *   The ePoetry translation request entity.
@@ -271,9 +271,12 @@ class RequestFactory extends RequestClientFactory {
     ]))->__toString();
 
     $request_details = new RequestDetailsIn();
+    $deadline = $request->getDeadline()->getPhpDateTime();
+    // Set the end of the day in case the user picks today.
+    $deadline->setTime(23, 59, 00);
     $request_details
       ->setTitle($request_title)
-      ->setRequestedDeadline($request->getDeadline()->getPhpDateTime())
+      ->setRequestedDeadline($deadline)
       ->setInternalReference('Translation request ' . $request->id());
 
     $contacts = new Contacts();
@@ -303,7 +306,7 @@ class RequestFactory extends RequestClientFactory {
       $productRequestIn = (new ProductRequestIn())
         // @todo fix the language mapping.
         ->setLanguage($language_with_status->getLangcode())
-        ->setRequestedDeadline($request->getDeadline()->getPhpDateTime())
+        ->setRequestedDeadline($deadline)
         ->setTrackChanges(FALSE);
       $products->addProduct($productRequestIn);
     }
@@ -345,6 +348,17 @@ class RequestFactory extends RequestClientFactory {
     $reference->setDossier($dossier);
 
     return $reference;
+  }
+
+  /**
+   * Returns the authentication object.
+   *
+   * @return \OpenEuropa\EPoetry\Authentication\AuthenticationInterface
+   *   The authentication object.
+   */
+  protected function getAuthentication(): AuthenticationInterface {
+    // @todo provide authentication mechanism.
+    return new MockAuthentication('ticket');
   }
 
 }
