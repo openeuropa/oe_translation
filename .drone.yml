@@ -20,6 +20,10 @@ services:
       - COMPOSERVER=--2
       - EPOETRY_SERVICE_URL=http://web:8080/build/epoetry-mock/server
       - EPOETRY_APPLICATION_NAME=digit
+      - EPOETRY_AUTH_CERT_SERVICE_URL=""
+      - EPOETRY_AUTH_CERT_PATH=""
+      - EPOETRY_AUTH_CERT_PASSWORD=""
+      - EPOETRY_AUTH_EU_LOGIN_BASEPATH=""
   mysql:
     image: registry.fpfis.eu/fpfis/sql:percona-5.7
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3

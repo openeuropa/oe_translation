@@ -54,7 +54,10 @@ commands:
       file: "build/sites/default/settings.testing.php"
       text: |
         $settings["epoetry.service_url"] = "${drupal.base_url}/epoetry-mock/server";
-        $settings["epoetry.notification_url"] = getenv('EPOETRY_NOTIFICATION_URL');
         $settings["epoetry.application_name"] = getenv('EPOETRY_APPLICATION_NAME');
+        $settings["epoetry.auth.cert_service_url"] = getenv('EPOETRY_AUTH_CERT_SERVICE_URL');
+        $settings["epoetry.auth.cert_path"] = getenv('EPOETRY_AUTH_CERT_PATH');
+        $settings["epoetry.auth.cert_password"] = getenv('EPOETRY_AUTH_CERT_PASSWORD');
+        $settings["epoetry.auth.eulogin_base_path"] = getenv('EPOETRY_AUTH_EU_LOGIN_BASEPATH');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }

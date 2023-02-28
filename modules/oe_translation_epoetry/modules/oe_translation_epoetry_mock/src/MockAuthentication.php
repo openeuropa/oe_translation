@@ -1,8 +1,8 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
-namespace Drupal\oe_translation_epoetry;
+namespace Drupal\oe_translation_epoetry_mock;
 
 use OpenEuropa\EPoetry\Authentication\AuthenticationInterface;
 
@@ -12,7 +12,7 @@ use OpenEuropa\EPoetry\Authentication\AuthenticationInterface;
 class MockAuthentication implements AuthenticationInterface {
 
   /**
-   * The ticket.
+   * A mock ticket.
    *
    * @var string
    */
@@ -20,6 +20,9 @@ class MockAuthentication implements AuthenticationInterface {
 
   /**
    * Constructs a MockAuthentication.
+   *
+   * @param string $ticket
+   *   A mock ticket.
    */
   public function __construct(string $ticket) {
     $this->ticket = $ticket;

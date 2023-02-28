@@ -1,7 +1,7 @@
 services:
   oe_translation_epoetry.request_factory:
     class: Drupal\oe_translation_epoetry\RequestFactory
-    arguments: ['@event_dispatcher', '@logger.factory', '@http_client', '@oe_translation_epoetry.html_formatter']
+    arguments: ['@event_dispatcher', '@logger.factory', '@http_client', '@oe_translation_epoetry.html_formatter', '@oe_translation_epoetry.client_certificate_authentication']
   oe_translation_epoetry.html_formatter:
     class: Drupal\oe_translation_epoetry\ContentFormatter\HtmlFormatter
     arguments: ['@tmgmt.data', '@renderer', '@entity_type.manager']
@@ -17,3 +17,6 @@ services:
     class: Drupal\oe_translation_epoetry\EventSubscriber\TranslationRequestOperationsProviderSubscriber
     tags:
       - { name: event_subscriber }
+  oe_translation_epoetry.client_certificate_authentication:
+    class: Drupal\oe_translation_epoetry\ClientCertificateAuthentication
+    arguments: ['@logger.factory']
