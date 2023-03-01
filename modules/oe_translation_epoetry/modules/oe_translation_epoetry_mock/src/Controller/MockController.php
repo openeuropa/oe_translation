@@ -17,6 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -105,8 +106,13 @@ class MockController extends ControllerBase {
       'SOAP-ENV:',
       'ns1:',
       'xsi:',
+      ':ProxyTicket',
     ], '', $request_xml);
     $xml = simplexml_load_string($xml);
+    if ((string) $xml->Header->ecas !== 'ticket' && !\Drupal::state()->get('oe_translation_epoetry_mock.bypass_mock_authentication', FALSE)) {
+      throw new AccessDeniedHttpException();
+    }
+
     if (!$xml->Body->children()) {
       // @todo handle this.
       throw new NotFoundHttpException();

@@ -48,6 +48,13 @@ class RequestFactory extends RequestClientFactory {
   protected $formatter;
 
   /**
+   * The client certificate authentication.
+   *
+   * @var \Drupal\oe_translation_epoetry\ClientCertificateAuthentication
+   */
+  protected $certificateAuthentication;
+
+  /**
    * Constructs a new instance of RequestFactory.
    *
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
@@ -58,11 +65,14 @@ class RequestFactory extends RequestClientFactory {
    *   The Guzzle client.
    * @param \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $formatter
    *   The content formatter.
+   * @param \OpenEuropa\EPoetry\Authentication\AuthenticationInterface $authentication
+   *   The authentication object.
    */
-  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, ClientInterface $guzzle, ContentFormatterInterface $formatter) {
+  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, ClientInterface $guzzle, ContentFormatterInterface $formatter, AuthenticationInterface $authentication) {
     $logger = $loggerChannelFactory->get('oe_translation_epoetry');
     $endpoint = static::getEpoetryServiceUrl();
     $this->formatter = $formatter;
+    $this->certificateAuthentication = $authentication;
     if (!$endpoint) {
       $logger->error('The ePoetry endpoint is not configured');
       throw new \Exception('The ePoetry endpoint is not configured');
@@ -357,8 +367,7 @@ class RequestFactory extends RequestClientFactory {
    *   The authentication object.
    */
   protected function getAuthentication(): AuthenticationInterface {
-    // @todo provide authentication mechanism.
-    return new MockAuthentication('ticket');
+    return $this->certificateAuthentication;
   }
 
 }

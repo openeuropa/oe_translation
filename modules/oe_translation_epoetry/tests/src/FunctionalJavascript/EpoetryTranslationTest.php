@@ -1689,7 +1689,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs = [
       1 => [
         'Error',
-        'There was a problem with this request: There was an error in your request.',
+        'Phpro\SoapClient\Exception\SoapException: There was an error in your request.',
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -1879,6 +1879,38 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'year' => date('Y'),
       ],
     ], $dossiers);
+  }
+
+  /**
+   * Tests that by default, we use the proper authentication service.
+   */
+  public function testAuthentication(): void {
+    \Drupal::state()->set('oe_translation_epoetry_mock.bypass_mock_authentication', TRUE);
+
+    $node = $this->createBasicTestNode();
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+
+    // Select the ePoetry translator.
+    $select = $this->assertSession()->selectExists('Translator');
+    $select->selectOption('epoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+
+    $this->getSession()->getPage()->checkField('Bulgarian');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('There was a problem sending the request to ePoetry.');
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('Phpro\SoapClient\Exception\SoapException: Client certificate authentication failed due to the following error');
   }
 
   /**

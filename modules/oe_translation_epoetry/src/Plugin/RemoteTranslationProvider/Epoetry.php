@@ -370,7 +370,10 @@ class Epoetry extends RemoteTranslationProviderBase {
     catch (\Throwable $exception) {
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
       $this->messenger->addError($this->t('There was a problem sending the request to ePoetry.'));
-      $request->log('There was a problem with this request: <strong>@message</strong>', ['@message' => $exception->getMessage()], TranslationRequestLogInterface::ERROR);
+      $request->log('@type: <strong>@message</strong>', [
+        '@type' => get_class($exception),
+        '@message' => $exception->getMessage(),
+      ], TranslationRequestLogInterface::ERROR);
     }
     $request->save();
   }
