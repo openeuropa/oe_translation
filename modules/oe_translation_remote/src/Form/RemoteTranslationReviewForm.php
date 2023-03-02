@@ -16,10 +16,9 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
-use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\LanguageWithStatus;
-use Drupal\oe_translation\TranslationSourceManagerInterface;
+use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -43,22 +42,22 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
   protected $currentUser;
 
   /**
-   * The translation source manager.
+   * The translation synchroniser.
    *
-   * @var \Drupal\oe_translation\TranslationSourceManagerInterface
+   * @var \Drupal\oe_translation_remote\RemoteTranslationSynchroniser
    */
-  protected $translationSourceManager;
+  protected $translationSynchroniser;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, RouteMatchInterface $routeMatch, AccountInterface $currentUser, Messenger $messenger, TranslationSourceManagerInterface $translationSourceManager) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, RouteMatchInterface $routeMatch, AccountInterface $currentUser, Messenger $messenger, RemoteTranslationSynchroniser $translationSynchroniser) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->routeMatch = $routeMatch;
     $this->currentUser = $currentUser;
-    $this->translationSourceManager = $translationSourceManager;
     $this->messenger = $messenger;
+    $this->translationSynchroniser = $translationSynchroniser;
   }
 
   /**
@@ -73,7 +72,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
       $container->get('current_route_match'),
       $container->get('current_user'),
       $container->get('messenger'),
-      $container->get('oe_translation.translation_source_manager')
+      $container->get('oe_translation_remote.translation_synchroniser')
     );
   }
 
@@ -141,9 +140,9 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $actions['save_and_sync'] = [
       '#type' => 'submit',
       '#button_type' => 'primary',
-      '#submit' => ['::synchronize'],
+      '#submit' => ['::synchronise'],
       '#access' => $language_status->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
-      '#value' => $this->t('Save and synchronize'),
+      '#value' => $this->t('Save and synchronise'),
     ];
 
     return $actions;
@@ -182,33 +181,12 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
-  public function synchronize(array &$form, FormStateInterface $form_state): void {
+  public function synchronise(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $translation_request */
     $translation_request = $this->entity;
-
     $entity = $translation_request->getContentEntity();
     $language = $form_state->get('language');
-    $data = $translation_request->getTranslatedData();
-    $language_data = $data[$language->id()] ?? [];
-    if (!$language_data) {
-      $translation_request->log('An attempt to sync the <strong>@language</strong> translation has failed because there was no data to synchronize.', ['@language' => $language->getName()], TranslationRequestLogInterface::ERROR);
-      $translation_request->save();
-      $this->messenger()->addError($this->t('There was no data to synchronize.'));
-      return;
-    }
-
-    $saved = $this->translationSourceManager->saveData($language_data, $entity, $language->id());
-    if (!$saved) {
-      $translation_request->log('An attempt to sync the <strong>@language</strong> translation has failed.', ['@language' => $language->getName()], TranslationRequestLogInterface::ERROR);
-      $translation_request->save();
-      $this->messenger()->addError($this->t('There was a problem synchronising the translation. Check the global site logs for the error.'));
-      return;
-    }
-
-    $translation_request->updateTargetLanguageStatus($language->id(), TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED);
-    $translation_request->log('The <strong>@language</strong> translation has been synchronised with the content.', ['@language' => $language->getName()]);
-    $translation_request->save();
-    $this->messenger->addStatus($this->t('The translation in @language has been synchronized.', ['@language' => $language->label()]));
+    $this->translationSynchroniser->synchronise($translation_request, $language->id());
     $form_state->setRedirect('entity.' . $entity->getEntityTypeId() . '.remote_translation', [$entity->getEntityTypeId() => $entity->id()]);
   }
 
@@ -254,7 +232,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
 
     $language_status = $oe_translation_request->getTargetLanguage($language->id());
     if ($language_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED) {
-      // If already synchronized, deny access.
+      // If already synchronised, deny access.
       // @todo see if we should still keep this page accessible for other
       // reasons.
       return AccessResult::forbidden();

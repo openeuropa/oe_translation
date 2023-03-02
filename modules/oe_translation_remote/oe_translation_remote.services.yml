@@ -21,3 +21,7 @@ services:
     arguments: ['@plugin.manager.oe_translation_remote.remote_translation_provider_manager']
     tags:
       - { name: event_subscriber }
+
+  oe_translation_remote.translation_synchroniser:
+    class: Drupal\oe_translation_remote\RemoteTranslationSynchroniser
+    arguments: ['@language_manager', '@oe_translation.translation_source_manager', '@messenger']

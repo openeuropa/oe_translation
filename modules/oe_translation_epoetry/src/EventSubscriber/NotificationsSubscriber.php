@@ -10,6 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\EPoetry\Notification\Event\Product\BaseEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\DeliveryEvent;
@@ -64,6 +65,13 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   protected $logger;
 
   /**
+   * The translation synchroniser.
+   *
+   * @var \Drupal\oe_translation_remote\RemoteTranslationSynchroniser
+   */
+  protected $translationSynchroniser;
+
+  /**
    * Constructs a new NotificationsSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -74,12 +82,15 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The language manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory.
+   * @param \Drupal\oe_translation_remote\RemoteTranslationSynchroniser $translationSynchroniser
+   *   The translation synchroniser.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory, RemoteTranslationSynchroniser $translationSynchroniser) {
     $this->entityTypeManager = $entityTypeManager;
     $this->contentFormatter = $contentFormatter;
     $this->languageManager = $languageManager;
     $this->logger = $loggerChannelFactory->get('oe_translation_epoetry');
+    $this->translationSynchroniser = $translationSynchroniser;
   }
 
   /**
@@ -243,8 +254,26 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $file = $product->getFile();
     $data = $this->contentFormatter->import($file, $translation_request);
     $translation_request->setTranslatedData($langcode, reset($data));
-    $translation_request->updateTargetLanguageStatus($langcode, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW);
     $translation_request->log('The <strong>@language</strong> translation has been delivered.', ['@language' => $language->getName()]);
+    $auto_accept = $translation_request->isAutoAccept();
+    $auto_sync = $translation_request->isAutoSync();
+    // Check the provider configuration because we may have global settings for
+    // the auto-accept feature.
+    $provider_configuration = $translation_request->getTranslatorProvider()->getProviderConfiguration();
+    if ((bool) $provider_configuration['auto_accept'] === TRUE) {
+      $auto_accept = TRUE;
+    }
+
+    $status = $auto_accept ? TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED : TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW;
+    $translation_request->updateTargetLanguageStatus($langcode, $status);
+    if ($auto_accept) {
+      $translation_request->log('The <strong>@language</strong> translation has been automatically accepted.', ['@language' => $language->getName()]);
+    }
+
+    if ($auto_sync) {
+      $this->translationSynchroniser->synchronise($translation_request, $langcode, TRUE);
+      // The log for this happens in the sync service.
+    }
     $translation_request->save();
     $event->setSuccessResponse('The translation has been saved.');
   }

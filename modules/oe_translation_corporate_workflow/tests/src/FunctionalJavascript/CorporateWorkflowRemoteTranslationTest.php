@@ -237,8 +237,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
       'validated',
     ]);
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations/remote');
 
     // Assert that we now make new translations and there are no more
@@ -423,8 +423,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // node.
     $this->getSession()->getPage()->find('xpath', '//table[@class="ongoing-remote-translation-requests-table"]/tbody/tr[1]')->clickLink('View');
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     // Only 2 are left.
     $third_ongoing['status'] = 'Translated';
     $this->assertOngoingTranslations([$second_ongoing, $third_ongoing]);
@@ -441,8 +441,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 
     $this->getSession()->getPage()->find('xpath', '//table[@class="ongoing-remote-translation-requests-table"]/tbody/tr[1]')->clickLink('View');
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
 
     // Only 1 is left, so now we don't have the requests table but directly
     // the last request meta information.
@@ -466,8 +466,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 
     // Sync the last one.
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
 
     // Assert that the published revision kept its translation value.
     $node_storage->resetCache();

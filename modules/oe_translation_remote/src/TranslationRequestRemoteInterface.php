@@ -23,7 +23,7 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
   const STATUS_LANGUAGE_ACTIVE = 'Active';
   const STATUS_LANGUAGE_REVIEW = 'Review';
   const STATUS_LANGUAGE_ACCEPTED = 'Accepted';
-  const STATUS_LANGUAGE_SYNCHRONISED = 'Synchronized';
+  const STATUS_LANGUAGE_SYNCHRONISED = 'Synchronised';
 
   /**
    * The statuses of a translation request as a whole.

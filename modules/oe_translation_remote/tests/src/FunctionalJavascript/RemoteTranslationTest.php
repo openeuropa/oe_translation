@@ -294,7 +294,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Assert that we have the 2 buttons because the oe_translator has all the
     // permissions.
     $this->assertSession()->buttonExists('Save and accept');
-    $this->assertSession()->buttonExists('Save and synchronize');
+    $this->assertSession()->buttonExists('Save and synchronise');
 
     // Remove the "accept" permission and assert the button is missing.
     $role = Role::load('oe_translator');
@@ -303,13 +303,13 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->reload();
 
     $this->assertSession()->buttonNotExists('Save and accept');
-    $this->assertSession()->buttonExists('Save and synchronize');
+    $this->assertSession()->buttonExists('Save and synchronise');
     // Do the same for the sync permission.
     $role->revokePermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
     $this->assertSession()->buttonNotExists('Save and accept');
-    $this->assertSession()->buttonNotExists('Save and synchronize');
+    $this->assertSession()->buttonNotExists('Save and synchronise');
 
     // Add back the permissions.
     $role->grantPermission('accept translation request');
@@ -412,10 +412,10 @@ class RemoteTranslationTest extends TranslationTestBase {
     // from the dashboard.
     $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table')->clickLink('View');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="bg"] a')->click();
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in Bulgarian has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in Bulgarian has been synchronised.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
-    $expected_languages['bg']['status'] = 'Synchronized';
+    $expected_languages['bg']['status'] = 'Synchronised';
     $expected_languages['bg']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     // The request status has not changed.
@@ -442,7 +442,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $request_storage->resetCache();
     $request = $request_storage->load($request->id());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Synchronized'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('bg', 'Synchronised'), $target_languages['bg']);
     $this->assertEquals(new LanguageWithStatus('fr', 'Review'), $target_languages['fr']);
     // Both languages have been translated so the request is has been marked
     // as translated.
@@ -458,18 +458,18 @@ class RemoteTranslationTest extends TranslationTestBase {
     ]);
 
     $expected_languages['bg']['review'] = FALSE;
-    $expected_languages['bg']['status'] = 'Synchronized';
+    $expected_languages['bg']['status'] = 'Synchronised';
     $expected_languages['fr']['review'] = TRUE;
     $expected_languages['fr']['status'] = 'Review';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
     // By now, the request has been synced entirely so it won't show up
     // anymore so we have to manually go to it.
     $this->drupalGet($request->toUrl());
-    $expected_languages['fr']['status'] = 'Synchronized';
+    $expected_languages['fr']['status'] = 'Synchronised';
     $expected_languages['fr']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     // The request status has changed because all languages have been synced.
@@ -477,8 +477,8 @@ class RemoteTranslationTest extends TranslationTestBase {
     $request = $request_storage->load($request->id());
     $this->assertEquals('Finished', $request->getRequestStatus());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Synchronized'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'Synchronized'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('bg', 'Synchronised'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Synchronised'), $target_languages['fr']);
 
     // We now also have the FR translation.
     $node_storage->resetCache();
@@ -593,8 +593,8 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Sync the latest translation request.
     $this->getSession()->getPage()->find('xpath', "//tr[td//text()[contains(., 'Updated basic translation node')]]")->clickLink('View');
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     $this->clickLink('Dashboard');
 
     // Assert we only have again the first, translated request on the dashboard.
@@ -627,8 +627,8 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table')->clickLink('View');
     // There is only one language to review.
     $this->getSession()->getPage()->clickLink('Review');
-    $this->getSession()->getPage()->pressButton('Save and synchronize');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronized.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     $this->clickLink('Dashboard');
     $this->assertSession()->pageTextContains('There are no ongoing remote translation requests');
 

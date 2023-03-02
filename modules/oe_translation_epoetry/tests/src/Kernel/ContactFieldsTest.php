@@ -15,6 +15,7 @@ class ContactFieldsTest extends TranslationKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'oe_translation_remote',
     'oe_translation_epoetry',
   ];
 
