@@ -189,3 +189,38 @@ function oe_translation_epoetry_form_oe_translation_remote_new_form_alter(array 
     \Drupal::messenger()->addWarning(t('The last ePoetry translation request with the ID <strong>@id</strong> had been rejected. You can resubmit to correct it.', ['@id' => $request->getRequestId(TRUE)]));
   }
 }
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function oe_translation_epoetry_views_data_alter(&$data) {
+  $data['oe_translation_request__request_id']['request_id']['filter'] = [
+    'title' => t('Formatted request ID'),
+    'help' => t('Filters by the formatted request ID.'),
+    'field' => 'request_id',
+    'id' => 'oe_translation_epoetry_request_id_filter',
+  ];
+}
+
+/**
+ * Implements template_preprocess_views_view_table().
+ */
+function oe_translation_epoetry_preprocess_views_view_table(&$variables) {
+  $view = $variables['view'];
+  if ($view->id() !== 'epoetry_translation_request_dashboard') {
+    return;
+  }
+
+  // For the ePoetry dashboard, highlight the failed and rejected requests.
+  foreach ($variables['rows'] as $row) {
+    $error = isset($row['columns']['request_status']) && (string) $row['columns']['request_status']['content'][0]['field_output']['#markup'] === TranslationRequestEpoetryInterface::STATUS_REQUEST_FAILED;
+    $warning = isset($row['columns']['epoetry_status']['content'][0]) && (string) $row['columns']['epoetry_status']['content'][0]['field_output']['#markup'] === TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED;
+    if ($error) {
+      $row['attributes']->addClass('color-error');
+    }
+    if ($warning) {
+      $row['attributes']->addClass('color-warning');
+    }
+  }
+
+}

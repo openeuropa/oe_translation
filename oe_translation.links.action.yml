@@ -3,9 +3,3 @@ entity.oe_translation_request.type_add:
   title: 'Add translation request type'
   appears_on:
     - entity.oe_translation_request_type.collection
-
-entity.oe_translation_request.add_page:
-  route_name: entity.oe_translation_request.add_page
-  title: 'Add translation request'
-  appears_on:
-    - entity.oe_translation_request.collection

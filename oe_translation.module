@@ -307,3 +307,24 @@ function _oe_translation_create_request_logs_tables(TranslationRequestInterface 
   $table['#rows'] = $rows;
   return $table;
 }
+
+/**
+ * Implements hook_entity_operation_alter().
+ */
+function oe_translation_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if (!$entity instanceof TranslationRequestInterface) {
+    return;
+  }
+
+  if (isset($operations['edit'])) {
+    // Remove the edit operation because for the moment we won't edit requests.
+    unset($operations['edit']);
+  }
+
+  // Add the extra operations we are defining with our subscriber.
+  foreach ($entity->getOperationsLinks()['#links'] as $op => $link) {
+    if (!isset($operations[$op])) {
+      $operations[$op] = $link;
+    }
+  }
+}

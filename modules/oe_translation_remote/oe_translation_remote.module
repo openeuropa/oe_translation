@@ -40,7 +40,9 @@ function oe_translation_remote_entity_type_alter(array &$entity_types) {
 function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, bool $cacheable): array {
   $options = [
     TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE => t('Active'),
+    TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => t('Translated'),
     TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => t('Failed & Finished'),
+    TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED => t('Failed'),
     TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED => t('Finished'),
   ];
 

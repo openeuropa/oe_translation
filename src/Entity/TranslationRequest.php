@@ -25,7 +25,7 @@ use Drupal\user\EntityOwnerTrait;
  *   bundle_label = @Translation("Translation Request type"),
  *   handlers = {
  *     "list_builder" = "Drupal\oe_translation\TranslationRequestListBuilder",
- *     "views_data" = "Drupal\views\EntityViewsData",
+ *     "views_data" = "Drupal\oe_translation\TranslationRequestViewsData",
  *     "access" = "Drupal\oe_translation\Access\TranslationRequestAccessControlHandler",
  *     "storage" = "Drupal\oe_translation\TranslationRequestStorage",
  *     "form" = {
@@ -54,7 +54,7 @@ use Drupal\user\EntityOwnerTrait;
  *     "add-form" = "/translation-request/add/{oe_translation_request_type}",
  *     "add-page" = "/translation-request/add",
  *     "canonical" = "/translation-request/{oe_translation_request}",
- *     "collection" = "/admin/content/translation-request",
+ *     "collection" = "/admin/content/translation-requests",
  *     "edit-form" = "/translation-request/{oe_translation_request}/edit",
  *     "delete-form" = "/translation-request/{oe_translation_request}/delete",
  *     "delete-multiple-form" = "/admin/content/translation-requests/delete",

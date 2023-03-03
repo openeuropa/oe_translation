@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\oe_translation\Plugin\Field\FieldType\EntityRevisionWithTypeItem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -18,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @FieldFormatter(
  *   id = "oe_translation_entity_revision_type_formatter",
- *   label = @Translation("Entity revision with type Formatter"),
+ *   label = @Translation("Entity revision with type formatter"),
  *   field_types = {
  *     "oe_translation_entity_revision_type_item"
  *   }
@@ -77,6 +78,38 @@ class EntityRevisionWithTypeFormatter extends FormatterBase implements Container
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    return [
+      'link' => TRUE,
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $elements['link'] = [
+      '#title' => $this->t('Link label to the referenced entity'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->getSetting('link'),
+    ];
+
+    return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+    $summary[] = $this->getSetting('link') ? $this->t('Link to the referenced entity') : $this->t('No link');
+
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     if (count($items) === 0) {
       return [];
@@ -114,7 +147,19 @@ class EntityRevisionWithTypeFormatter extends FormatterBase implements Container
       return $default;
     }
 
-    return $entity->getEntityType()->hasKey('label') ? ['#markup' => $entity->label()] : $default;
+    if (!$entity->getEntityType()->hasKey('label')) {
+      return $default;
+    }
+
+    $output_as_link = $this->getSetting('link');
+    if ($output_as_link) {
+      return [
+        '#type' => 'link',
+        '#title' => $entity->label(),
+        '#url' => $entity->toUrl('revision'),
+      ];
+    }
+    return ['#markup' => $entity->label()];
   }
 
 }

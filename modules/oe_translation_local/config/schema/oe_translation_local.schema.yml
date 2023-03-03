@@ -1,0 +1,7 @@
+field.formatter.settings.oe_translation_local_single_target_language:
+  type: mapping
+  label: 'Single target language formatter settings'
+  mapping:
+    data_value:
+      type: string
+      label: 'Whether to show the language or the status'

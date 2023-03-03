@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_local\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\oe_translation\Event\TranslationRequestOperationsProviderEvent;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -39,7 +40,7 @@ class TranslationRequestOperationsProviderSubscriber implements EventSubscriberI
     $edit = $request->toUrl('local-translation');
     $edit_access = $edit->access(NULL, TRUE);
     $cache->addCacheableDependency($edit_access);
-    if ($edit_access->isAllowed()) {
+    if ($edit_access->isAllowed() && $request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED) {
       // Put the edit link first.
       $existing = $links['#links'];
       $links['#links'] = [];
