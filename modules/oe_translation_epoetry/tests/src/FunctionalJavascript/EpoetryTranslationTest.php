@@ -44,6 +44,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     'oe_translation_remote',
     'oe_translation_epoetry',
     'oe_translation_epoetry_mock',
+    'oe_translation_epoetry_test',
   ];
 
   /**
@@ -57,6 +58,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $configuration['title_prefix'] = 'A title prefix';
     $configuration['site_id'] = 'A site ID';
     $configuration['auto_accept'] = FALSE;
+    $configuration['language_mapping'] = [];
     $provider->setProviderConfiguration($configuration);
     $provider->save();
 
@@ -120,6 +122,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $translator = \Drupal::entityTypeManager()->getStorage('remote_translation_provider')->load('epoetry_provider');
     $this->assertEquals('ePoetry provider', $translator->label());
     $this->assertEquals('epoetry', $translator->getProviderPlugin());
+    $default_language_mapping = [];
+    foreach (\Drupal::languageManager()->getLanguages() as $language) {
+      $default_language_mapping[$language->getId()] = strtoupper($language->getId());
+    }
     $this->assertEquals([
       'contacts' => [
         'Recipient' => 'test_recipient',
@@ -129,6 +135,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'auto_accept' => TRUE,
       'title_prefix' => 'The title prefix',
       'site_id' => 'The site ID',
+      'language_mapping' => $default_language_mapping,
     ], $translator->getProviderConfiguration());
 
     // Edit the provider.
@@ -153,6 +160,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'auto_accept' => FALSE,
       'title_prefix' => 'The title prefix',
       'site_id' => 'The site ID',
+      'language_mapping' => $default_language_mapping,
     ], $translator->getProviderConfiguration());
   }
 
@@ -232,6 +240,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function testEpoetrySingleTranslationFlow(): void {
+    // Set PT language mapping.
+    $translator = RemoteTranslatorProvider::load('epoetry');
+    $configuration = $translator->getProviderConfiguration();
+    $configuration['language_mapping']['pt-pt'] = 'PT';
+    $translator->setProviderConfiguration($configuration);
+    $translator->save();
+
     $node = $this->createBasicTestNode();
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
@@ -259,7 +274,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Select 2 languages.
     $this->getSession()->getPage()->checkField('Bulgarian');
-    $this->getSession()->getPage()->checkField('French');
+    $this->getSession()->getPage()->checkField('Portuguese');
 
     // Assert the message length is under 1700 characters.
     $this->getSession()->getPage()->fillField('Message', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cup');
@@ -276,7 +291,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createLinguisticRequest><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 1</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Message to the provider</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMSIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDE8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0xIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzFdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTVYxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>bg</language></product><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>fr</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:createLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createLinguisticRequest><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 1</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Message to the provider</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMSIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDE8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0xIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzFdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTVYxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>BG</language></product><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>PT</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:createLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     // Assert that we got back a correct response and our request was correctly
     // updated.
@@ -287,7 +302,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
     $this->assertEquals(new LanguageWithStatus('bg', 'Active'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('pt-pt', 'Active'), $target_languages['pt-pt']);
     $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
@@ -334,7 +349,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // We have the table of languages of this last request, all active but
     // none yet translated.
     $expected_languages = [];
-    foreach (['bg', 'fr'] as $langcode) {
+    foreach (['bg', 'pt-pt'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
         'status' => 'Active',
@@ -353,7 +368,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       ],
     ], $dossiers);
 
-    // Accept the request and the FR language.
+    // Accept the request and the PT-PT language.
     EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
     EpoetryTranslationMockHelper::notifyRequest($request, [
       'type' => 'RequestStatusChange',
@@ -362,7 +377,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     EpoetryTranslationMockHelper::notifyRequest($request, [
       'type' => 'ProductStatusChange',
       'status' => 'Accepted',
-      'language' => 'fr',
+      'language' => 'pt-pt',
     ]);
 
     $this->getSession()->reload();
@@ -378,7 +393,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       // The mock link tu cancel the request since it's been Accepted.
       'Cancel',
     ]);
-    $expected_languages['fr']['status'] = 'Accepted';
+    $expected_languages['pt-pt']['status'] = 'Accepted';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
     // Assert the extra logs.
@@ -388,21 +403,21 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ];
     $expected_logs[4] = [
       'Info',
-      'The French product status has been updated to Accepted.',
+      'The Portuguese product status has been updated to Accepted.',
     ];
     $this->assertLogMessagesTable($expected_logs);
 
     // Send the translation.
-    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    EpoetryTranslationMockHelper::translateRequest($request, 'pt-pt');
     $this->getSession()->reload();
-    $expected_languages['fr']['status'] = 'Review';
-    $expected_languages['fr']['review'] = TRUE;
+    $expected_languages['pt-pt']['status'] = 'Review';
+    $expected_languages['pt-pt']['review'] = TRUE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
     // Assert the extra logs.
     $expected_logs[5] = [
       'Info',
-      'The French translation has been delivered.',
+      'The Portuguese translation has been delivered.',
     ];
     $this->assertLogMessagesTable($expected_logs);
 
@@ -412,24 +427,24 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->drupalGet($request->toUrl());
     $expected_logs[6] = [
       'Info',
-      'The French translation has been accepted.',
+      'The Portuguese translation has been accepted.',
     ];
     $this->assertLogMessagesTable($expected_logs);
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $this->assertSession()->pageTextContains('The translation in Portuguese has been synchronised.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
-    $expected_languages['fr']['status'] = 'Synchronised';
-    $expected_languages['fr']['review'] = FALSE;
+    $expected_languages['pt-pt']['status'] = 'Synchronised';
+    $expected_languages['pt-pt']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
     $expected_logs[7] = [
       'Info',
-      'The French translation has been synchronised with the content.',
+      'The Portuguese translation has been synchronised with the content.',
     ];
     $this->assertLogMessagesTable($expected_logs);
     $node = Node::load($node->id());
-    $this->assertTrue($node->hasTranslation('fr'));
-    $this->assertEquals('Basic translation node - fr', $node->getTranslation('fr')->label());
+    $this->assertTrue($node->hasTranslation('pt-pt'));
+    $this->assertEquals('Basic translation node - PT', $node->getTranslation('pt-pt')->label());
   }
 
   /**
@@ -488,7 +503,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:addNewPartToDossier><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>2023</year></dossier><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 2</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node-0</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>fr</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:addNewPartToDossier></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:addNewPartToDossier><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 2</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node-0</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>FR</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:addNewPartToDossier></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     // Assert that the state dossier got updated correctly.
     $dossiers = RequestFactory::getEpoetryDossiers();
@@ -535,7 +550,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(2, $requests);
     $xml = end($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:addNewPartToDossier><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>2023</year></dossier><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 3</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node-1</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMyIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDM8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0zIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzNdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTTExYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>de</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:addNewPartToDossier></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:addNewPartToDossier><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 3</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node-1</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMyIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDM8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0zIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzNdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTTExYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>DE</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:addNewPartToDossier></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
     $dossiers = RequestFactory::getEpoetryDossiers();
     $this->assertEquals([
       2000 => [
@@ -574,7 +589,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(3, $requests);
     $xml = end($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createLinguisticRequest><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 4</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node-2</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iNCIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDQ8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS00Ij4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzRdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTkYxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>it</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:createLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createLinguisticRequest><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 4</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node-2</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iNCIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDQ8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS00Ij4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzRdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTkYxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>IT</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:createLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     $dossiers = RequestFactory::getEpoetryDossiers();
     $this->assertEquals([
@@ -647,8 +662,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $year = date('Y');
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createNewVersion><linguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . $year . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node - update</title><internalReference>Translation request 2</internalReference><requestedDeadline>2034-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Some message to the provider</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient2" contactRole="RECIPIENT"/><contact userId="test_webmaster2" contactRole="WEBMASTER"/><contact userId="test_editor2" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node---update.html</fileName><comment>http://web:8080/build/en/basic-translation-node-update</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlIC0gdXBkYXRlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>de</language></product><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>it</language></product></products></requestDetails></linguisticRequest><applicationName>digit</applicationName></ns1:createNewVersion></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createNewVersion><linguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node - update</title><internalReference>Translation request 2</internalReference><requestedDeadline>2034-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Some message to the provider</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient2" contactRole="RECIPIENT"/><contact userId="test_webmaster2" contactRole="WEBMASTER"/><contact userId="test_editor2" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node---update.html</fileName><comment>http://web:8080/build/en/basic-translation-node-update</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlIC0gdXBkYXRlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>DE</language></product><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>IT</language></product></products></requestDetails></linguisticRequest><applicationName>digit</applicationName></ns1:createNewVersion></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
     // Assert that we got back a correct response and our request was correctly
     // updated.
     $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
@@ -916,8 +930,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $year = date('Y');
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createNewVersion><linguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . $year . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node - update</title><internalReference>Translation request 2</internalReference><requestedDeadline>2034-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Some message to the provider</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient2" contactRole="RECIPIENT"/><contact userId="test_webmaster2" contactRole="WEBMASTER"/><contact userId="test_editor2" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node---update.html</fileName><comment>http://web:8080/build/en/basic-translation-node-update</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlIC0gdXBkYXRlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>bg</language></product><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>de</language></product><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>it</language></product></products></requestDetails></linguisticRequest><applicationName>digit</applicationName></ns1:createNewVersion></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createNewVersion><linguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node - update</title><internalReference>Translation request 2</internalReference><requestedDeadline>2034-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Some message to the provider</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient2" contactRole="RECIPIENT"/><contact userId="test_webmaster2" contactRole="WEBMASTER"/><contact userId="test_editor2" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node---update.html</fileName><comment>http://web:8080/build/en/basic-translation-node-update</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlIC0gdXBkYXRlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>BG</language></product><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>DE</language></product><product requestedDeadline="2034-10-10T23:59:00+00:00" trackChanges="false"><language>IT</language></product></products></requestDetails></linguisticRequest><applicationName>digit</applicationName></ns1:createNewVersion></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     // Assert that we got back a correct response and our request was correctly
     // updated.
@@ -1284,7 +1297,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:modifyLinguisticRequest><modifyLinguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>2023</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><contacts xsi:type="ns1:contacts"><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><products xsi:type="ns1:products"><product requestedDeadline="2035-10-10T23:59:00+00:00" trackChanges="false"><language>de</language></product></products></requestDetails></modifyLinguisticRequest><applicationName>digit</applicationName></ns1:modifyLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:modifyLinguisticRequest><modifyLinguisticRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><contacts xsi:type="ns1:contacts"><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><products xsi:type="ns1:products"><product requestedDeadline="2035-10-10T23:59:00+00:00" trackChanges="false"><language>DE</language></product></products></requestDetails></modifyLinguisticRequest><applicationName>digit</applicationName></ns1:modifyLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     // Assert the logs. This set of logs is missing the initial ones because
     // we created the request programatically.
@@ -1564,7 +1577,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:resubmitRequest><resubmitRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 3</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMyIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJlbiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDM8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0zIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzNdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTTExYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>fr</language></product></products></requestDetails></resubmitRequest><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:resubmitRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:resubmitRequest><resubmitRequest><requestReference><dossier><requesterCode>DIGIT</requesterCode><number>2000</number><year>' . date('Y') . '</year></dossier><productType>TRA</productType><part>0</part></requestReference><requestDetails><title>A title prefix: A site ID - Basic translation node</title><internalReference>Translation request 3</internalReference><requestedDeadline>2032-10-10T23:59:00+00:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>Basic-translation-node.html</fileName><comment>http://web:8080/build/en/basic-translation-node</comment><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMyIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDM8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0zIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzNdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTTExYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5CYXNpYyB0cmFuc2xhdGlvbiBub2RlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+00:00" trackChanges="false"><language>FR</language></product></products></requestDetails></resubmitRequest><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:resubmitRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     // Assert that we got back a correct response and our request was correctly
     // updated.
@@ -2059,6 +2072,31 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->find('css', 'summary')->click();
     $this->assertSession()->pageTextContains('The Bulgarian translation has been automatically synchronised with the content.');
     $this->assertSession()->pageTextNotContains('The Bulgarian translation has been synchronised with the content.');
+  }
+
+  /**
+   * Tests that the available languages for ePoetry can be altered.
+   */
+  public function testLanguagesAlter(): void {
+    $node = $this->createBasicTestNode();
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->selectFieldOption('Translator', 'ePoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('New translation request using ePoetry');
+
+    $this->assertSession()->fieldExists('Bulgarian');
+    $this->assertSession()->fieldExists('French');
+
+    \Drupal::state()->set('oe_translation_epoetry_test.remove_languages', ['bg']);
+
+    $this->getSession()->reload();
+    $this->getSession()->getPage()->selectFieldOption('Translator', 'ePoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('New translation request using ePoetry');
+
+    $this->assertSession()->fieldNotExists('Bulgarian');
+    $this->assertSession()->fieldExists('French');
   }
 
   /**

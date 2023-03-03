@@ -21,9 +21,11 @@ trait LanguageCheckboxesAwareTrait {
    *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
+   * @param array $languages
+   *   The language objects.
    */
-  protected function addLanguageCheckboxes(array &$form, FormStateInterface $form_state): void {
-    $languages = $this->languageManager->getLanguages();
+  protected function addLanguageCheckboxes(array &$form, FormStateInterface $form_state, array $languages = []): void {
+    $languages = !empty($languages) ? $languages : $this->languageManager->getLanguages();
     $entity = $this->getEntity();
     $source_language = $entity->language()->getId();
     unset($languages[$source_language]);

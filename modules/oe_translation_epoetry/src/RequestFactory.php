@@ -314,8 +314,7 @@ class RequestFactory extends RequestClientFactory {
     $products = new Products();
     foreach ($request->getTargetLanguages() as $language_with_status) {
       $productRequestIn = (new ProductRequestIn())
-        // @todo fix the language mapping.
-        ->setLanguage($language_with_status->getLangcode())
+        ->setLanguage(EpoetryLanguageMapper::getEpoetryLanguageCode($language_with_status->getLangcode(), $request),)
         ->setRequestedDeadline($deadline)
         ->setTrackChanges(FALSE);
       $products->addProduct($productRequestIn);

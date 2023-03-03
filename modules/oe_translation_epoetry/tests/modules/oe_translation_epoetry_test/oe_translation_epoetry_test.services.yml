@@ -1,0 +1,6 @@
+services:
+  oe_translation_epoetry_test.available_languages_alter:
+    class: Drupal\oe_translation_epoetry_test\EventSubscriber\AvailableLanguagesSubscriber
+    arguments: ['@state']
+    tags:
+      - { name: event_subscriber }

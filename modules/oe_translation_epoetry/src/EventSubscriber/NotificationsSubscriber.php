@@ -9,6 +9,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
+use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -216,8 +217,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $language = $product->getProductReference()->getLanguage();
-    // @todo handle language mapping.
-    $langcode = strtolower($language);
+    $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
     $translation_request->updateTargetLanguageStatus($langcode, $status);
@@ -246,8 +246,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $language = $product->getProductReference()->getLanguage();
-    // @todo handle language mapping.
-    $langcode = strtolower($language);
+    $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
     // Process the translated file.

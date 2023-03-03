@@ -8,6 +8,7 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
 use Drupal\tmgmt\Data;
 
 /**
@@ -74,8 +75,7 @@ class HtmlFormatter implements ContentFormatterInterface {
     $elements = [
       '#theme' => 'content_html_template',
       '#request_id' => $request->id(),
-      // @todo handle language mapping.
-      '#source_language' => $request->getSourceLanguageCode(),
+      '#source_language' => EpoetryLanguageMapper::getEpoetryLanguageCode($request->getSourceLanguageCode(), $request),
       '#items' => $items,
     ];
 
