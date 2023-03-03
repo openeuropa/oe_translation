@@ -9,8 +9,8 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
+use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Http\Discovery\Psr17Factory;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -67,7 +67,7 @@ class EpoetryController extends ControllerBase {
    *   The Symfony response containing the SOAP envelope.
    */
   public function notifications(Request $request): Response {
-    $callback = Url::fromRoute('oe_translation_epoetry.notifications_endpoint')->setAbsolute()->toString();
+    $callback = NotificationEndpointResolver::resolve();
     $server_factory = new NotificationServerFactory($callback, \Drupal::service('event_dispatcher'), \Drupal::logger('epoetry'), new Serializer());
     $psr_factory = new Psr17Factory();
     $psr_http_factory = new PsrHttpFactory($psr_factory, $psr_factory, $psr_factory, $psr_factory);
