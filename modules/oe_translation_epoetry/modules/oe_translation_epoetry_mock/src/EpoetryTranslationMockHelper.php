@@ -6,8 +6,8 @@ namespace Drupal\oe_translation_epoetry_mock;
 
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
+use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -196,7 +196,7 @@ class EpoetryTranslationMockHelper {
    *   The notification message.
    */
   protected static function performNotification(string $notification): void {
-    $url = Url::fromRoute('oe_translation_epoetry.notifications_endpoint')->setAbsolute()->toString();
+    $url = NotificationEndpointResolver::resolve();
     $config = \Drupal::config('oe_translation_epoetry_mock.settings');
     $notifications_endpoint = $config->get('notifications_endpoint');
     if ($notifications_endpoint && $notifications_endpoint !== '') {

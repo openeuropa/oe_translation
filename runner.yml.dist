@@ -46,8 +46,13 @@ commands:
     - task: "append"
       file: "build/sites/default/settings.override.php"
       text: |
-        $settings["epoetry.service_url"] = getenv('EPOETRY_SERVICE_URL');
+        $settings["epoetry.service_url"] = "${drupal.base_url}/epoetry-mock/server";
         $settings["epoetry.application_name"] = getenv('EPOETRY_APPLICATION_NAME');
+        $settings["epoetry.auth.cert_service_url"] = getenv('EPOETRY_AUTH_CERT_SERVICE_URL');
+        $settings["epoetry.auth.cert_path"] = getenv('EPOETRY_AUTH_CERT_PATH');
+        $settings["epoetry.auth.cert_password"] = getenv('EPOETRY_AUTH_CERT_PASSWORD');
+        $settings["epoetry.auth.eulogin_base_path"] = getenv('EPOETRY_AUTH_EU_LOGIN_BASEPATH');
+        $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
     # Generate settings.testing.php, it will be used when running functional tests.
     - { task: "process-php", type: "write", config: "drupal.settings", source: "${drupal.root}/sites/default/default.settings.php", destination: "${drupal.root}/sites/default/settings.testing.php", override: true }
     - task: "append"
@@ -59,5 +64,6 @@ commands:
         $settings["epoetry.auth.cert_path"] = getenv('EPOETRY_AUTH_CERT_PATH');
         $settings["epoetry.auth.cert_password"] = getenv('EPOETRY_AUTH_CERT_PASSWORD');
         $settings["epoetry.auth.eulogin_base_path"] = getenv('EPOETRY_AUTH_EU_LOGIN_BASEPATH');
+        $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }
