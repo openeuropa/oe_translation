@@ -20,6 +20,14 @@ field.value.oe_translation_entity_revision_type_item:
       type: string
       label: Entity Type
 
+field.formatter.settings.oe_translation_entity_revision_type_formatter:
+  type: mapping
+  label: 'Entity revision with type formatter settings'
+  mapping:
+    link:
+      type: boolean
+      label: 'Whether to display as link'
+
 oe_translation.oe_translation_request_type.*:
   type: config_entity
   label: 'Translation Request type config'

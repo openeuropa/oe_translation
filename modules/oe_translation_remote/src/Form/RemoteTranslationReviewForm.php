@@ -223,6 +223,13 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
    *   The access route match.
    */
   public function access(TranslationRequestInterface $oe_translation_request, AccountInterface $account, RouteMatchInterface $route_match): AccessResultInterface {
+    /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $entity */
+    $bundles = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getRemoteTranslationBundles();
+    if (!in_array($oe_translation_request->bundle(), $bundles)) {
+      // Only works for remote bundles.
+      return AccessResult::forbidden();
+    }
+
     $language = $route_match->getParameter('language');
     $data = $oe_translation_request->getTranslatedData();
     if (!isset($data[$language->id()])) {

@@ -119,7 +119,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Created the ePoetry provider Remote Translator Provider.');
 
     // Make sure the configuration is saved properly.
-    $translator = \Drupal::entityTypeManager()->getStorage('remote_translation_provider')->load('epoetry_provider');
+    $storage = \Drupal::entityTypeManager()->getStorage('remote_translation_provider');
+    $storage->resetCache();
+    $translator = $storage->load('epoetry_provider');
     $this->assertEquals('ePoetry provider', $translator->label());
     $this->assertEquals('epoetry', $translator->getProviderPlugin());
     $default_language_mapping = [];
@@ -2097,6 +2099,121 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     $this->assertSession()->fieldNotExists('Bulgarian');
     $this->assertSession()->fieldExists('French');
+  }
+
+  /**
+   * Tests the ePoetry translation dashboard.
+   */
+  public function testEpoetryTranslationDashboard(): void {
+    $request_id = [
+      'code' => 'DIGIT',
+      'year' => date('Y'),
+      'number' => 2000,
+      'part' => 0,
+      'version' => 0,
+      'service' => 'TRA',
+    ];
+
+    // Create a node with a rejected translation.
+    $first_node = $this->createBasicTestNode();
+    $first_node->set('title', 'First node');
+    $first_node->save();
+    $request = $this->createNodeTranslationRequest($first_node, TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, [
+      [
+        'langcode' => 'fr',
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+      ],
+    ]);
+    $request->setRequestId($request_id);
+    $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED);
+    $request->save();
+
+    // Create a node with an ongoing translation.
+    $second_node = $this->createBasicTestNode();
+    $second_node->set('title', 'Second node');
+    $second_node->save();
+    $request = $this->createNodeTranslationRequest($second_node, TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACTIVE, [
+      [
+        'langcode' => 'fr',
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
+      ],
+    ]);
+    $request_id['part'] = 1;
+    $request->setRequestId($request_id);
+    $request->save();
+    // Make a new revision to this node.
+    $second_node->set('title', 'Second node - updated');
+    $second_node->setNewRevision(TRUE);
+    $second_node->save();
+
+    // Create another node and failed request.
+    $third_node = $this->createBasicTestNode();
+    $third_node->set('title', 'Third node');
+    $third_node->save();
+    $request = $this->createNodeTranslationRequest($third_node, TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED, [
+      [
+        'langcode' => 'fr',
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+      ],
+    ]);
+    $request_id['part'] = 2;
+    $request->setRequestId($request_id);
+    $request->save();
+
+    // Assert the dashboard only accessible to users with the correct
+    // permission.
+    $this->drupalLogout();
+    $this->drupalGet('admin/content/epoetry-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+
+    $user = $this->createUser();
+    $this->drupalLogin($user);
+    $this->drupalGet('admin/content/epoetry-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+
+    $user->addRole('oe_translator');
+    $user->save();
+    $this->getSession()->reload();
+    $this->assertSession()->pageTextContains('ePoetry translation requests');
+
+    // Assert we can see all the nodes and the rejected and failed rows have
+    // color classes.
+    $this->assertSession()->linkExistsExact('Third node');
+    // The second node title is that of the first revision (for which the
+    // request has been made).
+    $this->assertSession()->linkExistsExact('Second node');
+    $this->assertSession()->linkExistsExact('First node');
+
+    $this->assertTrue($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'First node')]]")->hasClass('color-warning'));
+    $this->assertTrue($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Third node')]]")->hasClass('color-error'));
+
+    // Assert the filters.
+    $this->getSession()->getPage()->selectFieldOption('Request status', 'Failed');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkExistsExact('Third node');
+    $this->assertSession()->linkNotExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('First node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
+    $this->getSession()->getPage()->selectFieldOption('ePoetry status', 'SenttoDGT');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkNotExistsExact('Third node');
+    $this->assertSession()->linkExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('First node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
+    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT/2023/2000/0/0/TRA');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkNotExistsExact('Third node');
+    $this->assertSession()->linkNotExistsExact('Second node');
+    $this->assertSession()->linkExistsExact('First node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
+    $this->getSession()->getPage()->fillField('Content', 'Second');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkNotExistsExact('Third node');
+    $this->assertSession()->linkExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('First node');
   }
 
   /**

@@ -498,6 +498,88 @@ class LocalTranslationsTest extends TranslationTestBase {
   }
 
   /**
+   * Tests the local translation dashboard.
+   */
+  public function testLocalTranslationDashboard(): void {
+    $first_node = $this->createBasicTestNode();
+    $first_node->set('title', 'First node');
+    $first_node->save();
+    $this->drupalGet($first_node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
+    $element->setValue('First node FR');
+    $this->getSession()->getPage()->pressButton('Save as draft');
+    $this->assertSession()->pageTextContains('The translation request has been saved.');
+
+    $second_node = $this->createBasicTestNode();
+    $second_node->set('title', 'Second node');
+    $second_node->save();
+    $this->drupalGet($second_node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="it"] a')->click();
+    $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
+    $element->setValue('Second node IT');
+    $this->getSession()->getPage()->pressButton('Save and accept');
+    $this->assertSession()->pageTextContains('The translation request has been saved.');
+
+    $third_node = $this->createBasicTestNode();
+    $third_node->set('title', 'Third node');
+    $third_node->save();
+    $this->drupalGet($third_node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="ro"] a')->click();
+    $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
+    $element->setValue('Second node RO');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation request has been saved.');
+
+    // Assert the dashboard only accessible to users with the correct
+    // permission.
+    $this->drupalLogout();
+    $this->drupalGet('admin/content/local-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+
+    $user = $this->createUser();
+    $this->drupalLogin($user);
+    $this->drupalGet('admin/content/local-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+
+    $user->addRole('oe_translator');
+    $user->save();
+    $this->getSession()->reload();
+    $this->assertSession()->pageTextContains('Local translation requests');
+
+    // Assert we can see all the nodes.
+    $this->assertSession()->linkExistsExact('Third node');
+    $this->assertSession()->linkExistsExact('Second node');
+    $this->assertSession()->linkExistsExact('First node');
+
+    // Assert that we can see the target language and target status fields.
+    $this->assertEquals('French', $this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'First node')]]/td[5]")->getText());
+    $this->assertEquals('Draft', $this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'First node')]]/td[6]")->getText());
+
+    // Assert the filters.
+    $this->getSession()->getPage()->selectFieldOption('Status', 'Synchronised');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkExistsExact('Third node');
+    $this->assertSession()->linkNotExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('First node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
+    $this->getSession()->getPage()->fillField('Content', 'Second');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkNotExistsExact('Third node');
+    $this->assertSession()->linkExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('First node');
+
+    $this->assertSession()->linkExistsExact('Edit started translation request');
+  }
+
+  /**
    * Asserts the ongoing translations table.
    *
    * @param array $languages

@@ -34,3 +34,7 @@ oe_translation_remote.remote_translation_provider.plugin.epoetry:
       sequence:
         type: string
         label: The language code
+
+views.filter.oe_translation_epoetry_request_id_filter:
+  type: views.filter.string
+  label: Request ID filter
