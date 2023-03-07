@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * OE Translation ePoetry install file.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Site\Settings;
+
+/**
+ * Implements hook_requirements().
+ */
+function oe_translation_epoetry_requirements($phase) {
+  $requirements = [];
+
+  // Show the ePoetry configuration.
+  if ($phase == 'runtime') {
+    $requirements['epoetry.service_url'] = [
+      'title' => t('ePoetry service URL'),
+      'value' => Settings::get('epoetry.service_url', t('Value not set')),
+      'severity' => REQUIREMENT_INFO,
+    ];
+
+    $requirements['epoetry.application_name'] = [
+      'title' => t('ePoetry application name'),
+      'value' => Settings::get('epoetry.application_name', t('Value not set')),
+      'severity' => REQUIREMENT_INFO,
+    ];
+
+    $poetry_environment_variables = [
+      'epoetry.auth.cert_service_url' => t('ePoetry certificate URL'),
+      'epoetry.auth.cert_path' => t('ePoetry certificate path'),
+      'epoetry.auth.cert_password' => t('ePoetry certificate password'),
+      'epoetry.auth.eulogin_base_path' => t('ePoetry EU login base path'),
+    ];
+
+    foreach ($poetry_environment_variables as $variable => $name) {
+      $value = Settings::get($variable, FALSE);
+      $requirements[$variable] = [
+        'title' => $name,
+        'value' => $value ? t('Value set') : t('Value not set'),
+        'severity' => REQUIREMENT_INFO,
+      ];
+    }
+
+    $value = Settings::get('epoetry.notification.endpoint_prefix', FALSE);
+    $requirements['epoetry.notification.endpoint_prefix'] = [
+      'title' => 'ePoetry notification endpoint prefix',
+      'value' => $value ? $value : t('Value not set'),
+      'severity' => REQUIREMENT_INFO,
+    ];
+  }
+
+  return $requirements;
+}
