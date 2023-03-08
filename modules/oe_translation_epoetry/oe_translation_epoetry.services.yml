@@ -4,7 +4,7 @@ services:
     arguments: ['@event_dispatcher', '@logger.factory', '@http_client', '@oe_translation_epoetry.html_formatter', '@oe_translation_epoetry.client_certificate_authentication']
   oe_translation_epoetry.html_formatter:
     class: Drupal\oe_translation_epoetry\ContentFormatter\HtmlFormatter
-    arguments: ['@tmgmt.data', '@renderer', '@entity_type.manager']
+    arguments: ['@renderer', '@entity_type.manager']
   oe_translation_epoetry.new_version_request_handler:
     class: Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandler
     arguments: ['@entity_type.manager']

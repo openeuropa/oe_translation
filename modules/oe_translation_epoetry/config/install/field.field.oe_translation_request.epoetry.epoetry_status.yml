@@ -4,11 +4,7 @@ dependencies:
   config:
     - field.storage.oe_translation_request.epoetry_status
     - oe_translation.oe_translation_request_type.epoetry
-  module:
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: oe_translation_request.epoetry.epoetry_status
 field_name: epoetry_status
 entity_type: oe_translation_request

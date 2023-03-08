@@ -8,7 +8,7 @@ use Drupal\block_field\BlockFieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\tmgmt_content\DefaultFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\DefaultFieldProcessor;
 
 /**
  * Field processor for the Block reference field.
@@ -20,7 +20,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
   /**
    * {@inheritdoc}
    */
-  public function extractTranslatableData(FieldItemListInterface $field) {
+  public function extractTranslatableData(FieldItemListInterface $field): array {
     $data = [];
     /** @var \Drupal\Core\Field\FieldDefinitionInterface $field_item */
     $field_definition = $field->getFieldDefinition();
@@ -47,7 +47,7 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
   /**
    * {@inheritdoc}
    */
-  public function setTranslations($field_data, FieldItemListInterface $field) {
+  public function setTranslations($field_data, FieldItemListInterface $field): void {
     foreach (Element::children($field_data) as $delta) {
       $field_item = $field_data[$delta];
       $property_data = $field_item['settings__label'];

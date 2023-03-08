@@ -36,7 +36,6 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   public static function getSubscribedEvents(): array {
     $events = parent::getSubscribedEvents();
-    // Run later than \Drupal\tmgmt_content\Routing\TmgmtContentRouteSubscriber.
     $events[RoutingEvents::ALTER] = ['onAlterRoutes', -300];
     return $events;
   }

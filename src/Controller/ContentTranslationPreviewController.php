@@ -4,16 +4,67 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation\Controller;
 
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\Render\Element;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
-use Drupal\tmgmt_content\Controller\ContentTranslationPreviewController as TmgmtContentTranslationPreviewController;
+use Drupal\oe_translation\TranslationSourceManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Content preview translation controller.
- *
- * We extend from TMGMT to reuse some of its logic that applies to us as well.
  */
-class ContentTranslationPreviewController extends TmgmtContentTranslationPreviewController {
+class ContentTranslationPreviewController extends ControllerBase {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The page cache kill switch.
+   *
+   * @var \Drupal\Core\PageCache\ResponsePolicy\KillSwitch
+   */
+  protected $killSwitch;
+
+  /**
+   * The translation source manager.
+   *
+   * @var \Drupal\oe_translation\TranslationSourceManagerInterface
+   */
+  protected $translationSourceManager;
+
+  /**
+   * Creates an ContentTranslationPreviewController object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $killSwitch
+   *   The page cache kill switch.
+   * @param \Drupal\oe_translation\TranslationSourceManagerInterface $translationSourceManager
+   *   The translation source manager.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, KillSwitch $killSwitch, TranslationSourceManagerInterface $translationSourceManager) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->killSwitch = $killSwitch;
+    $this->translationSourceManager = $translationSourceManager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('page_cache_kill_switch'),
+      $container->get('oe_translation.translation_source_manager')
+    );
+  }
 
   /**
    * Preview the translation request entity underlying translation data.
@@ -47,7 +98,7 @@ class ContentTranslationPreviewController extends TmgmtContentTranslationPreview
 
     // The preview is not cacheable.
     $preview['#cache']['max-age'] = 0;
-    \Drupal::service('page_cache_kill_switch')->trigger();
+    $this->killSwitch->trigger();
 
     return $preview;
   }
@@ -81,8 +132,6 @@ class ContentTranslationPreviewController extends TmgmtContentTranslationPreview
   /**
    * Builds the entity translation for the provided translation data.
    *
-   * Defers to the parent TMGMT class, but caches statically the result.
-   *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity for which the translation should be returned.
    * @param array $data
@@ -99,7 +148,60 @@ class ContentTranslationPreviewController extends TmgmtContentTranslationPreview
       return $translation;
     }
 
-    $translation = $this->makePreview($entity, $data, $language);
+    return $this->makePreview($entity, $data, $language);
+  }
+
+  /**
+   * Builds the entity translation for the provided translation data.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which the translation should be returned.
+   * @param array $data
+   *   The translation data for the fields.
+   * @param string $target_langcode
+   *   The target language.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The translated entity.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
+   */
+  protected function makePreview(ContentEntityInterface $entity, array $data, string $target_langcode): ContentEntityInterface {
+    // If the translation for this language does not exist yet, initialize it.
+    if (!$entity->hasTranslation($target_langcode)) {
+      $entity->addTranslation($target_langcode, $entity->toArray());
+    }
+
+    $embeddable_fields = $this->translationSourceManager->getEmbeddableFields($entity);
+
+    $translation = $entity->getTranslation($target_langcode);
+
+    foreach (Element::children($data) as $name) {
+      $field_data = $data[$name];
+      foreach (Element::children($field_data) as $delta) {
+        $field_item = $field_data[$delta];
+        foreach (Element::children($field_item) as $property) {
+          $property_data = $field_item[$property];
+          // If there is translation data for the field property, save it.
+          if (isset($property_data['#translation']['#text']) && $property_data['#translate'] && is_numeric($delta)) {
+            $item = $translation->get($name)->offsetGet($delta);
+            if ($item) {
+              // @todo see if we should rely on the field processors instead.
+              $translation->get($name)
+                ->offsetGet($delta)
+                ->set($property, $property_data['#translation']['#text']);
+            }
+          }
+          // If the field is an embeddable reference, we assume that the
+          // property is a field reference. The translation will be available
+          // to formatters due to the static entity caching.
+          elseif (isset($embeddable_fields[$name]) && $property === 'entity') {
+            $this->makePreview($translation->get($name)->offsetGet($delta)->$property, $property_data, $target_langcode);
+          }
+        }
+      }
+    }
     return $translation;
   }
 

@@ -22,7 +22,6 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
   public static $modules = [
     'options',
     'language',
-    'tmgmt',
     'content_translation',
     'oe_translation',
     'views',
@@ -43,7 +42,6 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
 
     $this->installConfig([
       'language',
-      'tmgmt',
       'oe_translation',
       'views',
     ]);

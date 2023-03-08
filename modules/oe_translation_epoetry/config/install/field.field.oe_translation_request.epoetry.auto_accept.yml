@@ -4,11 +4,7 @@ dependencies:
   config:
     - field.storage.oe_translation_request.auto_accept
     - oe_translation.oe_translation_request_type.epoetry
-  module:
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: oe_translation_request.epoetry.auto_accept
 field_name: auto_accept
 entity_type: oe_translation_request

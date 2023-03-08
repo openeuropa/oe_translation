@@ -7,10 +7,7 @@ dependencies:
     - paragraphs.paragraphs_type.demo_paragraph_type
   module:
     - entity_reference_revisions
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: paragraph.demo_paragraph_type.ott_inner_paragraphs
 field_name: ott_inner_paragraphs
 entity_type: paragraph

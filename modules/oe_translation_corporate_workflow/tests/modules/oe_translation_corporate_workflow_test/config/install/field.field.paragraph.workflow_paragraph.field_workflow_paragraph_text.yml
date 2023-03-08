@@ -4,11 +4,7 @@ dependencies:
   config:
     - field.storage.paragraph.field_workflow_paragraph_text
     - paragraphs.paragraphs_type.workflow_paragraph
-  module:
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: paragraph.workflow_paragraph.field_workflow_paragraph_text
 field_name: field_workflow_paragraph_text
 entity_type: paragraph

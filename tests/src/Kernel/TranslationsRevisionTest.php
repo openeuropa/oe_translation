@@ -108,8 +108,8 @@ class TranslationsRevisionTest extends KernelTestBase {
 
     // Install our module and check that saving translations no longer creates
     // extra revisions.
-    $this->enableModules(['tmgmt', 'oe_translation']);
-    $this->installConfig(['tmgmt', 'oe_translation']);
+    $this->enableModules(['oe_translation']);
+    $this->installConfig(['oe_translation']);
     $this->assertInstanceOf(TranslationModerationHandler::class, $this->container->get('entity_type.manager')->getHandler('node', 'moderation'));
     $translation = $node->addTranslation('de', ['title' => 'Revisions DE']);
     $translation->save();
@@ -138,8 +138,8 @@ class TranslationsRevisionTest extends KernelTestBase {
       // per language. After enabling, all translations should have the same
       // moderation state regardless which translation was updated.
       if ($status === 'oe_translation_enabled') {
-        $this->enableModules(['tmgmt', 'oe_translation']);
-        $this->installConfig(['tmgmt', 'oe_translation']);
+        $this->enableModules(['oe_translation']);
+        $this->installConfig(['oe_translation']);
       }
 
       /** @var \Drupal\node\NodeInterface $node */
@@ -192,8 +192,8 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->assertTrue($node->access('update'));
     $this->assertTrue($translation->access('update'));
 
-    $this->enableModules(['tmgmt', 'oe_translation']);
-    $this->installConfig(['tmgmt', 'oe_translation']);
+    $this->enableModules(['oe_translation']);
+    $this->installConfig(['oe_translation']);
 
     // Now only the source language can be updated.
     $this->assertTrue($node->access('update'));

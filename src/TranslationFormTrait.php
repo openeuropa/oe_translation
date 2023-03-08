@@ -34,7 +34,7 @@ trait TranslationFormTrait {
     $element = [];
 
     foreach (Element::children($data) as $key) {
-      if (!isset($data[$key]['#text']) || !$this->tmgmtData->filterData($data[$key])) {
+      if (!isset($data[$key]['#text']) || !TranslationSourceHelper::filterData($data[$key])) {
         continue;
       }
 
@@ -44,7 +44,7 @@ trait TranslationFormTrait {
       $element[$target_key] = [
         '#tree' => TRUE,
         '#theme' => 'local_translation_form_element_group',
-        '#ajaxid' => Html::getUniqueId('tmgmt-local-element-' . $key),
+        '#ajaxid' => Html::getUniqueId('oe-translation-local-element-' . $key),
         '#parent_label' => $data[$key]['#parent_label'],
         '#zebra' => '',
       ];

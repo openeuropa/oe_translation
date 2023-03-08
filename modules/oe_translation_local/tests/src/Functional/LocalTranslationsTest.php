@@ -24,6 +24,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     'paragraphs',
     'entity_reference_revisions',
     'menu_link_content',
+    'views',
   ];
 
   /**
@@ -51,8 +52,8 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Mark the test entity reference field as embeddable for TMGMT to behave
     // as composite entities.
-    $this->config('tmgmt_content.settings')
-      ->set('embedded_fields', [
+    $this->config('oe_translation.settings')
+      ->set('translation_source_embedded_fields', [
         'node' => [
           'ott_content_reference' => TRUE,
         ],
@@ -379,6 +380,8 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->addressEquals('/es/translation-request/2/preview/es');
     $this->assertSession()->pageTextContains('Full translation node ES');
     $this->assertSession()->pageTextContains('Referenced node ES');
+    $this->assertSession()->pageTextContains('grandchild field value 1 ES');
+    $this->assertSession()->pageTextContains('top field value 1 ES');
 
     // Test that we can delete the translation request.
     $this->getSession()->back();

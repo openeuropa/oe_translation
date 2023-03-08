@@ -9,10 +9,6 @@ use Drupal\oe_translation\Entity\TranslationRequestInterface;
 
 /**
  * Interface for exporting to a given file format following DGT specifications.
- *
- * This interface is heavily inspired on the tmgmt_file format plugins.
- *
- * @see \Drupal\tmgmt_file\Format\FormatInterface
  */
 interface ContentFormatterInterface {
 

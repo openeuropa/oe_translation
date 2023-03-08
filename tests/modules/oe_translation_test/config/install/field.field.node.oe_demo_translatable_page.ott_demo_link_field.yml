@@ -6,10 +6,7 @@ dependencies:
     - node.type.oe_demo_translatable_page
   module:
     - link
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: node.oe_demo_translatable_page.demo_link_field
 field_name: ott_demo_link_field
 entity_type: node

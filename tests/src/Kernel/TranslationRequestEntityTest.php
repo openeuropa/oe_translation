@@ -5,14 +5,11 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation\Kernel;
 
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
-use Drupal\Tests\tmgmt\Functional\TmgmtTestTrait;
 
 /**
  * Tests the Translation Request entity.
  */
 class TranslationRequestEntityTest extends TranslationKernelTestBase {
-
-  use TmgmtTestTrait;
 
   /**
    * A translation request job entity to be referenced.

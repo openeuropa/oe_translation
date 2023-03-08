@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
-use Drupal\tmgmt_content\DefaultFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\DefaultFieldProcessor;
 
 /**
- * Tests that the link fields use the default field processor for TMGMT.
+ * Test that the link fields use the default translation source field processor.
  *
  * This is needed to ensure that we can translate also the URI column of the
  * link field type.
@@ -19,7 +19,7 @@ class LinkFieldProcessorTest extends TranslationKernelTestBase {
    */
   public function testLinkFieldProcessor(): void {
     $definition = $this->container->get('plugin.manager.field.field_type')->getDefinition('link');
-    $this->assertEquals($definition['tmgmt_field_processor'], DefaultFieldProcessor::class);
+    $this->assertEquals($definition['oe_translation_source_field_processor'], DefaultFieldProcessor::class);
   }
 
 }

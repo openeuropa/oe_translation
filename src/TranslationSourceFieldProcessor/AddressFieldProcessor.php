@@ -2,20 +2,19 @@
 
 declare(strict_types = 1);
 
-
-namespace Drupal\oe_translation\FieldProcessor;
+namespace Drupal\oe_translation\TranslationSourceFieldProcessor;
 
 use CommerceGuys\Addressing\AddressFormat\AddressFormatRepositoryInterface;
 use Drupal\address\FieldHelper;
 use Drupal\address\LabelHelper;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
-use Drupal\tmgmt_content\DefaultFieldProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * TMGMT field processor for the Address field type.
+ * Translation source field processor for the Address field type.
  *
  * The address field comes with different labels depending on the address format
  * so we need to change the default property labels when we translate.
@@ -30,12 +29,10 @@ class AddressFieldProcessor extends DefaultFieldProcessor implements ContainerIn
   protected $addressFormatRepository;
 
   /**
-   * AddressFieldProcessor constructor.
-   *
-   * @param \CommerceGuys\Addressing\AddressFormat\AddressFormatRepositoryInterface $addressFormatRepository
-   *   The address format repository.
+   * {@inheritdoc}
    */
-  public function __construct(AddressFormatRepositoryInterface $addressFormatRepository) {
+  public function __construct(ConfigFactoryInterface $configFactory, AddressFormatRepositoryInterface $addressFormatRepository) {
+    parent::__construct($configFactory);
     $this->addressFormatRepository = $addressFormatRepository;
   }
 
@@ -44,6 +41,7 @@ class AddressFieldProcessor extends DefaultFieldProcessor implements ContainerIn
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('config.factory'),
       $container->get('address.address_format_repository')
     );
   }
@@ -51,7 +49,7 @@ class AddressFieldProcessor extends DefaultFieldProcessor implements ContainerIn
   /**
    * {@inheritdoc}
    */
-  public function extractTranslatableData(FieldItemListInterface $field) {
+  public function extractTranslatableData(FieldItemListInterface $field): array {
     $data = parent::extractTranslatableData($field);
 
     foreach (Element::children($data) as $delta) {

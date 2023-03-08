@@ -26,8 +26,6 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   protected static $modules = [
     'oe_translation_epoetry',
     'oe_translation_remote',
-    'tmgmt',
-    'tmgmt_content',
     'filter',
   ];
 
