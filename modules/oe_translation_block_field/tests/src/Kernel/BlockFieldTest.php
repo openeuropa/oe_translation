@@ -45,7 +45,6 @@ class BlockFieldTest extends TranslationKernelTestBase {
     parent::setUp();
 
     $this->installConfig(['block_field']);
-    $this->installSchema('node', ['node_access']);
 
     $node_type = $this->container->get('entity_type.manager')
       ->getStorage('node_type')
