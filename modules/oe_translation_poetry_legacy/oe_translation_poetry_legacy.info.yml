@@ -1,0 +1,9 @@
+name: OpenEuropa Translation Poetry Legacy
+description: Tracks nodes that have at least one Poetry request.
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^9.2
+dependencies:
+  - oe_translation:oe_translation
+  - oe_translation_poetry:oe_translation_poetry
