@@ -8,6 +8,8 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
  * Tests the Legacy Poetry reference entity.
+ *
+ * @group batch2
  */
 class LegacyPoetryReferenceEntityTest extends TranslationKernelTestBase {
 
@@ -24,14 +26,9 @@ class LegacyPoetryReferenceEntityTest extends TranslationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('poetry_legacy_reference');
 
     // Create a node to reference.
-    $this->container->get('entity_type.manager')->getStorage('node_type')->create([
-      'type' => 'page',
-      'name' => 'Page',
-    ])->save();
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     /** @var \Drupal\node\NodeInterface $node */

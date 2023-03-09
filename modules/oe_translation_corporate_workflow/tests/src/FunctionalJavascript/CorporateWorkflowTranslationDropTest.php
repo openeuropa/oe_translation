@@ -13,6 +13,8 @@ use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
  *
  * When content is validated, there is a checkbox that allows to drop
  * the translations and not carry them over onto the next version.
+ *
+ * @group batch1
  */
 class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
 

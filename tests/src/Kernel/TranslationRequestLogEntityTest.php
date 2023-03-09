@@ -8,6 +8,8 @@ use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 
 /**
  * Tests the 'Translation request log' entity.
+ *
+ * @group batch1
  */
 class TranslationRequestLogEntityTest extends TranslationKernelTestBase {
 

@@ -14,7 +14,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 interface TranslationSourceFieldProcessorInterface {
 
   /**
-   * Extracts the translatatable data structure from the given field.
+   * Extracts the translatable data structure from the given field.
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $field
    *   The field object.

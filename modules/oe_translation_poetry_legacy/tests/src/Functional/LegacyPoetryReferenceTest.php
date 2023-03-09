@@ -9,6 +9,8 @@ use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 
 /**
  * Tests the Legacy Poetry reference entity.
+ *
+ * @group batch1
  */
 class LegacyPoetryReferenceTest extends TranslationTestBase {
 

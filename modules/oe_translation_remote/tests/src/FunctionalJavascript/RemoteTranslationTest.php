@@ -17,6 +17,8 @@ use Drupal\user\Entity\Role;
 
 /**
  * Tests the remote translations.
+ *
+ * @group batch1
  */
 class RemoteTranslationTest extends TranslationTestBase {
 
@@ -55,8 +57,8 @@ class RemoteTranslationTest extends TranslationTestBase {
       $this->importConfigFromFile($name, $storage);
     }
 
-    // Mark the test entity reference field as embeddable for TMGMT to behave
-    // as composite entities.
+    // Mark the test entity reference field as embeddable to behave as
+    // composite entities.
     $this->config('oe_translation.settings')
       ->set('translation_source_embedded_fields', [
         'node' => [

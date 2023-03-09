@@ -14,6 +14,8 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
  *
  * This is needed whenever the site uses content moderation which forces a
  * new revision every time the node is saved.
+ *
+ * @group batch1
  */
 class TranslationsRevisionTest extends KernelTestBase {
 

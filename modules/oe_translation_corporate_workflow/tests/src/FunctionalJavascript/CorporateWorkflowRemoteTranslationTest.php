@@ -23,6 +23,8 @@ use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
  * before the translation comes back, the latter should be saved on the
  * published revision. But not on any future drafts which create new minor
  * versions.
+ *
+ * @group batch1
  */
 class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 

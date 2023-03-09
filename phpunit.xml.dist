@@ -8,6 +8,9 @@
     <env name="SIMPLETEST_DB" value="mysql://${drupal.database.user}:${drupal.database.password}@${drupal.database.host}:${drupal.database.port}/${drupal.database.name}"/>
     <env name="MINK_DRIVER_ARGS_WEBDRIVER" value='["${selenium.browser}", null, "${selenium.host}:${selenium.port}/wd/hub"]'/>
   </php>
+  <extensions>
+    <extension class="Drupal\Tests\oe_translation\EnsurePHPUnitBatchingTestExtension"/>
+  </extensions>
   <testsuites>
     <testsuite name="OpenEuropa Translation Tests">
       <directory>./tests/</directory>

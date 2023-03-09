@@ -11,6 +11,8 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
  * Tests the ePoetry notification callback resolver.
+ *
+ * @group batch1
  */
 class NotificationsResolverTest extends TranslationKernelTestBase {
 

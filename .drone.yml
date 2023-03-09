@@ -85,7 +85,7 @@ pipeline:
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     environment: *web-environment
     commands:
-      - ./vendor/bin/phpunit
+      - ./vendor/bin/phpunit --group $BATCH
 
   debug:
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
@@ -95,9 +95,13 @@ pipeline:
       status: failure
 
 matrix:
-  COMPOSER_BOUNDARY:
-    - lowest
-    - highest
-  PHP_VERSION:
-    - 8.0
-    - 8.1
+  include:
+    - { PHP_VERSION: 8.0, COMPOSER_BOUNDARY: lowest, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.0, COMPOSER_BOUNDARY: lowest, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.1, COMPOSER_BOUNDARY: lowest, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.1, COMPOSER_BOUNDARY: lowest, TYPE: phpunit, BATCH: batch2 }
+
+    - { PHP_VERSION: 8.0, COMPOSER_BOUNDARY: highest, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.0, COMPOSER_BOUNDARY: highest, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.1, COMPOSER_BOUNDARY: highest, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.1, COMPOSER_BOUNDARY: highest, TYPE: phpunit, BATCH: batch2 }

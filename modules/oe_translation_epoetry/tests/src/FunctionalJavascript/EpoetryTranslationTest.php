@@ -24,6 +24,8 @@ use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
  * Tests the remote translations via ePoetry.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
+ * @group batch2
  */
 class EpoetryTranslationTest extends TranslationTestBase {
 
@@ -120,7 +122,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Created the ePoetry provider Remote Translator Provider.');
 
     // Make sure the configuration is saved properly.
-    $this->getSession()->wait(2000);
+    $this->getSession()->wait(4000);
     $storage = \Drupal::entityTypeManager()->getStorage('remote_translation_provider');
     $storage->resetCache();
     $translator = $storage->load('epoetry_provider');

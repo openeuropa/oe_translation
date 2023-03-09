@@ -9,6 +9,8 @@ use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Tests the EntityRevisionWithType field type, widget and formatter.
+ *
+ * @group batch1
  */
 class EntityRevisionWithTypeFieldTest extends TranslationKernelTestBase {
 
@@ -17,11 +19,6 @@ class EntityRevisionWithTypeFieldTest extends TranslationKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-
-    $this->container->get('entity_type.manager')->getStorage('node_type')->create([
-      'type' => 'page',
-      'name' => 'Page',
-    ])->save();
 
     FieldStorageConfig::create([
       'field_name' => 'entity_revision_type_item',
