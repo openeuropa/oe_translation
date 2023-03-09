@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Install file for oe_translation_local.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\user\Entity\Role;
+
+/**
+ * Implements hook_install().
+ */
+function oe_translation_local_install($is_syncing) {
+  // Add the translator role the permission to delete local translation
+  // requests.
+  $role = Role::load('oe_translator');
+  $role->grantPermission('delete local translation request');
+  $role->save();
+}
