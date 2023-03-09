@@ -35,4 +35,25 @@ class TranslationRequestForm extends ContentEntityForm {
     $form_state->setRedirect('entity.oe_translation_request.canonical', ['oe_translation_request' => $entity->id()]);
   }
 
+  /**
+   * Validates that the element is not longer than the max length.
+   *
+   * @param array $element
+   *   The input element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @see TranslationFormTrait::translationFormElement()
+   */
+  public static function validateMaxLength(array $element, FormStateInterface &$form_state): void {
+    if (isset($element['#max_length']) && ($element['#max_length'] < mb_strlen($element['#value']))) {
+      $form_state->setError($element,
+          t('The field has @size characters while the limit is @limit.', [
+            '@size' => mb_strlen($element['#value']),
+            '@limit' => $element['#max_length'],
+          ])
+        );
+    }
+  }
+
 }

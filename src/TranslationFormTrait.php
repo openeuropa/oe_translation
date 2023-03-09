@@ -7,6 +7,7 @@ namespace Drupal\oe_translation;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element;
 use Drupal\filter\Entity\FilterFormat;
+use Drupal\oe_translation\Form\TranslationRequestForm;
 
 /**
  * Helpful methods for dealing with translation forms.
@@ -27,6 +28,7 @@ trait TranslationFormTrait {
    *   The form element.
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   protected function translationFormElement(array $data, array $existing_translation_data, bool $disable) {
     $element = [];
@@ -85,6 +87,13 @@ trait TranslationFormTrait {
         '#allow_focus' => !$disable,
         '#disabled' => $disable,
       ];
+
+      if (!empty($data[$key]['#max_length'])) {
+        $element[$target_key]['translation']['#max_length'] = $data[$key]['#max_length'];
+        $element[$target_key]['translation']['#element_validate'] = [
+          [TranslationRequestForm::class, 'validateMaxLength'],
+        ];
+      }
 
       // Check if the field has a text format and ensure the element uses one
       // too (if the user has access to it).
