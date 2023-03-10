@@ -257,7 +257,6 @@ class RequestFactory extends RequestClientFactory {
     $add_part_request->setDossier($dossier);
     $add_part_request->setRequestDetails($request_details_in);
     $add_part_request->setApplicationName(static::getEpoetryApplicationName());
-    $add_part_request->setTemplateName('WEBTRA');
 
     return $add_part_request;
   }
