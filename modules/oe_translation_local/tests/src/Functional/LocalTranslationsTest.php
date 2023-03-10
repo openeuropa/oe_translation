@@ -227,6 +227,18 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->buttonExists('Save and synchronise');
     $this->assertSession()->buttonExists('Preview');
 
+    // Assert that we have max_length validation.
+    $this->getSession()->getPage()->fillField('title|0|value[translation]', 'ЄС єдиний у своїй солідарності з Україною та продовжуватиме підтримувати Україну та її народ разом зі своїми міжнародними партнерами, зокрема шляхом додаткової політичної, фінансової та гуманітарної підтримки. ЄС єдиний у своїй солідарності з Україною та продовжуватиме підтримувати Україну та її народ разом зі своїми міжнародними партнерами, зокрема шляхом додаткової політичної, фінансової та гуманітарної підтримки.');
+    $this->getSession()->getPage()->pressButton('Save as draft');
+    $this->assertSession()->pageTextContains('The field has 419 characters while the limit is 255.');
+    $this->getSession()->getPage()->fillField('title|0|value[translation]', 'ЄС єдиний у своїй солідарності з Україною та продовжуватиме підтримувати Україну та її народ разом зі своїми міжнародними партнерами, зокрема шляхом додаткової політичної, фінансової та гуманітарної підтримки.');
+    $this->getSession()->getPage()->pressButton('Save as draft');
+    $this->assertSession()->pageTextContains('The translation request has been saved.');
+
+    // Change back the title.
+    $this->clickLink('Edit started translation request');
+    $this->getSession()->getPage()->fillField('title|0|value[translation]', 'Full translation node FR');
+
     // Save the translation as draft.
     $this->getSession()->getPage()->pressButton('Save as draft');
     $this->assertSession()->pageTextContains('The translation request has been saved.');
