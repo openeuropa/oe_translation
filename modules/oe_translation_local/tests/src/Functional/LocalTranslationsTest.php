@@ -367,6 +367,13 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->addressEquals('/es/translation-request/2/preview/es');
     $this->assertSession()->pageTextContains('Full translation node ES');
     $this->assertSession()->pageTextContains('Referenced node ES');
+
+    // Test that we can delete the translation request.
+    $this->getSession()->back();
+    $this->getSession()->getPage()->clickLink('Delete');
+    $this->getSession()->getPage()->pressButton('Delete');
+    $this->assertSession()->pageTextContains('The translation request 2 has been deleted.');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
   }
 
   /**
@@ -624,16 +631,17 @@ class LocalTranslationsTest extends TranslationTestBase {
       $this->assertNotNull($row);
       $operations = $row->findAll('css', 'td .dropbutton li a');
 
-      // We expect one operation: either to create or to edit.
-      // @todo assert the delete operation when the access is granted.
-      $this->assertCount(1, $operations);
-
       // If we expect to have an edit button, assert the extra operation.
       if (in_array($langcode, $with_edit)) {
+        // We expect two operation: either to create or to edit AND to delete.
+        $this->assertCount(2, $operations);
         $this->assertEquals('Edit started translation request', $operations[0]->getText());
+        $this->assertEquals('Delete', $operations[1]->getText());
       }
       else {
         $this->assertEquals('New translation', $operations[0]->getText());
+        // We expect one operation only.
+        $this->assertCount(1, $operations);
       }
     }
   }

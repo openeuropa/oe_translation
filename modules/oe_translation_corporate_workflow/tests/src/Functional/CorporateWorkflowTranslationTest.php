@@ -510,7 +510,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'Yes',
       '2.0.0',
       'published',
-      'Edit started translation request',
+      'Edit started translation requestDelete',
     ];
     $expected[] = [
       'French',
@@ -520,7 +520,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'No',
       '3.0.0',
       'validated',
-      'Edit started translation request',
+      'Edit started translation requestDelete',
     ];
     $table = $this->getSession()->getPage()->find('css', 'table.ongoing-local-translation-requests-table');
     foreach ($expected as $row_key => $cols) {
