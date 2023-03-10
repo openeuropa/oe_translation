@@ -7,6 +7,7 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Template\Attribute;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -57,7 +58,6 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   $header['auto_accept'] = t('Auto-accept translations');
   $header['auto_sync'] = t('Auto sync translations');
   $header['requested_deadline'] = t('Requested deadline');
-  $header['accepted_deadline'] = t('Accepted deadline');
   $row = &$build['meta']['#rows'][0];
 
   $row['epoetry_request_status'] = $entity->getEpoetryRequestStatus();
@@ -69,7 +69,6 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   }
   $row['auto_sync'] = $entity->isAutoSync() ? t('Yes') : t('No');
   $row['requested_deadline'] = $entity->getDeadline()->format('Y-M-d');
-  $row['accepted_deadline'] = $entity->getAcceptedDeadline() ? $entity->getAcceptedDeadline()->format('Y-M-d') : 'N/A';
   $build['comment'] = [
     '#type' => 'fieldset',
     '#title' => t('Message to provider'),
@@ -221,6 +220,48 @@ function oe_translation_epoetry_preprocess_views_view_table(&$variables) {
     if ($warning) {
       $row['attributes']->addClass('color-warning');
     }
+  }
+
+}
+
+/**
+ * Implement template_preprocess_table__remote_language_list().
+ */
+function oe_translation_epoetry_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestEpoetry::load($id);
+  if (!$request) {
+    return;
+  }
+
+  if (!$request instanceof TranslationRequestEpoetryInterface || $request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_FAILED) {
+    return;
+  }
+
+  array_splice($variables['header'], 2, 0, [[
+    'tag' => 'th',
+    'attributes' => new Attribute(),
+    'content' => t('Accepted deadline'),
+  ],
+  ]);
+
+  foreach ($variables['rows'] as &$row) {
+    $langcode = (string) $row['attributes']['hreflang'];
+    $accepted_deadline = $request->getTargetLanguageAcceptedDeadline($langcode);
+    if ($accepted_deadline) {
+      $deadline = $accepted_deadline->format('Y-M-d');
+    }
+    else {
+      $deadline = 'N/A';
+    }
+
+    array_splice($row['cells'], 2, 0, [
+      'accepted_deadline' => [
+        'tag' => 'td',
+        'attributes' => new Attribute(),
+        'content' => $deadline,
+      ],
+    ]);
   }
 
 }

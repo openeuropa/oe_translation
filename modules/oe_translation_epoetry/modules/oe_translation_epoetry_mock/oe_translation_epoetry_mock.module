@@ -13,7 +13,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Implements hook_theme().
@@ -58,7 +57,7 @@ function oe_translation_epoetry_mock_preprocess_table__remote_language_list(arra
   $id = (string) $variables['attributes']['data-translation-request'];
   $request = TranslationRequestEpoetry::load($id);
   if (!$request) {
-    throw new NotFoundHttpException();
+    return;
   }
 
   if ($request->bundle() !== 'epoetry' || $request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_FAILED) {

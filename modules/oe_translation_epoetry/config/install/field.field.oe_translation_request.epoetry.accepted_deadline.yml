@@ -5,7 +5,6 @@ dependencies:
     - field.storage.oe_translation_request.accepted_deadline
     - oe_translation.oe_translation_request_type.epoetry
   module:
-    - datetime
     - tmgmt_content
 third_party_settings:
   tmgmt_content:
@@ -21,4 +20,4 @@ translatable: false
 default_value: {  }
 default_value_callback: ''
 settings: {  }
-field_type: datetime
+field_type: oe_translation_language_with_date

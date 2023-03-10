@@ -30,11 +30,17 @@ trait RemoteTranslationsTestTrait {
       $language = ConfigurableLanguage::load($hreflang);
       $this->assertEquals($language->getName(), $cols[0]->getText());
       $this->assertEquals($expected_info['status'], $cols[1]->getText());
+      $operations_col = 2;
+      if (\Drupal::moduleHandler()->moduleExists('oe_translation_epoetry')) {
+        $this->assertEquals($expected_info['accepted_deadline'], $cols[2]->getText());
+        $operations_col = 3;
+      }
+
       if ($expected_info['review']) {
-        $this->assertTrue($cols[2]->hasLink('Review'), sprintf('The %s language has a Review link', $language->label()));
+        $this->assertTrue($cols[$operations_col]->hasLink('Review'), sprintf('The %s language has a Review link', $language->label()));
       }
       else {
-        $this->assertFalse($cols[2]->hasLink('Review'), sprintf('The %s language does not have a Review link', $language->label()));
+        $this->assertFalse($cols[$operations_col]->hasLink('Review'), sprintf('The %s language does not have a Review link', $language->label()));
       }
     }
   }

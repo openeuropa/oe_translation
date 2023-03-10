@@ -308,7 +308,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
-    $this->assertNull($request->getAcceptedDeadline());
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
@@ -329,7 +328,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2032-Oct-10',
-      'N/A',
       // The mock link tu accept the request.
       'Accept',
     ]);
@@ -355,6 +353,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
         'status' => 'Active',
+        'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
     }
@@ -391,7 +390,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2032-Oct-10',
-      'N/A',
       // The mock link tu cancel the request since it's been Accepted.
       'Cancel',
     ]);
@@ -409,6 +407,17 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ];
     $this->assertLogMessagesTable($expected_logs);
 
+    // Mark the PT languages as ongoing (this will update the accepted
+    // deadline).
+    EpoetryTranslationMockHelper::notifyRequest($request, [
+      'type' => 'ProductStatusChange',
+      'status' => 'Ongoing',
+      'language' => 'pt-pt',
+    ]);
+    $this->getSession()->reload();
+    $expected_languages['pt-pt']['status'] = 'Ongoing';
+    $expected_languages['pt-pt']['accepted_deadline'] = '2050-Apr-04';
+
     // Send the translation.
     EpoetryTranslationMockHelper::translateRequest($request, 'pt-pt');
     $this->getSession()->reload();
@@ -419,15 +428,20 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Assert the extra logs.
     $expected_logs[5] = [
       'Info',
+      'The Portuguese product status has been updated to Ongoing.',
+    ];
+    $expected_logs[6] = [
+      'Info',
       'The Portuguese translation has been delivered.',
     ];
+
     $this->assertLogMessagesTable($expected_logs);
 
     // Sync the translation (first accept it).
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and accept');
     $this->drupalGet($request->toUrl());
-    $expected_logs[6] = [
+    $expected_logs[7] = [
       'Info',
       'The Portuguese translation has been accepted.',
     ];
@@ -439,7 +453,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['pt-pt']['status'] = 'Synchronised';
     $expected_languages['pt-pt']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
-    $expected_logs[7] = [
+    $expected_logs[8] = [
       'Info',
       'The Portuguese translation has been synchronised with the content.',
     ];
@@ -681,7 +695,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Active', $update_request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $update_request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $update_request->getTranslatorProvider()->id());
-    $this->assertNull($update_request->getAcceptedDeadline());
     $this->assertFalse($update_request->isAutoAccept());
     $this->assertFalse($update_request->isAutoSync());
     $this->assertEquals('2034-10-10', $update_request->getDeadline()->format('Y-m-d'));
@@ -704,7 +717,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2034-Oct-10',
-      'N/A',
       // The mock link to Accept.
       'Accept',
     ]);
@@ -716,6 +728,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
         'status' => 'Active',
+        'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
     }
@@ -902,7 +915,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2034-Oct-10',
-      'N/A',
       // The mock link to Accept.
       'Accept',
     ]);
@@ -917,6 +929,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
         'status' => 'Active',
+        'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
     }
@@ -950,7 +963,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Active', $update_request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $update_request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $update_request->getTranslatorProvider()->id());
-    $this->assertNull($update_request->getAcceptedDeadline());
     $this->assertFalse($update_request->isAutoAccept());
     $this->assertFalse($update_request->isAutoSync());
     $this->assertEquals('2034-10-10', $update_request->getDeadline()->format('Y-m-d'));
@@ -1011,7 +1023,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2034-Oct-10',
-      'N/A',
     ]);
 
     // Next, create a new request, accept it from DGT and then make an update
@@ -1210,7 +1221,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2035-Oct-10',
-      'N/A',
       'Cancel',
     ]);
 
@@ -1220,6 +1230,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
         'status' => 'Active',
+        'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
     }
@@ -1253,7 +1264,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2035-Oct-10',
-      'N/A',
       'Cancel',
     ]);
 
@@ -1263,6 +1273,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
         'status' => 'Active',
+        'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
     }
@@ -1282,7 +1293,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals('Accepted', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
-    $this->assertNull($request->getAcceptedDeadline());
     $this->assertNull($request->getMessage());
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
@@ -1515,7 +1525,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2035-Oct-10',
-      'N/A',
       // The mock link to accept the request.
       'Accept',
     ]);
@@ -1595,7 +1604,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
-    $this->assertNull($request->getAcceptedDeadline());
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
@@ -1616,7 +1624,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2032-Oct-10',
-      'N/A',
       // The mock link to accept the request.
       'Accept',
     ]);
@@ -1698,7 +1705,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2032-Oct-10',
-      'N/A',
     ]);
 
     $expected_logs = [
@@ -1765,7 +1771,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Active', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
-    $this->assertNull($request->getAcceptedDeadline());
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
@@ -1786,7 +1791,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'No',
       'No',
       '2032-Oct-10',
-      'N/A',
+
      // The mock link tu accept the request.
       'Accept',
     ]);
@@ -1969,6 +1974,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'langcode' => 'bg',
       // The language has been automatically accepted.
       'status' => 'Accepted',
+      'accepted_deadline' => 'N/A',
       'review' => TRUE,
     ];
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
@@ -2020,6 +2026,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'langcode' => 'fr',
      // The language has been automatically accepted.
       'status' => 'Accepted',
+      'accepted_deadline' => 'N/A',
       'review' => TRUE,
     ];
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
@@ -2068,6 +2075,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['bg'] = [
       'langcode' => 'bg',
       'status' => 'Synchronised',
+      'accepted_deadline' => 'N/A',
       'review' => FALSE,
     ];
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);

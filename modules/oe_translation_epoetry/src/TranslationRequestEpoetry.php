@@ -68,17 +68,37 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
   /**
    * {@inheritdoc}
    */
-  public function getAcceptedDeadline(): ?DrupalDateTime {
-    return $this->get('accepted_deadline')->isEmpty() ? NULL : $this->get('accepted_deadline')->date;
+  public function updateTargetLanguageAcceptedDeadline(string $langcode, \DateTimeInterface $date): TranslationRequestEpoetryInterface {
+    $values = $this->get('accepted_deadline')->getValue();
+    foreach ($values as &$value) {
+      if ($value['langcode'] === $langcode) {
+        $value['date_value'] = $date->format(DateTimeItemInterface::DATE_STORAGE_FORMAT);
+        $this->set('accepted_deadline', $values);
+        return $this;
+      }
+    }
+
+    $values[] = [
+      'langcode' => $langcode,
+      'date_value' => $date->format(DateTimeItemInterface::DATE_STORAGE_FORMAT),
+    ];
+
+    $this->set('accepted_deadline', $values);
+
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setAcceptedDeadline(DrupalDateTime $date): TranslationRequestEpoetryInterface {
-    $this->set('accepted_deadline', $date);
+  public function getTargetLanguageAcceptedDeadline(string $langcode): ?DrupalDateTime {
+    foreach ($this->get('accepted_deadline') as $item) {
+      if ($item->langcode === $langcode) {
+        return $item->date;
+      }
+    }
 
-    return $this;
+    return NULL;
   }
 
   /**

@@ -102,23 +102,30 @@ interface TranslationRequestEpoetryInterface extends TranslationRequestRemoteInt
   public function setDeadline(DrupalDateTime $date): TranslationRequestEpoetryInterface;
 
   /**
-   * Returns the accepted deadline.
+   * Updates the accepted deadline of a given target language.
    *
-   * @return \Drupal\Core\Datetime\DrupalDateTime|null
-   *   The accepted deadline.
+   * If the langcode doesn't exist, it gets set with that status.
+   *
+   * @param string $langcode
+   *   The langcode.
+   * @param \DateTimeInterface $date
+   *   The date.
+   *
+   * @return TranslationRequestEpoetryInterface
+   *   The current entity.
    */
-  public function getAcceptedDeadline(): ?DrupalDateTime;
+  public function updateTargetLanguageAcceptedDeadline(string $langcode, \DateTimeInterface $date): TranslationRequestEpoetryInterface;
 
   /**
-   * Sets the accepted deadline.
+   * Returns the accepted deadline for a given language.
    *
-   * @param \Drupal\Core\Datetime\DrupalDateTime $date
-   *   The accepted deadline.
+   * @param string $langcode
+   *   The langcode.
    *
-   * @return \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface
-   *   The current request.
+   * @return \Drupal\Core\Datetime\DrupalDateTime|null
+   *   The deadline.
    */
-  public function setAcceptedDeadline(DrupalDateTime $date): TranslationRequestEpoetryInterface;
+  public function getTargetLanguageAcceptedDeadline(string $langcode): ?DrupalDateTime;
 
   /**
    * Returns the contacts.
