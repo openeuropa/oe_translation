@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - link_description
+    - node
+id: node.field_link_description
+field_name: field_link_description
+entity_type: node
+type: link_description
+settings:
+  translation_multivalue: false
+module: link_description
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

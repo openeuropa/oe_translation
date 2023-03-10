@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.multivalue_paragraph.field_textfield_paragraph
+    - paragraphs.paragraphs_type.multivalue_paragraph
+id: paragraph.multivalue_paragraph.default
+targetEntityType: paragraph
+bundle: multivalue_paragraph
+mode: default
+content:
+  field_textfield_paragraph:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden: {  }

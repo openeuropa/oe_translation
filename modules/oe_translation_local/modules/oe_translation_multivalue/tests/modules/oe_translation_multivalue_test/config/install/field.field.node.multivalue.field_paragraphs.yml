@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_paragraphs
+    - node.type.multivalue
+    - paragraphs.paragraphs_type.multivalue_paragraph
+  module:
+    - entity_reference_revisions
+id: node.multivalue.field_paragraphs
+field_name: field_paragraphs
+entity_type: node
+bundle: multivalue
+label: Paragraphs
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      multivalue_paragraph: multivalue_paragraph
+    negate: 0
+    target_bundles_drag_drop:
+      multivalue_paragraph:
+        weight: 2
+        enabled: true
+field_type: entity_reference_revisions

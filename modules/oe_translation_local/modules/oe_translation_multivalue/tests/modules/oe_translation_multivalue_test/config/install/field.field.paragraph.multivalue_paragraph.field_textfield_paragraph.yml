@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_textfield_paragraph
+    - paragraphs.paragraphs_type.multivalue_paragraph
+id: paragraph.multivalue_paragraph.field_textfield_paragraph
+field_name: field_textfield_paragraph
+entity_type: paragraph
+bundle: multivalue_paragraph
+label: 'Textfield Paragraph'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

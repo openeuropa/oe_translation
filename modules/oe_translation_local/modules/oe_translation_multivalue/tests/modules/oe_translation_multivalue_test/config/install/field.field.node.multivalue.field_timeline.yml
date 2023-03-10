@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_timeline
+    - node.type.multivalue
+  module:
+    - oe_content_timeline_field
+id: node.multivalue.field_timeline
+field_name: field_timeline
+entity_type: node
+bundle: multivalue
+label: Timeline
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: timeline_field

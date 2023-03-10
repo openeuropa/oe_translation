@@ -1,0 +1,110 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.multivalue.field_address
+    - field.field.node.multivalue.field_description_list
+    - field.field.node.multivalue.field_link
+    - field.field.node.multivalue.field_link_description
+    - field.field.node.multivalue.field_paragraphs
+    - field.field.node.multivalue.field_textfield
+    - field.field.node.multivalue.field_timeline
+    - field.field.node.multivalue.field_typed_link
+    - node.type.multivalue
+  module:
+    - address
+    - description_list_field
+    - entity_reference_revisions
+    - link
+    - link_description
+    - oe_content_timeline_field
+    - typed_link
+    - user
+id: node.multivalue.default
+targetEntityType: node
+bundle: multivalue
+mode: default
+content:
+  field_address:
+    type: address_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_description_list:
+    type: description_list_formatter
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  field_link:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 105
+    region: content
+  field_link_description:
+    type: link_description
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_paragraphs:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 108
+    region: content
+  field_textfield:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_timeline:
+    type: timeline_formatter
+    label: above
+    settings:
+      limit: '0'
+      show_more: 'Show full timeline'
+    third_party_settings: {  }
+    weight: 107
+    region: content
+  field_typed_link:
+    type: typed_link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 106
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true

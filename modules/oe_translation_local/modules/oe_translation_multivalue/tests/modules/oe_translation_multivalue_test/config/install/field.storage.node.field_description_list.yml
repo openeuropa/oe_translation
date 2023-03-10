@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - description_list_field
+    - node
+id: node.field_description_list
+field_name: field_description_list
+entity_type: node
+type: description_list_field
+settings:
+  translation_multivalue: false
+module: description_list_field
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
