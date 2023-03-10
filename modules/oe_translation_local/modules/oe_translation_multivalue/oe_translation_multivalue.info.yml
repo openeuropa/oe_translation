@@ -1,0 +1,8 @@
+name: OpenEuropa Translation Local Multivalue
+description: Provides IDs for the values of multivalue fields to aid in the pre-filling of translation values in the local translation form
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^9.4
+dependencies:
+  - oe_translation:oe_translation_local

@@ -95,9 +95,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     // translation values.
     $data = $translation_request->getData();
     if (!$this->hasAnyTranslations($data)) {
-      $entity = $translation_request->getContentEntity();
-      $existing_translation = $entity->hasTranslation($langcode) ? $entity->getTranslation($langcode) : NULL;
-      $existing_translation_data = $existing_translation ? $this->translationSourceManager->extractData($existing_translation) : [];
+      $existing_translation_data = $this->getExistingTranslationData($translation_request, $langcode);
     }
 
     // Disable the element if the translation request is accepted.
@@ -344,6 +342,14 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     }
 
     return FALSE;
+  }
+
+  protected function getExistingTranslationData(TranslationRequestLocal $translation_request, string $langcode): array {
+    $entity = $translation_request->getContentEntity();
+    $existing_translation = $entity->hasTranslation($langcode) ? $entity->getTranslation($langcode) : NULL;
+    $existing_translation_data = $existing_translation ? $this->translationSourceManager->extractData($existing_translation) : [];
+
+    return $existing_translation_data;
   }
 
 }

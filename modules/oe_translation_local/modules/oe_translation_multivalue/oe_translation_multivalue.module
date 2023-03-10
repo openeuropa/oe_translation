@@ -1,0 +1,159 @@
+<?php
+
+declare(strict_types = 1);
+
+use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\oe_translation_multivalue\AddressTranslationMultivalueSourceFieldProcessor;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\AddressItemMultiple;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\DescriptionListItemMultiple;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\LinkDescriptionItemMultiple;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\LinkItemMultiple;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\StringItemMultiple;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\TimelineItemMultiple;
+use Drupal\oe_translation_multivalue\FieldItemOverrides\TypedLinkItemMultiple;
+use Drupal\oe_translation_multivalue\Form\LocalTranslationRequestForm;
+use Drupal\oe_translation_multivalue\MultivalueTranslationSourceFieldProcessor;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function oe_translation_multivalue_entity_type_alter(array &$entity_types) {
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type_id === 'oe_translation_request') {
+      /** @var \Drupal\Core\Entity\EntityTypeInterface $local_translation */
+      $local_translation = $entity_types[$entity_type_id];
+      $local_translation->setFormClass('local_translation', LocalTranslationRequestForm::class);
+    }
+  }
+}
+
+function oe_translation_multivalue_element_info_alter(array &$info) {
+  if (isset($info['address'])) {
+    $info['address']['#process'][] = 'oe_translation_multivalue_address_process';
+  }
+}
+
+function oe_translation_multivalue_address_process(array &$element, FormStateInterface $form_state, array &$complete_form) {
+  $element['translation_id'] = [
+    '#type' => 'hidden',
+    '#value' => $element['#default_value']['translation_id'],
+  ];
+  return $element;
+}
+
+function oe_translation_multivalue_widgets() {
+  return [
+    'link_default',
+    'ewcms_link_simple',
+    'description_list_widget',
+    'timeline_widget',
+    'address_default',
+    'typed_link',
+    'string_textfield',
+    'link_description',
+  ];
+}
+
+function oe_translation_multivalue_field_widget_complete_form_alter(&$field_widget_complete_form, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+  $widgets = oe_translation_multivalue_widgets();
+  $widget = $context['widget'];
+  if (!in_array($widget->getPluginId(), $widgets)) {
+    return;
+  }
+  $items = $context['items'];
+  // @todo check that the field has the translation_id schema.
+  foreach ($items as $delta => $item) {
+    if ($widget->getPluginId() === 'address_default') {
+      $field_widget_complete_form['widget'][$delta]['address']['#default_value']['translation_id'] = is_numeric($item->translation_id) ? $item->translation_id : rand(1,1000);
+      continue;
+    }
+    $field_widget_complete_form['widget'][$delta]['translation_id'] = [
+      '#type' => 'hidden',
+      '#value' => is_numeric($item->translation_id) ? $item->translation_id : rand(1,1000)
+    ];
+  }
+}
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function oe_translation_multivalue_field_info_alter(&$info) {
+  if (isset($info['link'])) {
+    $info['link']['class'] = LinkItemMultiple::class;
+    $info['link']['oe_translation_source_field_processor'] = MultivalueTranslationSourceFieldProcessor::class;
+  }
+
+  if (isset($info['description_list_field'])) {
+    $info['description_list_field']['class'] = DescriptionListItemMultiple::class;
+    $info['description_list_field']['oe_translation_source_field_processor'] = MultivalueTranslationSourceFieldProcessor::class;
+  }
+
+  if (isset($info['timeline_field'])) {
+    $info['timeline_field']['class'] = TimelineItemMultiple::class;
+    $info['timeline_field']['oe_translation_source_field_processor'] = MultivalueTranslationSourceFieldProcessor::class;
+  }
+
+  if (isset($info['address'])) {
+    $info['address']['class'] = AddressItemMultiple::class;
+    $info['address']['oe_translation_source_field_processor'] = AddressTranslationMultivalueSourceFieldProcessor::class;
+  }
+
+  if (isset($info['typed_link'])) {
+    $info['typed_link']['class'] = TypedLinkItemMultiple::class;
+    $info['typed_link']['oe_translation_source_field_processor'] = MultivalueTranslationSourceFieldProcessor::class;
+  }
+
+  if (isset($info['string'])) {
+    $info['string']['class'] = StringItemMultiple::class;
+    $info['string']['oe_translation_source_field_processor'] = MultivalueTranslationSourceFieldProcessor::class;
+  }
+
+  if (isset($info['link_description'])) {
+    $info['link_description']['class'] = LinkDescriptionItemMultiple::class;
+    $info['link_description']['oe_translation_source_field_processor'] = MultivalueTranslationSourceFieldProcessor::class;
+  }
+}
+
+function oe_translation_multivalue_add_field_property($field_type, $property, $allowed_fields) {
+  $manager = Drupal::entityDefinitionUpdateManager();
+  $field_map = Drupal::service('entity_field.manager')
+    ->getFieldMapByFieldType($field_type);
+
+  foreach ($field_map as $entity_type_id => $fields) {
+
+    foreach (array_keys($fields) as $field_name) {
+      if (!in_array($field_name, $allowed_fields)) {
+        continue;
+      }
+
+      $field_storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions($entity_type_id);
+      $field_storage_definition = $field_storage_definitions[$field_name];
+      $storage = Drupal::entityTypeManager()->getStorage($entity_type_id);
+
+      if ($storage instanceof SqlContentEntityStorage) {
+        $table_mapping = $storage->getTableMapping([
+          $field_name => $field_storage_definition,
+        ]);
+        $table_names = $table_mapping->getDedicatedTableNames();
+        $columns = $table_mapping->getColumnNames($field_name);
+
+        foreach ($table_names as $table_name) {
+          $field_schema = $field_storage_definition->getSchema();
+          if (!isset($field_schema['columns'][$property])) {
+            continue;
+          }
+
+          $schema = Drupal::database()->schema();
+          $field_exists = $schema->fieldExists($table_name, $columns[$property]);
+          $table_exists = $schema->tableExists($table_name);
+
+          if (!$field_exists && $table_exists) {
+            $schema->addField($table_name, $columns[$property], $field_schema['columns'][$property]);
+          }
+        }
+      }
+      $manager->updateFieldStorageDefinition($field_storage_definition);
+    }
+  }
+}
