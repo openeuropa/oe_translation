@@ -52,7 +52,7 @@ class LocalTranslationsTest extends TranslationTestBase {
       $this->importConfigFromFile($name, $storage);
     }
 
-    // Mark the test entity reference field as embeddable for TMGMT to behave
+    // Mark the test entity reference field as embeddable to behave
     // as composite entities.
     $this->config('oe_translation.settings')
       ->set('translation_source_embedded_fields', [

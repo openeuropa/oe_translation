@@ -55,15 +55,6 @@ class BlockFieldTest extends TranslationKernelTestBase {
 
     $node_type->save();
 
-    $node_type = $this->container->get('entity_type.manager')
-      ->getStorage('node_type')
-      ->create([
-        'name' => 'Test node type',
-        'type' => 'test_node_type',
-      ]);
-
-    $node_type->save();
-
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'field_block_field',
       'entity_type' => 'node',

@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation test module file.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Entity\ContentEntityInterface;
+
+/**
+ * Implements hook_oe_translation_source_translatable_fields_alter().
+ */
+function oe_translation_test_oe_translation_source_translatable_fields_alter(ContentEntityInterface $entity, array &$fields) {
+  if (isset($fields['ignored_field'])) {
+    unset($fields['ignored_field']);
+  }
+}

@@ -153,7 +153,6 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
     // request started in the validated version, we must also prevent the
     // creation of a new one. Only updates can be made.
     return $this->createNewRequestAccessForPublished($entity, $access);
-    // @todo Add handling for update requests.
   }
 
   /**

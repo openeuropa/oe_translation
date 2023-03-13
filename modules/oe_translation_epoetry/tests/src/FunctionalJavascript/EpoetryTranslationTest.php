@@ -116,13 +116,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Create a new ePoetry provider.
     $this->getSession()->getPage()->fillField('Name', 'ePoetry provider');
-    $this->getSession()->getPage()->pressButton('Save');
+    $this->getSession()->getPage()->find('css', '.admin-link .link')->press();
+    $this->assertSession()->waitForField('Machine-readable name');
     $this->getSession()->getPage()->fillField('Machine-readable name', 'epoetry_provider');
     $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains('Created the ePoetry provider Remote Translator Provider.');
 
     // Make sure the configuration is saved properly.
-    $this->getSession()->wait(4000);
     $storage = \Drupal::entityTypeManager()->getStorage('remote_translation_provider');
     $storage->resetCache();
     $translator = $storage->load('epoetry_provider');
@@ -1435,7 +1435,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'status' => 'Accepted',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $log = MockLogger::getLogs()[0];
+    $logs = MockLogger::getLogs();
+    // The last two logs should show the missing request: the last one is our
+    // response to ePoetry and the one before last is us logging that we are
+    // missing the request.
+    $log = array_pop($logs);
+    $this->assertEquals(RfcLogLevel::INFO, $log['level']);
+    $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
@@ -1502,13 +1508,22 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'language' => 'fr',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $log = MockLogger::getLogs()[0];
+    $logs = MockLogger::getLogs();
+    // The last two logs should show the missing request: the last one is our
+    // response to ePoetry and the one before last is us logging that we are
+    // missing the request.
+    $log = array_pop($logs);
+    $this->assertEquals(RfcLogLevel::INFO, $log['level']);
+    $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
     MockLogger::clearLogs();
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
-    $log = MockLogger::getLogs()[0];
+    $logs = MockLogger::getLogs();
+    $log = array_pop($logs);
+    $this->assertEquals(RfcLogLevel::INFO, $log['level']);
+    $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);

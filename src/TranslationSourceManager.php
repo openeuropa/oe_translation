@@ -204,11 +204,12 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
       }
     }
 
-    // @todo sort by form display weights.
+    $this->sortData($data, $entity);
+
+    // Add information about the entity type and bundle.
     $data['#entity_type'] = $entity->getEntityTypeId();
     $data['#entity_bundle'] = $entity->bundle();
 
-    // @todo write a test for the event.
     $event = new TranslationSourceEvent($entity, $data, $entity->language()->getId());
     $this->eventDispatcher->dispatch($event, TranslationSourceEvent::EXTRACT);
     return $event->getData();
@@ -225,7 +226,6 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
     // onto which to save the translation.
     $entity = $this->entityRevisionInfo->getEntityRevision($entity, $langcode);
 
-    // @todo write a test for the event.
     $event = new TranslationSourceEvent($entity, $data, $entity->language()->getId());
     $this->eventDispatcher->dispatch($event, TranslationSourceEvent::SAVE);
     $data = $event->getData();
@@ -418,6 +418,54 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
   protected function getFieldProcessor($field_type): TranslationSourceFieldProcessorInterface {
     $definition = $this->fieldTypePluginManager->getDefinition($field_type);
     return $this->classResolver->getInstanceFromDefinition($definition['oe_translation_source_field_processor']);
+  }
+
+  /**
+   * Sorts the extracted data by the weights in the form display.
+   *
+   * @param array $data
+   *   The data.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
+   */
+  protected function sortData(array &$data, ContentEntityInterface $entity): void {
+    $entity_form_display = $this->entityTypeManager->getStorage('entity_form_display')->load($entity->getEntityTypeId() . '.' . $entity->bundle() . '.default');
+    if (!$entity_form_display) {
+      return;
+    }
+    uksort($data, function ($a, $b) use ($entity_form_display) {
+      $a_weight = NULL;
+      $b_weight = NULL;
+      // Get the weights.
+      if ($entity_form_display->getComponent($a) && (isset($entity_form_display->getComponent($a)['weight']) && !is_null($entity_form_display->getComponent($a)['weight']))) {
+        $a_weight = (int) $entity_form_display->getComponent($a)['weight'];
+      }
+      if ($entity_form_display->getComponent($b) && (isset($entity_form_display->getComponent($b)['weight']) && !is_null($entity_form_display->getComponent($b)['weight']))) {
+        $b_weight = (int) $entity_form_display->getComponent($b)['weight'];
+      }
+
+      // If neither field has a weight, sort alphabetically.
+      if ($a_weight === NULL && $b_weight === NULL) {
+        return ($a > $b) ? 1 : -1;
+      }
+      // If one of them has no weight, the other comes first.
+      elseif ($a_weight === NULL) {
+        return 1;
+      }
+      elseif ($b_weight === NULL) {
+        return -1;
+      }
+      // If both have a weight, sort by weight.
+      elseif ($a_weight == $b_weight) {
+        return 0;
+      }
+      else {
+        return ($a_weight > $b_weight) ? 1 : -1;
+      }
+    });
   }
 
 }

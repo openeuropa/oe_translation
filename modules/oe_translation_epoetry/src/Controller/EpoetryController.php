@@ -8,6 +8,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
 use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
@@ -23,6 +24,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Controller for ePoetry routes.
@@ -37,10 +39,33 @@ class EpoetryController extends ControllerBase {
   protected $newVersionRequestHandler;
 
   /**
-   * Constructs a EpoetryController.
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler) {
+  protected $eventDispatcher;
+
+  /**
+   * The logger channel factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $loggerChannelFactory;
+
+  /**
+   * Constructs a EpoetryController.
+   *
+   * @param \Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler
+   *   The new version request handler.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory.
+   */
+  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->newVersionRequestHandler = $newVersionRequestHandler;
+    $this->eventDispatcher = $eventDispatcher;
+    $this->loggerChannelFactory = $loggerChannelFactory;
   }
 
   /**
@@ -48,7 +73,9 @@ class EpoetryController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('oe_translation_epoetry.new_version_request_handler')
+      $container->get('oe_translation_epoetry.new_version_request_handler'),
+      $container->get('event_dispatcher'),
+      $container->get('logger.factory')
     );
   }
 
@@ -68,7 +95,7 @@ class EpoetryController extends ControllerBase {
    */
   public function notifications(Request $request): Response {
     $callback = NotificationEndpointResolver::resolve();
-    $server_factory = new NotificationServerFactory($callback, \Drupal::service('event_dispatcher'), \Drupal::logger('epoetry'), new Serializer());
+    $server_factory = new NotificationServerFactory($callback, $this->eventDispatcher, $this->loggerChannelFactory->get('oe_translation_epoetry'), new Serializer());
     $psr_factory = new Psr17Factory();
     $psr_http_factory = new PsrHttpFactory($psr_factory, $psr_factory, $psr_factory, $psr_factory);
     $psr_request = $psr_http_factory->createRequest($request);
