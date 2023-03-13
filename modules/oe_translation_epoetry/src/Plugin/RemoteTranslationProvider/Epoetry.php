@@ -14,6 +14,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation_epoetry\Event\EpoetryRequestEvent;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItemInterface;
 use Drupal\oe_translation_epoetry\RequestFactory;
@@ -432,6 +433,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       // the dossier.
       if ($this->newPartNeeded($request, $form, $form_state) && !$this->dossierResetNeeded()) {
         $object = $this->requestFactory->addNewPartToDossierRequest($request);
+        $event = new EpoetryRequestEvent($object, $request);
+        $this->eventDispatcher->dispatch($event, EpoetryRequestEvent::NAME);
         $response = $this->requestFactory->getRequestClient()->addNewPartToDossier($object);
         // If we made an addPartToDossier request, we need to increment the
         // part in the dossier stored in our State system.
@@ -444,6 +447,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       }
       else {
         $object = $this->requestFactory->createLinguisticRequest($request);
+        $event = new EpoetryRequestEvent($object, $request);
+        $this->eventDispatcher->dispatch($event, EpoetryRequestEvent::NAME);
         $response = $this->requestFactory->getRequestClient()->createLinguisticRequest($object);
         // If we made a new CreateLinguisticRequest, it means we started a new
         // dossier so keep the generated number in the state. Together, we will
@@ -467,12 +472,16 @@ class Epoetry extends RemoteTranslationProviderBase {
       // resubmitRequest instead of createNewVersion.
       if ($last_request->getEpoetryRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED) {
         $object = $this->requestFactory->createNewVersionRequest($request, $last_request);
+        $event = new EpoetryRequestEvent($object, $request);
+        $this->eventDispatcher->dispatch($event, EpoetryRequestEvent::NAME);
         $response = $this->requestFactory->getRequestClient()->createNewVersion($object);
         $request->log('The request has been sent successfully using the <strong>createNewVersionRequest</strong> request type.');
         $this->logInformativeMessages($response, $request);
       }
       else {
         $object = $this->requestFactory->resubmitRequest($request, $last_request);
+        $event = new EpoetryRequestEvent($object, $request);
+        $this->eventDispatcher->dispatch($event, EpoetryRequestEvent::NAME);
         $response = $this->requestFactory->getRequestClient()->resubmitRequest($object);
         $request->log('The request has been sent successfully using the <strong>resubmitRequest</strong> request type.');
         $this->logInformativeMessages($response, $request);
