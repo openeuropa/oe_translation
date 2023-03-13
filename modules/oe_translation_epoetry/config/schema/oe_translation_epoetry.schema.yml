@@ -38,3 +38,11 @@ oe_translation_remote.remote_translation_provider.plugin.epoetry:
 views.filter.oe_translation_epoetry_request_id_filter:
   type: views.filter.string
   label: Request ID filter
+
+field.storage_settings.oe_translation_language_with_date:
+  type: mapping
+  label: 'Datetime settings'
+  mapping:
+    datetime_type:
+      type: string
+      label: 'Date type'

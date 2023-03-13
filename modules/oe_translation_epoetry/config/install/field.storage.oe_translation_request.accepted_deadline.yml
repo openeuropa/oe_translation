@@ -2,17 +2,16 @@ langcode: en
 status: true
 dependencies:
   module:
-    - datetime
     - oe_translation
 id: oe_translation_request.accepted_deadline
 field_name: accepted_deadline
 entity_type: oe_translation_request
-type: datetime
+type: oe_translation_language_with_date
 settings:
   datetime_type: date
-module: datetime
+module: oe_translation_epoetry
 locked: false
-cardinality: 1
+cardinality: -1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

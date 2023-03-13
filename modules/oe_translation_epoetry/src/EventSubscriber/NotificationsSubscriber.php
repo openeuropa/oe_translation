@@ -13,8 +13,9 @@ use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use OpenEuropa\EPoetry\Notification\Event\Product\BaseEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\DeliveryEvent;
+use OpenEuropa\EPoetry\Notification\Event\Product\ProductEventInterface;
+use OpenEuropa\EPoetry\Notification\Event\Product\ProductEventWithDeadlineInterface;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeAcceptedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeCancelledEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeClosedEvent;
@@ -201,12 +202,12 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   /**
    * Helper method that updates the product status.
    *
-   * @param \OpenEuropa\EPoetry\Notification\Event\Product\BaseEvent $event
+   * @param \OpenEuropa\EPoetry\Notification\Event\Product\ProductEventInterface $event
    *   The event.
    * @param string $status
    *   The status.
    */
-  protected function onProductStatusChange(BaseEvent $event, string $status): void {
+  protected function onProductStatusChange(ProductEventInterface $event, string $status): void {
     $product = $event->getProduct();
     $translation_request = $this->getTranslationRequest($product->getProductReference()->getRequestReference());
     if (!$translation_request) {
@@ -225,6 +226,10 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       '@language' => $language->getName(),
       '@status' => $status,
     ]);
+
+    if ($event instanceof ProductEventWithDeadlineInterface && $event->getAcceptedDeadline() instanceof \DateTimeInterface) {
+      $translation_request->updateTargetLanguageAcceptedDeadline($langcode, $event->getAcceptedDeadline());
+    }
     $translation_request->save();
     $event->setSuccessResponse('The language status has been updated successfully.');
   }
