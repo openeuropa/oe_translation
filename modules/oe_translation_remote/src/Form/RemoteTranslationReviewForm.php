@@ -166,11 +166,13 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
   public function accept(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $translation_request */
     $translation_request = $this->entity;
+    $entity = $translation_request->getContentEntity();
     $language = $form_state->get('language');
     $translation_request->updateTargetLanguageStatus($language->id(), TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED);
     $translation_request->log('The <strong>@language</strong> translation has been accepted.', ['@language' => $language->getName()]);
     $translation_request->save();
     $this->messenger->addStatus($this->t('The translation in @language has been accepted.', ['@language' => $language->label()]));
+    $form_state->setRedirect('entity.' . $entity->getEntityTypeId() . '.remote_translation', [$entity->getEntityTypeId() => $entity->id()]);
   }
 
   /**

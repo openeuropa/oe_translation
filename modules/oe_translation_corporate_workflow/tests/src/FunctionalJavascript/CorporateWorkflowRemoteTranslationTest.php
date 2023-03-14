@@ -166,7 +166,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'Remote one',
       '1.0.0',
       'validated',
@@ -183,7 +183,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $expected_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'Active',
+      'status' => 'Requested',
       'title' => 'My node',
       // The URL is of the validated revision from hence it came.
       'title_url' => $validated->toUrl('revision')->toString(),
@@ -195,7 +195,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertOngoingTranslations([$expected_ongoing]);
     $this->clickLink('Remote translations');
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'Remote one',
       '1.0.0',
       'validated',
@@ -339,7 +339,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // We now have 2 request for this node.
     $this->assertCount(2, $requests);
     $request = array_pop($requests);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals($published_revision_id, $request->getContentEntity()->getRevisionId());
 
     $this->getSession()->reload();
@@ -356,7 +356,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
       'state' => 'published',
     ];
     $second_ongoing = $first_ongoing;
-    $second_ongoing['status'] = 'Active';
+    $second_ongoing['status'] = 'Requested';
     $this->assertOngoingTranslations([$first_ongoing, $second_ongoing]);
 
     // Validate the draft and assert we still cannot request a new translation
@@ -392,14 +392,14 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertCount(3, $requests);
     // Get the active request and assert the new validated revision was used.
     $request = array_pop($requests);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $validated_revision_id = $node_storage->getLatestRevisionId($node->id());
     $validated = $node_storage->loadRevision($validated_revision_id);
     $this->assertEquals($validated_revision_id, $request->getContentEntity()->getRevisionId());
     $second_ongoing['status'] = 'Translated';
     $third_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'Active',
+      'status' => 'Requested',
       'title' => 'My node 2',
       'title_url' => $validated->toUrl('revision')->toString(),
       'revision' => $validated_revision_id,

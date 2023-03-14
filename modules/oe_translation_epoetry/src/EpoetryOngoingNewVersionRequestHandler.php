@@ -49,7 +49,7 @@ class EpoetryOngoingNewVersionRequestHandler implements EpoetryOngoingNewVersion
     }
 
     // The request needs to still be active.
-    if ($request->getRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE) {
+    if ($request->getRequestStatus() !== TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED) {
       return FALSE;
     }
 

@@ -303,9 +303,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $request);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Active'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('pt-pt', 'Active'), $target_languages['pt-pt']);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('pt-pt', 'Requested'), $target_languages['pt-pt']);
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
     $this->assertFalse($request->isAutoAccept());
@@ -321,7 +321,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'SenttoDGT',
       'DIGIT/' . date('Y') . '/1001/0/0/TRA',
@@ -352,7 +352,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     foreach (['bg', 'pt-pt'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'Active',
+        'status' => 'Requested [in ePoetry]',
         'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
@@ -383,7 +383,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     $this->getSession()->reload();
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'Accepted',
       'DIGIT/' . date('Y') . '/1001/0/0/TRA',
@@ -393,7 +393,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       // The mock link tu cancel the request since it's been Accepted.
       'Cancel',
     ]);
-    $expected_languages['pt-pt']['status'] = 'Accepted';
+    $expected_languages['pt-pt']['status'] = 'Accepted [in ePoetry]';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
     // Assert the extra logs.
@@ -690,9 +690,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $update_request);
     $this->assertEquals('en', $update_request->getSourceLanguageCode());
     $target_languages = $update_request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('de', 'Active'), $target_languages['de']);
-    $this->assertEquals(new LanguageWithStatus('it', 'Active'), $target_languages['it']);
-    $this->assertEquals('Active', $update_request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('de', 'Requested'), $target_languages['de']);
+    $this->assertEquals(new LanguageWithStatus('it', 'Requested'), $target_languages['it']);
+    $this->assertEquals('Requested', $update_request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $update_request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $update_request->getTranslatorProvider()->id());
     $this->assertFalse($update_request->isAutoAccept());
@@ -709,7 +709,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'SenttoDGT',
       // The version got updated, not the number.
@@ -727,7 +727,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     foreach (['de', 'it'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'Active',
+        'status' => 'Requested [in ePoetry]',
         'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
@@ -847,7 +847,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
         $this->assertSession()->linkNotExistsExact('Update');
 
         // Set back the active status for the next iteration.
-        $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE);
+        $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED);
       }
       else {
         $this->assertSession()->pageTextNotContains('Request an update');
@@ -907,7 +907,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // We see still only one request, the new one, as the previous one was
     // marked as finished.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'SenttoDGT',
       // The version got updated, not the number.
@@ -928,7 +928,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     foreach (['bg', 'de', 'it'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'Active',
+        'status' => 'Requested [in ePoetry]',
         'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
@@ -957,10 +957,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $update_request);
     $this->assertEquals('en', $update_request->getSourceLanguageCode());
     $target_languages = $update_request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Active'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('de', 'Active'), $target_languages['de']);
-    $this->assertEquals(new LanguageWithStatus('it', 'Active'), $target_languages['it']);
-    $this->assertEquals('Active', $update_request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('de', 'Requested'), $target_languages['de']);
+    $this->assertEquals(new LanguageWithStatus('it', 'Requested'), $target_languages['it']);
+    $this->assertEquals('Requested', $update_request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $update_request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $update_request->getTranslatorProvider()->id());
     $this->assertFalse($update_request->isAutoAccept());
@@ -1051,8 +1051,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'is_default' => 'Yes',
     ];
     $expected_ongoing_two = $expected_ongoing_one;
-    // They are both for the same revision, except the second one is Active.
-    $expected_ongoing_two['status'] = 'Active';
+    // They are both for the same revision, except the second one is Requested.
+    $expected_ongoing_two['status'] = 'Requested';
     $this->assertOngoingTranslations([
       $expected_ongoing_one,
       $expected_ongoing_two,
@@ -1062,7 +1062,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE, [TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED]);
     $this->assertCount(1, $requests);
     $request = reset($requests);
-    $this->getSession()->getPage()->find('xpath', "//tr[td//text()[contains(., 'Active')]]")->clickLink('View');
+    $this->getSession()->getPage()->find('xpath', "//tr[td//text()[contains(., 'Requested')]]")->clickLink('View');
     $this->assertSession()->linkNotExistsExact('Update');
     // Accept the request.
     EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
@@ -1188,7 +1188,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
         $this->assertSession()->linkNotExistsExact('Add new languages');
 
         // Set back the active status for the next iteration.
-        $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE);
+        $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED);
       }
       else {
         $this->assertSession()->pageTextNotContains('Add new languages');
@@ -1214,7 +1214,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert our Accepted request status.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'Accepted',
       'DIGIT/' . date('Y') . '/2000/0/0/TRA',
@@ -1229,7 +1229,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     foreach (['fr'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'Active',
+        'status' => 'Requested [in ePoetry]',
         'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
@@ -1257,7 +1257,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
     // Our request should stay unchanged, apart from the new language addition.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'Accepted',
       'DIGIT/' . date('Y') . '/2000/0/0/TRA',
@@ -1272,7 +1272,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     foreach (['fr', 'de'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'Active',
+        'status' => 'Requested [in ePoetry]',
         'accepted_deadline' => 'N/A',
         'review' => FALSE,
       ];
@@ -1287,10 +1287,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $request);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
-    $this->assertEquals(new LanguageWithStatus('de', 'Active'), $target_languages['de']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Requested'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('de', 'Requested'), $target_languages['de']);
     $this->assertCount(2, $target_languages);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals('Accepted', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
     $this->assertNull($request->getMessage());
@@ -1327,6 +1327,42 @@ class EpoetryTranslationTest extends TranslationTestBase {
   }
 
   /**
+   * Tests the failure of the modifyLinguisticRequest.
+   *
+   * It asserts that if the request fails, the translation request entity
+   * doesn't get updated with any other languages.
+   */
+  public function testFailedModifyLinguisticRequest(): void {
+    // Create a node with an ongoing, accepted request.
+    $node = $this->createBasicTestNode();
+    $request = $this->createNodeTranslationRequest($node);
+    $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
+    $request->save();
+
+    // Tell the mock to fail this request.
+    \Drupal::state()->set('oe_translation_epoetry_mock_response_error', [
+      'code' => 'ns0:Server',
+      'string' => 'There was an error in your request.',
+    ]);
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+
+    $this->assertSession()->linkExistsExact('Add new languages');
+    $this->clickLink('Add new languages');
+    // Add German as an extra language.
+    $this->getSession()->getPage()->checkField('German');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('There was a problem sending the request to ePoetry.');
+
+    // Assert that the request still only has a single language (the original
+    // one).
+    $request = TranslationRequestEpoetry::load($request->id());
+    $this->assertCount(1, $request->getTargetLanguages());
+    $this->assertEquals('fr', $request->getTargetLanguage('fr')->getLangcode());
+  }
+
+  /**
    * Tests the request notifications subscriber.
    */
   public function testRequestNotifications(): void {
@@ -1335,15 +1371,15 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = $this->createBasicTestNode();
     $request = $this->createNodeTranslationRequest($node);
     $request->save();
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
 
     $statuses = [
-      'Accepted' => 'Active',
+      'Accepted' => 'Requested',
       'Rejected' => 'Finished',
       'Cancelled' => 'Finished',
-      'Executed' => 'Finished',
-      'Suspended' => 'Active',
+      'Executed' => 'Requested',
+      'Suspended' => 'Requested',
     ];
 
     // Keep track of all the log messages because we are sending notifications
@@ -1381,7 +1417,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $this->assertLogMessagesValues($request, $expected_logs);
 
       // Reset the statuses for the next iteration.
-      $request->setRequestStatus('Active');
+      $request->setRequestStatus('Requested');
       $request->setEpoetryRequestStatus('SenttoDGT');
       $request->save();
       $i++;
@@ -1410,7 +1446,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = $this->createBasicTestNode();
     $request = $this->createNodeTranslationRequest($node);
     $request->save();
-    $this->assertEquals('Active', $request->getTargetLanguage('fr')->getStatus());
+    $this->assertEquals('Requested', $request->getTargetLanguage('fr')->getStatus());
 
     $statuses = [
       'Requested',
@@ -1439,19 +1475,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
       $storage->resetCache();
       $request = $storage->load($request->id());
-      if ($status === 'Requested') {
-        // For this status, we don't change our own as it doesn't make a
-        // difference.
-        $status = 'Active';
-      }
       $this->assertEquals($status, $request->getTargetLanguage('fr')->getStatus());
 
-      if ($status !== 'Requested') {
-        // We don't do anything for this status so we don't log anything.
-        continue;
-      }
-
-      $log_type = in_array($status, ['Accepted', 'Executed']) ? 'Warning' : 'Info';
+      $log_type = in_array($status, ['Cancelled', 'Suspended']) ? 'Warning' : 'Info';
       $log_message = sprintf('The French product status has been updated to %s.', $status);
 
       $expected_logs[$i] = [
@@ -1495,7 +1521,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $request = $this->createNodeTranslationRequest($node, TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, [
       [
         'langcode' => 'fr',
-        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
       ],
     ]);
     $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED);
@@ -1504,10 +1530,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Now create a new request for this node that is active. Note that because
     // the previous request was rejected, the request ID can stay identical
     // as this would be technically a resubmit request.
-    $request = $this->createNodeTranslationRequest($node, TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE, [
+    $request = $this->createNodeTranslationRequest($node, TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, [
       [
         'langcode' => 'fr',
-        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
       ],
     ]);
     $request->save();
@@ -1518,7 +1544,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'SenttoDGT',
       'DIGIT/' . date('Y') . '/2000/0/0/TRA',
@@ -1600,8 +1626,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $request);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('fr', 'Requested'), $target_languages['fr']);
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
     $this->assertFalse($request->isAutoAccept());
@@ -1616,7 +1642,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'SenttoDGT',
       // The ID is the same as the previous was rejected.
@@ -1767,8 +1793,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $request);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Active'), $target_languages['bg']);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
     $this->assertFalse($request->isAutoAccept());
@@ -1784,7 +1810,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'ePoetry',
       'SenttoDGT',
       'DIGIT/' . date('Y') . '/2000/1/0/TRA',
@@ -2107,6 +2133,18 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     $this->assertSession()->fieldNotExists('Bulgarian');
     $this->assertSession()->fieldExists('French');
+
+    // Create an accepted request in FR for this node and try to add a new
+    // language to assert we have the event subscriber firing there as well.
+    $request = $this->createNodeTranslationRequest($node);
+    $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
+    $request->save();
+
+    $this->getSession()->reload();
+    $this->clickLink('Add new languages');
+    $this->assertSession()->fieldDisabled('French');
+    $this->assertSession()->checkboxChecked('French');
+    $this->assertSession()->fieldNotExists('Bulgarian');
   }
 
   /**
@@ -2129,7 +2167,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $request = $this->createNodeTranslationRequest($first_node, TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, [
       [
         'langcode' => 'fr',
-        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
       ],
     ]);
     $request->setRequestId($request_id);
@@ -2140,7 +2178,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $second_node = $this->createBasicTestNode();
     $second_node->set('title', 'Second node');
     $second_node->save();
-    $request = $this->createNodeTranslationRequest($second_node, TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACTIVE, [
+    $request = $this->createNodeTranslationRequest($second_node, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, [
       [
         'langcode' => 'fr',
         'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
@@ -2161,7 +2199,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $request = $this->createNodeTranslationRequest($third_node, TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED, [
       [
         'langcode' => 'fr',
-        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
       ],
     ]);
     $request_id['part'] = 2;

@@ -234,7 +234,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
         $this->assertSession()->linkNotExistsExact('Update');
 
         // Set back the active status for the next iteration.
-        $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE);
+        $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED);
       }
       else {
         $this->assertSession()->pageTextNotContains('Request an update');

@@ -45,7 +45,7 @@ class TranslationRequestOperationsProviderSubscriber implements EventSubscriberI
       $existing = $links['#links'];
       $links['#links'] = [];
       $links['#links']['edit'] = [
-        'title' => t('Edit started translation request'),
+        'title' => t('Edit @status translation', ['@status' => strtolower($request->getTargetLanguageWithStatus()->getStatus())]),
         'url' => $edit,
       ];
       $links['#links'] += $existing;

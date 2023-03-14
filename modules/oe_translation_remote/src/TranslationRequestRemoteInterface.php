@@ -20,7 +20,7 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
    * translator type may have their own specific statuses that can come
    * between these.
    */
-  const STATUS_LANGUAGE_ACTIVE = 'Active';
+  const STATUS_LANGUAGE_REQUESTED = 'Requested';
   const STATUS_LANGUAGE_REVIEW = 'Review';
   const STATUS_LANGUAGE_ACCEPTED = 'Accepted';
   const STATUS_LANGUAGE_SYNCHRONISED = 'Synchronised';
@@ -39,7 +39,7 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
    * FAILED_FINISHED: the request failed upon initial send and was marked as
    * finished.
    */
-  const STATUS_REQUEST_ACTIVE = 'Active';
+  const STATUS_REQUEST_REQUESTED = 'Requested';
   const STATUS_REQUEST_TRANSLATED = 'Translated';
   const STATUS_REQUEST_FINISHED = 'Finished';
   const STATUS_REQUEST_FAILED = 'Failed';

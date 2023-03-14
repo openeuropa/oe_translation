@@ -38,7 +38,7 @@ function oe_translation_remote_test_preprocess_table__remote_language_list(array
   foreach ($variables['rows'] as &$row) {
     $langcode = (string) $row['attributes']['hreflang'];
     $language = $request->getTargetLanguage($langcode);
-    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE) {
+    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED) {
       continue;
     }
 

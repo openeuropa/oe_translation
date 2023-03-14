@@ -53,7 +53,7 @@ class RemoteOne extends RemoteTranslationProviderBase {
       'bundle' => 'test_remote',
       'source_language_code' => $entity->language()->getId(),
       'target_languages' => $languages,
-      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE,
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
       'translator_provider' => $form_state->get('translator_id'),
     ]);
 

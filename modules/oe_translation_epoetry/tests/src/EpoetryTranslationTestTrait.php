@@ -27,10 +27,10 @@ trait EpoetryTranslationTestTrait {
    * @return \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface
    *   The resulting request.
    */
-  protected function createNodeTranslationRequest(NodeInterface $node, string $status = TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE, array $languages = []): TranslationRequestEpoetryInterface {
+  protected function createNodeTranslationRequest(NodeInterface $node, string $status = TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED, array $languages = []): TranslationRequestEpoetryInterface {
     if (!$languages) {
       $languages[] = [
-        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ACTIVE,
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
         'langcode' => 'fr',
       ];
     }
@@ -68,7 +68,7 @@ trait EpoetryTranslationTestTrait {
     );
 
     // Set expected ePoetry statuses based on the request status.
-    if ($status == TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE) {
+    if ($status == TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED) {
       $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_SENT);
     }
     if (in_array($status, [
