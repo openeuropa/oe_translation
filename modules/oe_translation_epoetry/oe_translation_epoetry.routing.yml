@@ -28,6 +28,7 @@ oe_translation_epoetry.notifications_endpoint:
   path: '/translation-request/epoetry/notifications'
   defaults:
     _controller: Drupal\oe_translation_epoetry\Controller\EpoetryController::notifications
+    _disable_route_normalizer: 'TRUE'
   requirements:
     _permission: 'access content'
 
