@@ -248,6 +248,14 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
 
       $field = $translation->get($field_name);
       $field_processor = $this->getFieldProcessor($field->getFieldDefinition()->getType());
+      if (!$field_data) {
+        // If there is no field data for this field, it means the data was
+        // removed in the source and the new translation request no longer
+        // includes it. In this case we need to remove the value also from the
+        // translation or the user will not be able to ever remove it.
+        $field->setValue([]);
+        continue;
+      }
       $field_processor->setTranslations($field_data, $field);
     }
 
