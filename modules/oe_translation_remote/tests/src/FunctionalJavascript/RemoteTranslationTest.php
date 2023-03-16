@@ -338,27 +338,27 @@ class RemoteTranslationTest extends TranslationTestBase {
       'value' => 'Referenced node',
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / Delta #0 / Inner Paragraphs / Delta #0 / Inner paragraph field']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner paragraph field']",
       'value' => 'child field value 1',
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / Delta #0 / Inner Paragraphs / Delta #0 / Inner Paragraphs / Delta #0 / Inner paragraph field']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner paragraph field']",
       'value' => 'grandchild field value 1',
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / Delta #0 / Inner Paragraphs / Delta #0 / Inner Paragraphs / Delta #1 / Inner paragraph field']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner Paragraphs / (1) / Demo inner paragraph type / Inner paragraph field']",
       'value' => 'grandchild field value 2',
     ];
     $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / Delta #0 / Inner Paragraphs / Delta #1 / Inner paragraph field']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (1) / Demo inner paragraph type / Inner paragraph field']",
       'value' => 'child field value 2',
     ];
     $fields['ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / Delta #0 / Top level paragraph field']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Top level paragraph field']",
       'value' => 'top field value 1',
     ];
     $fields['ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / Delta #1 / Top level paragraph field']",
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (1) / Demo paragraph type / Top level paragraph field']",
       'value' => 'top field value 2',
     ];
 

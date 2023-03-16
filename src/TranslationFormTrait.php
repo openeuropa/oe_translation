@@ -119,4 +119,46 @@ trait TranslationFormTrait {
     return $element;
   }
 
+  /**
+   * Generates the embedded paragraph names.
+   *
+   * When we are dealing with paragraphs, we want to include the name of the
+   * paragraph type in the label of the field.
+   *
+   * @param array $data
+   *   The data.
+   *
+   * @return array
+   *   The data.
+   */
+  protected function generateParagraphFieldName(array $data): array {
+    foreach (Element::children($data) as $child_key) {
+      $child = &$data[$child_key];
+      if (!isset($child['entity'])) {
+        continue;
+      }
+
+      $entity_type = $child['entity']['#entity_type'];
+      if ($entity_type !== 'paragraph') {
+        continue;
+      }
+
+      $bundle = $child['entity']['#entity_bundle'];
+      $bundle_type = $this->entityTypeManager->getDefinition($entity_type)->getBundleEntityType();
+      $label = $this->entityTypeManager->getStorage($bundle_type)->load($bundle)->label();
+      // If we have a label already, it means we have more than 1 cardinality
+      // and the label is like so: Delta #0. In this case, we make the label
+      // like so: (0) Paragraph type. If we don't have a #label, it means it's
+      // single cardinality, in which case we just use the paragraph type label.
+      $child['#label'] = isset($child['#label']) ? ' (' . $child_key . ') / ' . $label : $label;
+
+      foreach (Element::children($child['entity']) as $sub_child_key) {
+        $sub_child = &$child['entity'][$sub_child_key];
+        $sub_child = $this->generateParagraphFieldName($sub_child);
+      }
+    }
+
+    return $data;
+  }
+
 }

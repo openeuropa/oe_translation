@@ -106,6 +106,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     // Need to keep the first hierarchy. So the flattening must take place
     // inside the foreach loop.
     foreach (Element::children($data) as $key) {
+      $data[$key] = $this->generateParagraphFieldName($data[$key]);
       $data_flattened = TranslationSourceHelper::flatten($data[$key], $key);
       $existing_translation_data_flattened = $existing_translation_data ? TranslationSourceHelper::flatten($existing_translation_data[$key], $key) : [];
       $form['translation'][$key] = $this->translationFormElement($data_flattened, $existing_translation_data_flattened, $disable);
