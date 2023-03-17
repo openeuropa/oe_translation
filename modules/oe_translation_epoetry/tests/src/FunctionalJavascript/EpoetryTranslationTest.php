@@ -39,6 +39,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     'paragraphs',
     'entity_reference_revisions',
     'menu_link_content',
+    'views',
     'oe_translation',
     'oe_translation_test',
     'oe_translation_remote',
@@ -119,6 +120,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Created the ePoetry provider Remote Translator Provider.');
 
     // Make sure the configuration is saved properly.
+    $this->getSession()->wait(2000);
     $storage = \Drupal::entityTypeManager()->getStorage('remote_translation_provider');
     $storage->resetCache();
     $translator = $storage->load('epoetry_provider');

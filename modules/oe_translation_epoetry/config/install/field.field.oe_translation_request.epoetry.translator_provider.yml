@@ -4,11 +4,7 @@ dependencies:
   config:
     - field.storage.oe_translation_request.translator_provider
     - oe_translation.oe_translation_request_type.epoetry
-  module:
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: oe_translation_request.epoetry.translator_provider
 field_name: translator_provider
 entity_type: oe_translation_request

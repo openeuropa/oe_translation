@@ -5,26 +5,23 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation_block_field\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\tmgmt_content\Kernel\ContentEntityTestBase;
+use Drupal\node\Entity\Node;
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
  * Tests for the block title translation.
  */
-class BlockFieldTest extends ContentEntityTestBase {
+class BlockFieldTest extends TranslationKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'block_field',
     'oe_translation_block_field',
-    'oe_translation',
   ];
 
   /**
@@ -33,11 +30,11 @@ class BlockFieldTest extends ContentEntityTestBase {
   protected $defaultTheme = 'classy';
 
   /**
-   * The test entity.
+   * The test node.
    *
    * @var \Drupal\Core\Entity\EntityInterface
    */
-  protected $entityTest;
+  protected $testNode;
 
   /**
    * {@inheritdoc}
@@ -46,10 +43,20 @@ class BlockFieldTest extends ContentEntityTestBase {
     parent::setUp();
 
     $this->installConfig(['block_field']);
+    $this->installSchema('node', ['node_access']);
+
+    $node_type = $this->container->get('entity_type.manager')
+      ->getStorage('node_type')
+      ->create([
+        'name' => 'Test node type',
+        'type' => 'test_node_type',
+      ]);
+
+    $node_type->save();
 
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'field_block_field',
-      'entity_type' => $this->entityTypeId,
+      'entity_type' => 'node',
       'type' => 'block_field',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
       'translatable' => TRUE,
@@ -57,18 +64,18 @@ class BlockFieldTest extends ContentEntityTestBase {
     $field_storage->save();
 
     FieldConfig::create([
-      'entity_type' => $this->entityTypeId,
+      'entity_type' => 'node',
       'field_storage' => $field_storage,
-      'bundle' => $this->entityTypeId,
+      'bundle' => 'test_node_type',
       'required' => FALSE,
     ])->setTranslatable(TRUE)->save();
 
     $values = [
-      'title' => 'My entity',
+      'title' => 'My node',
       'langcode' => 'en',
-      'user_id' => 1,
+      'type' => 'test_node_type',
     ];
-    $this->entityTest = EntityTestMul::create($values);
+    $this->testNode = Node::create($values);
   }
 
   /**
@@ -76,26 +83,26 @@ class BlockFieldTest extends ContentEntityTestBase {
    */
   public function testBlockFieldTranslation(): void {
     // Fill the fields with test data.
-    $this->entityTest->get('field_block_field')->plugin_id = 'system_powered_by_block';
-    $this->entityTest->get('field_block_field')->settings = [
+    $this->testNode->get('field_block_field')->plugin_id = 'system_powered_by_block';
+    $this->testNode->get('field_block_field')->settings = [
       'label' => 'Hello',
       'label_display' => TRUE,
       'content' => 'World',
     ];
-    $this->entityTest->save();
+    $this->testNode->save();
 
     /** @var \Drupal\oe_translation\TranslationSourceManagerInterface $manager */
     $manager = \Drupal::service('oe_translation.translation_source_manager');
-    $data = $manager->extractData($this->entityTest);
+    $data = $manager->extractData($this->testNode);
     $this->assertEquals($data['field_block_field'][0]['settings__label']['#text'], 'Hello');
 
     // Save the translated data onto the entity.
     $data['field_block_field'][0]['settings__label']['#translation']['#text'] = 'Hello DE';
-    $manager->saveData($data, $this->entityTest, 'de');
+    $manager->saveData($data, $this->testNode, 'de');
 
     // Check that the translation was saved correctly on the entity.
-    $this->entityTest = $this->container->get('entity_type.manager')->getStorage($this->entityTypeId)->load($this->entityTest->id());
-    $translation = $this->entityTest->getTranslation('de');
+    $this->testNode = $this->container->get('entity_type.manager')->getStorage('node')->load($this->testNode->id());
+    $translation = $this->testNode->getTranslation('de');
     $field_block_field = $translation->get('field_block_field')->settings;
     $this->assertEquals($field_block_field['label'], 'Hello DE');
   }

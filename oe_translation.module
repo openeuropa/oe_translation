@@ -17,12 +17,13 @@ use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\oe_translation\ContentEntitySource;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
-use Drupal\oe_translation\FieldProcessor\AddressFieldProcessor;
 use Drupal\oe_translation\TranslationModerationHandler;
-use Drupal\tmgmt_content\DefaultFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\AddressFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\DefaultFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\MetatagsFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\PathFieldProcessor;
 
 /**
  * Implements hook_theme().
@@ -64,7 +65,7 @@ function oe_translation_entity_type_alter(array &$entity_types) {
  * Implements template_preprocess_node().
  */
 function oe_translation_preprocess_node(&$variables) {
-  // Ensure that on the TMGMT preview page, we treat the node as the full page
+  // Ensure that on the preview page, we treat the node as the full page
   // display.
   if (\Drupal::service('current_route_match')->getRouteName() !== 'entity.oe_translation_request.preview') {
     return;
@@ -113,34 +114,25 @@ function oe_translation_entity_access(EntityInterface $entity, $operation, Accou
 }
 
 /**
- * Implements hook_module_implements_alter().
- */
-function oe_translation_module_implements_alter(&$implementations, $hook) {
-  if ($hook !== 'field_info_alter') {
-    return;
-  }
-
-  // Make sure that our hook_field_info_alter() fires before TMGMT's.
-  if (!isset($implementations['oe_translation'])) {
-    return;
-  }
-
-  unset($implementations['oe_translation']);
-  $implementations['oe_translation'] = FALSE;
-}
-
-/**
  * Implements hook_field_info_alter().
  */
 function oe_translation_field_info_alter(&$info) {
-  if (isset($info['link'])) {
-    // For the link field use the default field processor instead of the
-    // specific Link one which doesn't allow the translation of the URI.
-    $info['link']['tmgmt_field_processor'] = DefaultFieldProcessor::class;
+  if (isset($info['metatag'])) {
+    $info['metatag']['oe_translation_source_field_processor'] = MetatagsFieldProcessor::class;
+  }
+  if (isset($info['path'])) {
+    $info['path']['oe_translation_source_field_processor'] = PathFieldProcessor::class;
+  }
+
+  // Set a default processor class for all fields that do not have one yet.
+  foreach ($info as &$field_type) {
+    if (!isset($field_type['oe_translation_source_field_processor'])) {
+      $field_type['oe_translation_source_field_processor'] = DefaultFieldProcessor::class;
+    }
   }
 
   if (isset($info['address'])) {
-    $info['address']['tmgmt_field_processor'] = AddressFieldProcessor::class;
+    $info['address']['oe_translation_source_field_processor'] = AddressFieldProcessor::class;
   }
 }
 
@@ -179,27 +171,6 @@ function oe_translation_preprocess_local_translation_form_element_group(&$variab
   $table['#rows'] = $rows;
 
   $variables['element'] = $table;
-}
-
-/**
- * Implements tmgmt_source_plugin_info_alter().
- */
-function oe_translation_tmgmt_source_plugin_info_alter(&$definitions) {
-  if (isset($definitions['content'])) {
-    // Override the plugin class with ours.
-    $definitions['content']['class'] = ContentEntitySource::class;
-  }
-}
-
-/**
- * Implements hook_tmgmt_translatable_fields_alter().
- */
-function oe_translation_tmgmt_translatable_fields_alter(ContentEntityInterface $entity, &$translatable_fields) {
-  // Prevent the moderation state to show up as a translatable field. It seems
-  // it does even if we mark the base field as non-translatable.
-  if (isset($translatable_fields['moderation_state'])) {
-    unset($translatable_fields['moderation_state']);
-  }
 }
 
 /**

@@ -4,11 +4,7 @@ dependencies:
   config:
     - field.storage.node.ott_content_reference
     - node.type.oe_demo_translatable_page
-  module:
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: node.oe_demo_translatable_page.ott_content_reference
 field_name: ott_content_reference
 entity_type: node

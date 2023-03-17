@@ -57,7 +57,6 @@
         "symfony/options-resolver": "^5.4"
     },
     "_readme": [
-        "Patching TMGMT to ensure that when a new translation is saved onto the entity, it doesn't create a new revision",
         "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation. Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791.",
         "Requireding symfony propery-access and propery-info for the ePoetry mock for the serializer that uses them.",
         "Requiring minimum versions of php-soap/psr18-transport and symfony/serializer for the epoetry client which needs them for lowest dependencies.",
@@ -114,10 +113,6 @@
         "patches": {
             "drupal/address": {
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
-            },
-            "drupal/tmgmt": {
-                "https://www.drupal.org/project/tmgmt/issues/2942236": "https://www.drupal.org/files/issues/2022-07-07/2942236-7.patch",
-                "no-new-revisions": "patches/tmgmt_no_new_revision.patch"
             },
             "drupal/core": {
                 "stop_propagation": "patches/stop-propagation.patch"

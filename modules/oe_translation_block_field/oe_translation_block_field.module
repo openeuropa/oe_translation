@@ -14,6 +14,6 @@ use Drupal\oe_translation_block_field\BlockFieldProcessor;
  */
 function oe_translation_block_field_field_info_alter(&$info) {
   if (isset($info['block_field'])) {
-    $info['block_field']['tmgmt_field_processor'] = BlockFieldProcessor::class;
+    $info['block_field']['oe_translation_source_field_processor'] = BlockFieldProcessor::class;
   }
 }

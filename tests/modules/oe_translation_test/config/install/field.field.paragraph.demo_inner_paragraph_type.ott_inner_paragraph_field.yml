@@ -4,11 +4,7 @@ dependencies:
   config:
     - field.storage.paragraph.ott_inner_paragraph_field
     - paragraphs.paragraphs_type.demo_inner_paragraph_type
-  module:
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: paragraph.demo_inner_paragraph_type.ott_inner_paragraph_field
 field_name: ott_inner_paragraph_field
 entity_type: paragraph

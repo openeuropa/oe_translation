@@ -6,10 +6,7 @@ dependencies:
     - oe_translation.oe_translation_request_type.local
   module:
     - oe_translation
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: oe_translation_request.local.target_language
 field_name: target_language
 entity_type: oe_translation_request

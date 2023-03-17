@@ -55,8 +55,6 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'tmgmt',
-    'tmgmt_content',
     'node',
     'toolbar',
     'content_translation',
@@ -65,6 +63,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     'text',
     'options',
     'paragraphs',
+    'block',
     'oe_editorial_workflow_demo',
     'oe_translation',
     'oe_translation_local',

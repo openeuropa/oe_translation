@@ -8,27 +8,16 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation\TranslationSourceHelper;
 use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
-use Drupal\tmgmt\Data;
 
 /**
  * HTML formatter.
  *
  * Responsible for the formatting the translation data into an HTML version
  * that complies with the requirements of DGT using the ePoetry service.
- *
- * Inspired heavily from the TMGMT File translator plugin HTML formatter.
- *
- * @see \Drupal\tmgmt_file\Plugin\tmgmt_file\Format\Html
  */
 class HtmlFormatter implements ContentFormatterInterface {
-
-  /**
-   * The TMGMT Data manager.
-   *
-   * @var \Drupal\tmgmt\Data
-   */
-  protected $tmgmtData;
 
   /**
    * The renderer.
@@ -47,15 +36,12 @@ class HtmlFormatter implements ContentFormatterInterface {
   /**
    * PoetryHtmlFormatter constructor.
    *
-   * @param \Drupal\tmgmt\Data $tmgmt_data
-   *   The TMGMT Data.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(Data $tmgmt_data, RendererInterface $renderer, EntityTypeManagerInterface $entityTypeManager) {
-    $this->tmgmtData = $tmgmt_data;
+  public function __construct(RendererInterface $renderer, EntityTypeManagerInterface $entityTypeManager) {
     $this->renderer = $renderer;
     $this->entityTypeManager = $entityTypeManager;
   }
@@ -64,7 +50,7 @@ class HtmlFormatter implements ContentFormatterInterface {
    * {@inheritdoc}
    */
   public function export(TranslationRequestInterface $request): MarkupInterface {
-    $data = $this->tmgmtData->filterTranslatable($request->getData());
+    $data = TranslationSourceHelper::filterTranslatable($request->getData());
     $items = [];
     foreach ($data as $key => $value) {
       $value['#key'] = '[' . $request->id() . '][' . $key . ']';
@@ -89,7 +75,7 @@ class HtmlFormatter implements ContentFormatterInterface {
     // Flatted the entire original request data so we have the original bits
     // as well to combine with the translation values.
     $request_data = [$request->id() => $request->getData()];
-    $flattened_request_data = $this->tmgmtData->flatten($request_data);
+    $flattened_request_data = TranslationSourceHelper::flatten($request_data);
 
     // Start a fresh array of translation data so that we can only include
     // things that actually have translation values. This is to avoid
@@ -125,7 +111,7 @@ class HtmlFormatter implements ContentFormatterInterface {
       }
     }
 
-    return $this->tmgmtData->unflatten($translation_data);
+    return TranslationSourceHelper::unflatten($translation_data);
   }
 
   /**

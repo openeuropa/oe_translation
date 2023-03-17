@@ -17,9 +17,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\TranslationFormTrait;
+use Drupal\oe_translation\TranslationSourceHelper;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_local\TranslationRequestLocal;
-use Drupal\tmgmt\Data;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,13 +35,6 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
-
-  /**
-   * The TMGMT data service.
-   *
-   * @var \Drupal\tmgmt\Data
-   */
-  protected $tmgmtData;
 
   /**
    * The translation source manager.
@@ -60,10 +53,9 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, Data $tmgmt_data, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
-    $this->tmgmtData = $tmgmt_data;
     $this->translationSourceManager = $translation_source_manager;
     $this->currentUser = $current_user;
   }
@@ -77,7 +69,6 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $container->get('entity_type.bundle.info'),
       $container->get('datetime.time'),
       $container->get('entity_type.manager'),
-      $container->get('tmgmt.data'),
       $container->get('oe_translation.translation_source_manager'),
       $container->get('current_user')
     );
@@ -115,8 +106,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     // Need to keep the first hierarchy. So the flattening must take place
     // inside the foreach loop.
     foreach (Element::children($data) as $key) {
-      $data_flattened = $this->tmgmtData->flatten($data[$key], $key);
-      $existing_translation_data_flattened = $existing_translation_data ? $this->tmgmtData->flatten($existing_translation_data[$key], $key) : [];
+      $data_flattened = TranslationSourceHelper::flatten($data[$key], $key);
+      $existing_translation_data_flattened = $existing_translation_data ? TranslationSourceHelper::flatten($existing_translation_data[$key], $key) : [];
       $form['translation'][$key] = $this->translationFormElement($data_flattened, $existing_translation_data_flattened, $disable);
     }
 
@@ -338,18 +329,18 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    */
   protected function updateData($key, array $data, array $values, bool $replace = FALSE) {
     if ($replace) {
-      NestedArray::setValue($data, $this->tmgmtData->ensureArrayKey($key), $values);
+      NestedArray::setValue($data, TranslationSourceHelper::ensureArrayKey($key), $values);
     }
     foreach ($values as $index => $value) {
       // In order to preserve existing values, we can not apply the values array
       // at once. We need to apply each containing value on its own.
       // If $value is an array we need to advance the hierarchy level.
       if (is_array($value)) {
-        $data = $this->updateData(array_merge($this->tmgmtData->ensureArrayKey($key), [$index]), $data, $value);
+        $data = $this->updateData(array_merge(TranslationSourceHelper::ensureArrayKey($key), [$index]), $data, $value);
       }
       // Apply the value.
       else {
-        NestedArray::setValue($data, array_merge($this->tmgmtData->ensureArrayKey($key), [$index]), $value, TRUE);
+        NestedArray::setValue($data, array_merge(TranslationSourceHelper::ensureArrayKey($key), [$index]), $value, TRUE);
       }
     }
 
@@ -383,7 +374,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   Whether at least one of the fields was translated.
    */
   protected function hasAnyTranslations(array $data): bool {
-    $flattened = $this->tmgmtData->flatten($data);
+    $flattened = TranslationSourceHelper::flatten($data);
     foreach ($flattened as $value) {
       if (isset($value['#translation'])) {
         return TRUE;

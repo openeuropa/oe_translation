@@ -7,10 +7,7 @@ dependencies:
     - paragraphs.paragraphs_type.workflow_paragraph
   module:
     - entity_reference_revisions
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: node.oe_workflow_demo.field_workflow_paragraphs
 field_name: field_workflow_paragraphs
 entity_type: node

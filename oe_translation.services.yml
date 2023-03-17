@@ -4,15 +4,12 @@ services:
     arguments: ['@entity_type.manager']
   oe_translation.translation_source_manager:
     class: Drupal\oe_translation\TranslationSourceManager
-    arguments: ['@plugin.manager.tmgmt.source']
+    arguments: ['@oe_translation.entity_revision_info', '@content_translation.manager', '@entity_type.manager', '@config.factory', '@module_handler', '@plugin.manager.field.field_type', '@class_resolver', '@event_dispatcher']
   oe_translation.route_subscriber:
     class: Drupal\oe_translation\Routing\RouteSubscriber
     arguments: ['@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
-  oe_translation.translation_provider_routes:
-    class: Drupal\oe_translation\Routing\TranslationProviderRoutes
-    arguments: ['@plugin.manager.tmgmt.translator']
   oe_translation.route_access_checker:
     class: Drupal\oe_translation\Access\TranslationRouteAccess
     arguments: ['@entity_type.manager']

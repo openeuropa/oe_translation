@@ -48,8 +48,6 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'tmgmt',
-    'tmgmt_content',
     'node',
     'toolbar',
     'content_translation',
@@ -58,6 +56,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     'text',
     'options',
     'paragraphs',
+    'block',
     'oe_editorial_workflow_demo',
     'oe_translation',
     'oe_translation_remote',

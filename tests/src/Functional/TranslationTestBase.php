@@ -26,8 +26,6 @@ class TranslationTestBase extends BrowserTestBase {
    */
   protected static $modules = [
     'system',
-    'tmgmt',
-    'tmgmt_content',
     'oe_multilingual',
     'node',
     'toolbar',
@@ -36,6 +34,7 @@ class TranslationTestBase extends BrowserTestBase {
     'field',
     'text',
     'options',
+    'block',
     'oe_translation',
     'oe_translation_local',
     'oe_translation_test',

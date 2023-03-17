@@ -1,11 +1,3 @@
-tmgmt.translator.settings.permission:
-  type: mapping
-  label: Settings for the Permission translator
-  mapping:
-    permission:
-      type: string
-      label: The permission needed for this translator
-
 field.value.oe_translation_entity_revision_type_item:
   type: mapping
   label: Default value
@@ -49,3 +41,20 @@ field.value.oe_translation_language_with_status:
     status:
       type: string
       label: The status
+
+oe_translation.settings:
+  type: config_object
+  mapping:
+    translation_source_embedded_fields:
+      label: 'Embedded fields'
+      type: sequence
+      sequence:
+        type: sequence
+        sequence:
+          type: boolean
+    translation_source_allowed_formats:
+      type: sequence
+      label: 'Allowed formats'
+      sequence:
+        type: string
+        label: Format ID

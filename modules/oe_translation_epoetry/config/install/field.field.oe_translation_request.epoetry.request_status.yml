@@ -6,10 +6,7 @@ dependencies:
     - oe_translation.oe_translation_request_type.epoetry
   module:
     - options
-    - tmgmt_content
-third_party_settings:
-  tmgmt_content:
-    excluded: false
+third_party_settings: { }
 id: oe_translation_request.epoetry.request_status
 field_name: request_status
 entity_type: oe_translation_request

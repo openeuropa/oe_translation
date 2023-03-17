@@ -30,8 +30,6 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'tmgmt',
-    'tmgmt_content',
     'node',
     'toolbar',
     'content_translation',

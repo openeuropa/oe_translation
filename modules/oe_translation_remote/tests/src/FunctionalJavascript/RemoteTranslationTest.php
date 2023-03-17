@@ -57,8 +57,8 @@ class RemoteTranslationTest extends TranslationTestBase {
 
     // Mark the test entity reference field as embeddable for TMGMT to behave
     // as composite entities.
-    $this->config('tmgmt_content.settings')
-      ->set('embedded_fields', [
+    $this->config('oe_translation.settings')
+      ->set('translation_source_embedded_fields', [
         'node' => [
           'ott_content_reference' => TRUE,
         ],

@@ -25,9 +25,9 @@ class TranslatorProvidersTest extends TranslationKernelTestBase {
     $this->assertEquals(['node'], array_keys($translator_providers_service->getDefinitions()));
     $this->assertTrue($translator_providers_service->hasTranslators($entity_type));
 
-    // Asserts that the tmgmt_job entity type doesn't contain the oe_translation
+    // Asserts that the user entity type doesn't contain the oe_translation
     // translators configuration.
-    $entity_type = \Drupal::entityTypeManager()->getDefinition('tmgmt_job');
+    $entity_type = \Drupal::entityTypeManager()->getDefinition('user');
     $this->assertFalse($translator_providers_service->hasLocal($entity_type));
     $this->assertFalse($translator_providers_service->hasRemote($entity_type));
     $remote = [];
