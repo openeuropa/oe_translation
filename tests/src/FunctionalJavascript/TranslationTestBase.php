@@ -8,6 +8,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
  * Base class for functional javsacript tests.
+ *
+ * @group batch1
  */
 class TranslationTestBase extends WebDriverTestBase {
 

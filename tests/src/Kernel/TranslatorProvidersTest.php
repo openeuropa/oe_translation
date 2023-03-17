@@ -6,6 +6,8 @@ namespace Drupal\Tests\oe_translation\Kernel;
 
 /**
  * Tests the translator providers service.
+ *
+ * @group batch1
  */
 class TranslatorProvidersTest extends TranslationKernelTestBase {
 

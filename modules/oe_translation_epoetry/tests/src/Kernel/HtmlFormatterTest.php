@@ -17,6 +17,8 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
  *
  * This is the service that transforms the translatable data into an HTML file
  * to be sent with the ePoetry request for translation.
+ *
+ * @group batch1
  */
 class HtmlFormatterTest extends TranslationKernelTestBase {
 
@@ -42,7 +44,6 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('oe_translation_request');
     $this->installConfig(['filter']);
     $this->installConfig(['oe_translation_remote']);

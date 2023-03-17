@@ -8,6 +8,8 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
  * Tests the Poetry contact fields type and formatter.
+ *
+ * @group batch1
  */
 class ContactFieldsTest extends TranslationKernelTestBase {
 
@@ -24,13 +26,6 @@ class ContactFieldsTest extends TranslationKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-
-    $this->installSchema('node', ['node_access']);
-
-    $this->container->get('entity_type.manager')->getStorage('node_type')->create([
-      'type' => 'page',
-      'name' => 'Page',
-    ])->save();
 
     $this->container->get('entity_type.manager')->getStorage('field_storage_config')->create([
       'field_name' => 'field_epoetry_contact',

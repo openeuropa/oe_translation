@@ -11,6 +11,8 @@ use Drupal\node\Entity\Node;
 
 /**
  * Tests the Entity revision with type field widget.
+ *
+ * @group batch1
  */
 class EntityRevisionWithTypeFieldWidgetTest extends TranslationTestBase {
 

@@ -10,6 +10,8 @@ use Drupal\node\Entity\Node;
 
 /**
  * Various tests of the translation system.
+ *
+ * @group batch1
  */
 class TranslationGenericTest extends TranslationTestBase {
 

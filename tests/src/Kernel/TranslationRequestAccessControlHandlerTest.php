@@ -11,6 +11,8 @@ use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 
 /**
  * Test the translation request access control handler.
+ *
+ * @group batch1
  */
 class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
 

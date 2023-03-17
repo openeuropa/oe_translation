@@ -11,6 +11,8 @@ use Drupal\oe_translation\TranslationSourceFieldProcessor\DefaultFieldProcessor;
  *
  * This is needed to ensure that we can translate also the URI column of the
  * link field type.
+ *
+ * @group batch1
  */
 class LinkFieldProcessorTest extends TranslationKernelTestBase {
 

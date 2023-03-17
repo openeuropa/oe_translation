@@ -8,6 +8,8 @@ use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 
 /**
  * Tests the Translation Request entity.
+ *
+ * @group batch1
  */
 class TranslationRequestEntityTest extends TranslationKernelTestBase {
 
@@ -31,7 +33,6 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('oe_translation_request');
     $this->installEntitySchema('oe_translation_request_log');
 
@@ -43,10 +44,6 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
     ])->save();
 
     // Create nodes to reference.
-    $this->container->get('entity_type.manager')->getStorage('node_type')->create([
-      'type' => 'page',
-      'name' => 'Page',
-    ])->save();
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     /** @var \Drupal\node\NodeInterface $node */
