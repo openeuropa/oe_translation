@@ -113,7 +113,7 @@ function oe_translation_corporate_workflow_node_view_alter(array &$build, Entity
  * default (such as published), any new revision on the entity which is not
  * default will carry over translations from that last default revision instead
  * of the actual revision based on which the new one is created. For us this is
- * not good because we use TMGMT to hydrate specific revisions with translations
+ * not good because w hydrate specific revisions with translations
  * regardless of whether they are default or not. So for example, if revision 5
  * is not published but has a translation, when we make revision 6 to publish
  * it, we carry over the translation values from revision 5 and not from any
@@ -284,7 +284,7 @@ function oe_translation_corporate_workflow_content_moderation_state_presave(Enti
 /**
  * Implements hook_entity_presave().
  *
- * Whenever we delete a translation that is made using the TMGMT-based
+ * Whenever we delete a translation that is made using our
  * translators, we do not make a new revision of the entity. Since translations
  * are added to the same revision where they were initiated, for the same
  * reason their removal should not impact the number of entity revisions.

@@ -7,38 +7,11 @@
 
 use Drupal\Core\Config\Entity\ConfigEntityType;
 use Drupal\Core\Entity\ContentEntityType;
-use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Entity\TranslationRequestLog;
 use Drupal\oe_translation\Entity\TranslationRequestType;
-
-/**
- * Implements hook_install().
- */
-function oe_translation_install($is_syncing) {
-  if ($is_syncing) {
-    // We don't want to change config when the module is installed as part of
-    // a configuration sync.
-    return;
-  }
-
-  // Hide the "translation skills" fields on the User forms as we are not using
-  // the local translator plugin in its original form.
-  /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface[] $form_displays */
-  $form_displays = EntityFormDisplay::loadMultiple([
-    'user.user.default',
-    'user.user.register',
-  ]);
-  foreach ($form_displays as $form_display) {
-    $component = $form_display->getComponent('tmgmt_translation_skills');
-    if ($component) {
-      $form_display->removeComponent('tmgmt_translation_skills');
-      $form_display->save();
-    }
-  }
-}
 
 /**
  * Creates the revision ID field on the TMGMT job item entity.

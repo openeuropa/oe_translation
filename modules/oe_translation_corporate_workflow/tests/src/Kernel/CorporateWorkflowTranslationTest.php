@@ -105,8 +105,8 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     $this->assertCount(1, $node->getTranslationLanguages());
     $this->assertCount(2, $entity_type_manager->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
 
-    // Do the same tests but with another entity type which does not use the
-    // TMGMT-based local translation.
+    // Do the same tests but with another entity type which does not use
+    // our local translation.
     $entity = $entity_type_manager->getStorage('entity_test_mulrev')->create([
       'name' => 'Test entity',
     ]);

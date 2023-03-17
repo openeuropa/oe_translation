@@ -49,8 +49,6 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
   /**
    * {@inheritdoc}
    *
-   * @todo add logic from https://www.drupal.org/project/tmgmt/issues/2942236
-   *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
@@ -117,6 +115,7 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
         }
       }
     }
+
     return $data;
   }
 
@@ -164,6 +163,7 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
     if ($property instanceof OptionsProviderInterface || !($property instanceof StringInterface)) {
       return FALSE;
     }
+
     return TRUE;
   }
 
@@ -202,6 +202,7 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
         }
       }
     }
+
     return $data;
   }
 

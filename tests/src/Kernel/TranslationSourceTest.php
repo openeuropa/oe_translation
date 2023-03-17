@@ -79,6 +79,8 @@ class TranslationSourceTest extends TranslationKernelTestBase {
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
       'translatable' => TRUE,
     ])->save();
+    // Configure the image field to have its title translatable, but not
+    // its alt text.
     FieldConfig::create([
       'entity_type' => 'node',
       'field_name' => 'image_field',
@@ -100,6 +102,20 @@ class TranslationSourceTest extends TranslationKernelTestBase {
       'uri' => 'public://example.jpg',
     ]);
     $this->image_file->save();
+    // Create a text field that will be ignored using a hook.
+    FieldStorageConfig::create([
+      'entity_type' => 'node',
+      'field_name' => 'ignored_field',
+      'type' => 'string',
+      'cardinality' => 3,
+    ])->save();
+    FieldConfig::create([
+      'entity_type' => 'node',
+      'field_name' => 'ignored_field',
+      'bundle' => 'page',
+      'label' => 'Ignored field',
+      'translatable' => TRUE,
+    ])->save();
     // Mark the paragraph bundles translatable.
     \Drupal::service('content_translation.manager')
       ->setEnabled('paragraph', 'demo_paragraph_type', TRUE);
@@ -114,6 +130,35 @@ class TranslationSourceTest extends TranslationKernelTestBase {
         ],
       ])
       ->save();
+
+    // Create an entity reference field on the oe_demo_translatable_page node
+    // type that will not be marked as embedded.
+    FieldStorageConfig::create([
+      'field_name' => 'reference_not_embedded',
+      'entity_type' => 'node',
+      'type' => 'entity_reference',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      'settings' => [
+        'target_type' => 'node',
+      ],
+      'translatable' => TRUE,
+    ])->save();
+    FieldConfig::create([
+      'entity_type' => 'node',
+      'field_name' => 'reference_not_embedded',
+      'bundle' => 'oe_demo_translatable_page',
+      'label' => 'Non-embeddable entity reference',
+      'translatable' => FALSE,
+      'settings' => [
+        'handler' => 'default',
+        'handler_settings' => [
+          'target_bundles' => [
+            'oe_demo_translatable_page' => 'oe_demo_translatable_page',
+          ],
+          'sort' => ['field' => '_none'],
+        ],
+      ],
+    ])->save();
 
     // Create paragraphs to reference and translate.
     $grandchild_paragraph = Paragraph::create([
@@ -169,8 +214,22 @@ class TranslationSourceTest extends TranslationKernelTestBase {
         ],
       ],
       'ott_content_reference' => $referenced_node->id(),
+      'reference_not_embedded' => $referenced_node->id(),
     ]);
     $this->referencingNode->save();
+
+    // Order the fields in the form in a specific way.
+    $entity_form_display = \Drupal::service('entity_display.repository')->getFormDisplay('node', 'page', 'default');
+    $title = $entity_form_display->getComponent('title');
+    $title['weight'] = 0;
+    $entity_form_display->setComponent('title', $title);
+    $image_field = $entity_form_display->getComponent('image_field');
+    $image_field['weight'] = 1;
+    $entity_form_display->setComponent('image_field', $image_field);
+    $body = $entity_form_display->getComponent('body');
+    $body['weight'] = 2;
+    $entity_form_display->setComponent('body', $body);
+    $entity_form_display->save();
   }
 
   /**
@@ -197,11 +256,17 @@ class TranslationSourceTest extends TranslationKernelTestBase {
         'format' => 'unallowed_format',
       ],
     ]);
+    $node->set('ignored_field', 'The ignored field value');
+    // Inform the test event subscriber to add some extra field to the
+    // translation data.
+    $node->setExtraTranslationField = TRUE;
     $node->set('image_field', [
       'target_id' => $this->image_file->id(),
       'alt' => 'Alt text',
       'title' => 'Image title',
     ])->save();
+
+    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
 
     // Extract the translatable data.
     $data = $this->translationManager->extractData($node);
@@ -261,6 +326,29 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     $this->assertFalse(isset($image_item['alt']['#label']));
     $this->assertTrue($image_item['title']['#translate']);
     $this->assertEquals($node->image_field->title, $image_item['title']['#text']);
+    // Assert we have our custom data added from the event subscriber.
+    $this->assertEquals([
+      '#label' => 'Test field',
+      'value' => [
+        '#translate' => TRUE,
+        '#text' => 'The translatable value',
+        '#label' => 'The value',
+      ],
+    ], $data['oe_translation_test_field']);
+
+    // Assert the ignored field is not getting included.
+    $this->assertFalse(isset($data['ignored_field']));
+
+    // Assert the order of the data.
+    $order_data = array_filter($data, function ($item, $key) {
+      return in_array($key, ['title', 'body', 'image_field']);
+    }, ARRAY_FILTER_USE_BOTH);
+
+    $actual_order = array_keys($order_data);
+    $this->assertEquals(['title', 'image_field', 'body'], $actual_order);
+
+    $this->assertEquals('node', $data['#entity_type']);
+    $this->assertEquals('page', $data['#entity_bundle']);
 
     // Translate the data.
     $data['title'][0]['value']['#translation']['#text'] = 'Test node FR';
@@ -270,7 +358,9 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     $data['image_field'][0]['title']['#translation']['#text'] = 'Image title FR';
     $this->translationManager->saveData($data, $node, 'fr');
 
-    // @todo assert it did not make a new revision.
+    // Assert we still only have 1 node revision.
+    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
+
     // Check that the translation was saved correctly on the entity.
     $translation = $node->getTranslation('fr');
     $this->assertEquals($data['title'][0]['value']['#translation']['#text'], $translation->getTitle());
@@ -304,12 +394,13 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     $this->translationManager->saveData($data, $node, 'fr');
     $translation = $node->getTranslation('fr');
     $this->assertEquals($data['translatable_text_field'][2]['value']['#translation']['#text'], $translation->translatable_text_field[2]->value);
+
+    // Assert we still only have 1 node revision.
+    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
   }
 
   /**
    * Tests the translation of referenced entities.
-   *
-   * @todo assert non-embeddable references are not included.
    */
   public function testNodeReferencingEntities(): void {
     $data = $this->translationManager->extractData($this->referencingNode);
@@ -342,8 +433,9 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     $this->assertEquals('Title', $data['ott_content_reference'][0]['entity']['title']['#label']);
     $this->assertEquals('Referenced node', $data['ott_content_reference'][0]['entity']['title'][0]['value']['#text']);
     $this->assertTrue($data['ott_content_reference'][0]['entity']['title'][0]['value']['#translate']);
+    // Assert we don't have the non-embeddable entity reference.
+    $this->assertFalse(isset($data['reference_not_embedded']));
 
-    // @todo assert we have the #entity_bundle and #entity_type in the data.
     // Translate the referenced data.
     $paragraph1['entity']['ott_top_level_paragraph_field'][0]['value']['#translation']['#text'] = 'top field value 1 FR';
     $inner_paragraphs[0]['entity']['ott_inner_paragraph_field'][0]['value']['#translation']['#text'] = 'child field value 1 FR';
