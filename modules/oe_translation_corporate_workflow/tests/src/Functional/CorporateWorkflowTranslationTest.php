@@ -358,7 +358,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     // the edit button (which should in fact take us to the translation request
     // start from the validated version).
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
-    $this->clickLink('Edit started translation request');
+    $this->clickLink('Edit draft translation');
     $this->assertSession()->addressEquals('/translation-request/1/translate-locally');
     $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in French (version 1.0.0)');
     $values = [
@@ -478,7 +478,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('The translation request has been saved.');
     // Assert we now have an edit link instead.
     $edit_link_published = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a');
-    $this->assertEquals('Edit started translation request', $edit_link_published->getText());
+    $this->assertEquals('Edit draft translation', $edit_link_published->getText());
     $requests = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getTranslationRequestsForEntityRevision($published, 'local');
     $published_request = end($requests);
     $this->assertEquals($published_request->toUrl('local-translation')->toString(), $edit_link_published->getAttribute('href'));
@@ -495,7 +495,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('The translation request has been saved.');
     // Assert we now have an edit link instead.
     $edit_link_validated = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="3.0.0"] a');
-    $this->assertEquals('Edit started translation request', $edit_link_validated->getText());
+    $this->assertEquals('Edit draft translation', $edit_link_validated->getText());
     $requests = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getTranslationRequestsForEntityRevision($validated, 'local');
     $validated_request = end($requests);
     $this->assertEquals($validated_request->toUrl('local-translation')->toString(), $edit_link_validated->getAttribute('href'));
@@ -510,7 +510,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'Yes',
       '2.0.0',
       'published',
-      'Edit started translation requestDelete',
+      'Edit draft translationDelete',
     ];
     $expected[] = [
       'French',
@@ -520,7 +520,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'No',
       '3.0.0',
       'validated',
-      'Edit started translation requestDelete',
+      'Edit draft translationDelete',
     ];
     $table = $this->getSession()->getPage()->find('css', 'table.ongoing-local-translation-requests-table');
     foreach ($expected as $row_key => $cols) {

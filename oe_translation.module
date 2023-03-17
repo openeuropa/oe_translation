@@ -250,6 +250,7 @@ function _oe_translation_default_breadcrumb_links(Breadcrumb &$breadcrumb, Route
   $links[] = $entity->toLink();
   $links[] = Link::fromTextAndUrl(t('Translate'), $entity->toUrl('drupal:content-translation-overview'));
   $cache = CacheableMetadata::createFromObject($breadcrumb);
+  $cache->addCacheContexts(['route']);
   $breadcrumb = new Breadcrumb();
   $breadcrumb->addCacheableDependency($cache);
   $breadcrumb->setLinks($links);

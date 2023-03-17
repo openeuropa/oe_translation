@@ -366,7 +366,7 @@ class Epoetry extends RemoteTranslationProviderBase {
       'source_language_code' => $entity->language()->getId(),
       'target_languages' => $languages,
       'translator_provider' => $form_state->get('translator_id'),
-      'request_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE,
+      'request_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED,
     ]);
 
     $request->setContentEntity($entity);

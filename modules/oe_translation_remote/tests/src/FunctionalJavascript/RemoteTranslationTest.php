@@ -218,7 +218,7 @@ class RemoteTranslationTest extends TranslationTestBase {
 
     // Assert the request status table.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'Remote one',
     ]);
 
@@ -228,7 +228,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     foreach (['bg', 'fr'] as $langcode) {
       $expected_languages[$langcode] = [
         'langcode' => $langcode,
-        'status' => 'Active',
+        'status' => 'Requested',
         'review' => FALSE,
       ];
     }
@@ -240,9 +240,9 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertInstanceOf(TranslationRequestTestRemote::class, $request);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Active'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Requested'), $target_languages['fr']);
+    $this->assertEquals('Requested', $request->getRequestStatus());
     $this->assertEquals('remote_one', $request->getTranslatorProvider()->id());
 
     // Check that for another node, we can make a new request.
@@ -268,9 +268,9 @@ class RemoteTranslationTest extends TranslationTestBase {
     $request = $request_storage->load($request->id());
     $target_languages = $request->getTargetLanguages();
     $this->assertEquals(new LanguageWithStatus('bg', 'Review'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('fr', 'Active'), $target_languages['fr']);
+    $this->assertEquals(new LanguageWithStatus('fr', 'Requested'), $target_languages['fr']);
     // Only one language has been translated so the request is still active.
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('Requested', $request->getRequestStatus());
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
@@ -278,7 +278,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Assert the request status table is still active because only one
     // language has been translated.
     $this->assertRequestStatusTable([
-      'Active',
+      'Requested',
       'Remote one',
     ]);
 
@@ -384,9 +384,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Accept the translation and assert it got accepted.
     $this->getSession()->getPage()->pressButton('Save and accept');
     $this->assertSession()->pageTextContains('The translation in Bulgarian has been accepted.');
-    $this->assertSession()->addressEquals('/en/translation-request/' . $request->id() . '/review/bg');
-
-    $this->getSession()->getPage()->clickLink('Translation request for Full translation node');
+    $this->assertSession()->addressEquals('/en/node/2/translations/remote');
     $expected_languages['bg']['status'] = 'Accepted';
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
 
@@ -400,7 +398,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Ongoing remote translation requests');
     $expected_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'Active',
+      'status' => 'Requested',
       'title' => 'Full translation node',
       'title_url' => $node->toUrl()->toString(),
       'revision' => $node->getRevisionId(),
@@ -421,7 +419,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     // The request status has not changed.
     $request_storage->resetCache();
     $request = $request_storage->load($request->id());
-    $this->assertEquals('Active', $request->getRequestStatus());
+    $this->assertEquals('Requested', $request->getRequestStatus());
 
     // Now we have a node translation.
     $node_storage->resetCache();
@@ -532,7 +530,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $revision = $node_storage->loadRevision($first_revision);
     $expected_ongoing = [
       'translator' => 'Remote one',
-      'status' => 'Active',
+      'status' => 'Requested',
       'title' => 'Basic translation node',
       'title_url' => $revision->toUrl('revision')->toString(),
       // It is the initial revision ID.

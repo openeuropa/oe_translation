@@ -246,6 +246,7 @@ function oe_translation_epoetry_preprocess_table__remote_language_list(array &$v
   ]);
 
   foreach ($variables['rows'] as &$row) {
+    // Add the accepted deadline per individual language.
     $langcode = (string) $row['attributes']['hreflang'];
     $accepted_deadline = $request->getTargetLanguageAcceptedDeadline($langcode);
     if ($accepted_deadline) {
@@ -262,6 +263,35 @@ function oe_translation_epoetry_preprocess_table__remote_language_list(array &$v
         'content' => $deadline,
       ],
     ]);
+
+    // Mark the status as being from ePoetry if it's the case.
+    $status = $row['cells']['status']['content'];
+    $epoetry = FALSE;
+    if (in_array($status, [
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_EPOETRY_ACCEPTED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CLOSED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SENT,
+    ])) {
+      $epoetry = TRUE;
+    }
+    $review = Url::fromRoute('entity.oe_translation_request.remote_translation_review', [
+      'oe_translation_request' => $request->id(),
+      'language' => $langcode,
+    ]);
+    if ($review->access()) {
+      // If, however, we can review the translation, it means it's been accepted
+      // on our side and not in ePoetry.
+      $epoetry = FALSE;
+    }
+
+    if ($epoetry) {
+      $row['cells']['status']['content'] .= ' [in ePoetry]';
+    }
   }
 
 }

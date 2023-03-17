@@ -20,7 +20,7 @@ interface TranslationRequestEpoetryInterface extends TranslationRequestRemoteInt
    *
    * When a new request is made, the response status we get for the language is
    * "SenttoDGT", like the entire request. For us, this will be the global
-   * status STATUS_REQUEST_ACTIVE.
+   * status STATUS_REQUEST_REQUESTED.
    */
   const STATUS_LANGUAGE_EPOETRY_ACCEPTED = 'Accepted';
   const STATUS_LANGUAGE_ONGOING = 'Ongoing';

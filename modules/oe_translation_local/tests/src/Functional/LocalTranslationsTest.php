@@ -236,7 +236,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('The translation request has been saved.');
 
     // Change back the title.
-    $this->clickLink('Edit started translation request');
+    $this->clickLink('Edit draft translation');
     $this->getSession()->getPage()->fillField('title|0|value[translation]', 'Full translation node FR');
 
     // Save the translation as draft.
@@ -267,7 +267,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Edit the translation request.
     $this->clickLink('Local translations');
-    $this->clickLink('Edit started translation request');
+    $this->clickLink('Edit draft translation');
 
     // Assert the translation values have been saved and the form is
     // populated with the translated values.
@@ -297,7 +297,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertDashboardOngoingTranslations([$expected_ongoing]);
 
     // Edit and sync the translation. This time from the dashboard.
-    $this->clickLink('Edit started translation request');
+    $this->clickLink('Edit accepted translation');
     // The "accept" button is no longer visible since we accepted it.
     $this->assertSession()->buttonExists('Save as draft');
     $this->assertSession()->buttonNotExists('Save and accept');
@@ -317,7 +317,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->getSession()->getPage()->pressButton('Save as draft');
     $this->assertSession()->pageTextContains('The translation request has been saved.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
-    $this->clickLink('Edit started translation request');
+    $this->clickLink('Edit draft translation');
     foreach ($fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       $table = $table_header->getParent()->getParent()->getParent();
@@ -463,7 +463,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertDashboardOngoingTranslations([$first_ongoing, $second_ongoing]);
 
     // Edit the most recent translation request and sync it.
-    $this->clickLink('Edit started translation request', 1);
+    $this->clickLink('Edit draft translation', 1);
     // Ensure we clicked the right one.
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $this->assertEquals('Updated basic translation node FR', $element->getText());
@@ -491,7 +491,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertEquals('Updated basic translation node FR', $node->getTranslation('fr')->label());
 
     // Sync also the older ongoing translation.
-    $this->clickLink('Edit started translation request');
+    $this->clickLink('Edit draft translation');
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $this->assertEquals('Basic translation node FR', $element->getText());
     $this->getSession()->getPage()->pressButton('Save and synchronise');
@@ -595,7 +595,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->linkExistsExact('Second node');
     $this->assertSession()->linkNotExistsExact('First node');
 
-    $this->assertSession()->linkExistsExact('Edit started translation request');
+    $this->assertSession()->linkExistsExact('Edit accepted translation');
   }
 
   /**
@@ -647,7 +647,7 @@ class LocalTranslationsTest extends TranslationTestBase {
       if (in_array($langcode, $with_edit)) {
         // We expect two operation: either to create or to edit AND to delete.
         $this->assertCount(2, $operations);
-        $this->assertEquals('Edit started translation request', $operations[0]->getText());
+        $this->assertEquals('Edit draft translation', $operations[0]->getText());
         $this->assertEquals('Delete', $operations[1]->getText());
       }
       else {

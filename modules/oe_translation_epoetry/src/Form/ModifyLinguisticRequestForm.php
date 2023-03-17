@@ -9,17 +9,20 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
+use Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Builds the form for modifying the request, i.e. adding new languages.
@@ -52,6 +55,20 @@ class ModifyLinguisticRequestForm extends FormBase {
   protected $entity;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Constructs a ModifyLinguisticRequestForm form.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
@@ -60,11 +77,17 @@ class ModifyLinguisticRequestForm extends FormBase {
    *   The language manager.
    * @param \Drupal\oe_translation_epoetry\RequestFactory $requestFactory
    *   The request factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(MessengerInterface $messenger, LanguageManagerInterface $languageManager, RequestFactory $requestFactory) {
+  public function __construct(MessengerInterface $messenger, LanguageManagerInterface $languageManager, RequestFactory $requestFactory, EntityTypeManagerInterface $entityTypeManager, EventDispatcherInterface $eventDispatcher) {
     $this->languageManager = $languageManager;
     $this->requestFactory = $requestFactory;
     $this->messenger = $messenger;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -74,7 +97,9 @@ class ModifyLinguisticRequestForm extends FormBase {
     return new static(
       $container->get('messenger'),
       $container->get('language_manager'),
-      $container->get('oe_translation_epoetry.request_factory')
+      $container->get('oe_translation_epoetry.request_factory'),
+      $container->get('entity_type.manager'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -107,7 +132,7 @@ class ModifyLinguisticRequestForm extends FormBase {
       TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED,
       TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
     ];
-    $allowed = in_array($translation_request->getEpoetryRequestStatus(), $states) && $translation_request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_ACTIVE;
+    $allowed = in_array($translation_request->getEpoetryRequestStatus(), $states) && $translation_request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED;
     if ($allowed) {
       return AccessResult::allowed()->addCacheableDependency($cache);
     }
@@ -138,7 +163,10 @@ class ModifyLinguisticRequestForm extends FormBase {
 
     $this->entity = $translation_request->getContentEntity();
     $form_state->set('translation_request', $translation_request);
-    $this->addLanguageCheckboxes($form, $form_state);
+    $languages = $this->languageManager->getLanguages();
+    $event = new AvailableLanguagesAlterEvent($languages);
+    $this->eventDispatcher->dispatch($event, AvailableLanguagesAlterEvent::NAME);
+    $this->addLanguageCheckboxes($form, $form_state, $event->getLanguages());
 
     // Disable the languages that have been already requested.
     $languages = $translation_request->getTargetLanguages();
@@ -202,11 +230,18 @@ class ModifyLinguisticRequestForm extends FormBase {
     catch (\Throwable $exception) {
       $this->messenger->addError($this->t('There was a problem sending the request to ePoetry.'));
 
+      // Reload the translation request from storage to ensure we are clearing
+      // all the values we set in the try{} block as we don't want to save it
+      // and include the language changes because the request failed.
+      $this->entityTypeManager->getStorage('oe_translation_request')->resetCache();
+      $translation_request = $this->entityTypeManager->getStorage('oe_translation_request')->load($translation_request->id());
+
       // We log but we don't change any statuses.
       $translation_request->log('There was an error with the <strong>modifyLinguisticRequest</strong> for adding the following extra languages: <strong>@languages</strong>. The error: @error', [
         '@languages' => implode(', ', $new_language_labels),
         '@error' => $exception->getMessage(),
       ], TranslationRequestLogInterface::ERROR);
+
       $translation_request->save();
     }
   }

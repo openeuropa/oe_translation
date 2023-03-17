@@ -124,9 +124,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function onProductRequested(StatusChangeRequestedEvent $event): void {
-    // For the Requested status, we don't update anything, we leave it as
-    // Active.
-    $event->setSuccessResponse('No status update done, but on purpose.');
+    $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED);
   }
 
   /**
@@ -136,7 +134,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function onProductCancelled(StatusChangeCancelledEvent $event): void {
-    $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED);
+    $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED, TranslationRequestLogInterface::WARNING);
   }
 
   /**
@@ -196,7 +194,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function onProductSuspended(StatusChangeSuspendedEvent $event): void {
-    $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED);
+    $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED, TranslationRequestLogInterface::WARNING);
   }
 
   /**
@@ -206,8 +204,10 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The event.
    * @param string $status
    *   The status.
+   * @param string $log_type
+   *   The type of log to create.
    */
-  protected function onProductStatusChange(ProductEventInterface $event, string $status): void {
+  protected function onProductStatusChange(ProductEventInterface $event, string $status, string $log_type = TranslationRequestLogInterface::INFO): void {
     $product = $event->getProduct();
     $translation_request = $this->getTranslationRequest($product->getProductReference()->getRequestReference());
     if (!$translation_request) {
@@ -225,7 +225,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $translation_request->log('The <strong>@language</strong> product status has been updated to <strong>@status</strong>.', [
       '@language' => $language->getName(),
       '@status' => $status,
-    ]);
+    ], $log_type);
 
     if ($event instanceof ProductEventWithDeadlineInterface && $event->getAcceptedDeadline() instanceof \DateTimeInterface) {
       $translation_request->updateTargetLanguageAcceptedDeadline($langcode, $event->getAcceptedDeadline());
@@ -300,7 +300,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
 
     // Set the ePoetry request status but keep the request active.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
-    $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_ACTIVE);
+    $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED);
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
@@ -346,9 +346,8 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // Set the ePoetry request status and finish the request if it was executed.
+    // Set the ePoetry request status.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED);
-    $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
