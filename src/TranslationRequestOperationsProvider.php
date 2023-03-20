@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\TranslationRequestOperationsProviderEvent;
@@ -14,6 +15,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * Provider service for translation request operation links.
  */
 class TranslationRequestOperationsProvider {
+
+  use StringTranslationTrait;
 
   /**
    * The event dispatcher.
@@ -57,7 +60,7 @@ class TranslationRequestOperationsProvider {
     $cache->addCacheableDependency($delete_access);
     if ($delete_access->isAllowed()) {
       $links['#links']['delete'] = [
-        'title' => t('Delete'),
+        'title' => $this->t('Delete'),
         'url' => $delete,
       ];
     }

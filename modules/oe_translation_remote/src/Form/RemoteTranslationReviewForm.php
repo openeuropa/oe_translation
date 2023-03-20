@@ -145,6 +145,13 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
       '#value' => $this->t('Save and synchronise'),
     ];
 
+    $actions['preview'] = [
+      '#type' => 'submit',
+      '#button_type' => 'secondary',
+      '#submit' => ['::preview'],
+      '#value' => $this->t('Preview'),
+    ];
+
     return $actions;
   }
 
@@ -190,6 +197,25 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $language = $form_state->get('language');
     $this->translationSynchroniser->synchronise($translation_request, $language->id());
     $form_state->setRedirect('entity.' . $entity->getEntityTypeId() . '.remote_translation', [$entity->getEntityTypeId() => $entity->id()]);
+  }
+
+  /**
+   * Redirects the user to the preview path of the translation request.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function preview(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
+    $translation_request = $this->entity;
+
+    $language = $form_state->get('language');
+    $url = $translation_request->toUrl('preview');
+    $url->setRouteParameter('language', $language->id());
+    $url->setOption('language', $language);
+    $form_state->setRedirectUrl($url);
   }
 
   /**

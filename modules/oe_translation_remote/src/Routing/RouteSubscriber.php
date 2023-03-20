@@ -76,7 +76,6 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route_name = "entity.$entity_type_id.remote_translation";
       $collection->add($route_name, $route);
     }
-    return $collection;
   }
 
   /**
