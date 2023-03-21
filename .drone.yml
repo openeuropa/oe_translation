@@ -68,6 +68,13 @@ pipeline:
       matrix:
         COMPOSER_BOUNDARY: lowest
 
+  ensure-phpunit-batching:
+    group: test
+    image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
+    commands:
+      - ./vendor/bin/phpunit --group default
+    environment: *web-environment
+
   site-install:
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
     commands:
