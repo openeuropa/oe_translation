@@ -60,7 +60,19 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   $header['requested_deadline'] = t('Requested deadline');
   $row = &$build['meta']['#rows'][0];
 
-  $row['epoetry_request_status'] = $entity->getEpoetryRequestStatus();
+  if ($entity->getEpoetryRequestStatus()) {
+    $row['epoetry_request_status'] = [
+      'data' => [
+        '#theme' => 'tooltip',
+        '#label' => $entity->getEpoetryRequestStatus(),
+        '#text' => $entity->getEpoetryRequestStatusDescription($entity->getEpoetryRequestStatus()),
+      ],
+    ];
+  }
+  else {
+    $row['epoetry_request_status'] = NULL;
+  }
+
   $row['request_id'] = $entity->getRequestId(TRUE);
   $row['auto_accept'] = $entity->isAutoAccept() ? t('Yes') : t('No');
   $plugin_auto_accept = $entity->getTranslatorProvider()->getProviderConfiguration()['auto_accept'];
@@ -265,7 +277,7 @@ function oe_translation_epoetry_preprocess_table__remote_language_list(array &$v
     ]);
 
     // Mark the status as being from ePoetry if it's the case.
-    $status = $row['cells']['status']['content'];
+    $status = $row['cells']['status']['content']['#label'];
     $epoetry = FALSE;
     if (in_array($status, [
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
@@ -290,7 +302,7 @@ function oe_translation_epoetry_preprocess_table__remote_language_list(array &$v
     }
 
     if ($epoetry) {
-      $row['cells']['status']['content'] .= ' [in ePoetry]';
+      $row['cells']['status']['content']['#label'] .= ' [in ePoetry]';
     }
   }
 

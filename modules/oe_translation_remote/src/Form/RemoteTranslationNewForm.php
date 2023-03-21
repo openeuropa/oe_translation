@@ -329,7 +329,13 @@ class RemoteTranslationNewForm extends FormBase {
       $entity = $request->getContentEntity();
       $row = [
         'translator' => $request->getTranslatorProvider()->label(),
-        'status' => $request->getRequestStatus(),
+        'status' => [
+          'data' => [
+            '#theme' => 'tooltip',
+            '#label' => $request->getRequestStatus(),
+            '#text' => $request->getRequestStatusDescription($request->getRequestStatus()),
+          ],
+        ],
         'title' => [
           'data' => [
             '#type' => 'link',

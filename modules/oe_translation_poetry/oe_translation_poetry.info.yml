@@ -6,6 +6,7 @@ type: module
 core_version_requirement: ^9.4
 dependencies:
   - oe_translation:oe_translation
+  - oe_translation:oe_translation_remote
   - oe_translation_poetry_html_formatter:oe_translation_poetry_html_formatter
   - drupal:datetime
 

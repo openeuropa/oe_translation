@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_epoetry;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_remote\RemoteTranslationRequestEntityTrait;
@@ -15,7 +17,9 @@ use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
  */
 class TranslationRequestEpoetry extends TranslationRequest implements TranslationRequestEpoetryInterface {
 
-  use RemoteTranslationRequestEntityTrait;
+  use RemoteTranslationRequestEntityTrait {
+    getLanguageStatusDescription as traitGetLanguageStatusDescription;
+  }
 
   /**
    * {@inheritdoc}
@@ -181,6 +185,74 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
     $this->set('epoetry_status', $status);
 
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEpoetryRequestStatusDescription(string $status): TranslatableMarkup {
+    switch ($status) {
+      case TranslationRequestEpoetryInterface::STATUS_REQUEST_SENT:
+        return t('The request has been sent to ePoetry and they need to accept or reject it.');
+
+      case TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED:
+        return t('The translation request has been accepted by ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED:
+        return t('The translation request has been rejected by ePoetry. Please check the request logs for the reason why it was rejected.');
+
+      case TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED:
+        return t('The translation request has been cancelled by ePoetry. You cannot reopen this request but you can make a new one.');
+
+      case TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED:
+        return t('The translation request has been suspended by ePoetry. This can be a temporary measure and the request can be unsuspended by ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED:
+        return t('The translation request has been executed by ePoetry. This means they have dispatched the translations for all the languages.');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup {
+    switch ($status) {
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_EPOETRY_ACCEPTED:
+        // For the Accepted language, we need to check if it's actually the
+        // ePoetry Accepted or the local Accepted.
+        $review = Url::fromRoute('entity.oe_translation_request.remote_translation_review', [
+          'oe_translation_request' => $this->id(),
+          'language' => $langcode,
+        ]);
+
+        if ($review->access()) {
+          // If we can review, it means it's been accepted on our side and
+          // not in ePoetry.
+          return $this->traitGetLanguageStatusDescription($status, $langcode);
+        }
+        // Otherwise, it means it's been accepted in ePoetry.
+        return t('The translation in this language has been accepted in ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING:
+        return t('The content is being translated in ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY:
+        return t('The translation is ready and will be shortly sent by ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SENT:
+        return t('The translation has been sent by ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CLOSED:
+        return t('The translation has been sent and the task has been closed by ePoetry.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED:
+        return t('The translation for this language has been cancelled by ePoetry. It cannot be reopened.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED:
+        return t('The translation for this language has been suspended by ePoetry. This can be a temporary measure and it can be unsuspended by ePoetry.');
+    }
+
+    return $this->traitGetLanguageStatusDescription($status, $langcode);
   }
 
 }

@@ -103,7 +103,13 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $entity = $translation_request->getContentEntity();
       $row = [
         'translator' => $translation_request->getTranslatorProvider()->label(),
-        'status' => $translation_request->getRequestStatus(),
+        'status' => [
+          'data' => [
+            '#theme' => 'tooltip',
+            '#label' => $translation_request->getRequestStatus(),
+            '#text' => $translation_request->getRequestStatusDescription($translation_request->getRequestStatus()),
+          ],
+        ],
         'title' => [
           'data' => [
             '#type' => 'link',

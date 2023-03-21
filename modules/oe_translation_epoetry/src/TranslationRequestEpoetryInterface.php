@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_epoetry;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
@@ -205,5 +206,16 @@ interface TranslationRequestEpoetryInterface extends TranslationRequestRemoteInt
    *   The current request.
    */
   public function setEpoetryRequestStatus(string $status): TranslationRequestRemoteInterface;
+
+  /**
+   * Returns a short description of the epoetry request status.
+   *
+   * @param string $status
+   *   The status.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The description.
+   */
+  public function getEpoetryRequestStatusDescription(string $status): TranslatableMarkup;
 
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation\Traits;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -11,6 +12,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\user\Entity\Role;
 use Drupal\user\UserInterface;
@@ -260,8 +262,54 @@ trait TranslationsTestTrait {
     $this->assertCount(count($columns), $table->findAll('css', 'tbody tr td'));
     $table_columns = $table->findAll('css', 'tbody td');
     foreach ($columns as $delta => $column) {
+      if ($delta === 0) {
+        // Assert the request status and tooltip.
+        $this->assertRequestStatus($column, $table_columns[$delta]);
+        continue;
+      }
+
       $this->assertEquals($column, $table_columns[$delta]->getText());
     }
+  }
+
+  /**
+   * Asserts the request status value and tooltip text.
+   *
+   * @param string $expected_status
+   *   The expected status.
+   * @param \Behat\Mink\Element\NodeElement $column
+   *   The entire column value.
+   */
+  protected function assertRequestStatus(string $expected_status, NodeElement $column): void {
+    $text = $column->getText();
+    if (str_contains($text, 'ⓘ')) {
+      $text = trim(str_replace('ⓘ', '', $text));
+    }
+
+    $this->assertEquals($expected_status, $text);
+    switch ($expected_status) {
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED:
+        $this->assertEquals('The request has been made to the external service.', $column->find('css', '.oe-translation-tooltip--text')->getHtml());
+        return;
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED:
+        $this->assertEquals('The translations for all languages have arrived from the remote provider and at least one is still not synchronised with the content.', $column->find('css', '.oe-translation-tooltip--text')->getHtml());
+        return;
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED:
+        $this->assertEquals('All translations have been synchronised with the content.', $column->find('css', '.oe-translation-tooltip--text')->getHtml());
+        return;
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED:
+        $this->assertEquals('The request has failed but it has been manually marked as finished so a new request can be made to the remote provider.', $column->find('css', '.oe-translation-tooltip--text')->getHtml());
+        return;
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED:
+        $this->assertEquals('The request has failed. You should mark it as "Failed &amp; Finished" in order to retry a new request.', $column->find('css', '.oe-translation-tooltip--text')->getHtml());
+        return;
+    }
+
+    throw new \Exception(sprintf('The %s status tooltip is not covered by any assertion', $expected_status));
   }
 
 }

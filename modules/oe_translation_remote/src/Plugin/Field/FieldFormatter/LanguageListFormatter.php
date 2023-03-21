@@ -97,7 +97,13 @@ class LanguageListFormatter extends FormatterBase {
         'hreflang' => $language->id(),
         'data' => [
           'language' => $language->label(),
-          'status' => $item->status,
+          'status' => [
+            'data' => [
+              '#theme' => 'tooltip',
+              '#label' => $item->status,
+              '#text' => $items->getEntity()->getLanguageStatusDescription($item->status, $item->langcode),
+            ],
+          ],
           'operations' => ['data' => $operations],
         ],
       ];

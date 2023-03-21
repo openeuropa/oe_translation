@@ -1,0 +1,4 @@
+tooltip:
+  css:
+    component:
+      css/tooltip.css: {}
