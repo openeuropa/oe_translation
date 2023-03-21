@@ -17,6 +17,8 @@ use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
  *
  * It only covers ePoetry specific things that are not covered as part of the
  * generic remote translation tests.
+ *
+ * @group batch2
  */
 class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
 
