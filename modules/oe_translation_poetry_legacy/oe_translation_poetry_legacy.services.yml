@@ -1,0 +1,6 @@
+services:
+  oe_translation_poetry_legacy.epoetry_request_subscriber:
+    class: Drupal\oe_translation_poetry_legacy\EventSubscriber\EpoetryRequestSubscriber
+    arguments: [ '@entity_type.manager' ]
+    tags:
+      - { name: event_subscriber }
