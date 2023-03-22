@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.0](https://github.com/openeuropa/oe_translation/tree/0.20.0) (2022-03-21)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.19.0...0.20.0)
+
+**Merged pull requests:**
+
+- EWPP-2908: Update to PHP8.1 and D9.4. [\#193](https://github.com/openeuropa/oe_translation/pull/193) ([22Alexandra](https://github.com/22Alexandra))
+
 ## [0.19.0](https://github.com/openeuropa/oe_translation/tree/0.19.0) (2022-07-29)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.18.1...0.19.0)
 
