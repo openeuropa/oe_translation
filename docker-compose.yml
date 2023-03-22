@@ -22,6 +22,8 @@ services:
       EPOETRY_AUTH_CERT_PATH: ""
       EPOETRY_AUTH_CERT_PASSWORD: ""
       EPOETRY_AUTH_EU_LOGIN_BASEPATH: ""
+      EPOETRY_TICKET_VALIDATION_EU_LOGIN_BASEPATH: ""
+      EPOETRY_TICKET_VALIDATION_JOB_ACCOUNT: ""
   mysql:
     image: percona/percona-server:5.7
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3

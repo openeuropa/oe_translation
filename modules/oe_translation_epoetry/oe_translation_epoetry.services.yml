@@ -20,3 +20,6 @@ services:
   oe_translation_epoetry.client_certificate_authentication:
     class: Drupal\oe_translation_epoetry\ClientCertificateAuthentication
     arguments: ['@logger.factory']
+  oe_translation_epoetry.notification_ticket_validation:
+    class: Drupal\oe_translation_epoetry\NotificationTicketValidation
+    arguments: ['@http_client', '@logger.factory']
