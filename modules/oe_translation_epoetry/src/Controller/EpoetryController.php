@@ -17,6 +17,7 @@ use Http\Discovery\Psr17Factory;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\EPoetry\NotificationServerFactory;
 use OpenEuropa\EPoetry\Serializer\Serializer;
+use OpenEuropa\EPoetry\TicketValidation\TicketValidationInterface;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -53,6 +54,13 @@ class EpoetryController extends ControllerBase {
   protected $loggerChannelFactory;
 
   /**
+   * The ticket validation service.
+   *
+   * @var \OpenEuropa\EPoetry\TicketValidation\TicketValidationInterface
+   */
+  protected $ticketValidation;
+
+  /**
    * Constructs a EpoetryController.
    *
    * @param \Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler
@@ -61,11 +69,14 @@ class EpoetryController extends ControllerBase {
    *   The event dispatcher.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory.
+   * @param \OpenEuropa\EPoetry\TicketValidation\TicketValidationInterface $ticketValidation
+   *   The ticket validation service.
    */
-  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, TicketValidationInterface $ticketValidation) {
     $this->newVersionRequestHandler = $newVersionRequestHandler;
     $this->eventDispatcher = $eventDispatcher;
     $this->loggerChannelFactory = $loggerChannelFactory;
+    $this->ticketValidation = $ticketValidation;
   }
 
   /**
@@ -75,7 +86,8 @@ class EpoetryController extends ControllerBase {
     return new static(
       $container->get('oe_translation_epoetry.new_version_request_handler'),
       $container->get('event_dispatcher'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('oe_translation_epoetry.notification_ticket_validation')
     );
   }
 
@@ -85,8 +97,6 @@ class EpoetryController extends ControllerBase {
    * Handles the SOAP requests from ePoetry that change statuses or deliver
    * translations.
    *
-   * @todo add basic access check.
-   *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current Symfony request.
    *
@@ -95,7 +105,16 @@ class EpoetryController extends ControllerBase {
    */
   public function notifications(Request $request): Response {
     $callback = NotificationEndpointResolver::resolve();
-    $server_factory = new NotificationServerFactory($callback, $this->eventDispatcher, $this->loggerChannelFactory->get('oe_translation_epoetry'), new Serializer());
+    $logger = $this->loggerChannelFactory->get('oe_translation_epoetry');
+    $server_factory = new NotificationServerFactory($callback, $this->eventDispatcher, $logger, new Serializer(), $this->ticketValidation);
+    $request_type = $request->getMethod();
+    if ($request_type === 'GET') {
+      $wsdl = $server_factory->getWsdl();
+      $response = new Response($wsdl);
+      $response->headers->set('Content-type', 'application/xml; charset=utf-8');
+      return $response;
+    }
+
     $psr_factory = new Psr17Factory();
     $psr_http_factory = new PsrHttpFactory($psr_factory, $psr_factory, $psr_factory, $psr_factory);
     $psr_request = $psr_http_factory->createRequest($request);

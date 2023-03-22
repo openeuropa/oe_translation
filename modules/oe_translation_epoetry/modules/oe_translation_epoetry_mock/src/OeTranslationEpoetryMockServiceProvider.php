@@ -20,6 +20,11 @@ class OeTranslationEpoetryMockServiceProvider extends ServiceProviderBase {
       $definition = $container->getDefinition('oe_translation_epoetry.request_factory');
       $definition->setClass(MockRequestFactory::class);
     }
+
+    if ($container->hasDefinition('oe_translation_epoetry.notification_ticket_validation')) {
+      $definition = $container->getDefinition('oe_translation_epoetry.notification_ticket_validation');
+      $definition->setClass(MockNotificationTicketValidation::class);
+    }
   }
 
 }
