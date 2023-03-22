@@ -293,10 +293,11 @@ class RemoteTranslationTest extends TranslationTestBase {
     // Review the Bulgarian translation.
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="bg"] a')->click();
 
-    // Assert that we have the 2 buttons because the oe_translator has all the
+    // Assert that we have the 3 buttons because the oe_translator has all the
     // permissions.
     $this->assertSession()->buttonExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
+    $this->assertSession()->buttonExists('Preview');
 
     // Remove the "accept" permission and assert the button is missing.
     $role = Role::load('oe_translator');
@@ -408,10 +409,20 @@ class RemoteTranslationTest extends TranslationTestBase {
     ];
     $this->assertOngoingTranslations([$expected_ongoing]);
 
-    // Sync the translation and assert we go to the request page. We navigate
-    // from the dashboard.
+    // Preview the translation. We navigate from the dashboard.
     $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table')->clickLink('View');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="bg"] a')->click();
+    $this->getSession()->getPage()->pressButton('Preview');
+    $this->assertSession()->pageTextContains('Full translation node - BG');
+    $this->assertSession()->pageTextContains('Referenced node - bg');
+    $this->assertSession()->pageTextContains('grandchild field value 1 - bg');
+    $this->assertSession()->pageTextContains('grandchild field value 2 - bg');
+    $this->assertSession()->pageTextContains('child field value 2 - bg');
+    $this->assertSession()->pageTextContains('child field value 2 - bg');
+    $this->assertSession()->pageTextContains('top field value 1 - bg');
+    $this->assertSession()->pageTextContains('top field value 2 - bg');
+    // Go back and sync the translation and assert we go to the request page.
+    $this->getSession()->back();
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in Bulgarian has been synchronised.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
