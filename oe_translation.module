@@ -33,6 +33,12 @@ function oe_translation_theme($existing, $type, $theme, $path) {
     'local_translation_form_element_group' => [
       'render element' => 'element',
     ],
+    'tooltip' => [
+      'variables' => [
+        'text' => NULL,
+        'label' => NULL,
+      ],
+    ],
   ];
 }
 
@@ -299,4 +305,11 @@ function oe_translation_entity_operation_alter(array &$operations, EntityInterfa
       $operations[$op] = $link;
     }
   }
+}
+
+/**
+ * Implements template_preprocess_tooltip().
+ */
+function oe_translation_preprocess_tooltip(array &$variables) {
+  $variables['#attached']['library'][] = 'oe_translation/tooltip';
 }

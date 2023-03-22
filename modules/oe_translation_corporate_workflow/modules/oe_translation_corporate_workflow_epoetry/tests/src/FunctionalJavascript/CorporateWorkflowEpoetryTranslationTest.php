@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
+namespace Drupal\Tests\oe_translation_corporate_workflow_epoetry\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;

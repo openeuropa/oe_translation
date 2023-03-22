@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_remote;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface;
 
@@ -134,6 +135,47 @@ trait RemoteTranslationRequestEntityTrait {
     }
 
     return $data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequestStatusDescription(string $status): TranslatableMarkup {
+    switch ($status) {
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED:
+        return t('The request has been made to the external service.');
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED:
+        return t('The translations for all languages have arrived from the remote provider and at least one is still not synchronised with the content.');
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED:
+        return t('All translations have been synchronised with the content.');
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED:
+        return t('The request has failed but it has been manually marked as finished so a new request can be made to the remote provider.');
+
+      case TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED:
+        return t('The request has failed. You should mark it as "@value" in order to retry a new request.', ['@value' => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED]);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup {
+    switch ($status) {
+      case TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED:
+        return t('The language has been requested.');
+
+      case TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW:
+        return t('The translation for this language has arrived and is ready for review.');
+
+      case TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED:
+        return t('The translation for this language has been internally accepted and is ready for synchronisation.');
+
+      case TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED:
+        return t('The translation for this language has been synchronised.');
+    }
   }
 
 }

@@ -191,7 +191,13 @@ function oe_translation_remote_oe_translation_request_view(array &$build, Entity
 
     $row = [];
 
-    $row['request_status'] = $entity->getRequestStatus();
+    $row['request_status'] = [
+      'data' => [
+        '#theme' => 'tooltip',
+        '#label' => $entity->getRequestStatus(),
+        '#text' => $entity->getRequestStatusDescription($entity->getRequestStatus()),
+      ],
+    ];
     $row['provider'] = $entity->getTranslatorProvider()->label();
 
     $classes = ['request-status-meta-table'];

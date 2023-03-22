@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_remote;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface;
@@ -31,7 +32,7 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
    * These are the mandatory statuses a remote request can have. Each remote
    * translator can, however, provide its own extra statuses.
    *
-   * ACTIVE: the request is sent to the provider.
+   * REQUESTED: the request is sent to the provider.
    * TRANSLATED: all the language translations have arrived and the provider's
    * job is done.
    * FINISHED: all the language translations have been synced.
@@ -123,5 +124,29 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
    *   The translated data.
    */
   public function getTranslatedData(): array;
+
+  /**
+   * Returns a short description of the translation request status.
+   *
+   * @param string $status
+   *   The status.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The description.
+   */
+  public function getRequestStatusDescription(string $status): TranslatableMarkup;
+
+  /**
+   * Returns a short description of the translation language status.
+   *
+   * @param string $status
+   *   The status.
+   * @param string $langcode
+   *   The langcode.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The description.
+   */
+  public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup;
 
 }
