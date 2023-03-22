@@ -33,6 +33,15 @@ trait TranslationFormTrait {
   protected function translationFormElement(array $data, array $existing_translation_data, bool $disable) {
     $element = [];
 
+    foreach (Element::children($existing_translation_data) as $key) {
+      if (isset($data[$key]) || !TranslationSourceHelper::filterData($existing_translation_data[$key])) {
+        continue;
+      }
+
+      $data[$key] = $existing_translation_data[$key];
+      $data[$key]['#remove'] = TRUE;
+    }
+
     foreach (Element::children($data) as $key) {
       if (!isset($data[$key]['#text']) || !TranslationSourceHelper::filterData($data[$key])) {
         continue;
@@ -41,6 +50,18 @@ trait TranslationFormTrait {
       // The char sequence '][' confuses the form API so we need to replace
       // it.
       $target_key = str_replace('][', '|', $key);
+
+      if (isset($data[$key]['#remove'])) {
+        $element[$target_key] = [
+          '#theme' => 'status_messages',
+          '#message_list' => [
+            'warning' => [$this->t('Source value for the field <em>@name</em> was removed. Synchronising this translation will remove the value from the translation as well.', ['@name' => implode(' / ', $data[$key]['#parent_label'])])],
+          ],
+        ];
+
+        continue;
+      }
+
       $element[$target_key] = [
         '#tree' => TRUE,
         '#theme' => 'local_translation_form_element_group',

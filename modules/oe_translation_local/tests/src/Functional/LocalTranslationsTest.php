@@ -35,6 +35,81 @@ class LocalTranslationsTest extends TranslationTestBase {
   protected $defaultTheme = 'classy';
 
   /**
+   * Array of fields.
+   *
+   * Keyed by field name containing the xpath, value and whether it's
+   * translatable.
+   *
+   * @var array
+   */
+  protected $fields = [
+    'title' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Title']",
+      'value' => 'Full translation node',
+      'translate' => TRUE,
+    ],
+    'address_country_code' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Address / The two-letter country code']",
+      'value' => 'BE',
+    ],
+    'address_locality' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Address / City']",
+      'value' => 'Brussels',
+    ],
+    'address_postal_code' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Address / Postal code']",
+      'value' => 1000,
+    ],
+    'address_address_line1' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Address / Street address']",
+      'value' => 'The street name',
+    ],
+    'address_given_name' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Address / First name']",
+      'value' => 'The first name',
+    ],
+    'address_family_name' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Address / Last name']",
+      'value' => 'The last name',
+    ],
+    'ott_content_reference' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Content reference / Title']",
+      'value' => 'Referenced node',
+      'translate' => TRUE,
+    ],
+    'ott_inner_paragraphs__0__ott_inner_paragraph_ott__0' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner paragraph field']",
+      'value' => 'child field value 1',
+      'translate' => TRUE,
+    ],
+    'ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner paragraph field']",
+      'value' => 'grandchild field value 1',
+      'translate' => TRUE,
+    ],
+    'ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner Paragraphs / (1) / Demo inner paragraph type / Inner paragraph field']",
+      'value' => 'grandchild field value 2',
+      'translate' => TRUE,
+    ],
+    'ott_inner_paragraphs__0__ott_inner_paragraph_ott__1' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (1) / Demo inner paragraph type / Inner paragraph field']",
+      'value' => 'child field value 2',
+      'translate' => TRUE,
+    ],
+    'ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Top level paragraph field']",
+      'value' => 'top field value 1',
+      'translate' => TRUE,
+    ],
+    'ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0' => [
+      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (1) / Demo paragraph type / Top level paragraph field']",
+      'value' => 'top field value 2',
+      'translate' => TRUE,
+    ],
+  ];
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -109,73 +184,6 @@ class LocalTranslationsTest extends TranslationTestBase {
     // Assert the title.
     $this->assertSession()->elementTextEquals('css', 'h1', 'Translate Full translation node in French');
 
-    // Assert we have all the fields there.
-    $fields = [];
-    $fields['title'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Title']",
-      'value' => 'Full translation node',
-      'translate' => TRUE,
-    ];
-    $fields['address_country_code'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address / The two-letter country code']",
-      'value' => 'BE',
-    ];
-    $fields['address_locality'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address / City']",
-      'value' => 'Brussels',
-    ];
-    $fields['address_postal_code'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address / Postal code']",
-      'value' => 1000,
-    ];
-    $fields['address_address_line1'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address / Street address']",
-      'value' => 'The street name',
-    ];
-    $fields['address_given_name'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address / First name']",
-      'value' => 'The first name',
-    ];
-    $fields['address_family_name'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Address / Last name']",
-      'value' => 'The last name',
-    ];
-    $fields['ott_content_reference'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Content reference / Title']",
-      'value' => 'Referenced node',
-      'translate' => TRUE,
-    ];
-    $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner paragraph field']",
-      'value' => 'child field value 1',
-      'translate' => TRUE,
-    ];
-    $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner paragraph field']",
-      'value' => 'grandchild field value 1',
-      'translate' => TRUE,
-    ];
-    $fields['ott_inner_paragraphs__0__ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (0) / Demo inner paragraph type / Inner Paragraphs / (1) / Demo inner paragraph type / Inner paragraph field']",
-      'value' => 'grandchild field value 2',
-      'translate' => TRUE,
-    ];
-    $fields['ott_inner_paragraphs__0__ott_inner_paragraph_ott__1'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Inner Paragraphs / (1) / Demo inner paragraph type / Inner paragraph field']",
-      'value' => 'child field value 2',
-      'translate' => TRUE,
-    ];
-    $fields['ott_top_level_paragraphs__0__ott_top_level_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (0) / Demo paragraph type / Top level paragraph field']",
-      'value' => 'top field value 1',
-      'translate' => TRUE,
-    ];
-    $fields['ott_top_level_paragraphs__1__ott_top_level_paragraph_ott__0'] = [
-      'xpath' => "//table//th[normalize-space(text()) = 'Top level paragraphs / (1) / Demo paragraph type / Top level paragraph field']",
-      'value' => 'top field value 2',
-      'translate' => TRUE,
-    ];
-
     // Assert that we have the 3 buttons because the oe_translator has all the
     // permissions.
     $this->assertSession()->buttonExists('Save as draft');
@@ -205,7 +213,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->getSession()->reload();
 
     // Translate each of the fields.
-    foreach ($fields as $key => $data) {
+    foreach ($this->fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       if (!$table_header) {
         $this->fail(sprintf('The form label for the "%s" field was not found on the page.', $key));
@@ -216,7 +224,7 @@ class LocalTranslationsTest extends TranslationTestBase {
       if (!$element) {
         $this->fail(sprintf('The translation element for the "%s" field was not found on the page.', $key));
       }
-
+      // Assert we have all the fields there with the correct value.
       $this->assertEquals($data['value'], $element->getText());
       // Set a translation value.
       if (isset($data['translate'])) {
@@ -274,7 +282,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Assert the translation values have been saved and the form is
     // populated with the translated values.
-    foreach ($fields as $key => $data) {
+    foreach ($this->fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       $table = $table_header->getParent()->getParent()->getParent();
       $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
@@ -308,7 +316,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Each form element is disabled because while accepted, we should not
     // edit.
-    foreach ($fields as $key => $data) {
+    foreach ($this->fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       $table = $table_header->getParent()->getParent()->getParent();
       $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
@@ -321,7 +329,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('The translation request has been saved.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
     $this->clickLink('Edit draft translation');
-    foreach ($fields as $key => $data) {
+    foreach ($this->fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       $table = $table_header->getParent()->getParent()->getParent();
       $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
@@ -353,7 +361,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
 
     // Assert that we can see all the translated values.
-    foreach ($fields as $key => $data) {
+    foreach ($this->fields as $key => $data) {
       if (isset($data['translate'])) {
         $this->assertSession()->pageTextContains($data['value'] . ' FR');
       }
@@ -366,7 +374,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Add a spanish translation to be previewed.
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="es"] a')->click();
-    foreach ($fields as $key => $data) {
+    foreach ($this->fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
       $table = $table_header->getParent()->getParent()->getParent();
       $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
@@ -601,6 +609,73 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->linkNotExistsExact('First node');
 
     $this->assertSession()->linkExistsExact('Edit accepted translation');
+  }
+
+  /**
+   * Tests translation values are removed upon sync if source ones are removed.
+   */
+  public function testSourceValuesRemoval(): void {
+    // Grant permission to edit nodes for the Translator role.
+    $role = Role::load('oe_translator');
+    $role->grantPermission('edit any oe_demo_translatable_page content');
+    $role->save();
+    // Create a node and translate it to French.
+    $node = $this->createFullTestNode();
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    // Translate each of the fields.
+    foreach ($this->fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      if (!$table_header) {
+        $this->fail(sprintf('The form label for the "%s" field was not found on the page.', $key));
+      }
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+      if (!$element) {
+        $this->fail(sprintf('The translation element for the "%s" field was not found on the page.', $key));
+      }
+      // Set a translation value.
+      if (isset($data['translate'])) {
+        $element->setValue($data['value'] . ' FR');
+      }
+    }
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    // Assert the node now has the FR translation.
+    $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
+
+    // Assert that we can see all the translated values.
+    foreach ($this->fields as $key => $data) {
+      if (isset($data['translate'])) {
+        $this->assertSession()->pageTextContains($data['value'] . ' FR');
+      }
+    }
+
+    $this->drupalGet($node->toUrl('edit-form'));
+    // Remove Top level paragraph fields values.
+    $this->getSession()->getPage()->fillField('ott_top_level_paragraphs[0][subform][ott_top_level_paragraph_field][0][value]', '');
+    $this->getSession()->getPage()->fillField('ott_top_level_paragraphs[1][subform][ott_top_level_paragraph_field][0][value]', '');
+    $this->getSession()->getPage()->pressButton('Save (this translation)');
+    // Navigate to the French local translation and assert it can be synced in
+    // order to remove the translation values.
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    $this->assertSession()->pageTextContains('Source value for the field Top level paragraphs / Delta #0 / Top level paragraph field was removed. Synchronising this translation will remove the value from the translation as well.');
+    $this->assertSession()->pageTextContains('Source value for the field Top level paragraphs / Delta #1 / Top level paragraph field was removed. Synchronising this translation will remove the value from the translation as well.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    // Assert that the French translations contains the same values except for
+    // the ones removed from the original node.
+    $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
+    $this->assertSession()->pageTextContains('Full translation node FR');
+    $this->assertSession()->pageTextContains('Referenced node FR');
+    $this->assertSession()->pageTextNotContains('top field value 1 FR');
+    $this->assertSession()->pageTextNotContains('top field value 2 FR');
+    $this->assertSession()->pageTextContains('grandchild field value 1 FR');
+    $this->assertSession()->pageTextContains('grandchild field value 2 FR');
+    $this->assertSession()->pageTextContains('child field value 1 FR');
+    $this->assertSession()->pageTextContains('child field value 2 FR');
   }
 
   /**
