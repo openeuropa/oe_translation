@@ -12,6 +12,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
 use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
+use Drupal\oe_translation_epoetry\NotificationTicketValidation;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Http\Discovery\Psr17Factory;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -106,7 +107,11 @@ class EpoetryController extends ControllerBase {
   public function notifications(Request $request): Response {
     $callback = NotificationEndpointResolver::resolve();
     $logger = $this->loggerChannelFactory->get('oe_translation_epoetry');
-    $server_factory = new NotificationServerFactory($callback, $this->eventDispatcher, $logger, new Serializer(), $this->ticketValidation);
+    $ticket_validation = NULL;
+    if (NotificationTicketValidation::shouldUseTicketValidation()) {
+      $ticket_validation = $this->ticketValidation;
+    }
+    $server_factory = new NotificationServerFactory($callback, $this->eventDispatcher, $logger, new Serializer(), $ticket_validation);
     $request_type = $request->getMethod();
     if ($request_type === 'GET') {
       $wsdl = $server_factory->getWsdl();
