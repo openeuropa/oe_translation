@@ -2283,6 +2283,54 @@ class EpoetryTranslationTest extends TranslationTestBase {
   }
 
   /**
+   * Tests that we can configure the notification validation to kick in.
+   */
+  public function testNotificationTicketValidation(): void {
+    // Create a node and its active translation request.
+    $node = $this->createBasicTestNode();
+    $request = $this->createNodeTranslationRequest($node);
+    $request->save();
+    $this->assertEquals('Requested', $request->getRequestStatus());
+    $this->assertEquals('SenttoDGT', $request->getEpoetryRequestStatus());
+
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    $notification = [
+      'type' => 'RequestStatusChange',
+      'status' => 'Accepted',
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $logs = MockLogger::getLogs();
+    foreach ($logs as $log) {
+      $this->assertStringNotContainsString('The mock ticket validation kicked in.', $log['message']);
+    }
+
+    MockLogger::clearLogs();
+
+    // Turn on the ticket validation.
+    $this->writeSettings([
+      'settings' => [
+        'epoetry.ticket_validation.on' =>
+        (object) [
+          'value' => 1,
+          'required' => TRUE,
+        ],
+      ],
+    ]
+    );
+
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $logs = MockLogger::getLogs();
+    $found = FALSE;
+    foreach ($logs as $log) {
+      if (str_contains('The mock ticket validation kicked in.', $log['message'])) {
+        $found = TRUE;
+      }
+    }
+
+    $this->assertEquals($found, 'The mock ticket validation kicked in');
+  }
+
+  /**
    * Asserts the log messages table output.
    *
    * @param array $logs

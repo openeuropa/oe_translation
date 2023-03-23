@@ -52,8 +52,9 @@ commands:
         $settings["epoetry.auth.cert_path"] = getenv('EPOETRY_AUTH_CERT_PATH');
         $settings["epoetry.auth.cert_password"] = getenv('EPOETRY_AUTH_CERT_PASSWORD');
         $settings["epoetry.auth.eulogin_base_path"] = getenv('EPOETRY_AUTH_EU_LOGIN_BASEPATH');
-        $settings["epoetry.ticket_validation.eulogin_ticket_validation_base_path"] = getenv('EPOETRY_TICKET_VALIDATION_EU_LOGIN_BASEPATH');
+        $settings["epoetry.ticket_validation.eulogin_base_path"] = getenv('EPOETRY_TICKET_VALIDATION_EU_LOGIN_BASEPATH');
         $settings["epoetry.ticket_validation.eulogin_job_account"] = getenv('EPOETRY_TICKET_VALIDATION_JOB_ACCOUNT');
+        $settings["epoetry.ticket_validation.on"] = getenv('EPOETRY_TICKET_VALIDATION_ON');
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
     # Generate settings.testing.php, it will be used when running functional tests.
     - { task: "process-php", type: "write", config: "drupal.settings", source: "${drupal.root}/sites/default/default.settings.php", destination: "${drupal.root}/sites/default/settings.testing.php", override: true }
@@ -66,8 +67,9 @@ commands:
         $settings["epoetry.auth.cert_path"] = getenv('EPOETRY_AUTH_CERT_PATH');
         $settings["epoetry.auth.cert_password"] = getenv('EPOETRY_AUTH_CERT_PASSWORD');
         $settings["epoetry.auth.eulogin_base_path"] = getenv('EPOETRY_AUTH_EU_LOGIN_BASEPATH');
-        $settings["epoetry.ticket_validation.eulogin_ticket_validation_base_path"] = getenv('EPOETRY_TICKET_VALIDATION_EU_LOGIN_BASEPATH');
+        $settings["epoetry.ticket_validation.eulogin_base_path"] = getenv('EPOETRY_TICKET_VALIDATION_EU_LOGIN_BASEPATH');
         $settings["epoetry.ticket_validation.eulogin_job_account"] = getenv('EPOETRY_TICKET_VALIDATION_JOB_ACCOUNT');
+        $settings["epoetry.ticket_validation.on"] = getenv('EPOETRY_TICKET_VALIDATION_ON');
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }

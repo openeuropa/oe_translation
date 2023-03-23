@@ -34,6 +34,8 @@ function oe_translation_epoetry_requirements($phase) {
       'epoetry.auth.cert_path' => t('ePoetry certificate path'),
       'epoetry.auth.cert_password' => t('ePoetry certificate password'),
       'epoetry.auth.eulogin_base_path' => t('ePoetry EU login base path'),
+      'epoetry.ticket_validation.eulogin_base_path' => t('ePoetry EU login ticket validation base path'),
+      'epoetry.ticket_validation.eulogin_job_account' => t('ePoetry EU login ticket validation job account'),
     ];
 
     foreach ($poetry_environment_variables as $variable => $name) {
@@ -48,6 +50,13 @@ function oe_translation_epoetry_requirements($phase) {
     $value = Settings::get('epoetry.notification.endpoint_prefix', FALSE);
     $requirements['epoetry.notification.endpoint_prefix'] = [
       'title' => 'ePoetry notification endpoint prefix',
+      'value' => $value ? $value : t('Value not set'),
+      'severity' => REQUIREMENT_INFO,
+    ];
+
+    $value = Settings::get('epoetry.ticket_validation.on', FALSE);
+    $requirements['epoetry.ticket_validation.on'] = [
+      'title' => 'ePoetry ticket validation enabled',
       'value' => $value ? $value : t('Value not set'),
       'severity' => REQUIREMENT_INFO,
     ];

@@ -16,6 +16,7 @@ class MockNotificationTicketValidation implements TicketValidationInterface {
    * {@inheritdoc}
    */
   public function validate(RequestInterface $request): bool {
+    \Drupal::logger('oe_translation_epoetry')->info('The mock ticket validation kicked in.');
     return TRUE;
   }
 

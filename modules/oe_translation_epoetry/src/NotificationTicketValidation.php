@@ -26,6 +26,16 @@ class NotificationTicketValidation extends EuLoginTicketValidation {
   }
 
   /**
+   * Returns if we should use the ticket validation.
+   *
+   * @return bool
+   *   Whether ticket validation should be used.
+   */
+  public static function shouldUseTicketValidation(): bool {
+    return Settings::get('epoetry.ticket_validation.on') ? (bool) Settings::get('epoetry.ticket_validation.on') : FALSE;
+  }
+
+  /**
    * Returns the EULogin base path used for the ticket validation.
    *
    * @return string|null
