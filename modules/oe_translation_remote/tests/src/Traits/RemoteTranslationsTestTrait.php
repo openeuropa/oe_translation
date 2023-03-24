@@ -62,10 +62,7 @@ trait RemoteTranslationsTestTrait {
       $expected_info = $translations[$key];
       $this->assertEquals($expected_info['translator'], $cols[0]->getText());
       $this->assertRequestStatus($expected_info['status'], $cols[1]);
-      $this->assertEquals($expected_info['title_url'], $cols[2]->findLink($expected_info['title'])->getAttribute('href'));
-      $this->assertEquals($expected_info['revision'], $cols[3]->getText());
-      $this->assertEquals($expected_info['is_default'], $cols[4]->getText());
-      $this->assertTrue($cols[5]->hasLink('View'));
+      $this->assertTrue($cols[2]->hasLink('View'));
     }
   }
 

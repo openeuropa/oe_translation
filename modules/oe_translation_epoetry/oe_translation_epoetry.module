@@ -106,7 +106,7 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   if ($logs) {
     $build['logs'] = [
       '#type' => 'details',
-      '#title' => t('Log messages'),
+      '#title' => t('Log messages (@count)', ['@count' => count($logs['#rows'])]),
       0 => $logs,
     ];
   }
@@ -211,6 +211,16 @@ function oe_translation_epoetry_views_data_alter(&$data) {
     'field' => 'request_id',
     'id' => 'oe_translation_epoetry_request_id_filter',
   ];
+  $data['oe_translation_request__target_languages']['target_languages_with_tooltip'] = [
+    'title' => t('Target languages with tooltip'),
+    'group' => t('Translation Request'),
+    'field' => [
+      'title' => t('Target languages with tooltip'),
+      'help' => t('Shows the number of requested languages with a tooltip containing more information.'),
+      'id' => 'oe_translation_epoetry_target_languages_with_tooltip',
+    ],
+  ];
+  $data['oe_translation_request__target_languages']['target_languages_langcode']['filter']['id'] = 'oe_translation_epoetry_target_languages_filter';
 }
 
 /**

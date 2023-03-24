@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Drupal\oe_translation_epoetry\Event;
+namespace Drupal\oe_translation\Event;
 
 /**
- * Dispatched for altering the languages available for ePoetry translations.
+ * Dispatched for altering the languages available for translations.
  */
 class AvailableLanguagesAlterEvent {
 
   /**
    * The event name.
    */
-  const NAME = 'oe_translation_epoetry.available_languages_alter';
+  const NAME = 'oe_translation.available_languages_alter';
 
   /**
    * The available languages.

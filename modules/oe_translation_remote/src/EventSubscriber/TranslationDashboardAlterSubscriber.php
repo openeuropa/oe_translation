@@ -8,6 +8,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -34,16 +35,26 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected $providerManager;
 
   /**
+   * The translator providers service.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * Creates a new TranslationDashboardAlterSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager $providerManager
    *   The remote translation provider manager.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   The translator providers service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, TranslatorProvidersInterface $translatorProviders) {
     $this->entityTypeManager = $entityTypeManager;
     $this->providerManager = $providerManager;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -62,6 +73,13 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   public function alterDashboard(ContentTranslationDashboardAlterEvent $event) {
     $build = $event->getBuild();
     $cache = CacheableMetadata::createFromRenderArray($build);
+    $cache->addCacheContexts(['route']);
+
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
+    $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
+    if (!$this->translatorProviders->hasRemote($current_entity->getEntityType())) {
+      return;
+    }
 
     $build['remote_translation'] = [
       '#weight' => -100,
@@ -71,9 +89,6 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       '#type' => 'inline_template',
       '#template' => "<h3>{{ 'Ongoing remote translation requests' }}</h3>",
     ];
-
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
-    $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
 
     // Get all the translation requests that are not synced for all revisions.
     /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface[] $translation_requests */
@@ -91,10 +106,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $header = [
       'translator' => $this->t('Translator'),
-      'status' => $this->t('Status'),
-      'title' => $this->t('Title'),
-      'revision_id' => $this->t('Revision ID'),
-      'default_revision' => $this->t('Default revision'),
+      'status' => $this->t('Request status'),
       'operations' => $this->t('Operations'),
     ];
 
@@ -110,15 +122,6 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
             '#text' => $translation_request->getRequestStatusDescription($translation_request->getRequestStatus()),
           ],
         ],
-        'title' => [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $entity->label(),
-            '#url' => $entity->toUrl('revision'),
-          ],
-        ],
-        'revision_id' => $entity->getRevisionId(),
-        'default_revision' => $entity->isDefaultRevision() ? $this->t('Yes') : $this->t('No'),
         'operations' => [
           'data' => $translation_request->getOperationsLinks(),
         ],

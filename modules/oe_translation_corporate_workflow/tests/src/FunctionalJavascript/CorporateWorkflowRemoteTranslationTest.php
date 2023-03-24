@@ -148,7 +148,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // Assert we cannot translate this node while in draft.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $this->assertSession()->elementContains('css', '.translator-wrapper .messages--warning', 'No translation requests can be made until a version of the content has been created.');
+    $this->assertSession()->elementContains('css', '.translator-wrapper .messages--warning', 'This content cannot be translated yet as it does not have a Validated nor Published major version.');
 
     // Validate the node and make a new translation request in Bulgarian.
     $node = $this->moderateNode($node, 'validated');
@@ -169,8 +169,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertRequestStatusTable([
       'Requested',
       'Remote one',
-      '1.0.0',
-      'validated',
+      '1.0.0 / validated',
     ]);
 
     // Publish the node.
@@ -185,21 +184,14 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $expected_ongoing = [
       'translator' => 'Remote one',
       'status' => 'Requested',
-      'title' => 'My node',
-      // The URL is of the validated revision from hence it came.
-      'title_url' => $validated->toUrl('revision')->toString(),
-      'revision' => $validated->getRevisionId(),
-      'is_default' => 'No',
-      'version' => '1.0.0',
-      'state' => 'validated',
+      'version' => '1.0.0 / validated',
     ];
     $this->assertOngoingTranslations([$expected_ongoing]);
     $this->clickLink('Remote translations');
     $this->assertRequestStatusTable([
       'Requested',
       'Remote one',
-      '1.0.0',
-      'validated',
+      '1.0.0 / validated',
     ]);
 
     $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
@@ -221,8 +213,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertRequestStatusTable([
       'Translated',
       'Remote one',
-      '1.0.0',
-      'validated',
+      '1.0.0 / validated',
     ]);
 
     $this->clickLink('Dashboard');
@@ -234,8 +225,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertRequestStatusTable([
       'Translated',
       'Remote one',
-      '1.0.0',
-      'validated',
+      '1.0.0 / validated',
     ]);
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
     $this->getSession()->getPage()->pressButton('Save and synchronise');
@@ -349,12 +339,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $first_ongoing = [
       'translator' => 'Remote one',
       'status' => 'Translated',
-      'title' => 'My node',
-      'title_url' => $node->toUrl()->toString(),
-      'revision' => $published_revision_id,
-      'is_default' => 'Yes',
-      'version' => '1.0.0',
-      'state' => 'published',
+      'version' => '1.0.0 / published',
     ];
     $second_ongoing = $first_ongoing;
     $second_ongoing['status'] = 'Requested';
@@ -401,12 +386,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $third_ongoing = [
       'translator' => 'Remote one',
       'status' => 'Requested',
-      'title' => 'My node 2',
-      'title_url' => $validated->toUrl('revision')->toString(),
-      'revision' => $validated_revision_id,
-      'is_default' => 'No',
-      'version' => '2.0.0',
-      'state' => 'validated',
+      'version' => '2.0.0 / validated',
     ];
     $this->assertOngoingTranslations([
       $first_ongoing,
@@ -450,8 +430,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertRequestStatusTable([
       'Translated',
       'Remote one',
-      '2.0.0',
-      'validated',
+      '2.0.0 / validated',
     ]);
     // Assert the translation value.
     $node_storage->resetCache();
@@ -499,12 +478,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
       $expected_info = $languages[$key];
       $this->assertEquals($expected_info['translator'], $cols[0]->getText());
       $this->assertRequestStatus($expected_info['status'], $cols[1]);
-      $this->assertEquals($expected_info['title_url'], $cols[2]->findLink($expected_info['title'])->getAttribute('href'));
-      $this->assertEquals($expected_info['revision'], $cols[3]->getText());
-      $this->assertEquals($expected_info['is_default'], $cols[4]->getText());
-      $this->assertEquals($expected_info['version'], $cols[5]->getText());
-      $this->assertEquals($expected_info['state'], $cols[6]->getText());
-      $this->assertTrue($cols[7]->hasLink('View'));
+      $this->assertEquals($expected_info['version'], $cols[2]->getText());
+      $this->assertTrue($cols[3]->hasLink('View'));
     }
   }
 

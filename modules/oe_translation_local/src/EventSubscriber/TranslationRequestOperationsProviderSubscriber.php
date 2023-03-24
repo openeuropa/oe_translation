@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_local\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Url;
 use Drupal\oe_translation\Event\TranslationRequestOperationsProviderEvent;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -38,6 +39,7 @@ class TranslationRequestOperationsProviderSubscriber implements EventSubscriberI
     $cache = CacheableMetadata::createFromRenderArray($links);
 
     $edit = $request->toUrl('local-translation');
+    $edit->setOption('query', ['destination' => Url::fromRoute('<current>')->toString()]);
     $edit_access = $edit->access(NULL, TRUE);
     $cache->addCacheableDependency($edit_access);
     if ($edit_access->isAllowed() && $request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED) {

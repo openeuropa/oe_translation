@@ -19,6 +19,7 @@ class TranslationRequestStorage extends SqlContentEntityStorage implements Trans
     $ids = $this->getQuery()
       ->condition('content_entity.entity_id', $entity->id())
       ->condition('content_entity.entity_revision_id', $entity->getRevisionId())
+      ->condition('content_entity.entity_type', $entity->getEntityTypeId())
       ->condition('bundle', $bundle)
       ->execute();
 
@@ -35,6 +36,7 @@ class TranslationRequestStorage extends SqlContentEntityStorage implements Trans
   public function getTranslationRequestsForEntity(ContentEntityInterface $entity, string $bundle): array {
     $ids = $this->getQuery()
       ->condition('content_entity.entity_id', $entity->id())
+      ->condition('content_entity.entity_type', $entity->getEntityTypeId())
       ->condition('bundle', $bundle)
       ->execute();
 

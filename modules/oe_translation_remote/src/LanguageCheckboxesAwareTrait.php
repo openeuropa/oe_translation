@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\oe_translation_remote;
 
@@ -33,13 +33,22 @@ trait LanguageCheckboxesAwareTrait {
     $form['languages'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Languages'),
+      '#attributes' => ['class' => ['js-language-checkboxes-wrapper']],
+    ];
+    $form['languages']['all'] = [
+      '#type' => 'checkbox',
+      '#title' => '<strong>' . t('Select all') . '</strong>',
+      '#attributes' => ['class' => ['js-checkbox-all']],
     ];
     foreach ($languages as $language) {
       $form['languages'][$language->getId()] = [
         '#type' => 'checkbox',
         '#title' => $language->getName(),
+        '#attributes' => ['class' => ['js-checkbox-language']],
       ];
     }
+
+    $form['#attached']['library'][] = 'oe_translation_remote/language_checkboxes';
   }
 
   /**
@@ -61,7 +70,7 @@ trait LanguageCheckboxesAwareTrait {
     $language_values = $form_state->getValue('languages');
     $languages = [];
     foreach ($language_values as $langcode => $value) {
-      if ($value === 1) {
+      if ($value === 1 && $langcode !== 'all') {
         $languages[] = [
           'langcode' => $langcode,
           'status' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,

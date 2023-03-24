@@ -84,7 +84,7 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
 
     $state = $entity->get('moderation_state')->value;
     if (!in_array($state, ['validated', 'published'])) {
-      return AccessResult::forbidden()->setReason($this->t('No translation requests can be made until a version of the content has been created.'))->addCacheableDependency($cache);
+      return AccessResult::forbidden()->setReason($this->t('This content cannot be translated yet as it does not have a Validated nor Published major version.'))->addCacheableDependency($cache);
     }
 
     if ($entity->isDefaultRevision() && !$entity->isLatestRevision()) {
@@ -221,8 +221,7 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
     $header = [];
     foreach ($table['#header'] as $key => $col) {
       if ($key === 'operations') {
-        $header['version'] = $this->t('Version');
-        $header['state'] = $this->t('Moderation state');
+        $header['version'] = $this->t('Content version');
       }
 
       $header[$key] = $col;
@@ -235,8 +234,7 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       $revision = $request->getContentEntity();
       foreach ($row['data'] as $key => $value) {
         if ($key == 'operations') {
-          $cols['version'] = $this->getEntityVersion($revision);
-          $cols['state'] = $revision->get('moderation_state')->value;
+          $cols['version'] = $this->getEntityVersion($revision) . ' / ' . $revision->get('moderation_state')->value;
         }
         $cols[$key] = $value;
       }

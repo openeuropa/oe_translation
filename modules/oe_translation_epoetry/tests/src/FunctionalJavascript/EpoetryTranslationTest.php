@@ -48,8 +48,14 @@ class EpoetryTranslationTest extends TranslationTestBase {
     'oe_translation_remote',
     'oe_translation_epoetry',
     'oe_translation_epoetry_mock',
-    'oe_translation_epoetry_test',
   ];
+
+  /**
+   * The user running the tests.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $user;
 
   /**
    * {@inheritdoc}
@@ -66,8 +72,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $provider->setProviderConfiguration($configuration);
     $provider->save();
 
-    $user = $this->setUpTranslatorUser();
-    $this->drupalLogin($user);
+    $this->user = $this->setUpTranslatorUser();
+    $this->drupalLogin($this->user);
   }
 
   /**
@@ -178,8 +184,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = $this->createBasicTestNode();
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $this->getSession()->getPage()->selectFieldOption('Translator', 'ePoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
 
     // The contacts fields are empty and the auto-accept checkbox is enabled
@@ -222,8 +226,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Now the contact fields are pre-filled and the auto-accept checkbox
     // is disabled.
     $this->getSession()->reload();
-    $this->getSession()->getPage()->selectFieldOption('Translator', 'ePoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
     $contact_fields = [
       'Recipient' => 'test_recipient',
@@ -258,10 +260,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
 
-    // Select the ePoetry translator.
     $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    // The ePoetry translator is preselected because it's the only one.
+    $this->assertEquals('epoetry', $select->find('css', 'option[selected]')->getValue());
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
 
     // Pick a deadline, contacts and a message.
@@ -343,10 +344,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Info',
         'The request has been sent successfully using the createLinguisticRequest request type. The dossier number started is 1001.',
+        $this->user->label(),
       ],
       2 => [
         'Info',
         'Message from ePoetry: We have received your createLinguisticRequest. We will process it soon.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -405,10 +408,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs[3] = [
       'Info',
       'The request has been Accepted by ePoetry. Planning agent: test. Planning sector: DGT. Message: The request status has been changed to Accepted.',
+      'Anonymous',
     ];
     $expected_logs[4] = [
       'Info',
       'The Portuguese product status has been updated to Accepted.',
+      'Anonymous',
     ];
     $this->assertLogMessagesTable($expected_logs);
 
@@ -434,10 +439,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs[5] = [
       'Info',
       'The Portuguese product status has been updated to Ongoing.',
+      'Anonymous',
     ];
     $expected_logs[6] = [
       'Info',
       'The Portuguese translation has been delivered.',
+      'Anonymous',
     ];
 
     $this->assertLogMessagesTable($expected_logs);
@@ -449,6 +456,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs[7] = [
       'Info',
       'The Portuguese translation has been accepted.',
+      $this->user->label(),
     ];
     $this->assertLogMessagesTable($expected_logs);
     $this->getSession()->getPage()->clickLink('Review');
@@ -461,6 +469,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs[8] = [
       'Info',
       'The Portuguese translation has been synchronised with the content.',
+      $this->user->label(),
     ];
     $this->assertLogMessagesTable($expected_logs);
     $node = Node::load($node->id());
@@ -503,9 +512,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $second_node = $this->createBasicTestNode();
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('French');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -541,10 +547,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Info',
         'The request has been sent successfully using the addNewPartToDossierRequest request type.',
+        $this->user->label(),
       ],
       2 => [
         'Info',
         'Message from ePoetry: We have received your addNewPartToDossier. We will process it soon.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -553,9 +561,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $third_node = $this->createBasicTestNode();
     $this->drupalGet($third_node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('German');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -589,9 +594,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $fourth_node = $this->createBasicTestNode();
     $this->drupalGet($fourth_node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Italian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -656,8 +658,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ]);
 
     $this->clickLink('Remote translations');
-    $this->assertSession()->fieldEnabled('Translator')->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
     $this->assertSession()->pageTextContains(sprintf('You are making a request for a new version. The previous version was translated with the %s request ID.', $request->getRequestId(TRUE)));
 
@@ -744,10 +744,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Info',
         'The request has been sent successfully using the createNewVersionRequest request type.',
+        $this->user->label(),
       ],
       2 => [
         'Info',
         'Message from ePoetry: We have received your createNewVersionRequest. We will process it soon.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -998,14 +1000,17 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Info',
         'The request has been sent successfully using the createNewVersionRequest request type.',
+        $this->user->label(),
       ],
       2 => [
         'Info',
         'Message from ePoetry: We have received your createNewVersionRequest. We will process it soon.',
+        $this->user->label(),
       ],
       3 => [
         'Info',
         'The request has replaced an ongoing translation request which has now been marked as Finished: ' . $old_request_id . '.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -1032,8 +1037,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Next, create a new request, accept it from DGT and then make an update
     // to this request.
-    $this->assertSession()->selectExists('Translator')->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('French');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
@@ -1322,10 +1325,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Info',
         'The modifyLinguisticRequest has been sent to ePoetry for adding the following extra languages: German.',
+        $this->user->label(),
       ],
       2 => [
         'Info',
         'Message from ePoetry: We have received your modifyLinguisticRequest. We will process it soon.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -1417,6 +1422,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_logs[$i] = [
         $log_type,
         $log_message,
+        'Anonymous',
       ];
 
       $this->assertLogMessagesValues($request, $expected_logs);
@@ -1494,6 +1500,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $expected_logs[$i] = [
         $log_type,
         $log_message,
+        'Anonymous',
       ];
 
       $this->assertLogMessagesValues($request, $expected_logs);
@@ -1597,6 +1604,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Warning',
         'The request has been Rejected by ePoetry. Planning agent: test. Planning sector: DGT. Message: Please fix your content.',
+        'Anonymous',
       ],
     ]);
 
@@ -1611,9 +1619,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Make a new request to "correct" the reason why it was rejected. This can
     // be done even without making a change to the content.
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
     $this->assertSession()->pageTextContains('You are making a request for a new version. The previous version was translated with the DIGIT/' . date('Y') . '/2000/0/0/TRA request ID. The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.');
     $this->getSession()->getPage()->checkField('French');
@@ -1678,10 +1683,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Info',
         'The request has been sent successfully using the resubmitRequest request type.',
+        $this->user->label(),
       ],
       2 => [
         'Info',
         'Message from ePoetry: We have received your resubmitRequest. We will process it soon.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -1718,9 +1725,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ]);
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains(sprintf('You are making a request for a new version. The previous version was translated with the %s request ID.', $request->getRequestId(TRUE)));
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
@@ -1757,6 +1761,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       1 => [
         'Error',
         'Phpro\SoapClient\Exception\SoapException: There was an error in your request.',
+        $this->user->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -1785,8 +1790,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Go back to and create a request, this time going through.
     \Drupal::state()->delete('oe_translation_epoetry_mock_response_error');
     $this->clickLink('Remote translations');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $request = reset($requests);
     $this->assertSession()->pageTextContains(sprintf('You are making a request for a new version. The previous version was translated with the %s request ID.', $request->getRequestId(TRUE)));
     $this->getSession()->getPage()->checkField('Bulgarian');
@@ -1852,9 +1855,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = $this->createBasicTestNode();
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -1915,8 +1915,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->drupalLogin($user);
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -1956,12 +1954,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = $this->createBasicTestNode();
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-
-    // Select the ePoetry translator.
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -1989,9 +1981,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Create a request.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->checkField('Auto accept translations');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
@@ -2042,9 +2031,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Create a request.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('French');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -2091,9 +2077,6 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Create a request.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->checkField('Auto sync translations');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
@@ -2137,18 +2120,14 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = $this->createBasicTestNode();
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $this->getSession()->getPage()->selectFieldOption('Translator', 'ePoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
 
     $this->assertSession()->fieldExists('Bulgarian');
     $this->assertSession()->fieldExists('French');
 
-    \Drupal::state()->set('oe_translation_epoetry_test.remove_languages', ['bg']);
+    \Drupal::state()->set('oe_translation_test.remove_languages', ['bg']);
 
     $this->getSession()->reload();
-    $this->getSession()->getPage()->selectFieldOption('Translator', 'ePoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
 
     $this->assertSession()->fieldNotExists('Bulgarian');
@@ -2189,6 +2168,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'langcode' => 'fr',
         'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
       ],
+      [
+        'langcode' => 'de',
+        'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
+      ],
     ]);
     $request->setRequestId($request_id);
     $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED);
@@ -2200,7 +2183,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $second_node->save();
     $request = $this->createNodeTranslationRequest($second_node, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, [
       [
-        'langcode' => 'fr',
+        'langcode' => 'it',
         'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_ONGOING,
       ],
     ]);
@@ -2218,7 +2201,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $third_node->save();
     $request = $this->createNodeTranslationRequest($third_node, TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED, [
       [
-        'langcode' => 'fr',
+        'langcode' => 'ro',
         'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
       ],
     ]);
@@ -2268,6 +2251,20 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->linkNotExistsExact('First node');
     $this->getSession()->getPage()->pressButton('Reset');
 
+    $this->getSession()->getPage()->selectFieldOption('Requested language', 'French');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkExistsExact('First node');
+    $this->assertSession()->linkNotExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('Third node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
+    $this->getSession()->getPage()->fillField('Node ID', $second_node->id());
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertSession()->linkNotExistsExact('First node');
+    $this->assertSession()->linkExistsExact('Second node');
+    $this->assertSession()->linkNotExistsExact('Third node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
     $this->getSession()->getPage()->fillField('Request ID', 'DIGIT/2023/2000/0/0/TRA');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertSession()->linkNotExistsExact('Third node');
@@ -2280,6 +2277,15 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->assertSession()->linkExistsExact('Second node');
     $this->assertSession()->linkNotExistsExact('First node');
+    $this->getSession()->getPage()->pressButton('Reset');
+
+    // Assert the tooltip.
+    $this->assertEquals('2 / 0 ⓘ', $this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'First node')]]/td[5]")->getText());
+    $this->assertEquals('Requested [in ePoetry]: French, German', strip_tags($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'First node')]]/td[5]")->find('css', '.oe-translation-tooltip--text')->getHtml()));
+    $this->assertEquals('1 / 0 ⓘ', $this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Second node')]]/td[5]")->getText());
+    $this->assertEquals('Ongoing [in ePoetry]: Italian', strip_tags($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Second node')]]/td[5]")->find('css', '.oe-translation-tooltip--text')->getHtml()));
+    $this->assertEquals('1 / 0 ⓘ', $this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Third node')]]/td[5]")->getText());
+    $this->assertEquals('Requested [in ePoetry]: Romanian', strip_tags($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Third node')]]/td[5]")->find('css', '.oe-translation-tooltip--text')->getHtml()));
   }
 
   /**
@@ -2346,6 +2352,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $actual[(int) $cols[0]->getHtml()] = [
         $cols[1]->getHtml(),
         strip_tags($cols[2]->getHtml()),
+        strip_tags($cols[3]->getHtml()),
       ];
     }
 
@@ -2367,6 +2374,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $actual[$i] = [
         ucfirst($log->getType()),
         strip_tags((string) $log->getMessage()),
+        $log->getOwner()->label(),
       ];
 
       $i++;

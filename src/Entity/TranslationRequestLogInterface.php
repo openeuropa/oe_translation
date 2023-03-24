@@ -6,11 +6,12 @@ namespace Drupal\oe_translation\Entity;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Interface for the 'Translation request log' entity.
  */
-interface TranslationRequestLogInterface extends ContentEntityInterface {
+interface TranslationRequestLogInterface extends ContentEntityInterface, EntityOwnerInterface {
 
   /**
    * Info message type.

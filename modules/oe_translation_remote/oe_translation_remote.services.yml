@@ -12,7 +12,7 @@ services:
 
   oe_translation_remote.event_subscriber.dashboard_alter:
     class: Drupal\oe_translation_remote\EventSubscriber\TranslationDashboardAlterSubscriber
-    arguments: ['@entity_type.manager', '@plugin.manager.oe_translation_remote.remote_translation_provider_manager']
+    arguments: ['@entity_type.manager', '@plugin.manager.oe_translation_remote.remote_translation_provider_manager', '@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
 

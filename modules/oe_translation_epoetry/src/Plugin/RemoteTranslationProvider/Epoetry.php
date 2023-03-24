@@ -13,7 +13,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
-use Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation_epoetry\Event\EpoetryRequestEvent;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItemInterface;

@@ -99,6 +99,9 @@ class RemoteTranslationNewForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function buildForm(array $form, FormStateInterface $form_state, RouteMatchInterface $route_match = NULL, $entity_type_id = NULL) {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
@@ -143,6 +146,10 @@ class RemoteTranslationNewForm extends FormBase {
       '#disabled' => !$access->isAllowed(),
     ];
 
+    if (count($options) === 1 && !$access->isForbidden()) {
+      $form['translator_wrapper']['translator']['#default_value'] = key($options);
+    }
+
     $form['translator_wrapper']['translator_configuration'] = [
       '#type' => 'hidden',
       '#attributes' => [
@@ -155,6 +162,11 @@ class RemoteTranslationNewForm extends FormBase {
     $translator_id = NULL;
     if ($form_state->getValue('translator')) {
       $translator_id = $form_state->getValue('translator');
+    }
+
+    // If we only have a single option available, use that one.
+    if (count($options) === 1 && !$access->isForbidden()) {
+      $translator_id = key($options);
     }
 
     if ($translator_id) {
@@ -317,10 +329,7 @@ class RemoteTranslationNewForm extends FormBase {
 
     $headers = [
       'translator' => $this->t('Translator'),
-      'status' => $this->t('Status'),
-      'title' => $this->t('Title'),
-      'revision_id' => $this->t('Revision ID'),
-      'default_revision' => $this->t('Default revision'),
+      'status' => $this->t('Request status'),
       'operations' => $this->t('Operations'),
     ];
 
@@ -336,15 +345,6 @@ class RemoteTranslationNewForm extends FormBase {
             '#text' => $request->getRequestStatusDescription($request->getRequestStatus()),
           ],
         ],
-        'title' => [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $entity->label(),
-            '#url' => $entity->toUrl('revision'),
-          ],
-        ],
-        'revision_id' => $entity->getRevisionId(),
-        'default_revision' => $entity->isDefaultRevision() ? $this->t('Yes') : $this->t('No'),
         'operations' => [
           'data' => $request->getOperationsLinks(),
         ],

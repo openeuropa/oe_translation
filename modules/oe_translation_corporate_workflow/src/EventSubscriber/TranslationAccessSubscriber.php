@@ -75,7 +75,7 @@ class TranslationAccessSubscriber implements EventSubscriberInterface {
 
     $state = $entity->get('moderation_state')->value;
     if (!in_array($state, ['validated', 'published'])) {
-      $event->setAccess(AccessResult::forbidden()->setReason($this->t('No translation requests can be made until a version of the content has been created.'))->addCacheableDependency($cache));
+      $event->setAccess(AccessResult::forbidden()->setReason($this->t('This content cannot be translated yet as it does not have a Validated nor Published major version.'))->addCacheableDependency($cache));
     }
   }
 
