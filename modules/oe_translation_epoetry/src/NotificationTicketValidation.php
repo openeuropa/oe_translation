@@ -20,9 +20,8 @@ class NotificationTicketValidation extends EuLoginTicketValidation {
    * {@inheritdoc}
    */
   public function __construct(ClientInterface $guzzle, LoggerChannelFactoryInterface $logger_channel_factory) {
-    $callback_url = NotificationEndpointResolver::resolve();
     $http_client = new Client($guzzle);
-    parent::__construct($callback_url, static::getEuLoginBasePath(), static::getEuLoginJobAccount(), new Psr17Factory(), $http_client, $logger_channel_factory->get('oe_translation_epoetry'));
+    parent::__construct(static::getCallbackUrl(), static::getEuLoginBasePath(), static::getEuLoginJobAccount(), new Psr17Factory(), $http_client, $logger_channel_factory->get('oe_translation_epoetry'));
   }
 
   /**
@@ -53,6 +52,16 @@ class NotificationTicketValidation extends EuLoginTicketValidation {
    */
   public static function getEuLoginJobAccount(): ?string {
     return Settings::get('epoetry.ticket_validation.eulogin_job_account') ? Settings::get('epoetry.ticket_validation.eulogin_job_account') : '';
+  }
+
+  /**
+   * Returns the EULogin callback URL to be used for the ticket validation.
+   *
+   * @return string|null
+   *   The base path.
+   */
+  public static function getCallbackUrl(): ?string {
+    return Settings::get('epoetry.ticket_validation.callback_url') ? Settings::get('epoetry.ticket_validation.callback_url') : '';
   }
 
 }

@@ -36,6 +36,7 @@ function oe_translation_epoetry_requirements($phase) {
       'epoetry.auth.eulogin_base_path' => t('ePoetry EU login base path'),
       'epoetry.ticket_validation.eulogin_base_path' => t('ePoetry EU login ticket validation base path'),
       'epoetry.ticket_validation.eulogin_job_account' => t('ePoetry EU login ticket validation job account'),
+      'epoetry.ticket_validation.callback_url' => t('ePoetry ticket validation callback URL'),
     ];
 
     foreach ($poetry_environment_variables as $variable => $name) {
