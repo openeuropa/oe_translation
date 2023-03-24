@@ -38,6 +38,7 @@ class RequirementsTest extends TranslationKernelTestBase {
     $settings['epoetry.notification.endpoint_prefix'] = 'http://example.com';
     $settings['epoetry.ticket_validation.eulogin_base_path'] = 'http://example.com/ticket';
     $settings['epoetry.ticket_validation.eulogin_job_account'] = '3rwefdf';
+    $settings['epoetry.ticket_validation.callback_url'] = 'http://callback';
     $settings['epoetry.ticket_validation.on'] = '1';
     new Settings($settings);
   }
@@ -59,10 +60,11 @@ class RequirementsTest extends TranslationKernelTestBase {
       'epoetry.auth.eulogin_base_path' => t('Value set'),
       'epoetry.ticket_validation.eulogin_base_path' => t('Value set'),
       'epoetry.ticket_validation.eulogin_job_account' => t('Value set'),
+      'epoetry.ticket_validation.callback_url' => t('Value set'),
       'epoetry.ticket_validation.on' => 1,
     ];
 
-    $this->assertCount(10, $requirements);
+    $this->assertCount(11, $requirements);
     foreach ($requirements as $name => $requirement) {
       $this->assertNotEmpty($requirement['value']);
       $this->assertEquals($values[$name], $requirement['value'], sprintf('The %s value is not set', $name));
