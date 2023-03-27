@@ -3,11 +3,6 @@
 The OpenEuropa Translation provides the translation capabilities for
 OpenEuropa contents and translatable items.
 
-## Submodules
-
-[OpenEuropa Translation Poetry](modules/oe_translation_poetry/README.md) - integrates with the DGT Poetry translation system.
-[OpenEuropa Translation Block Field](modules/oe_translation_block_field/README.md) - integrates with the Block Field module.
-
 ## Development setup
 
 You can build the development site by running the following steps:
