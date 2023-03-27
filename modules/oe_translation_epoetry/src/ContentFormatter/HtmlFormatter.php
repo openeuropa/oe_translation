@@ -53,6 +53,7 @@ class HtmlFormatter implements ContentFormatterInterface {
     $data = TranslationSourceHelper::filterTranslatable($request->getData());
     $items = [];
     foreach ($data as $key => $value) {
+      $value['#label'] = implode(' / ', $value['#parent_label']);
       $value['#key'] = '[' . $request->id() . '][' . $key . ']';
       $value['renderable'] = $this->prepareValueRenderable($value);
       $items[$request->id()][$this->encodeIdSafeBase64($request->id() . '][' . $key)] = $value;

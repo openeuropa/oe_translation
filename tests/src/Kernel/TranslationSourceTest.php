@@ -57,7 +57,7 @@ class TranslationSourceTest extends TranslationKernelTestBase {
       ->set('translation_source_allowed_formats', ['text_plain'])
       ->save();
 
-    // Add a text field for the Page bundle.
+    // Add a text field.
     FieldStorageConfig::create([
       'entity_type' => 'node',
       'field_name' => 'translatable_text_field',
