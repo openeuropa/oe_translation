@@ -12,7 +12,7 @@
       <div class="asset" id="item-{{ item_key }}">
         {% for field_key, field in item %}
           <!--
-          label="{{ field['#parent_label']|first }}"
+          label="{{ field['#label'] }}"
           context="{{ field['#key'] }}"
           -->
           <div class="atom" id="{{ field_key }}">{{ field['renderable'] }}</div>

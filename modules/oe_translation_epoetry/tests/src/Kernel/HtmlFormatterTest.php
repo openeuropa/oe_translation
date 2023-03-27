@@ -49,15 +49,6 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $this->installConfig(['oe_translation_remote']);
     $this->installConfig(['oe_translation_epoetry']);
 
-    $node_type = $this->container->get('entity_type.manager')
-      ->getStorage('node_type')
-      ->create([
-        'name' => 'Test node type',
-        'type' => 'test_node_type',
-      ]);
-
-    $node_type->save();
-
     // Add a formatted field to the content type.
     $field_storage_definition = [
       'field_name' => 'translatable_text_field',
@@ -71,7 +62,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
 
     $field_definition = [
       'field_storage' => $field_storage,
-      'bundle' => 'test_node_type',
+      'bundle' => 'oe_demo_translatable_page',
     ];
     $field = FieldConfig::create($field_definition);
     $field->save();
@@ -89,10 +80,19 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
 
     $field_definition = [
       'field_storage' => $field_storage,
-      'bundle' => 'test_node_type',
+      'bundle' => 'oe_demo_translatable_page',
     ];
     $field = FieldConfig::create($field_definition);
     $field->save();
+
+    // Mark the test entity reference field as embeddable.
+    $this->config('oe_translation.settings')
+      ->set('translation_source_embedded_fields', [
+        'node' => [
+          'ott_content_reference' => TRUE,
+        ],
+      ])
+      ->save();
 
     // Create a format for the content.
     FilterFormat::create([
@@ -102,11 +102,19 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
       'filters' => [],
     ])->save();
 
+    // Create a node to be referenced.
+    $referenced_node = Node::create([
+      'type' => 'oe_demo_translatable_page',
+      'title' => 'Referenced node',
+    ]);
+    $referenced_node->save();
+
     // Create a node to format.
     /** @var \Drupal\node\NodeInterface $node */
     $node = Node::create([
-      'type' => 'test_node_type',
+      'type' => 'oe_demo_translatable_page',
       'title' => 'English title',
+      'ott_content_reference' => $referenced_node->id(),
       'translatable_text_field' => [
         'value' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
         'format' => 'html',
@@ -175,6 +183,28 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
               ],
               '#translation' => [
                 '#text' => 'French title',
+              ],
+            ],
+          ],
+        ],
+        'ott_content_reference' => [
+          0 => [
+            'entity' => [
+              'title' => [
+                0 => [
+                  'value' => [
+                    '#text' => 'Referenced node',
+                    '#translate' => TRUE,
+                    '#max_length' => 255,
+                    '#parent_label' => [
+                      0 => 'Content reference',
+                      1 => 'Title',
+                    ],
+                    '#translation' => [
+                      '#text' => 'Referenced node in French',
+                    ],
+                  ],
+                ],
               ],
             ],
           ],
