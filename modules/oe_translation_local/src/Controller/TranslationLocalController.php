@@ -15,6 +15,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
 use Drupal\oe_translation_local\Event\TranslationLocalControllerAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
@@ -132,6 +133,10 @@ class TranslationLocalController extends ControllerBase {
     $cache = CacheableMetadata::createFromObject($entity);
 
     $languages = $this->languageManager()->getLanguages();
+    $event = new AvailableLanguagesAlterEvent($languages);
+    $this->eventDispatcher->dispatch($event, AvailableLanguagesAlterEvent::NAME);
+    $languages = $event->getLanguages();
+
     $source_language = $entity->language();
     unset($languages[$source_language->getId()]);
     $rows = [];

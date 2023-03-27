@@ -337,8 +337,7 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
   }
 
   $header = &$build['meta']['#header'];
-  $header['version'] = t('Version');
-  $header['state'] = t('Moderation state');
+  $header['version'] = t('Content version');
   $row = &$build['meta']['#rows'][0];
   $version = '';
 
@@ -350,6 +349,5 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
     $version = implode('.', $version);
   }
 
-  $row['version'] = $version;
-  $row['state'] = $content_entity->get('moderation_state')->value;
+  $row['version'] = $version . ' / ' . $content_entity->get('moderation_state')->value;
 }

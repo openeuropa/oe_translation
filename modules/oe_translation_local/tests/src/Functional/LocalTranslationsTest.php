@@ -244,7 +244,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('The field has 419 characters while the limit is 255.');
     $this->getSession()->getPage()->fillField('title|0|value[translation]', 'ЄС єдиний у своїй солідарності з Україною та продовжуватиме підтримувати Україну та її народ разом зі своїми міжнародними партнерами, зокрема шляхом додаткової політичної, фінансової та гуманітарної підтримки.');
     $this->getSession()->getPage()->pressButton('Save as draft');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
 
     // Change back the title.
     $this->clickLink('Edit draft translation');
@@ -252,7 +252,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Save the translation as draft.
     $this->getSession()->getPage()->pressButton('Save as draft');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
 
     // Assert that FR now has a started translation request.
@@ -293,7 +293,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Save and accept the translation.
     $this->getSession()->getPage()->pressButton('Save and accept');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
 
     // Assert no translation was created on the node.
@@ -326,8 +326,8 @@ class LocalTranslationsTest extends TranslationTestBase {
     // Before syncing, save it again as draft to assert that the form elements
     // become editable again.
     $this->getSession()->getPage()->pressButton('Save as draft');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
-    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
     $this->clickLink('Edit draft translation');
     foreach ($this->fields as $key => $data) {
       $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
@@ -338,9 +338,9 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Sync directly from draft state.
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
-    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/local');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations');
 
     // Go to the dashboard and assert there is no ongoing request, but we now
     // have a translation.
@@ -386,7 +386,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     }
     // Preview translation.
     $this->getSession()->getPage()->pressButton('Preview');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->addressEquals('/es/translation-request/2/preview/es');
     $this->assertSession()->pageTextContains('Full translation node ES');
     $this->assertSession()->pageTextContains('Referenced node ES');
@@ -418,7 +418,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertEquals('Basic translation node', $element->getText());
     $element->setValue('Basic translation node FR');
     $this->getSession()->getPage()->pressButton('Save as draft');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
 
     // Edit the node and start a new revision.
     $node->set('title', 'Updated basic translation node');
@@ -463,7 +463,7 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     // Save again as draft and go back to the dashboard.
     $this->getSession()->getPage()->pressButton('Save as draft');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->clickLink('Dashboard');
 
     // Assert we see both ongoing translation requests.
@@ -481,7 +481,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $this->assertEquals('Updated basic translation node FR', $element->getText());
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->clickLink('Dashboard');
 
     // Assert we only have again one ongoing request on the dashboard.
@@ -508,7 +508,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $this->assertEquals('Basic translation node FR', $element->getText());
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->clickLink('Dashboard');
     $this->assertSession()->pageTextContains('There are no open local translation requests');
 
@@ -543,7 +543,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $element->setValue('First node FR');
     $this->getSession()->getPage()->pressButton('Save as draft');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
 
     $second_node = $this->createBasicTestNode();
     $second_node->set('title', 'Second node');
@@ -555,7 +555,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $element->setValue('Second node IT');
     $this->getSession()->getPage()->pressButton('Save and accept');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
 
     $third_node = $this->createBasicTestNode();
     $third_node->set('title', 'Third node');
@@ -567,7 +567,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $element->setValue('Second node RO');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
 
     // Assert the dashboard only accessible to users with the correct
     // permission.
@@ -653,17 +653,18 @@ class LocalTranslationsTest extends TranslationTestBase {
     }
 
     $this->drupalGet($node->toUrl('edit-form'));
-    // Remove Top level paragraph fields values.
+    // Remove on of the Top level paragraph fields values.
     $this->getSession()->getPage()->fillField('ott_top_level_paragraphs[0][subform][ott_top_level_paragraph_field][0][value]', '');
-    $this->getSession()->getPage()->fillField('ott_top_level_paragraphs[1][subform][ott_top_level_paragraph_field][0][value]', '');
     $this->getSession()->getPage()->pressButton('Save (this translation)');
-    // Navigate to the French local translation and assert it can be synced in
-    // order to remove the translation values.
+    // Navigate to the French local translation.
     $this->clickLink('Translate');
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    // Assert that we see a message informing the user that the field value
+    // was removed from the source, and upon syncing, it will be removed from
+    // the translation as well.
     $this->assertSession()->pageTextContains('Source value for the field Top level paragraphs / Delta #0 / Top level paragraph field was removed. Synchronising this translation will remove the value from the translation as well.');
-    $this->assertSession()->pageTextContains('Source value for the field Top level paragraphs / Delta #1 / Top level paragraph field was removed. Synchronising this translation will remove the value from the translation as well.');
+    // Sync the translation.
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     // Assert that the French translations contains the same values except for
     // the ones removed from the original node.
@@ -671,11 +672,31 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Full translation node FR');
     $this->assertSession()->pageTextContains('Referenced node FR');
     $this->assertSession()->pageTextNotContains('top field value 1 FR');
-    $this->assertSession()->pageTextNotContains('top field value 2 FR');
+    $this->assertSession()->pageTextContains('top field value 2 FR');
     $this->assertSession()->pageTextContains('grandchild field value 1 FR');
     $this->assertSession()->pageTextContains('grandchild field value 2 FR');
     $this->assertSession()->pageTextContains('child field value 1 FR');
     $this->assertSession()->pageTextContains('child field value 2 FR');
+  }
+
+  /**
+   * Tests that the available languages for ePoetry can be altered.
+   */
+  public function testLanguagesAlter(): void {
+    $node = $this->createBasicTestNode();
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+
+    $this->assertSession()->pageTextContains('Bulgarian');
+    $this->assertSession()->pageTextContains('French');
+
+    \Drupal::state()->set('oe_translation_test.remove_languages', ['bg']);
+
+    $this->getSession()->reload();
+
+    $this->assertSession()->pageTextNotContains('Bulgarian');
+    $this->assertSession()->pageTextContains('French');
   }
 
   /**
@@ -696,10 +717,7 @@ class LocalTranslationsTest extends TranslationTestBase {
       $language = ConfigurableLanguage::load($hreflang);
       $this->assertEquals($language->getName(), $cols[0]->getText());
       $this->assertEquals($expected_info['status'], $cols[1]->getText());
-      $this->assertEquals($expected_info['title_url'], $cols[2]->findLink($expected_info['title'])->getAttribute('href'));
-      $this->assertEquals($expected_info['revision'], $cols[3]->getText());
-      $this->assertEquals($expected_info['is_default'], $cols[4]->getText());
-      $this->assertTrue($cols[5]->hasLink('Edit'));
+      $this->assertTrue($cols[2]->hasLink('Edit'));
     }
   }
 

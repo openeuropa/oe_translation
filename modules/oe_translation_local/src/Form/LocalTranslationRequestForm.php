@@ -244,7 +244,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     $translation_request = $this->entity;
 
     $translation_request->save();
-    $this->messenger()->addStatus($this->t('The translation request has been saved.'));
+    $this->messenger()->addStatus($this->t('The translation has been saved.'));
 
     $this->addRedirect($form_state);
   }
@@ -296,6 +296,10 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * Redirects the user to the preview path of the translation request.
    */
   public function preview(array &$form, FormStateInterface $form_state) {
+    // Clear the existing redirect if we have a destination.
+    if ($this->getRequest()->query->get('destination')) {
+      $this->getRequest()->query->remove('destination');
+    }
     /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
 

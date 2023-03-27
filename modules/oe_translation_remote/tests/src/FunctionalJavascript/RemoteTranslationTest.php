@@ -602,7 +602,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertOngoingTranslations([$translated_request, $ongoing_request]);
 
     // Sync the latest translation request.
-    $this->getSession()->getPage()->find('xpath', "//tr[td//text()[contains(., 'Updated basic translation node')]]")->clickLink('View');
+    $this->getSession()->getPage()->find('xpath', "//tr[2]/td[3]")->clickLink('View');
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
@@ -658,6 +658,59 @@ class RemoteTranslationTest extends TranslationTestBase {
 
     // Assert that in this process, no new node revisions were created.
     $this->assertCount(2, $node_storage->revisionIds($node));
+  }
+
+  /**
+   * Tests the select all or none of the language checkboxes.
+   */
+  public function testLanguageCheckboxesSelect(): void {
+    $node = $this->createBasicTestNode();
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Remote translations');
+
+    $select = $this->assertSession()->selectExists('Translator');
+    $select->selectOption('remote_one');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('New translation request using Remote one');
+
+    $languages = [
+      'all' => 'Select all',
+    ];
+    foreach (\Drupal::languageManager()->getLanguages() as $language) {
+      if ($language->getId() === 'en') {
+        continue;
+      }
+      $languages[$language->getId()] = $language->getName();
+    }
+
+    foreach ($languages as $language => $name) {
+      $this->assertSession()->fieldExists('translator_configuration[remote_one][languages][' . $language . ']');
+      $this->assertSession()->checkboxNotChecked('translator_configuration[remote_one][languages][' . $language . ']');
+    }
+
+    $checkbox = $this->getSession()->getPage()->find('css', 'input[name="translator_configuration[remote_one][languages][all]"]');
+    $this->assertEquals('Select all', $checkbox->getParent()->find('css', 'label')->getText());
+
+    // Select all the languages.
+    $checkbox->check();
+    $this->getSession()->wait(100);
+
+    // Assert all checkboxes have been checked.
+    foreach ($languages as $language => $name) {
+      $this->assertSession()->checkboxChecked('translator_configuration[remote_one][languages][' . $language . ']');
+    }
+    // The "Select all" checkbox got renamed.
+    $this->assertEquals('Select none', $checkbox->getParent()->find('css', 'label')->getText());
+
+    // Unselect all.
+    $checkbox->uncheck();
+    $this->getSession()->wait(100);
+    foreach ($languages as $language => $name) {
+      $this->assertSession()->checkboxNotChecked('translator_configuration[remote_one][languages][' . $language . ']');
+    }
+    // The "Select all" checkbox got renamed back.
+    $this->assertEquals('Select all', $checkbox->getParent()->find('css', 'label')->getText());
   }
 
 }

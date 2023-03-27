@@ -5,4 +5,4 @@ package: OpenEuropa
 type: module
 core_version_requirement: ^9.2
 dependencies:
-  - oe_translation_epoetry:oe_translation_epoetry
+  - oe_translation:oe_translation_epoetry

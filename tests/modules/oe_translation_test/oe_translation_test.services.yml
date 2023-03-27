@@ -3,3 +3,8 @@ services:
     class: Drupal\oe_translation_test\EventSubscriber\TranslationSourceEventSubscriber
     tags:
       - { name: event_subscriber }
+  oe_translation_test.available_languages_alter:
+    class: Drupal\oe_translation_test\EventSubscriber\AvailableLanguagesSubscriber
+    arguments: ['@state']
+    tags:
+      - { name: event_subscriber }

@@ -5,4 +5,5 @@ type: module
 core_version_requirement: ^9.2
 
 dependencies:
-  - oe_translation_corporate_workflow:oe_translation_corporate_workflow
+  - oe_translation:oe_translation_corporate_workflow
+  - oe_translation:oe_translation_epoetry

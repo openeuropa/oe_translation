@@ -16,7 +16,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
-use Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;

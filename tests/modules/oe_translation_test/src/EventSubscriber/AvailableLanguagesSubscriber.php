@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\oe_translation_epoetry_test\EventSubscriber;
+namespace Drupal\oe_translation_test\EventSubscriber;
 
 use Drupal\Core\State\StateInterface;
-use Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -40,11 +40,11 @@ class AvailableLanguagesSubscriber implements EventSubscriberInterface {
   /**
    * Alters the available ePoetry languages.
    *
-   * @param \Drupal\oe_translation_epoetry\Event\AvailableLanguagesAlterEvent $event
+   * @param \Drupal\oe_translation\Event\AvailableLanguagesAlterEvent $event
    *   The event.
    */
   public function alterAvailableLanguages(AvailableLanguagesAlterEvent $event) {
-    $to_remove = $this->state->get('oe_translation_epoetry_test.remove_languages', []);
+    $to_remove = $this->state->get('oe_translation_test.remove_languages', []);
     $languages = $event->getLanguages();
     foreach ($to_remove as $langcode) {
       unset($languages[$langcode]);

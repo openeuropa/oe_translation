@@ -257,6 +257,7 @@ function _oe_translation_create_request_logs_tables(TranslationRequestInterface 
       '#',
       t('Type'),
       t('Message'),
+      t('User'),
       t('Date'),
     ],
   ];
@@ -273,6 +274,7 @@ function _oe_translation_create_request_logs_tables(TranslationRequestInterface 
       $i,
       ucfirst($log->getType()),
       $log->getMessage(),
+      $log->getOwner()->label(),
       \Drupal::service('date.formatter')->format($log->getCreatedTime(), 'short'),
     ];
     $rows[] = [

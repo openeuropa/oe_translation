@@ -173,7 +173,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     // a link to start a translation.
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
     $this->assertSession()->linkNotExists('New translation');
-    $this->assertSession()->pageTextContains('This content cannot be translated yet as it does not have a validated version.');
+    $this->assertSession()->pageTextContains('This content cannot be translated yet as it does not have a Validated nor Published major version.');
 
     // Validate the node.
     $node->set('moderation_state', 'validated');
@@ -183,7 +183,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertTrue($url->access($this->user));
 
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
-    $this->assertSession()->pageTextNotContains('This content cannot be translated yet as it does not have a validated version.');
+    $this->assertSession()->pageTextNotContains('This content cannot be translated yet as it does not have a Validated nor Published major version.');
     $this->assertSession()->linkExists('New translation');
 
     $node->set('moderation_state', 'published');
@@ -193,7 +193,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertTrue($url->access($this->user));
 
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
-    $this->assertSession()->pageTextNotContains('This content cannot be translated yet as it does not have a validated version.');
+    $this->assertSession()->pageTextNotContains('This content cannot be translated yet as it does not have a Validated nor Published major version.');
     $this->assertSession()->linkExists('New translation');
 
     // If we start a new draft, then we cannot create a new translation for that
@@ -476,13 +476,13 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'Translation' => 'My node 2 FR (updated but no actual change cause we already have a translation)',
     ];
     $this->submitForm($values, t('Save as draft'));
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     // Assert we now have an edit link instead.
     $edit_link_published = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a');
     $this->assertEquals('Edit draft translation', $edit_link_published->getText());
     $requests = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getTranslationRequestsForEntityRevision($published, 'local');
     $published_request = end($requests);
-    $this->assertEquals($published_request->toUrl('local-translation')->toString(), $edit_link_published->getAttribute('href'));
+    $this->assertEquals($published_request->toUrl('local-translation', ['query' => ['destination' => '/build/node/' . $node->id() . '/translations/local']])->toString(), $edit_link_published->getAttribute('href'));
     // Now for the validated.
     $create_link_validated = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="3.0.0"] a');
     $this->assertEquals('New translation', $create_link_validated->getText());
@@ -493,34 +493,26 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'Translation' => 'My node 3 FR (brand new translation)',
     ];
     $this->submitForm($values, t('Save as draft'));
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     // Assert we now have an edit link instead.
     $edit_link_validated = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="3.0.0"] a');
     $this->assertEquals('Edit draft translation', $edit_link_validated->getText());
     $requests = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getTranslationRequestsForEntityRevision($validated, 'local');
     $validated_request = end($requests);
-    $this->assertEquals($validated_request->toUrl('local-translation')->toString(), $edit_link_validated->getAttribute('href'));
+    $this->assertEquals($validated_request->toUrl('local-translation', ['query' => ['destination' => '/build/node/' . $node->id() . '/translations/local']])->toString(), $edit_link_validated->getAttribute('href'));
     // Assert the dashboard contains to ongoing requests.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $expected = [];
     $expected[] = [
       'French',
       'Draft',
-      'My node 2',
-      '10',
-      'Yes',
-      '2.0.0',
-      'published',
+      '2.0.0 / published',
       'Edit draft translationDelete',
     ];
     $expected[] = [
       'French',
       'Draft',
-      'My node 3',
-      '14',
-      'No',
-      '3.0.0',
-      'validated',
+      '3.0.0 / validated',
       'Edit draft translationDelete',
     ];
     $table = $this->getSession()->getPage()->find('css', 'table.ongoing-local-translation-requests-table');
@@ -536,11 +528,11 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->clickLink('Local translations');
     $edit_link_published->click();
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $edit_link_validated->click();
     $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $this->assertSession()->pageTextContains('The translation request has been saved.');
+    $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     // Assert the translations got saved on the correct revisions.
     $revision_ids = $node_storage->revisionIds($node);

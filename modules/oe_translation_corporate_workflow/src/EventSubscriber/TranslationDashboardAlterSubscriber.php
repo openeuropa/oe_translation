@@ -122,8 +122,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $header = [];
     foreach ($table['#header'] as $key => $col) {
       if ($key === 'operations') {
-        $header['version'] = $this->t('Version');
-        $header['state'] = $this->t('Moderation state');
+        $header['version'] = $this->t('Content version');
       }
 
       $header[$key] = $col;
@@ -136,8 +135,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $revision = $storage->loadRevision($revision_id);
       foreach ($row['data'] as $key => $value) {
         if ($key == 'operations') {
-          $cols['version'] = $this->getEntityVersion($revision);
-          $cols['state'] = $revision->get('moderation_state')->value;
+          $cols['version'] = $this->getEntityVersion($revision) . ' / ' . $revision->get('moderation_state')->value;
         }
         $cols[$key] = $value;
       }

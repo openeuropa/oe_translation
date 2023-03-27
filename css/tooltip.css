@@ -6,15 +6,14 @@
 .oe-translation-tooltip .oe-translation-tooltip--text {
   visibility: hidden;
   background-color: #f5f5f2;
-  text-align: center;
-  padding: 5px 0;
+  text-align: left;
+  padding: 5px 5px 5px 7px;
   border-radius: 6px;
   position: absolute;
   z-index: 100000;
   left: 0;
   bottom: 105%;
-  min-width: 200px;
-  max-width: 500px;
+  min-width: 350px;
   border: 1px solid #bfbfba;
 }
 
@@ -30,4 +29,13 @@
   border-width: 5px;
   border-style: solid;
   border-color: #bfbfba transparent transparent transparent;
+}
+
+.oe-translation-tooltip .oe-translation-tooltip--text ul {
+  list-style: none;
+}
+
+.oe-translation-tooltip .oe-translation-tooltip--text ul li {
+  list-style: none;
+  margin: 0;
 }

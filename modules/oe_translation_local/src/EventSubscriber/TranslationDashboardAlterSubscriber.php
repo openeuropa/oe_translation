@@ -69,7 +69,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $element = &$build['local_translation'];
     $element['title'] = [
       '#type' => 'inline_template',
-      '#template' => "<h3>{{ 'Open local translation requests' }}</h3>",
+      '#template' => "<h3>{{ 'Started local translations' }}</h3>",
     ];
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
@@ -95,10 +95,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $header = [
       'language' => $this->t('Language'),
-      'status' => $this->t('Status'),
-      'title' => $this->t('Title'),
-      'revision_id' => $this->t('Revision ID'),
-      'default_revision' => $this->t('Default revision'),
+      'status' => $this->t('Request status'),
       'operations' => $this->t('Operations'),
     ];
 
@@ -109,15 +106,6 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $row = [
         'language' => $language->getName(),
         'status' => $translation_request->getTargetLanguageWithStatus()->getStatus(),
-        'title' => [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $entity->label(),
-            '#url' => $entity->toUrl('revision'),
-          ],
-        ],
-        'revision_id' => $entity->getRevisionId(),
-        'default_revision' => $entity->isDefaultRevision() ? $this->t('Yes') : $this->t('No'),
         'operations' => [
           'data' => $translation_request->getOperationsLinks(),
         ],

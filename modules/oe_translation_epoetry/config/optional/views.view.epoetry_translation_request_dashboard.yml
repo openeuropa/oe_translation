@@ -32,17 +32,17 @@ display:
     display_options:
       title: 'ePoetry translation requests'
       fields:
-        id:
-          id: id
-          table: oe_translation_request
-          field: id
-          relationship: none
+        nid:
+          id: nid
+          table: node_field_revision
+          field: nid
+          relationship: content_entity__node
           group_type: group
           admin_label: ''
-          entity_type: null
-          entity_field: id
+          entity_type: node
+          entity_field: nid
           plugin_id: field
-          label: ID
+          label: 'Node ID'
           exclude: false
           alter:
             alter_text: false
@@ -85,7 +85,9 @@ display:
           hide_alter_empty: true
           click_sort_column: value
           type: number_integer
-          settings: {  }
+          settings:
+            thousand_separator: ''
+            prefix_suffix: false
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -290,17 +292,15 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        source_language_code:
-          id: source_language_code
-          table: oe_translation_request
-          field: source_language_code
+        target_languages_with_tooltip:
+          id: target_languages_with_tooltip
+          table: oe_translation_request__target_languages
+          field: target_languages_with_tooltip
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: oe_translation_request
-          entity_field: source_language_code
-          plugin_id: field
-          label: 'Source language'
+          plugin_id: oe_translation_epoetry_target_languages_with_tooltip
+          label: Languages
           exclude: false
           alter:
             alter_text: false
@@ -341,20 +341,6 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          click_sort_column: value
-          type: string
-          settings:
-            link_to_entity: false
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         epoetry_status:
           id: epoetry_status
           table: oe_translation_request__epoetry_status
@@ -931,6 +917,50 @@ display:
                 title: Executed
                 operator: '='
                 value: Executed
+        target_languages_langcode:
+          id: target_languages_langcode
+          table: oe_translation_request__target_languages
+          field: target_languages_langcode
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: oe_translation_epoetry_target_languages_filter
+          operator: in
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: language
+            label: 'Requested language'
+            description: ''
+            use_operator: false
+            operator: target_languages_langcode_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: language
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              oe_author: '0'
+              oe_translator: '0'
+              oe_reviewer: '0'
+              oe_validator: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
         request_id:
           id: request_id
           table: oe_translation_request__request_id
@@ -959,6 +989,57 @@ display:
               authenticated: authenticated
               anonymous: '0'
               oe_translator: '0'
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+        nid:
+          id: nid
+          table: node_field_revision
+          field: nid
+          relationship: content_entity__node
+          group_type: group
+          admin_label: ''
+          entity_type: node
+          entity_field: nid
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: nid_op
+            label: 'Node ID'
+            description: ''
+            use_operator: false
+            operator: nid_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: nid
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              oe_author: '0'
+              oe_translator: '0'
+              oe_reviewer: '0'
+              oe_validator: '0'
+            min_placeholder: ''
+            max_placeholder: ''
             placeholder: ''
           is_grouped: false
           group_info:

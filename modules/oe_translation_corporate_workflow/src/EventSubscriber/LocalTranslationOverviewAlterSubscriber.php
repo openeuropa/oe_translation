@@ -120,7 +120,7 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
       'validated',
       'published',
     ])) {
-      $this->messenger->addWarning($this->t('This content cannot be translated yet as it does not have a validated version.'));
+      $this->messenger->addWarning($this->t('This content cannot be translated yet as it does not have a Validated nor Published major version.'));
     }
 
     // If the loaded entity is the default revision but not the latest, it means

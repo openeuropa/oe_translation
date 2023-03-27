@@ -11,6 +11,7 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\user\EntityOwnerTrait;
 
 /**
  * Defines the Translation request log entity.
@@ -22,11 +23,14 @@ use Drupal\Core\Render\Markup;
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "id",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
+ *     "owner" = "uid"
  *   }
  * )
  */
 class TranslationRequestLog extends ContentEntityBase implements TranslationRequestLogInterface {
+
+  use EntityOwnerTrait;
 
   /**
    * {@inheritdoc}
@@ -93,6 +97,8 @@ class TranslationRequestLog extends ContentEntityBase implements TranslationRequ
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
+    $fields += static::ownerBaseFieldDefinitions($entity_type);
+
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel('Created time');
 
