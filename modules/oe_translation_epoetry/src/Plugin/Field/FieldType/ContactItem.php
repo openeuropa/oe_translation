@@ -78,11 +78,11 @@ class ContactItem extends FieldItemBase implements ContactItemInterface {
    */
   public static function contactTypes(): array {
     return [
-      self::AUTHOR,
-      self::REQUESTER,
-      self::RECIPIENT,
-      self::EDITOR,
-      self::WEBMASTER,
+      self::AUTHOR => '',
+      self::REQUESTER => '',
+      self::RECIPIENT => t('The person that DGT can contact for information on the request and to negotiate the deadline.'),
+      self::EDITOR => t('The author of the page to be translated – the translator might contact this person if they have questions about the content of the page.'),
+      self::WEBMASTER => t('The person who will receive notifications about the status of the request and the availability of the translations.'),
     ];
   }
 
