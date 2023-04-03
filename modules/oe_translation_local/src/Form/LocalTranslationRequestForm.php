@@ -137,7 +137,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     ]);
     $create_access = $url->access(NULL, TRUE);
     $cache->addCacheableDependency($create_access);
-    $title = t('New translation');
+    $title = t('Add new translation');
     if ($create_access->isAllowed()) {
       return [
         'title' => $title,

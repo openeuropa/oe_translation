@@ -90,6 +90,14 @@ class NewVersionCreateForm extends FormBase {
     $form['actions']['send'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save and send'),
+      '#submit' => ['::send'],
+    ];
+
+    $form['actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Cancel'),
+      '#submit' => ['::cancel'],
+      '#limit_validation_errors' => [],
     ];
 
     return $form;
@@ -107,10 +115,25 @@ class NewVersionCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function send(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\oe_translation_remote\RemoteTranslationProviderInterface $plugin */
     $plugin = $form_state->get('plugin');
     $plugin->submitRequestToProvider($form, $form_state);
+  }
+
+  /**
+   * Submit handler to cancel and go back.
+   */
+  public function cancel(array &$form, FormStateInterface $form_state) {
+    // We don't have to do anything as the form system will automatically
+    // redirect us back to where we came from.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // We do nothing here as we have custom submit buttons.
   }
 
   /**

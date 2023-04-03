@@ -172,7 +172,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     // Navigate to the local translation overview page and assert we don't have
     // a link to start a translation.
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
-    $this->assertSession()->linkNotExists('New translation');
+    $this->assertSession()->linkNotExists('Add new translation');
     $this->assertSession()->pageTextContains('This content cannot be translated yet as it does not have a Validated nor Published major version.');
 
     // Validate the node.
@@ -184,7 +184,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
     $this->assertSession()->pageTextNotContains('This content cannot be translated yet as it does not have a Validated nor Published major version.');
-    $this->assertSession()->linkExists('New translation');
+    $this->assertSession()->linkExists('Add new translation');
 
     $node->set('moderation_state', 'published');
     $node->save();
@@ -194,7 +194,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     $this->drupalGet(Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]));
     $this->assertSession()->pageTextNotContains('This content cannot be translated yet as it does not have a Validated nor Published major version.');
-    $this->assertSession()->linkExists('New translation');
+    $this->assertSession()->linkExists('Add new translation');
 
     // If we start a new draft, then we cannot create a new translation for that
     // draft, but we can still access the endpoint for the published one.
@@ -230,7 +230,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $node->save();
     $node = $this->moderateNode($node, 'validated');
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
+    $this->assertSession()->responseContains('<h3>Existing synchronised translations</h3>');
     // Assert that before we have a published version AND a validated one,
     // the table looks normal.
     $this->assertDashboardExistingTranslations([
@@ -252,7 +252,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     // Go to the dashboard and assert the table title has been changed.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
+    $this->assertSession()->responseContains('<h3>Existing synchronised translations</h3>');
 
     // Create a new draft and validate it.
     $node = $node_storage->load($node->id());
@@ -273,7 +273,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'published_title' => 'My node FR',
         'validated_title' => 'My node FR',
       ],
-    ], ['1.0.0', '2.0.0']);
+    ], ['1.0.0 / published', '2.0.0 / validated']);
 
     // Create a translation in IT for the published version.
     $this->clickLink('Local translations');
@@ -301,7 +301,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         // we don't have any translations on the new version.
         'validated_title' => 'N/A',
       ],
-    ], ['1.0.0', '2.0.0']);
+    ], ['1.0.0 / published', '2.0.0 / validated']);
   }
 
   /**
@@ -409,10 +409,35 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node FR');
     $this->assertEquals($validated_node->getRevisionId(), $second_request->getContentEntity()->getRevisionId());
 
+    // Assert the dashboard contains the ongoing request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $expected = [];
+    $expected[] = [
+      'French',
+      'Draft',
+      // We started from Validated.
+      '2.0.0 / validated',
+      'Edit draft translationDelete',
+    ];
+    $this->assertLocalOngoingRequests($expected);
+
     // Publish the node before finalizing the translation.
     $this->moderateNode($node, 'published');
     $revision_ids = $node_storage->revisionIds($node);
     $this->assertCount(10, $revision_ids);
+    // Assert the dashboard contains the ongoing requests.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $expected = [];
+    $expected[] = [
+      'French',
+      'Draft',
+      // Even though the translation started from the Validated revision, we
+      // published the node so we show instead "published" to be clear to the
+      // user that is the state the translation values would go onto.
+      '2.0.0 / published',
+      'Edit draft translationDelete',
+    ];
+    $this->assertLocalOngoingRequests($expected);
 
     // Finalize the translation and check that the translation got saved onto
     // the published version rather than the validated one where it actually
@@ -468,7 +493,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     // Create a new translation for each and save them both as drafts.
     $create_link_published = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a');
-    $this->assertEquals('New translation', $create_link_published->getText());
+    $this->assertEquals('Add new translation', $create_link_published->getText());
     $create_link_published->click();
     $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node 2 in French (version 2.0.0)');
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node 2 FR');
@@ -485,7 +510,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertEquals($published_request->toUrl('local-translation', ['query' => ['destination' => '/build/node/' . $node->id() . '/translations/local']])->toString(), $edit_link_published->getAttribute('href'));
     // Now for the validated.
     $create_link_validated = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="3.0.0"] a');
-    $this->assertEquals('New translation', $create_link_validated->getText());
+    $this->assertEquals('Add new translation', $create_link_validated->getText());
     $create_link_validated->click();
     $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node 3 in French (version 3.0.0)');
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node 2 FR');
@@ -500,7 +525,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $requests = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getTranslationRequestsForEntityRevision($validated, 'local');
     $validated_request = end($requests);
     $this->assertEquals($validated_request->toUrl('local-translation', ['query' => ['destination' => '/build/node/' . $node->id() . '/translations/local']])->toString(), $edit_link_validated->getAttribute('href'));
-    // Assert the dashboard contains to ongoing requests.
+    // Assert the dashboard contains the ongoing requests.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $expected = [];
     $expected[] = [
@@ -515,15 +540,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       '3.0.0 / validated',
       'Edit draft translationDelete',
     ];
-    $table = $this->getSession()->getPage()->find('css', 'table.ongoing-local-translation-requests-table');
-    foreach ($expected as $row_key => $cols) {
-      $row = $table->findAll('css', 'tbody tr')[$row_key];
-      $columns = $row->findAll('css', 'td');
-      foreach ($cols as $col_key => $col_value) {
-        $col = $columns[$col_key];
-        $this->assertEquals($col_value, $col->getText(), sprintf('The %s column value is not correct', $col_value));
-      }
-    }
+    $this->assertLocalOngoingRequests($expected);
     // Sync the translation requests.
     $this->clickLink('Local translations');
     $edit_link_published->click();
@@ -858,9 +875,10 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
     $header = $table->findAll('css', 'thead th');
     $this->assertEquals('Language', $header[0]->getText());
-    $this->assertEquals('Title ' . $versions[0], $header[1]->getText());
-    $this->assertEquals('Title ' . $versions[1], $header[2]->getText());
-    $this->assertEquals('Operations ' . $versions[0], $header[3]->getText());
+    $this->assertEquals($versions[0], $header[1]->getText());
+    $this->assertEquals('Operations', $header[2]->getText());
+    $this->assertEquals($versions[1], $header[3]->getText());
+    $this->assertEquals('Operations', $header[4]->getText());
 
     $rows = $table->findAll('css', 'tbody tr');
     foreach ($rows as $row) {
@@ -877,14 +895,28 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       }
 
       if ($expected_info['validated_title'] === 'N/A') {
-        $this->assertEquals('N/A', $cols[2]->getText());
+        $this->assertEquals('N/A', $cols[3]->getText());
       }
       else {
-        $this->assertNotNull($cols[2]->findLink($expected_info['validated_title']));
+        $this->assertNotNull($cols[3]->findLink($expected_info['validated_title']));
       }
+    }
+  }
 
-      if ($row->getAttribute('hreflang') === 'en') {
-        $this->assertEmpty($cols[3]->getText());
+  /**
+   * Asserts the ongoing local requests table values.
+   *
+   * @param array $expected
+   *   The expected requests data.
+   */
+  protected function assertLocalOngoingRequests(array $expected): void {
+    $table = $this->getSession()->getPage()->find('css', 'table.ongoing-local-translation-requests-table');
+    foreach ($expected as $row_key => $cols) {
+      $row = $table->findAll('css', 'tbody tr')[$row_key];
+      $columns = $row->findAll('css', 'td');
+      foreach ($cols as $col_key => $col_value) {
+        $col = $columns[$col_key];
+        $this->assertEquals($col_value, $col->getText(), sprintf('The %s column value is not correct', $col_value));
       }
     }
   }

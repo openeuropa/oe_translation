@@ -12,6 +12,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_remote\Form\RemoteTranslationNewForm as RemoteTranslationNewFormOriginal;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager;
@@ -36,14 +37,22 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
   protected $moderationInformation;
 
   /**
+   * The entity revision info service.
+   *
+   * @var \Drupal\oe_translation\EntityRevisionInfoInterface
+   */
+  protected $entityRevisionInfo;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, ModerationInformationInterface $moderationInformation) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, ModerationInformationInterface $moderationInformation, EntityRevisionInfoInterface $entityRevisionInfo) {
     parent::__construct($entityTypeManager, $providerManager, $account);
     $this->entityTypeManager = $entityTypeManager;
     $this->providerManager = $providerManager;
     $this->account = $account;
     $this->moderationInformation = $moderationInformation;
+    $this->entityRevisionInfo = $entityRevisionInfo;
   }
 
   /**
@@ -54,7 +63,8 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager'),
       $container->get('current_user'),
-      $container->get('content_moderation.moderation_information')
+      $container->get('content_moderation.moderation_information'),
+      $container->get('oe_translation.entity_revision_info')
     );
   }
 
@@ -232,6 +242,10 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       $cols = [];
       $request = $requests[$row['data-translation-request']];
       $revision = $request->getContentEntity();
+      // Load the revision onto which the translation would go and display its
+      // version and moderation state. This is for those cases in which the
+      // request started from Validated, but we have a Published one meanwhile.
+      $revision = $this->entityRevisionInfo->getEntityRevision($revision, 'en');
       foreach ($row['data'] as $key => $value) {
         if ($key == 'operations') {
           $cols['version'] = $this->getEntityVersion($revision) . ' / ' . $revision->get('moderation_state')->value;

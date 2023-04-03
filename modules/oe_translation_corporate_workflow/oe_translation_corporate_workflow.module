@@ -349,5 +349,9 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
     $version = implode('.', $version);
   }
 
-  $row['version'] = $version . ' / ' . $content_entity->get('moderation_state')->value;
+  // Load the revision onto which the translation would go and display its
+  // version and moderation state. This is for those cases in which the
+  // request started from Validated, but we have a Published one meanwhile.
+  $revision = \Drupal::service('oe_translation.entity_revision_info')->getEntityRevision($content_entity, 'en');
+  $row['version'] = $version . ' / ' . $revision->get('moderation_state')->value;
 }

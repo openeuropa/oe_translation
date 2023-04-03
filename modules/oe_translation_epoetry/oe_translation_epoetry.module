@@ -12,8 +12,10 @@ use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -316,4 +318,35 @@ function oe_translation_epoetry_preprocess_table__remote_language_list(array &$v
     }
   }
 
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function oe_translation_epoetry_oe_translation_request_presave(TranslationRequestInterface $request) {
+  if ($request->bundle() !== 'epoetry') {
+    return;
+  }
+  // Mark the request as finalized if the ePoetry status is Executed AND all
+  // languages are Cancelled. This is because Cancelled languages cannot be
+  // continued anymore so the request needs be finished.
+  // We do this here because the ePoetry notifications
+  // can come in any order so we have to check every time the request is saved.
+  $epoetry_status = $request->getEpoetryRequestStatus();
+  if ($epoetry_status !== TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED) {
+    return;
+  }
+
+  $languages = $request->getTargetLanguages();
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED,
+    ])) {
+      // It means at least one language is still not Cancelled or Synchronised.
+      return;
+    }
+  }
+
+  $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
 }

@@ -95,6 +95,7 @@ function oe_translation_update_9001(): void {
       'id' => 'id',
       'label' => 'id',
       'uuid' => 'uuid',
+      'owner' => 'uid',
     ],
   ];
   $translation_request_config_entity_type = [

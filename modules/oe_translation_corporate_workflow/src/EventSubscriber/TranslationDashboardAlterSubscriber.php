@@ -10,6 +10,9 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -44,6 +47,13 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected $moderationInformation;
 
   /**
+   * The entity revision info service.
+   *
+   * @var \Drupal\oe_translation\EntityRevisionInfoInterface
+   */
+  protected $entityRevisionInfo;
+
+  /**
    * Creates a new TranslationDashboardAlterSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -52,11 +62,14 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    *   The language manager.
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderationInformation
    *   The moderation information service.
+   * @param \Drupal\oe_translation\EntityRevisionInfoInterface $entityRevisionInfo
+   *   The entity revision info service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, ModerationInformationInterface $moderationInformation) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, ModerationInformationInterface $moderationInformation, EntityRevisionInfoInterface $entityRevisionInfo) {
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
     $this->moderationInformation = $moderationInformation;
+    $this->entityRevisionInfo = $entityRevisionInfo;
   }
 
   /**
@@ -133,6 +146,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $cols = [];
       $revision_id = $row['data-revision-id'];
       $revision = $storage->loadRevision($revision_id);
+      // Load the revision onto which the translation would go and display its
+      // version and moderation state. This is for those cases in which the
+      // request started from Validated, but we have a Published one meanwhile.
+      $revision = $this->entityRevisionInfo->getEntityRevision($revision, 'en');
       foreach ($row['data'] as $key => $value) {
         if ($key == 'operations') {
           $cols['version'] = $this->getEntityVersion($revision) . ' / ' . $revision->get('moderation_state')->value;
@@ -159,7 +176,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   protected function alterExistingTranslationsTable(array &$build, ContentEntityInterface $entity): void {
-    $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing translations'|t }}</h3>";
+    $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing synchronised translations'|t }}</h3>";
 
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     if ($entity->get('moderation_state')->value !== 'published') {
@@ -179,7 +196,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     }
     $latest_entity_version = $this->getEntityVersion($latest_entity);
 
-    // Create an array of languages across both versions, with info reglated
+    // Create an array of languages across both versions, with info related
     // to each.
     $languages = [];
     $language_names = [];
@@ -194,7 +211,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
           ],
         ],
         'version' => $published_version,
-        'operations' => $this->getTranslationOperations($translation, $build),
+        'operations' => $this->getTranslationOperations($translation, TRUE),
       ];
 
       $languages[$language->getId()][$published_version] = $info;
@@ -215,8 +232,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
           ],
         ],
         'version' => $latest_entity_version,
-        // Only the published version can have operations.
-        'operations' => 'N/A',
+        'operations' => $this->getTranslationOperations($translation, FALSE),
       ];
 
       $languages[$language->getId()][$latest_entity_version] = $info;
@@ -226,9 +242,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     // Rebuild the table.
     $header = [
       $this->t('Language'),
-      $this->t('Title @published', ['@published' => $published_version]),
-      $this->t('Title @validated', ['@validated' => $latest_entity_version]),
-      $this->t('Operations @published', ['@published' => $published_version]),
+      $this->t('@published / published', ['@published' => $published_version]),
+      $this->t('Operations'),
+      $this->t('@validated / validated', ['@validated' => $latest_entity_version]),
+      $this->t('Operations'),
     ];
 
     $rows = [];
@@ -236,8 +253,9 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $row['data'] = [];
       $row['data']['language'] = $language_names[$langcode];
       $row['data']['title_published'] = isset($info[$published_version]) ? $info[$published_version]['title'] : 'N/A';
+      $row['data']['operations_published'] = isset($info[$published_version]) ? ['data' => $info[$published_version]['operations']] : 'N/A';
       $row['data']['title_validated'] = isset($info[$latest_entity_version]) ? $info[$latest_entity_version]['title'] : 'N/A';
-      $row['data']['operations'] = isset($info[$published_version]) ? $info[$published_version]['operations'] : 'N/A';
+      $row['data']['operations_validated'] = isset($info[$latest_entity_version]) ? ['data' => $info[$latest_entity_version]['operations']] : 'N/A';
 
       $row['hreflang'] = $langcode;
       if (isset($info['default_language'])) {
@@ -249,25 +267,55 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $build['existing_translations']['table']['#header'] = $header;
     $build['existing_translations']['table']['#rows'] = $rows;
+    $build['existing_translations']['#attached']['library'][] = 'oe_translation_corporate_workflow/tables';
   }
 
   /**
-   * Fishes out the operations links from the existing table.
+   * Prepares operations for a given translation.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $translation
    *   The translation language for which to get the operations.
-   * @param array $build
-   *   The build array.
+   * @param bool $default
+   *   If we are creating the links for the default revision.
    *
    * @return array
    *   The operations links.
    */
-  protected function getTranslationOperations(ContentEntityInterface $translation, array $build): array {
-    foreach ($build['existing_translations']['table']['#rows'] as $key => $row) {
-      if ($row['hreflang'] === $translation->language()->getId()) {
-        return $row['data']['operations'];
-      }
+  protected function getTranslationOperations(ContentEntityInterface $translation, bool $default): array {
+    if (!$default && !$translation instanceof NodeInterface) {
+      // We only support the operations for non default revisions for Node
+      // entities.
+      return [];
     }
+
+    $links = [
+      'view' => [
+        'title' => $this->t('View'),
+        'url' => $default ? $translation->toUrl() : Url::fromRoute('entity.node.revision', [
+          'node' => $translation->id(),
+          'node_revision' => $translation->getRevisionId(),
+        ], ['language' => $translation->language()]),
+      ],
+    ];
+
+    $delete = $translation->toUrl('delete-form');
+    if (!$default) {
+      $delete = Url::fromRoute('node.revision_delete_confirm', [
+        'node' => $translation->id(),
+        'node_revision' => $translation->getRevisionId(),
+      ], ['language' => $translation->language()]);
+    }
+    if ($delete->access()) {
+      $links['delete'] = [
+        'title' => $this->t('Delete'),
+        'url' => $delete,
+      ];
+    }
+
+    return [
+      '#type' => 'operations',
+      '#links' => $links,
+    ];
   }
 
 }

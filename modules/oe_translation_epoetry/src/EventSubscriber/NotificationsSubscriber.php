@@ -221,7 +221,15 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
-    $translation_request->updateTargetLanguageStatus($langcode, $status);
+    // If we already have a translation for this language, do not change the
+    // status anymore. Any status updates that may come after have no real
+    // relevance for our system because from this moment we start our own flow
+    // of reviewing and syncing the translation values.
+    $data = $translation_request->getTranslatedData();
+    if (!isset($data[$language->getId()])) {
+      $translation_request->updateTargetLanguageStatus($langcode, $status);
+    }
+
     $translation_request->log('The <strong>@language</strong> product status has been updated to <strong>@status</strong>.', [
       '@language' => $language->getName(),
       '@status' => $status,
