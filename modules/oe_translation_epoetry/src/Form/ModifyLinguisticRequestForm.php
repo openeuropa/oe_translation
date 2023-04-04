@@ -126,6 +126,27 @@ class ModifyLinguisticRequestForm extends FormBase {
       return AccessResult::forbidden()->addCacheableDependency($cache);
     }
 
+    // If there are no more languages to request, do not allow access.
+    $existing_languages = $translation_request->getTargetLanguages();
+    $all_languages = \Drupal::languageManager()->getLanguages();
+    unset($all_languages[$translation_request->getContentEntity()->language()->getId()]);
+    $event = new AvailableLanguagesAlterEvent($all_languages);
+    \Drupal::service('event_dispatcher')->dispatch($event, AvailableLanguagesAlterEvent::NAME);
+    $available_languages = $event->getLanguages();
+    $all_covered = TRUE;
+    foreach ($available_languages as $language) {
+      if (in_array($language->getId(), array_keys($existing_languages))) {
+        continue;
+      }
+
+      $all_covered = FALSE;
+      break;
+    }
+
+    if ($all_covered) {
+      return AccessResult::forbidden()->addCacheableDependency($cache);
+    }
+
     // We only allow to add new languages if the request is accepted or
     // suspended.
     $states = [
@@ -182,6 +203,15 @@ class ModifyLinguisticRequestForm extends FormBase {
     $form['actions']['send'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save and send'),
+      '#submit' => ['::send'],
+      '#validate' => ['::validateRequest'],
+    ];
+
+    $form['actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Cancel'),
+      '#submit' => ['::cancel'],
+      '#limit_validation_errors' => [],
     ];
 
     return $form;
@@ -190,7 +220,18 @@ class ModifyLinguisticRequestForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function validateRequest(array &$form, FormStateInterface $form_state): void {
+    // Validate that at least one language is selected.
+    $languages = $this->getSubmittedLanguages($form, $form_state);
+    if (!$languages) {
+      $form_state->setErrorByName('languages', $this->t('Please select at least one extra language.'));
+    }
+  }
+
+  /**
+   * Submit handler that sends the request.
+   */
+  public function send(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $translation_request */
     $translation_request = $form_state->get('translation_request');
     $new_languages = $this->getSubmittedLanguages($form, $form_state);
@@ -244,6 +285,21 @@ class ModifyLinguisticRequestForm extends FormBase {
 
       $translation_request->save();
     }
+  }
+
+  /**
+   * Submit handler to cancel and go back.
+   */
+  public function cancel(array &$form, FormStateInterface $form_state) {
+    // We don't have to do anything as the form system will automatically
+    // redirect us back to where we came from.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // We do nothing here as we have custom submit buttons.
   }
 
   /**

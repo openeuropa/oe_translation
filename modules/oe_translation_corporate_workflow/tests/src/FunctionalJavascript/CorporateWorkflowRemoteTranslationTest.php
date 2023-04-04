@@ -184,14 +184,17 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $expected_ongoing = [
       'translator' => 'Remote one',
       'status' => 'Requested',
-      'version' => '1.0.0 / validated',
+      // Even though the translation started from the Validated revision, we
+      // published the node so we show instead "published" to be clear to the
+      // user that is the state the translation values would go onto.
+      'version' => '1.0.0 / published',
     ];
     $this->assertOngoingTranslations([$expected_ongoing]);
     $this->clickLink('Remote translations');
     $this->assertRequestStatusTable([
       'Requested',
       'Remote one',
-      '1.0.0 / validated',
+      '1.0.0 / published',
     ]);
 
     $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
@@ -213,7 +216,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertRequestStatusTable([
       'Translated',
       'Remote one',
-      '1.0.0 / validated',
+      '1.0.0 / published',
     ]);
 
     $this->clickLink('Dashboard');
@@ -225,7 +228,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertRequestStatusTable([
       'Translated',
       'Remote one',
-      '1.0.0 / validated',
+      '1.0.0 / published',
     ]);
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
     $this->getSession()->getPage()->pressButton('Save and synchronise');

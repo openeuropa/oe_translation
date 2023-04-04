@@ -749,7 +749,7 @@ class LocalTranslationsTest extends TranslationTestBase {
         $this->assertEquals('Delete', $operations[1]->getText());
       }
       else {
-        $this->assertEquals('New translation', $operations[0]->getText());
+        $this->assertEquals('Add new translation', $operations[0]->getText());
         // We expect one operation only.
         $this->assertCount(1, $operations);
       }

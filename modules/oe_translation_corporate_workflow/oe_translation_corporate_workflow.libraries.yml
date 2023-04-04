@@ -1,0 +1,4 @@
+tables:
+  css:
+    component:
+      css/tables.css: {}

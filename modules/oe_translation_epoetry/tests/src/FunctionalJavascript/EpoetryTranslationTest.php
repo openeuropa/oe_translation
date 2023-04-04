@@ -888,6 +888,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->addressEquals('/en/translation-request/epoetry/new-version-request/' . $request->id());
     $this->assertSession()->pageTextContains(sprintf('You are making a request for a new version. The previous version was translated with the %s request ID.', $request->getRequestId(TRUE)));
 
+    // Click the Cancel button and assert we are back where we came from.
+    $this->getSession()->getPage()->pressButton('Cancel');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
+
+    $this->clickLink('Update');
+
     // Make some changes to the request: new language, request message,
     // different date.
     $this->getSession()->getPage()->checkField('Bulgarian');
@@ -1137,6 +1143,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'ongoing' => TRUE,
         'finished' => FALSE,
       ],
+      'accepted request with all languages requested' => [
+        'epoetry_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED,
+        'visible' => FALSE,
+        'ongoing' => TRUE,
+        'finished' => FALSE,
+      ],
       'executed request' => [
         'epoetry_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED,
         'visible' => FALSE,
@@ -1164,6 +1176,16 @@ class EpoetryTranslationTest extends TranslationTestBase {
       // Make an active request and set the case epoetry status.
       $request = $this->createNodeTranslationRequest($node);
       $request->setEpoetryRequestStatus($case_info['epoetry_status']);
+      if ($case === 'accepted request with all languages requested') {
+        // Add all the languages to the request.
+        foreach (\Drupal::languageManager()->getLanguages() as $language) {
+          if ($language->getId() === 'en') {
+            continue;
+          }
+
+          $request->updateTargetLanguageStatus($language->getId(), TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED);
+        }
+      }
       if ($case_info['finished']) {
         $request->setRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_FINISHED);
       }
@@ -1251,10 +1273,22 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->addressEquals('/en/translation-request/epoetry/modify-linguistic-request/' . $request->id());
     $this->assertSession()->pageTextContains(sprintf('You are making a request to add extra languages to an existing, ongoing request with the ID %s.', $request->getRequestId(TRUE)));
 
+    // Click the Cancel button and assert we are back where we came from.
+    $this->getSession()->getPage()->pressButton('Cancel');
+    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
+
+    $this->clickLink('Add new languages');
+
     // Assert that FR is disabled and checked because the ongoing request
     // is for FR.
     $this->assertSession()->fieldDisabled('French');
     $this->assertSession()->checkboxChecked('French');
+
+    // Submit the form without selecting any other languages and assert we have
+    // a validation in place.
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('Please select at least one extra language.');
+
     // Add another language and submit the request.
     $this->getSession()->getPage()->checkField('German');
     $this->getSession()->getPage()->pressButton('Save and send');
@@ -1535,6 +1569,54 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
+  }
+
+  /**
+   * Tests we don't change the language status once the translation has arrived.
+   */
+  public function testLanguageStatusAfterReview(): void {
+    // Create a node and its active translation request.
+    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
+    $node = $this->createBasicTestNode();
+    $request = $this->createNodeTranslationRequest($node);
+    $request->save();
+    $this->assertEquals('Requested', $request->getTargetLanguage('fr')->getStatus());
+
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+
+    // Send the translation.
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $storage->resetCache();
+    $request = $storage->load($request->id());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguage('fr')->getStatus());
+
+    // Send a status notification.
+    $notification = [
+      'type' => 'ProductStatusChange',
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SENT,
+      'language' => 'fr',
+    ];
+
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+
+    $storage->resetCache();
+    $request = $storage->load($request->id());
+    // The language status did not change.
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguage('fr')->getStatus());
+
+    // We do still log that the notification came from ePoetry.
+    $expected_logs = [];
+    $expected_logs[1] = [
+      'Info',
+      'The French translation has been delivered.',
+      'Anonymous',
+    ];
+    $expected_logs[2] = [
+      'Info',
+      'The French product status has been updated to Sent.',
+      'Anonymous',
+    ];
+    $this->assertLogMessagesValues($request, $expected_logs);
   }
 
   /**
@@ -2334,6 +2416,117 @@ class EpoetryTranslationTest extends TranslationTestBase {
     }
 
     $this->assertEquals($found, 'The mock ticket validation kicked in');
+  }
+
+  /**
+   * Tests various cases of a request being finalised automatically.
+   */
+  public function testFinishedRequest(): void {
+    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
+    // Test that requests that are marked as Executed in ePoetry AND have all
+    // the languages Cancelled or Synchronised, get marked as Finished.
+    $node = $this->createBasicTestNode();
+    $languages[] = [
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
+      'langcode' => 'fr',
+    ];
+    $languages[] = [
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
+      'langcode' => 'bg',
+    ];
+    $languages[] = [
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REQUESTED,
+      'langcode' => 'it',
+    ];
+    $request = $this->createNodeTranslationRequest($node, TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED, $languages);
+    $request->save();
+    // Execute the request.
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    $notification = [
+      'type' => 'RequestStatusChange',
+      'status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED,
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    // No change in the request status.
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED, $request->getEpoetryRequestStatus());
+    // Cancel the languages one by one and assert that when the last one got
+    // cancelled, the request status gets marked as Finished.
+    $notification = [
+      'type' => 'ProductStatusChange',
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      'language' => 'fr',
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    // No change in the request status.
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+    // Translate the Italian and sync it.
+    EpoetryTranslationMockHelper::translateRequest($request, 'it');
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    \Drupal::service('oe_translation_remote.translation_synchroniser')->synchronise($request, 'it');
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    // No change in the request status.
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+    // Cancel the Bulgarian.
+    $notification = [
+      'type' => 'ProductStatusChange',
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      'language' => 'bg',
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    // The request status has been marked as Finished.
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+
+    // Test the same the other way around: first Cancel the translation and
+    // then Execute the request.
+    $node = $this->createBasicTestNode();
+    $request = $this->createNodeTranslationRequest($node);
+    $request->setRequestId(
+      [
+        'code' => 'DIGIT',
+        'year' => date('Y'),
+        'number' => 2000,
+        'part' => 1,
+        'version' => 0,
+        'service' => 'TRA',
+      ]
+    );
+    $request->save();
+    $notification = [
+      'type' => 'ProductStatusChange',
+      'status' => TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      'language' => 'fr',
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_SENT, $request->getEpoetryRequestStatus());
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED, $request->getTargetLanguage('fr')->getStatus());
+    $notification = [
+      'type' => 'RequestStatusChange',
+      'status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED,
+    ];
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification);
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED, $request->getEpoetryRequestStatus());
   }
 
   /**
