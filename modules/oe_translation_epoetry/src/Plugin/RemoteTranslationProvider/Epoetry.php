@@ -130,10 +130,11 @@ class Epoetry extends RemoteTranslationProviderBase {
       '#type' => 'fieldset',
     ];
 
-    foreach (ContactItem::contactTypes() as $type) {
+    foreach (ContactItem::contactTypes() as $type => $description) {
       $form['contacts'][$type] = [
         '#type' => 'textfield',
         '#title' => $type,
+        '#description' => empty($description) ? '' : $description,
         '#default_value' => $contacts[$type] ?? NULL,
       ];
     }
@@ -312,6 +313,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       ContactItemInterface::EDITOR,
     ];
 
+    $contact_types = ContactItem::contactTypes();
+
     $form['contacts'] = [
       '#title' => $this->t('Contacts'),
       '#type' => 'fieldset',
@@ -321,6 +324,7 @@ class Epoetry extends RemoteTranslationProviderBase {
       $form['contacts'][$type] = [
         '#type' => 'textfield',
         '#title' => $type,
+        '#description' => $contact_types[$type],
         '#default_value' => $this->configuration['contacts'][$type] ?? NULL,
         '#required' => TRUE,
       ];

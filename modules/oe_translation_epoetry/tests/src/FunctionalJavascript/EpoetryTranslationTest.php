@@ -9,6 +9,7 @@ use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\LanguageWithStatus;
+use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -94,16 +95,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('Plugin configuration for ePoetry');
 
+    $contact_fields = ContactItem::contactTypes();
     // Assert we have the contact form elements.
-    $contact_fields = [
-      'Author',
-      'Requester',
-      'Recipient',
-      'Editor',
-      'Webmaster',
-    ];
-    foreach ($contact_fields as $field) {
+    foreach ($contact_fields as $field => $description) {
       $this->assertSession()->fieldExists($field);
+      if (empty($field)) {
+        $this->assertSession()->elementTextEquals('css', '#form-item-translator-configuration-epoetry-' . strtolower($field) . '--description', $description);
+      }
     }
 
     // Assert we have the auto-accept checkbox.
