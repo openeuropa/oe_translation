@@ -20,6 +20,7 @@ use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -149,11 +150,16 @@ class ModifyLinguisticRequestForm extends FormBase {
 
     // We only allow to add new languages if the request is accepted or
     // suspended.
-    $states = [
+    $epoetry_statuses = [
       TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED,
       TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
+      TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED,
     ];
-    $allowed = in_array($translation_request->getEpoetryRequestStatus(), $states) && $translation_request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_REQUESTED;
+    $request_statuses = [
+      TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
+    ];
+    $allowed = in_array($translation_request->getEpoetryRequestStatus(), $epoetry_statuses) && in_array($translation_request->getRequestStatus(), $request_statuses);
     if ($allowed) {
       return AccessResult::allowed()->addCacheableDependency($cache);
     }

@@ -863,6 +863,80 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
   }
 
   /**
+   * Tests that synchronising translations doesn't change the default revision.
+   *
+   * The tested use case is having a translation started from a Published
+   * version that becomes unpublished, followed by syncing that ongoing
+   * translation. We ensure that when we sync onto that Published version which
+   * is no longer the default revision, it doesn't become the default revision.
+   */
+  public function testDefaultRevisionFlagIsKept(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+    $revision_ids = $node_storage->revisionIds($node);
+    $this->assertCount(5, $revision_ids);
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    // Save the translation request as draft.
+    $this->submitForm([], t('Save as draft'));
+    $node_storage->resetCache();
+
+    // Unpublish the node.
+    $node->set('moderation_state', 'archived');
+    $node->setNewRevision(TRUE);
+    $node->save();
+    $revision_ids = $node_storage->revisionIds($node);
+    // Assert we have one extra revision and the default revision is the
+    // Archived one and not the Published one.
+    $this->assertCount(6, $revision_ids);
+    $node = $node_storage->load($node->id());
+    $this->assertEquals('archived', $node->get('moderation_state')->value);
+    $this->assertTrue($node->isDefaultRevision());
+    array_pop($revision_ids);
+    $published_revision_id = array_pop($revision_ids);
+    $published = $node_storage->loadRevision($published_revision_id);
+    $this->assertEquals('published', $published->get('moderation_state')->value);
+    $this->assertFalse($published->isDefaultRevision());
+
+    // Synchronise the translation.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Edit draft translation');
+    $values = [
+      'Translation' => 'My node FR',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+    $node_storage->resetCache();
+
+    // Assert we don't have extra revisions created, nor is the default
+    // revision published.
+    $revision_ids = $node_storage->revisionIds($node);
+    $this->assertCount(6, $revision_ids);
+    $node = $node_storage->load($node->id());
+    $this->assertEquals('archived', $node->get('moderation_state')->value);
+    $this->assertTrue($node->isDefaultRevision());
+    $this->assertCount(1, $node->getTranslationLanguages());
+    // The published revision is still not default but has the translation on
+    // it.
+    array_pop($revision_ids);
+    $published_revision_id = array_pop($revision_ids);
+    $published = $node_storage->loadRevision($published_revision_id);
+    $this->assertEquals('published', $published->get('moderation_state')->value);
+    $this->assertFalse($published->isDefaultRevision());
+    $this->assertCount(2, $published->getTranslationLanguages());
+  }
+
+  /**
    * Asserts the existing translations table.
    *
    * @param array $languages

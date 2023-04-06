@@ -302,13 +302,18 @@ class RequestFactory extends RequestClientFactory {
       ->setTrackChanges(FALSE)
       ->setFileName(str_replace(' ', '-', $entity->label()) . '.html')
       ->setContent((string) $content)
-      ->setComment($entity->toUrl('revision')->setAbsolute()->toString())
       ->setLinguisticSections($linguistic_sections);
     $request_details->setOriginalDocument($original_document);
 
+    $comment = '';
     if ($request->getMessage()) {
-      $request_details->setComment($request->getMessage());
+      $comment .= trim($request->getMessage(), '.');
     }
+    if ($comment !== "") {
+      $comment .= '. ';
+    }
+    $comment .= 'Page URL: ' . $entity->toUrl('revision')->setAbsolute()->toString();
+    $request_details->setComment($comment);
 
     $products = new Products();
     foreach ($request->getTargetLanguages() as $language_with_status) {

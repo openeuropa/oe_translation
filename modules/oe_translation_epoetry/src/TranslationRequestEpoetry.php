@@ -214,6 +214,8 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
 
   /**
    * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup {
     switch ($status) {
@@ -247,6 +249,9 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
 
       case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED:
         return t('The translation for this language has been cancelled by ePoetry. It cannot be reopened.');
+
+      case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED:
+        return t('The translation for this language has been rejected by ePoetry. It cannot be reopened.');
 
       case TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED:
         return t('The translation for this language has been suspended by ePoetry. This can be a temporary measure and it can be unsuspended by ePoetry.');

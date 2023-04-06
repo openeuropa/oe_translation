@@ -233,10 +233,12 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
-    $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations/remote');
+    $this->assertSession()->addressEquals('/translation-request/' . $request->id());
 
     // Assert that we now make new translations and there are no more
     // existing translation requests.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
     $this->assertSession()->fieldEnabled('Translator');
     $this->assertSession()->elementNotExists('css', 'table.ongoing-remote-translation-requests-table');
     $this->assertSession()->pageTextNotContains('Ongoing remote translation requests');
@@ -409,6 +411,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
     // Only 2 are left.
     $third_ongoing['status'] = 'Translated';
     $this->assertOngoingTranslations([$second_ongoing, $third_ongoing]);
@@ -427,6 +431,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
 
     // Only 1 is left, so now we don't have the requests table but directly
     // the last request meta information.

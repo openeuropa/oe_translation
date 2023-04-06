@@ -38,7 +38,9 @@ class EpoetryOngoingNewVersionRequestHandler implements EpoetryOngoingNewVersion
    */
   public function canCreateRequest(TranslationRequestEpoetryInterface $request): bool {
     // If the request doesn't have one of these statuses, we cannot make such
-    // request.
+    // request. We don't include Executed because if the request is Executed,
+    // it means all languages have been sent so a brand new request can be made
+    // instead.
     $access = in_array($request->getEpoetryRequestStatus(), [
       TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED,
       TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,

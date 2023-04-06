@@ -71,6 +71,7 @@ function oe_translation_epoetry_mock_preprocess_table__remote_language_list(arra
     TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY,
     TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED,
     TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+    TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED,
   ];
 
   foreach ($variables['rows'] as &$row) {

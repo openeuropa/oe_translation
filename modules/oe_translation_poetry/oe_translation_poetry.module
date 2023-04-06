@@ -11,8 +11,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_poetry\JobItemListBuilder;
 use Drupal\oe_translation_poetry\Plugin\tmgmt\Translator\PoetryTranslator;
@@ -26,40 +24,6 @@ function oe_translation_poetry_entity_type_alter(array &$entity_types) {
   $entity_type = $entity_types['tmgmt_job_item'] ?? NULL;
   if ($entity_type) {
     $entity_type->setHandlerClass('list_builder', JobItemListBuilder::class);
-  }
-}
-
-/**
- * Implements hook_entity_base_field_info().
- */
-function oe_translation_poetry_entity_base_field_info(EntityTypeInterface $entity_type) {
-  if ($entity_type->id() === 'tmgmt_job') {
-    $fields = [];
-    $fields['poetry_request_id'] = BaseFieldDefinition::create('poetry_request_id')
-      ->setLabel(t('The Poetry request ID'))
-      ->setDisplayOptions('view', [
-        'label' => 'hidden',
-        'type' => 'poetry_request_id_formatter',
-        'weight' => 20,
-      ]);
-
-    $fields['poetry_state'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Poetry state'))
-      ->setDescription(t('The poetry job state while the job is active.'))
-      ->setSetting('allowed_values', [
-        PoetryTranslator::POETRY_STATUS_ONGOING => t('Ongoing'),
-        PoetryTranslator::POETRY_STATUS_TRANSLATED => t('Translated'),
-      ]);
-
-    $fields['poetry_request_date'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('The Poetry request date'))
-      ->setDescription(t('The date when the translations are expected at the moment of the request.'));
-
-    $fields['poetry_request_date_updated'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('The Poetry updated request date'))
-      ->setDescription(t('The updated date when the translations are expected. Poetry can choose to update the request with a new expected delivery date.'));
-
-    return $fields;
   }
 }
 

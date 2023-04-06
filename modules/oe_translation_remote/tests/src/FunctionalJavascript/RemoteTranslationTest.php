@@ -425,7 +425,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->back();
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in Bulgarian has been synchronised.');
-    $this->assertSession()->addressEquals('/en/node/' . $node->id() . '/translations/remote');
+    $this->assertSession()->addressEquals('/en/translation-request/' . $request->id());
     $expected_languages['bg']['status'] = 'Synchronised';
     $expected_languages['bg']['review'] = FALSE;
     $this->assertRemoteOngoingTranslationLanguages($expected_languages);
@@ -606,6 +606,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Dashboard');
 
     // Assert we only have again the first, translated request on the dashboard.
@@ -640,6 +641,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Dashboard');
     $this->assertSession()->pageTextContains('There are no ongoing remote translation requests');
 

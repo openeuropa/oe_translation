@@ -7,6 +7,7 @@
 
 declare(strict_types = 1);
 
+use Drupal\oe_translation_poetry\Plugin\Field\FieldType\PoetryRequestIdItem;
 use Drupal\tmgmt\Entity\Translator;
 
 /**
