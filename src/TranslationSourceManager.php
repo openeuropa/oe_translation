@@ -231,7 +231,15 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
     $data = $event->getData();
 
     if (!$entity->hasTranslation($langcode)) {
+      // We need to ensure that after we create the translation, we maintain
+      // the "default revision" flag so that in case we are creating a
+      // translation for a non-default revision, it doesn't transform it by
+      // accident into a default revision. This happens, for example, if we
+      // have a published revision followed by a draft (default) revision as a
+      // result of an Unpublishing action.
+      $default_revision = $entity->isDefaultRevision();
       $entity->addTranslation($langcode, $entity->toArray());
+      $entity->isDefaultRevision($default_revision);
     }
 
     $translation = $entity->getTranslation($langcode);

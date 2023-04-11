@@ -78,7 +78,7 @@ class LanguageListFormatter extends FormatterBase {
       $review = Url::fromRoute('entity.oe_translation_request.remote_translation_review', [
         'oe_translation_request' => $items->getEntity()->id(),
         'language' => $item->langcode,
-      ]);
+      ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
       $review_access = $review->access(NULL, TRUE);
       $cache->addCacheableDependency($review_access);
       $operations = [

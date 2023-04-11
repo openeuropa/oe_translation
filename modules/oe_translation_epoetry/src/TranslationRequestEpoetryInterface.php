@@ -29,6 +29,7 @@ interface TranslationRequestEpoetryInterface extends TranslationRequestRemoteInt
   const STATUS_LANGUAGE_SENT = 'Sent';
   const STATUS_LANGUAGE_CLOSED = 'Closed';
   const STATUS_LANGUAGE_CANCELLED = 'Cancelled';
+  const STATUS_LANGUAGE_REJECTED = 'Rejected';
   const STATUS_LANGUAGE_SUSPENDED = 'Suspended';
 
   /**

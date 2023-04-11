@@ -21,14 +21,15 @@ use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeCancelledEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeClosedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeOngoingEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeReadyToBeSentEvent;
+use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeRejectedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeRequestedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeSentEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\BaseEvent as RequestBaseEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeAcceptedEvent as RequestStatusChangeAcceptedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeCancelledEvent as RequestStatusChangeCancelledEvent;
+use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeRejectedEvent as RequestStatusChangeRejectedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeSuspendedEvent as RequestStatusChangeSuspendedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeExecutedEvent;
-use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeRejectedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeSuspendedEvent;
 use OpenEuropa\EPoetry\Notification\Type\RequestReference;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -102,6 +103,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     return [
       StatusChangeRequestedEvent::NAME => 'onProductRequested',
       StatusChangeCancelledEvent::NAME => 'onProductCancelled',
+      StatusChangeRejectedEvent::NAME => 'onProductRejected',
       StatusChangeAcceptedEvent::NAME => 'onProductAccepted',
       StatusChangeOngoingEvent::NAME => 'onProductOngoing',
       StatusChangeReadyToBeSentEvent::NAME => 'onProductReadyToBeSent',
@@ -109,7 +111,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       StatusChangeClosedEvent::NAME => 'onProductClosed',
       StatusChangeSuspendedEvent::NAME => 'onProductSuspended',
       RequestStatusChangeAcceptedEvent::NAME => 'onRequestAccepted',
-      StatusChangeRejectedEvent::NAME => 'onRequestRejected',
+      RequestStatusChangeRejectedEvent::NAME => 'onRequestRejected',
       RequestStatusChangeCancelledEvent::NAME => 'onRequestCancelled',
       StatusChangeExecutedEvent::NAME => 'onRequestExecuted',
       RequestStatusChangeSuspendedEvent::NAME => 'onRequestSuspended',
@@ -135,6 +137,16 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    */
   public function onProductCancelled(StatusChangeCancelledEvent $event): void {
     $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED, TranslationRequestLogInterface::WARNING);
+  }
+
+  /**
+   * Handles the product status change: Rejected.
+   *
+   * @param \OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeRejectedEvent $event
+   *   The event.
+   */
+  public function onProductRejected(StatusChangeRejectedEvent $event): void {
+    $this->onProductStatusChange($event, TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED, TranslationRequestLogInterface::WARNING);
   }
 
   /**
@@ -320,7 +332,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    * @param \OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeRejectedEvent $event
    *   The event.
    */
-  public function onRequestRejected(StatusChangeRejectedEvent $event): void {
+  public function onRequestRejected(RequestStatusChangeRejectedEvent $event): void {
     $linguistic_request = $event->getLinguisticRequest();
     $translation_request = $this->getTranslationRequest($linguistic_request->getRequestReference());
     if (!$translation_request) {

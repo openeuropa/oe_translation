@@ -277,7 +277,6 @@ class MockServer implements ContainerInjectionInterface {
       ->condition('request_id.year', $dossier_in->getYear())
       ->condition('request_id.number', $dossier_in->getNumber())
       ->condition('request_id.part', $reference_in->getPart())
-      ->condition('epoetry_status', TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED)
       ->accessCheck(FALSE)
       ->execute();
 
@@ -285,8 +284,8 @@ class MockServer implements ContainerInjectionInterface {
       throw new NotFoundHttpException();
     }
 
-    // We expect this to be here.
-    $id = reset($ids);
+    // We can only modify the latest version.
+    $id = end($ids);
     $request_entity = $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
 
     // Create an original linguistic request from the found entity so we can

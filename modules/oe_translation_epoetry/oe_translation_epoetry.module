@@ -298,6 +298,7 @@ function oe_translation_epoetry_preprocess_table__remote_language_list(array &$v
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CLOSED,
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_READY,
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED,
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED,
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SENT,
     ])) {
@@ -327,26 +328,64 @@ function oe_translation_epoetry_oe_translation_request_presave(TranslationReques
   if ($request->bundle() !== 'epoetry') {
     return;
   }
-  // Mark the request as finalized if the ePoetry status is Executed AND all
-  // languages are Cancelled. This is because Cancelled languages cannot be
-  // continued anymore so the request needs be finished.
-  // We do this here because the ePoetry notifications
-  // can come in any order so we have to check every time the request is saved.
-  $epoetry_status = $request->getEpoetryRequestStatus();
-  if ($epoetry_status !== TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED) {
-    return;
-  }
 
   $languages = $request->getTargetLanguages();
+
+  // Mark the request as Translated if all languages are either Cancelled,
+  // Rejected or in Review. This is because Cancelled and Rejected languages
+  // cannot be continued anymore so they should allow the request to be
+  // Translated. We do this in a presave because the ePoetry notifications
+  // can come in any order so we have to check every time the request is saved.
+  $request_translated = TRUE;
   foreach ($languages as $language_with_status) {
     if (!in_array($language_with_status->getStatus(), [
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
-      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW,
     ])) {
       // It means at least one language is still not Cancelled or Synchronised.
-      return;
+      $request_translated = FALSE;
     }
   }
 
-  $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+  if ($request_translated) {
+    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED);
+  }
+
+  // Mark the request as Finished if all languages are either Cancelled,
+  // Rejected or Synchronised. This is because Cancelled and Rejected languages
+  // cannot be continued anymore so they should allow the request to be
+  // Finished. We do this in a presave because the ePoetry notifications
+  // can come in any order so we have to check every time the request is saved.
+  $request_finished = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED,
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED,
+    ])) {
+      // It means at least one language is still not Cancelled, Rejected or
+      // Synchronised.
+      $request_finished = FALSE;
+    }
+  }
+
+  if ($request_finished) {
+    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+  }
+
+  // If at least one language is Requested, mark the entire request as
+  // Requested. This can happen if all the languages become in Review (marking
+  // the entire request as Translated) but then additional languages are added
+  // to the request. This happens only if the ePoetry request is Executed and
+  // the request is Translated.
+  $epoetry_status = $request->getEpoetryRequestStatus();
+  if ($epoetry_status === TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED && $request->getRequestStatus() === TranslationRequestEpoetryInterface::STATUS_REQUEST_TRANSLATED) {
+    foreach ($request->getTargetLanguages() as $target_language_status) {
+      if ($target_language_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED) {
+        $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED);
+        break;
+      }
+    }
+  }
 }

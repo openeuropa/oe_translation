@@ -13,9 +13,11 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
@@ -314,4 +316,56 @@ function oe_translation_entity_operation_alter(array &$operations, EntityInterfa
  */
 function oe_translation_preprocess_tooltip(array &$variables) {
   $variables['#attached']['library'][] = 'oe_translation/tooltip';
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ *
+ * We are keeping the 2 tmgmt_job and tmgmt_job_item base fields in place until
+ * the 2.x version of the translations system is deployed.
+ */
+function oe_translation_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'tmgmt_job_item') {
+    $fields = [];
+    // Add a field to the Job item to store the entity revision at the moment of
+    // creation.
+    $fields['item_rid'] = BaseFieldDefinition::create('integer')
+      ->setLabel(new TranslatableMarkup('Item revision ID'))
+      ->setSetting('unsigned', TRUE);
+    // Add a field to the Job item to store the entity bundle being translated.
+    // This is needed to be able to inspect field related info if the entity
+    // itself gets deleted.
+    $fields['item_bundle'] = BaseFieldDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('Item bundle'));
+    return $fields;
+  }
+
+  if ($entity_type->id() === 'tmgmt_job') {
+    $fields = [];
+    $fields['poetry_request_id'] = BaseFieldDefinition::create('poetry_request_id')
+      ->setLabel(t('The Poetry request ID'))
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'poetry_request_id_formatter',
+        'weight' => 20,
+      ]);
+
+    $fields['poetry_state'] = BaseFieldDefinition::create('list_string')
+      ->setLabel(t('Poetry state'))
+      ->setDescription(t('The poetry job state while the job is active.'))
+      ->setSetting('allowed_values', [
+        'ongoing' => t('Ongoing'),
+        'translated' => t('Translated'),
+      ]);
+
+    $fields['poetry_request_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('The Poetry request date'))
+      ->setDescription(t('The date when the translations are expected at the moment of the request.'));
+
+    $fields['poetry_request_date_updated'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('The Poetry updated request date'))
+      ->setDescription(t('The updated date when the translations are expected. Poetry can choose to update the request with a new expected delivery date.'));
+
+    return $fields;
+  }
 }

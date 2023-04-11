@@ -211,6 +211,11 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     /** @var \Drupal\oe_translation_local\TranslationRequestLocal $translation_request */
     $translation_request = $this->entity;
 
+    // Clear the existing redirect if we have a destination.
+    if ($this->getRequest()->query->get('destination')) {
+      $this->getRequest()->query->remove('destination');
+    }
+
     $language = $form_state->get('language');
     $url = $translation_request->toUrl('preview');
     $url->setRouteParameter('language', $language->id());

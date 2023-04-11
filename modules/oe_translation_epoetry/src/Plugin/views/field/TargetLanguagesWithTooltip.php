@@ -175,6 +175,7 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CLOSED . ' [in ePoetry]',
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SUSPENDED . ' [in ePoetry]',
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_CANCELLED . ' [in ePoetry]',
+      TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED . ' [in ePoetry]',
     ];
 
     uksort($grouped, function ($a, $b) use ($order) {

@@ -98,12 +98,20 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($vid);
 
+    // We create the empty translation on the entity so that we ensure if we
+    // need to set the entity to not be the default revision (see below), it
+    // doesn't get later overridden in
+    // TranslationSourceManager::doSaveTranslations().
     if (!$entity->hasTranslation($target_langcode)) {
-      // We create the empty translation on the entity so that we ensure if we
-      // need to set the entity to not be the default revision (see below), it
-      // doesn't get later overridden in
-      // ContentEntitySource::doSaveTranslations().
+      // We need to ensure that after we create the translation, we maintain
+      // the "default revision" flag so that in case we are creating a
+      // translation for a non-default revision, it doesn't transform it by
+      // accident into a default revision. This happens, for example, if we
+      // have a published revision followed by a draft (default) revision as a
+      // result of an Unpublishing action.
+      $default_revision = $entity->isDefaultRevision();
       $entity->addTranslation($target_langcode, $entity->toArray());
+      $entity->isDefaultRevision($default_revision);
     }
 
     // Check if the entity has a forward revision that is published and mark
