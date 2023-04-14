@@ -23,7 +23,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
  *     },
  *   },
- *   admin_permission = "administer site configuration",
+ *   admin_permission = "administer remote translators",
  *   config_prefix = "remote_translation_provider",
  *   entity_keys = {
  *     "id" = "id",

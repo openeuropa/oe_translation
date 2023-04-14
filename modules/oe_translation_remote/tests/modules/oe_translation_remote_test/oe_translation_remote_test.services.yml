@@ -1,0 +1,5 @@
+services:
+  oe_translation_remote_test.translation_source_event_subscriber:
+    class: Drupal\oe_translation_remote_test\EventSubscriber\TranslationSourceEventSubscriber
+    tags:
+      - { name: event_subscriber }

@@ -82,7 +82,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
    */
   public function testEpoetryProviderConfiguration(): void {
     $user = $this->drupalCreateUser([
-      'administer site configuration',
+      'administer remote translators',
       'access administration pages',
       'access toolbar',
     ]);
@@ -790,6 +790,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'visible' => FALSE,
         'ongoing' => FALSE,
         'finished' => TRUE,
+      ],
+      'new draft, executed request, requested status' => [
+        'epoetry_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED,
+        'create draft' => TRUE,
+        'visible' => TRUE,
+        'ongoing' => TRUE,
+        'finished' => FALSE,
       ],
       'new draft, suspended request' => [
         'epoetry_status' => TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED,
@@ -1982,7 +1989,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Log in as an admin and go reset the dossier.
     $user = $this->drupalCreateUser([
-      'administer site configuration',
+      'administer remote translators',
       'access administration pages',
       'access toolbar',
     ]);

@@ -44,6 +44,13 @@ class TranslationSourceEvent extends Event {
   protected $langcode;
 
   /**
+   * The original extracted translation data array to be used on save.
+   *
+   * @var array
+   */
+  protected $originalData = [];
+
+  /**
    * TranslationSourceEvent constructor.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -97,6 +104,26 @@ class TranslationSourceEvent extends Event {
    */
   public function getLangcode(): string {
     return $this->langcode;
+  }
+
+  /**
+   * Gets the original data.
+   *
+   * @return array
+   *   The data.
+   */
+  public function getOriginalData(): array {
+    return $this->originalData;
+  }
+
+  /**
+   * Sets the original data.
+   *
+   * @param array $original_data
+   *   The original data.
+   */
+  public function setOriginalData(array $original_data): void {
+    $this->originalData = $original_data;
   }
 
 }
