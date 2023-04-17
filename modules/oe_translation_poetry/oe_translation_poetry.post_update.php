@@ -45,8 +45,8 @@ function oe_translation_poetry_post_update_0002(array &$sandbox) {
     // Query database to find all the nodes that have at least a Poetry
     // translation request.
     $database = \Drupal::database();
-    $query = $database->query("SELECT ji.item_id FROM tmgmt_job j
-        INNER JOIN tmgmt_job_item ji ON j.tjid = ji.tjid
+    $query = $database->query("SELECT ji.item_id FROM {tmgmt_job} j
+        INNER JOIN {tmgmt_job_item} ji ON j.tjid = ji.tjid
         WHERE j.translator = 'poetry' GROUP BY ji.item_id");
     $node_ids = $query->fetchAll();
     if (empty($node_ids)) {
@@ -79,8 +79,8 @@ function oe_translation_poetry_post_update_0002(array &$sandbox) {
     $query = $database->query("SELECT ji.item_id, ji.item_rid,
        j.poetry_request_id__code,j.poetry_request_id__year,
        j.poetry_request_id__number,j.poetry_request_id__version,
-       j.poetry_request_id__part,j.poetry_request_id__product FROM tmgmt_job j
-       INNER JOIN tmgmt_job_item ji ON j.tjid = ji.tjid
+       j.poetry_request_id__part,j.poetry_request_id__product FROM {tmgmt_job} j
+       INNER JOIN {tmgmt_job_item} ji ON j.tjid = ji.tjid
        WHERE j.translator = 'poetry' AND ji.item_id = $id->item_id
        ORDER BY ji.item_rid, j.poetry_request_id__version DESC LIMIT 1");
     $poetry_request_id_parts = $query->fetchAll();
