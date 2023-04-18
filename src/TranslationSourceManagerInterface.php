@@ -26,18 +26,21 @@ interface TranslationSourceManagerInterface {
    * Saves the data.
    *
    * @param array $data
-   *   The data array.
+   *   The translated data array.
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    * @param string $langcode
    *   The langcode into which we save the data.
    * @param bool $save
    *   Whether to call save on the entity.
+   * @param array $original_data
+   *   The original translation data array. This is used when it can contain
+   *   extra information which is used in the saving of the translation.
    *
    * @return bool
    *   TRUE for success, FALSE if not.
    */
-  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, $save = TRUE): bool;
+  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, bool $save = TRUE, array $original_data = []): bool;
 
   /**
    * Returns fields that should be embedded into the data for the given entity.

@@ -221,14 +221,10 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, $save = TRUE): bool {
+  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, bool $save = TRUE, array $original_data = []): bool {
     // Use the entity revision info service to resolve the correct revision
     // onto which to save the translation.
     $entity = $this->entityRevisionInfo->getEntityRevision($entity, $langcode);
-
-    $event = new TranslationSourceEvent($entity, $data, $langcode);
-    $this->eventDispatcher->dispatch($event, TranslationSourceEvent::SAVE);
-    $data = $event->getData();
 
     if (!$entity->hasTranslation($langcode)) {
       // We need to ensure that after we create the translation, we maintain
@@ -241,6 +237,11 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
       $entity->addTranslation($langcode, $entity->toArray());
       $entity->isDefaultRevision($default_revision);
     }
+
+    $event = new TranslationSourceEvent($entity, $data, $langcode);
+    $event->setOriginalData($original_data);
+    $this->eventDispatcher->dispatch($event, TranslationSourceEvent::SAVE);
+    $data = $event->getData();
 
     $translation = $entity->getTranslation($langcode);
     if ($this->contentTranslationManager->isEnabled($translation->getEntityTypeId(), $translation->bundle())) {

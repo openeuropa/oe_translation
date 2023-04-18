@@ -1,0 +1,3 @@
+administer remote translators:
+  title: 'Administer remote translators'
+  restrict access: true

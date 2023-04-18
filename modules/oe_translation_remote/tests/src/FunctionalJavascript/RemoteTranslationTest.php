@@ -95,7 +95,7 @@ class RemoteTranslationTest extends TranslationTestBase {
    */
   public function testRemoteTranslationProviderForm(): void {
     $user = $this->drupalCreateUser([
-      'administer site configuration',
+      'administer remote translators',
       'access administration pages',
       'access toolbar',
     ]);
@@ -713,6 +713,57 @@ class RemoteTranslationTest extends TranslationTestBase {
     }
     // The "Select all" checkbox got renamed back.
     $this->assertEquals('Select all', $checkbox->getParent()->find('css', 'label')->getText());
+  }
+
+  /**
+   * Tests that the translation sync process throws an event.
+   *
+   * Ensures that when we sync translations, we pass also the original
+   * translation data to the event subscribers so that they can access in the
+   * saveData method any extra metadata values they set in the extract method.
+   * This is because if the translation comes from a remote source, the save
+   * method will not have in the data array this metadata.
+   */
+  public function testTranslationSourceSyncWithEvent(): void {
+    $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+    $node = $this->createFullTestNode();
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Remote translations');
+
+    // Send a translation request in French only with Remote one.
+    $this->getSession()->getPage()->selectFieldOption('Translator', 'remote_one');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->checkField('French');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent');
+
+    // Translate the request.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $this->assertCount(1, $requests);
+    /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $request */
+    $request = reset($requests);
+    TestRemoteTranslationMockHelper::translateRequest($request, 'fr');
+    // Remove from the translated data the #fake_value to mimic the fact that
+    // a remote translator would not be sending this value.
+    $translated_data = $request->getTranslatedData();
+    $this->assertEquals('test fake value', $translated_data['fr']['oe_translation_test_field']['#fake_value']);
+    unset($translated_data['fr']['oe_translation_test_field']['#fake_value']);
+    $request->setTranslatedData('fr', $translated_data['fr']);
+    $request->save();
+
+    // Sync the language.
+    $this->clickLink('Dashboard');
+    $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table')->clickLink('View');
+    // There is only one language to review.
+    $this->getSession()->getPage()->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $node = $node_storage->load($node->id());
+    // Assert that the TranslationSourceEventSubscriber added the #fake_value
+    // to the node title. It's just a way of asserting that the subscriber
+    // was able to access it from the original data array.
+    $this->assertEquals('Full translation node test fake value', $node->label());
   }
 
 }

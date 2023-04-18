@@ -80,7 +80,7 @@ class RemoteTranslationSynchroniser {
       return;
     }
 
-    $saved = $this->translationSourceManager->saveData($language_data, $entity, $language->getId());
+    $saved = $this->translationSourceManager->saveData($language_data, $entity, $language->getId(), TRUE, $translation_request->getData());
     if (!$saved) {
       $translation_request->log('An attempt to sync @auto the <strong>@language</strong> translation has failed.', [
         '@language' => $language->getName(),
