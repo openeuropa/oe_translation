@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Event;
 
+use Drupal\Component\EventDispatcher\Event;
+
 /**
  * Dispatched for altering the languages available for translations.
  */
-class AvailableLanguagesAlterEvent {
+class AvailableLanguagesAlterEvent extends Event {
 
   /**
    * The event name.

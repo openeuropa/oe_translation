@@ -113,9 +113,6 @@
         "patches": {
             "drupal/address": {
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
-            },
-            "drupal/core": {
-                "stop_propagation": "patches/stop-propagation.patch"
             }
         }
     },
