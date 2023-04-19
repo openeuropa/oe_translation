@@ -197,6 +197,22 @@ class TranslationRequest extends ContentEntityBase implements TranslationRequest
   /**
    * {@inheritdoc}
    */
+  public static function preDelete(EntityStorageInterface $storage, array $entities) {
+    // Delete the log message entities when a request is deleted.
+    $logs_storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request_log');
+    foreach ($entities as $entity) {
+      $log_messages = $entity->getLogMessages();
+      if (!$log_messages) {
+        continue;
+      }
+      $logs_storage->delete($log_messages);
+    }
+    parent::preDelete($storage, $entities);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
