@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Datetime\DateHelper;
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -353,6 +355,13 @@ class Epoetry extends RemoteTranslationProviderBase {
       if ($length > 1699) {
         $form_state->setErrorByName('message', $this->t('Please keep the message under 1700 characters.'));
       }
+    }
+
+    // Let the user know the chosen deadline is a weekend day.
+    $deadline = $form_state->getValue('deadline')[0]['value'];
+    if ($deadline instanceof DrupalDateTime &&
+      in_array(DateHelper::dayOfWeek($deadline), [0, 6])) {
+      $this->messenger->addWarning($this->t('The selected deadline is a weekend day and it can delay receiving the translation request.'));
     }
   }
 
