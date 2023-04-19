@@ -57,7 +57,7 @@
         "symfony/options-resolver": "^5.4"
     },
     "_readme": [
-        "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation. Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791.",
+        "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation (needed because of the php soap client event) Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791.",
         "Requireding symfony propery-access and propery-info for the ePoetry mock for the serializer that uses them.",
         "Requiring minimum versions of php-soap/psr18-transport and symfony/serializer for the epoetry client which needs them for lowest dependencies.",
         "Explicit requirement of token module due to lower versions declaring optional parameters before the require one on token_tokens() function.",
@@ -115,7 +115,7 @@
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
             },
             "drupal/core": {
-                "stop_propagation": "patches/stop-propagation.patch"
+                "stop_propagation": "https://raw.githubusercontent.com/openeuropa/oe_translation/2.x/patches/stop-propagation.patch"
             }
         }
     },
