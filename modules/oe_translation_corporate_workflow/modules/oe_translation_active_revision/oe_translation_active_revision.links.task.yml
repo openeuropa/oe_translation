@@ -1,0 +1,9 @@
+entity.oe_translation_active_revision.settings:
+  title: 'Settings'
+  route_name: entity.oe_translation_active_revision.settings
+  base_route: entity.oe_translation_active_revision.settings
+entity.oe_translation_active_revision.collection:
+  title: 'Active Revision entities'
+  route_name: entity.oe_translation_active_revision.collection
+  base_route: system.admin_content
+  weight: 10

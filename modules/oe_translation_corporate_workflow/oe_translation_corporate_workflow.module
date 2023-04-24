@@ -211,7 +211,7 @@ function oe_translation_corporate_workflow_form_content_moderation_entity_modera
   }
 
   $current_state = $entity->moderation_state->value;
-  $form['translation_drop_wrapper'] = [
+  $form['translation_options_wrapper'] = [
     '#type' => 'container',
     '#states' => [
       'visible' => [
@@ -224,7 +224,7 @@ function oe_translation_corporate_workflow_form_content_moderation_entity_modera
       ],
     ],
   ];
-  $form['translation_drop_wrapper']['translation_drop'] = [
+  $form['translation_options_wrapper']['translation_drop'] = [
     '#type' => 'checkbox',
     '#title' => t('Do not carry over the translations'),
     // If the content is already validated and only needs to be published,
@@ -234,6 +234,10 @@ function oe_translation_corporate_workflow_form_content_moderation_entity_modera
 
   $form['#theme'] = 'entity_moderation_form__oe_translation_corporate_workflow';
   $form['#submit'] = array_merge(['oe_translation_corporate_workflow_form_content_moderation_entity_moderation_form_submit'], $form['#submit']);
+
+  // Allow to alter this form because it's impossible to ensure a
+  // hook_form_FORM_ID_alter() comes last in another module.
+  \Drupal::moduleHandler()->alter('oe_translation_corporate_workflow_moderation_form', $form, $form_state);
 }
 
 /**

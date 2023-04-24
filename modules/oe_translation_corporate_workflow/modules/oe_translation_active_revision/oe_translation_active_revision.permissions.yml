@@ -1,0 +1,3 @@
+administer active revision settings:
+  title: 'Administer active revision settings'
+  restrict access: true

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation_active_revision
+id: oe_translation_active_revision.field_language_revision
+field_name: field_language_revision
+entity_type: oe_translation_active_revision
+type: oe_translation_language_with_entity_revision
+settings: {  }
+module: oe_translation_active_revision
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

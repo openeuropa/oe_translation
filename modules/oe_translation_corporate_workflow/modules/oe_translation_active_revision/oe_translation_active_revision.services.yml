@@ -1,0 +1,6 @@
+services:
+  oe_translation_active_revision.paramconverter.node:
+    class: Drupal\oe_translation_active_revision\ParamConverter\ActiveRevisionConverter
+    tags:
+      - { name: paramconverter, priority: 100 }
+    parent: paramconverter.entity
