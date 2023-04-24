@@ -62,6 +62,7 @@
         "psr-4": {
             "Drupal\\Tests\\oe_translation\\": "./tests/src",
             "Drupal\\Tests\\oe_translation_epoetry\\": "./modules/oe_translation_epoetry/tests/src",
+            "Drupal\\Tests\\oe_translation_active_revision\\": "./modules/oe_translation_corporate_workflow/modules/oe_translation_active_revision/tests/src",
             "Drupal\\Tests\\oe_translation_corporate_workflow\\": "./modules/oe_translation_corporate_workflow/tests/src"
         }
     },
