@@ -1,0 +1,7 @@
+entity.oe_translation_active_revision.settings:
+  path: 'admin/structure/oe-translation-active-revision'
+  defaults:
+    _form: '\Drupal\oe_translation_active_revision\Form\ActiveRevisionSettingsForm'
+    _title: 'Active Revision'
+  requirements:
+    _permission: 'administer active revision settings'

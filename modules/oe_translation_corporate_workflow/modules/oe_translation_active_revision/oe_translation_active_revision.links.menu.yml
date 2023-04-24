@@ -1,0 +1,10 @@
+entity.oe_translation_active_revision.settings:
+  title: 'Active Revision settings'
+  description: 'Configure an Active Revision entity type.'
+  route_name:  entity.oe_translation_active_revision.settings
+  parent: system.admin_structure
+entity.oe_translation_active_revision.collection:
+  title: 'Active Revision entities'
+  description: 'List of Active Revision entities.'
+  route_name: entity.oe_translation_active_revision.collection
+  parent: system.admin_structure
