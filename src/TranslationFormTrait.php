@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Render\Element;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\oe_translation\Form\TranslationRequestForm;
@@ -176,6 +177,46 @@ trait TranslationFormTrait {
       foreach (Element::children($child['entity']) as $sub_child_key) {
         $sub_child = &$child['entity'][$sub_child_key];
         $sub_child = $this->generateParagraphFieldName($sub_child);
+      }
+    }
+
+    return $data;
+  }
+
+  /**
+   * Updates the values for a specific substructure in the data array.
+   *
+   * The values are either set or updated but never deleted.
+   *
+   * @param string|array $key
+   *   Key pointing to the item the values should be applied.
+   *   The key can be either be an array containing the keys of a nested array
+   *   hierarchy path or a string with '][' or '|' as delimiter.
+   * @param array $data
+   *   The entire data set.
+   * @param array $values
+   *   Nested array of values to set.
+   * @param bool $replace
+   *   (optional) When TRUE, replaces the structure at the provided key instead
+   *   of writing into it.
+   *
+   * @return array
+   *   The updated data.
+   */
+  protected function updateData($key, array $data, array $values, bool $replace = FALSE) {
+    if ($replace) {
+      NestedArray::setValue($data, TranslationSourceHelper::ensureArrayKey($key), $values);
+    }
+    foreach ($values as $index => $value) {
+      // In order to preserve existing values, we can not apply the values array
+      // at once. We need to apply each containing value on its own.
+      // If $value is an array we need to advance the hierarchy level.
+      if (is_array($value)) {
+        $data = $this->updateData(array_merge(TranslationSourceHelper::ensureArrayKey($key), [$index]), $data, $value);
+      }
+      // Apply the value.
+      else {
+        NestedArray::setValue($data, array_merge(TranslationSourceHelper::ensureArrayKey($key), [$index]), $value, TRUE);
       }
     }
 
