@@ -10,6 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
+use Drupal\oe_translation_epoetry\Event\EpoetryNotificationRequestUpdateEvent;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -33,6 +34,7 @@ use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeRejectedEvent as R
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeSuspendedEvent as RequestStatusChangeSuspendedEvent;
 use OpenEuropa\EPoetry\Notification\Type\RequestReference;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Subscribes to the ePoetry notification events.
@@ -75,6 +77,13 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   protected $translationSynchroniser;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Constructs a new NotificationsSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -87,13 +96,16 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The logger channel factory.
    * @param \Drupal\oe_translation_remote\RemoteTranslationSynchroniser $translationSynchroniser
    *   The translation synchroniser.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory, RemoteTranslationSynchroniser $translationSynchroniser) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory, RemoteTranslationSynchroniser $translationSynchroniser, EventDispatcherInterface $eventDispatcher) {
     $this->entityTypeManager = $entityTypeManager;
     $this->contentFormatter = $contentFormatter;
     $this->languageManager = $languageManager;
     $this->logger = $loggerChannelFactory->get('oe_translation_epoetry');
     $this->translationSynchroniser = $translationSynchroniser;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -250,6 +262,12 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     if ($event instanceof ProductEventWithDeadlineInterface && $event->getAcceptedDeadline() instanceof \DateTimeInterface) {
       $translation_request->updateTargetLanguageAcceptedDeadline($langcode, $event->getAcceptedDeadline());
     }
+
+    // Dispatch an event to allow others to alter the translation request
+    // before saving it.
+    $notification_event = new EpoetryNotificationRequestUpdateEvent($translation_request, $event);
+    $this->eventDispatcher->dispatch($notification_event, EpoetryNotificationRequestUpdateEvent::NAME);
+
     $translation_request->save();
     $event->setSuccessResponse('The language status has been updated successfully.');
   }
