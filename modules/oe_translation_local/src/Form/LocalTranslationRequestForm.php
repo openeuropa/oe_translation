@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_local\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -308,48 +307,6 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     $url->setRouteParameter('language', $language);
     $url->setOption('language', $this->entityTypeManager->getStorage('configurable_language')->load($language));
     $form_state->setRedirectUrl($url);
-  }
-
-  /**
-   * Updates the values for a specific substructure in the data array.
-   *
-   * The values are either set or updated but never deleted.
-   *
-   * Copied from TMGMT from the JobItem.
-   *
-   * @param string|array $key
-   *   Key pointing to the item the values should be applied.
-   *   The key can be either be an array containing the keys of a nested array
-   *   hierarchy path or a string with '][' or '|' as delimiter.
-   * @param array $data
-   *   The entire data set.
-   * @param array $values
-   *   Nested array of values to set.
-   * @param bool $replace
-   *   (optional) When TRUE, replaces the structure at the provided key instead
-   *   of writing into it.
-   *
-   * @return array
-   *   The updated data.
-   */
-  protected function updateData($key, array $data, array $values, bool $replace = FALSE) {
-    if ($replace) {
-      NestedArray::setValue($data, TranslationSourceHelper::ensureArrayKey($key), $values);
-    }
-    foreach ($values as $index => $value) {
-      // In order to preserve existing values, we can not apply the values array
-      // at once. We need to apply each containing value on its own.
-      // If $value is an array we need to advance the hierarchy level.
-      if (is_array($value)) {
-        $data = $this->updateData(array_merge(TranslationSourceHelper::ensureArrayKey($key), [$index]), $data, $value);
-      }
-      // Apply the value.
-      else {
-        NestedArray::setValue($data, array_merge(TranslationSourceHelper::ensureArrayKey($key), [$index]), $value, TRUE);
-      }
-    }
-
-    return $data;
   }
 
   /**

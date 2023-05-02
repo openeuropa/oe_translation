@@ -46,7 +46,10 @@ class TranslationRequestForm extends ContentEntityForm {
    * @see TranslationFormTrait::translationFormElement()
    */
   public static function validateMaxLength(array $element, FormStateInterface &$form_state): void {
-    if (isset($element['#max_length']) && ($element['#max_length'] < mb_strlen($element['#value']))) {
+    // The value can be nested in a rare case in which the element is a
+    // text_format.
+    $value = $element['#value'] ?? $element['value']['#value'];
+    if (isset($element['#max_length']) && ($element['#max_length'] < mb_strlen($value))) {
       $form_state->setError($element,
           t('The field has @size characters while the limit is @limit.', [
             '@size' => mb_strlen($element['#value']),

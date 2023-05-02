@@ -24,6 +24,9 @@ function oe_translation_post_update_0001(&$sandbox = NULL) {
  */
 function oe_translation_post_update_0002(&$sandbox = NULL) {
   $role = Role::load('oe_translator');
+  if (!$role) {
+    return;
+  }
   $role->grantPermission('accept translation request');
   $role->grantPermission('sync translation request');
   $role->save();

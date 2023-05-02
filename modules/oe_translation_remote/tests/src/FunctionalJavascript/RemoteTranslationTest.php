@@ -382,7 +382,12 @@ class RemoteTranslationTest extends TranslationTestBase {
       }
 
       $this->assertEquals($data['value'] . ' - bg', $translation->getText());
+      // The translation element should not be disabled.
+      $this->assertFalse($translation->hasAttribute('disabled'));
     }
+
+    // Update the title while in review.
+    $this->getSession()->getPage()->fillField('title|0|value[translation]', 'Full translation node - bg - update in review');
 
     // Accept the translation and assert it got accepted.
     $this->getSession()->getPage()->pressButton('Save and accept');
@@ -409,11 +414,16 @@ class RemoteTranslationTest extends TranslationTestBase {
     ];
     $this->assertOngoingTranslations([$expected_ongoing]);
 
-    // Preview the translation. We navigate from the dashboard.
+    // Assert we have the title change in the translation data.
+    // We navigate from the dashboard.
     $this->getSession()->getPage()->find('css', 'table.ongoing-remote-translation-requests-table')->clickLink('View');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="bg"] a')->click();
+    $this->assertSession()->fieldValueEquals('title|0|value[translation]', 'Full translation node - bg - update in review');
+
+    // Update again the title and preview the translation.
+    $this->getSession()->getPage()->fillField('title|0|value[translation]', 'Full translation node - bg - update before preview');
     $this->getSession()->getPage()->pressButton('Preview');
-    $this->assertSession()->pageTextContains('Full translation node - BG');
+    $this->assertSession()->pageTextContains('Full translation node - bg - update before preview');
     $this->assertSession()->pageTextContains('Referenced node - bg');
     $this->assertSession()->pageTextContains('grandchild field value 1 - bg');
     $this->assertSession()->pageTextContains('grandchild field value 2 - bg');
@@ -421,8 +431,10 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('child field value 2 - bg');
     $this->assertSession()->pageTextContains('top field value 1 - bg');
     $this->assertSession()->pageTextContains('top field value 2 - bg');
-    // Go back and sync the translation and assert we go to the request page.
+
+    // Go back and update again the title before syncing the translation.
     $this->getSession()->back();
+    $this->getSession()->getPage()->fillField('title|0|value[translation]', 'Full translation node - bg - update before syncing');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in Bulgarian has been synchronised.');
     $this->assertSession()->addressEquals('/en/translation-request/' . $request->id());
@@ -443,6 +455,10 @@ class RemoteTranslationTest extends TranslationTestBase {
 
     // Assert that we can see all the translated values.
     foreach ($fields as $key => $data) {
+      if ($key === 'title') {
+        $this->assertSession()->pageTextContains('Full translation node - bg - update before syncing');
+        continue;
+      }
       $this->assertSession()->pageTextContains($data['value'] . ' - bg');
     }
 

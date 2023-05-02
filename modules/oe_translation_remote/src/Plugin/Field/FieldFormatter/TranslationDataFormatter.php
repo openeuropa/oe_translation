@@ -110,7 +110,7 @@ class TranslationDataFormatter extends FormatterBase {
     foreach (Element::children($data) as $key) {
       $data[$key] = $this->generateParagraphFieldName($data[$key]);
       $data_flattened = TranslationSourceHelper::flatten($data[$key], $key);
-      $element['translation'][$key] = $this->translationFormElement($data_flattened, [], TRUE);
+      $element['translation'][$key] = $this->translationFormElement($data_flattened, [], FALSE);
     }
 
     return $element;

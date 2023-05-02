@@ -18,6 +18,7 @@ use Drupal\Core\Url;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\LanguageWithStatus;
+use Drupal\oe_translation\TranslationFormTrait;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,6 +27,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Form handler for the reviewing remote translations for a given language.
  */
 class RemoteTranslationReviewForm extends TranslationRequestForm {
+
+  use TranslationFormTrait;
 
   /**
    * The entity type manager.
@@ -132,7 +135,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $actions['save_and_accept'] = [
       '#type' => 'submit',
       '#button_type' => 'primary',
-      '#submit' => ['::accept'],
+      '#submit' => ['::saveData', '::accept'],
       '#access' => $language_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW && $this->currentUser->hasPermission('accept translation request'),
       '#value' => $this->t('Save and accept'),
     ];
@@ -140,7 +143,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $actions['save_and_sync'] = [
       '#type' => 'submit',
       '#button_type' => 'primary',
-      '#submit' => ['::synchronise'],
+      '#submit' => ['::saveData', '::synchronise'],
       '#access' => $language_status->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
       '#value' => $this->t('Save and synchronise'),
     ];
@@ -148,7 +151,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $actions['preview'] = [
       '#type' => 'submit',
       '#button_type' => 'secondary',
-      '#submit' => ['::preview'],
+      '#submit' => ['::saveData', '::preview'],
       '#value' => $this->t('Preview'),
     ];
 
@@ -160,6 +163,40 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // The regular submit does nothing.
+  }
+
+  /**
+   * Saves the data in case the user updated it while reviewing.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function saveData(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $translation_request */
+    $translation_request = $this->entity;
+    $language = $form_state->get('language');
+
+    $data = $translation_request->getTranslatedData();
+    $data = $data[$language->getId()] ?? [];
+    foreach ($form_state->getValues() as $key => $value) {
+      if (is_array($value) && isset($value['translation'])) {
+        // Update the translation, this will only update the translation in case
+        // it has changed. We have two different cases, the first is for nested
+        // texts.
+        if (is_array($value['translation'])) {
+          $update['#translation']['#text'] = $value['translation']['value'];
+        }
+        else {
+          $update['#translation']['#text'] = $value['translation'];
+        }
+        $data = $this->updateData($key, $data, $update);
+      }
+    }
+
+    $translation_request->setTranslatedData($language->getId(), $data);
+    $translation_request->save();
   }
 
   /**

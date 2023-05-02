@@ -16,6 +16,9 @@ function oe_translation_local_install($is_syncing) {
   // Add the translator role the permission to delete local translation
   // requests.
   $role = Role::load('oe_translator');
+  if (!$role) {
+    return;
+  }
   $role->grantPermission('delete local translation request');
   $role->save();
 }
