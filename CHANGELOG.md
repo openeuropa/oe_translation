@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.0.0-alpha2](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha2) (2023-05-02)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha1...2.0.0-alpha2)
+
+**Closed issues:**
+
+- Warning: Undefined array key "\#value" in Drupal\oe\_translation\Form\TranslationRequestForm::validateMaxLength\(\) \(line 50 of /oe\_translation/src/Form/TranslationRequestForm.php\) [\#248](https://github.com/openeuropa/oe_translation/issues/248)
+- oe\_translation\_post\_update\_0002\(\) fails if oe\_translator role was deleted on website [\#245](https://github.com/openeuropa/oe_translation/issues/245)
+- Version conflict with guzzle and core-recommended [\#244](https://github.com/openeuropa/oe_translation/issues/244)
+
+**Merged pull requests:**
+
+- EWPP-3205: Allow to update incoming remote translations. [\#247](https://github.com/openeuropa/oe_translation/pull/247) ([upchuk](https://github.com/upchuk))
+
 ## [2.0.0-alpha1](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha1) (2023-04-21)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.20.0...2.0.0-alpha1)
 
