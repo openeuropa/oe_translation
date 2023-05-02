@@ -131,8 +131,10 @@ class EpoetryTranslationMockHelper {
    *   The request.
    * @param array $notification
    *   Notification data.
+   * @param bool $wait
+   *   Whether to wait for the response.
    */
-  public static function notifyRequest(TranslationRequestEpoetry $request, array $notification): void {
+  public static function notifyRequest(TranslationRequestEpoetry $request, array $notification, bool $wait = TRUE): void {
     $type = $notification['type'];
 
     switch ($type) {
@@ -148,13 +150,13 @@ class EpoetryTranslationMockHelper {
           $values['#message'] = $notification['message'];
         }
 
-        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values) {
+        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values, $wait) {
             $build = [
               '#theme' => 'request_status_change',
             ] + $values;
 
             $notification = (string) \Drupal::service('renderer')->renderRoot($build);
-            static::performNotification($notification);
+            static::performNotification($notification, $wait);
         });
 
         break;
@@ -170,13 +172,13 @@ class EpoetryTranslationMockHelper {
           $values['#accepted_deadline'] = TRUE;
         }
 
-        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values) {
+        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($values, $wait) {
             $build = [
               '#theme' => 'product_status_change',
             ] + $values;
 
             $notification = (string) \Drupal::service('renderer')->renderRoot($build);
-            static::performNotification($notification);
+            static::performNotification($notification, $wait);
         });
 
         break;
@@ -194,8 +196,13 @@ class EpoetryTranslationMockHelper {
    *
    * @param string $notification
    *   The notification message.
+   * @param bool $wait
+   *   Whether to wait for the response.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  protected static function performNotification(string $notification): void {
+  protected static function performNotification(string $notification, bool $wait = TRUE): void {
     $url = NotificationEndpointResolver::resolve();
     $config = \Drupal::config('oe_translation_epoetry_mock.settings');
     $notifications_endpoint = $config->get('notifications_endpoint');
@@ -205,6 +212,8 @@ class EpoetryTranslationMockHelper {
     if (Settings::get('epoetry_notifications_endpoint')) {
       $url = Settings::get('epoetry_notifications_endpoint');
     }
+
+    $body = sprintf('<?xml version="1.0" encoding="utf-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:eu="http://eu.europa.ec.dgt.epoetry"><soapenv:Header><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">abc</ecas:ProxyTicket></soapenv:Header><S:Body xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><ns0:receiveNotification xmlns:ns0="http://eu.europa.ec.dgt.epoetry">%s</ns0:receiveNotification></S:Body></soapenv:Envelope>', $notification);
 
     $options = [
       'cache_wsdl' => WSDL_CACHE_NONE,
@@ -218,13 +227,32 @@ class EpoetryTranslationMockHelper {
       $options['password'] = $password;
     }
 
-    $client = new \SoapClient(NULL, $options);
-
+    $headers = [
+      'Content-type: text/xml;charset="utf-8"',
+      'Accept: text/xml',
+      'Cache-Control: no-cache',
+      'Pragma: no-cache',
+      'SOAPAction: receiveNotification',
+      'Content-length: ' . strlen($body),
+    ];
     if (static::$databasePrefix) {
-      $client->__setCookie('SIMPLETEST_USER_AGENT', drupal_generate_test_ua(static::$databasePrefix));
+      $headers[] = 'Cookie: SIMPLETEST_USER_AGENT=' . drupal_generate_test_ua(static::$databasePrefix);
     }
 
-    $client->receiveNotification(new \SoapParam(new \SoapVar($notification, XSD_ANYXML), 'notification'));
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_USERPWD, $username . ':' . $password);
+    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+    $timeout = $wait ? 10 : 1;
+    curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+    curl_setopt($ch, CURLOPT_POST, TRUE);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    curl_exec($ch);
+    curl_close($ch);
   }
 
 }

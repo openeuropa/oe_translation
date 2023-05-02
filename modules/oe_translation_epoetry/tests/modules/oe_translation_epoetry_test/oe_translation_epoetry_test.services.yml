@@ -1,0 +1,5 @@
+services:
+  oe_translation_epoetry_test.notifications_subscriber:
+    class: Drupal\oe_translation_epoetry_test\EventSubscriber\TestNotificationSubscriber
+    tags:
+      - { name: event_subscriber }
