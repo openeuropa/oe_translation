@@ -47,6 +47,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     'oe_translation_test',
     'oe_translation_remote',
     'oe_translation_epoetry',
+    'oe_translation_epoetry_test',
     'oe_translation_epoetry_mock',
   ];
 
@@ -1588,6 +1589,49 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
+  }
+
+  /**
+   * Tests the product notifications subscriber locking mechanism.
+   */
+  public function testProductNotificationsLock(): void {
+    // Create a node and its active translation request.
+    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
+    $node = $this->createBasicTestNode();
+    $request = $this->createNodeTranslationRequest($node);
+    $request->save();
+    $this->assertEquals('Requested', $request->getTargetLanguage('fr')->getStatus());
+
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    // Instruct our event subscriber to delay the processing of the "Requested"
+    // product status change to mimic that it is taking place by the time we
+    // run the next one.
+    \Drupal::state()->set('oe_translation_epoetry_test_delay_requested', TRUE);
+
+    $notification_one = [
+      'type' => 'ProductStatusChange',
+      'status' => 'Requested',
+      'language' => 'fr',
+    ];
+    $notification_two = [
+      'type' => 'ProductStatusChange',
+      'status' => 'Accepted',
+      'language' => 'fr',
+    ];
+
+    // Notify with the "Requested" status but do not wait for the response.
+    // Instead, immediately after, notify with the Accepted. The latter should
+    // encounter a lock and wait for the "Requested" update to finish.
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification_one, FALSE);
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification_two);
+
+    // Wait a bit until the "Requested" update has had a chance to finish
+    // before loading the request and asserting.
+    sleep(6);
+
+    $storage->resetCache();
+    $request = $storage->load($request->id());
+    $this->assertEquals('Accepted', $request->getTargetLanguage('fr')->getStatus());
   }
 
   /**
