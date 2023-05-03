@@ -1628,10 +1628,64 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Wait a bit until the "Requested" update has had a chance to finish
     // before loading the request and asserting.
     sleep(6);
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $log = $logs[6];
+    $this->assertEquals('Lock already acquired: The translation request 1 is already being updated.', $log['message']);
 
     $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
     $request = $storage->load($request->id());
     $this->assertEquals('Accepted', $request->getTargetLanguage('fr')->getStatus());
+
+    // Go through each request status and assert they are also correctly waiting
+    // to acquire the lock.
+    $request_statuses = [
+      'Accepted',
+      'Cancelled',
+      'Suspended',
+      'Executed',
+      'Rejected',
+    ];
+
+    $request->setEpoetryRequestStatus('SenttoDGT');
+    $request->save();
+    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    foreach ($request_statuses as $request_status) {
+      $notification_two = [
+        'type' => 'RequestStatusChange',
+        'status' => $request_status,
+      ];
+      EpoetryTranslationMockHelper::notifyRequest($request, $notification_one, FALSE);
+      EpoetryTranslationMockHelper::notifyRequest($request, $notification_two);
+
+      sleep(6);
+
+      $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+      $log = $logs[6];
+      $this->assertEquals('Lock already acquired: The translation request 1 is already being updated.', $log['message']);
+      \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+
+      $storage->resetCache();
+      $request = $storage->load($request->id());
+      $this->assertEquals($request_status, $request->getEpoetryRequestStatus());
+    }
+
+    // Assert the Lock also is checked when the translation comes in.
+    $this->assertEmpty($request->getTranslatedData());
+    $request->setEpoetryRequestStatus('SenttoDGT');
+    $request->save();
+    EpoetryTranslationMockHelper::notifyRequest($request, $notification_one, FALSE);
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+
+    sleep(6);
+
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $log = $logs[6];
+    $this->assertEquals('Lock already acquired: The translation request 1 is already being updated.', $log['message']);
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    $this->assertNotNull($request->getTranslatedData()['fr']);
   }
 
   /**
