@@ -37,10 +37,10 @@ interface TranslationSourceManagerInterface {
    *   The original translation data array. This is used when it can contain
    *   extra information which is used in the saving of the translation.
    *
-   * @return bool
-   *   TRUE for success, FALSE if not.
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The translation.
    */
-  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, bool $save = TRUE, array $original_data = []): bool;
+  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, bool $save = TRUE, array $original_data = []): ContentEntityInterface;
 
   /**
    * Returns fields that should be embedded into the data for the given entity.
