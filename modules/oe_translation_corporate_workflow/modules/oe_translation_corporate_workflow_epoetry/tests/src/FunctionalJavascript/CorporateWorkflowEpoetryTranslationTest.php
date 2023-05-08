@@ -244,6 +244,22 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
 
       $node->delete();
     }
+
+    // Test that if the request is started from Validated, if it gets to
+    // Published after the request is started, we cannot make an update request
+    // because there is no new version created.
+    $node = $this->createBasicTestNode('page');
+    $node = $this->moderateNode($node, 'validated');
+    $request = $this->createNodeTranslationRequest($node);
+    $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
+    $request->save();
+    $node = $this->moderateNode($node, 'published');
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->assertSession()->pageTextContains('Ongoing remote translation request via ePoetry');
+    $this->assertSession()->pageTextNotContains('Request an update');
+    $this->assertSession()->linkNotExistsExact('Update');
   }
 
 }
