@@ -3,6 +3,6 @@ description: Tracks nodes that have at least one Poetry request.
 package: OpenEuropa
 
 type: module
-core_version_requirement: ^9.2
+core_version_requirement: ^9.4 || ^10
 dependencies:
   - oe_translation:oe_translation
