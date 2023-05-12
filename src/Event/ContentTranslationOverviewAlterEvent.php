@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Event;
 
 use Drupal\Core\Routing\RouteMatchInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event used for altering the content translation overview list page.

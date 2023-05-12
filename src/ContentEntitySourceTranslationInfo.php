@@ -38,7 +38,7 @@ class ContentEntitySourceTranslationInfo implements EntitySourceTranslationInfoI
    */
   public function getEntityFromJobItem(JobItemInterface $jobItem): ?EntityInterface {
     $event = new ContentEntitySourceEntityEvent($jobItem);
-    $this->eventDispatcher->dispatch(ContentEntitySourceEntityEvent::EVENT, $event);
+    $this->eventDispatcher->dispatch($event, ContentEntitySourceEntityEvent::EVENT);
     return $event->getEntity();
   }
 

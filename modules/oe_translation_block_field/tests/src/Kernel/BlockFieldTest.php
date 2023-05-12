@@ -20,7 +20,7 @@ class BlockFieldTest extends ContentEntityTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'block_field',
     'oe_translation_block_field',

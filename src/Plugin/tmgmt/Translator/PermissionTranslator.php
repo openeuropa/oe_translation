@@ -739,7 +739,7 @@ class PermissionTranslator extends TranslatorPluginBase implements ApplicableTra
     $storage = $this->entityTypeManager->getStorage('tmgmt_local_task_item');
 
     $query = $storage->getQuery();
-    $query->condition($job_item->getEntityType()->getKey('id'), $job_item->id());
+    $query->accessCheck(FALSE)->condition($job_item->getEntityType()->getKey('id'), $job_item->id());
     $results = $query->execute();
 
     return !empty($results) ? $storage->load(current($results)) : NULL;

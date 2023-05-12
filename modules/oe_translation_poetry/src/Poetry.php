@@ -348,6 +348,7 @@ class Poetry implements PoetryInterface {
    */
   protected function getLastRequestIdForNumber(string $number): array {
     $job_ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
+      ->accessCheck(FALSE)
       ->condition('poetry_request_id__number', $number)
       ->sort('poetry_request_id.part', 'DESC')
       ->range(0, 1)

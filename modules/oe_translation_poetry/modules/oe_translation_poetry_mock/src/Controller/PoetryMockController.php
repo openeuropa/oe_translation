@@ -95,7 +95,7 @@ class PoetryMockController extends ControllerBase {
    *   The XML response.
    */
   public function wsdl(): Response {
-    $path = drupal_get_path('module', 'oe_translation_poetry_mock') . '/poetry_mock.wsdl.xml';
+    $path = \Drupal::service('extension.list.module')->getPath('oe_translation_poetry_mock') . '/poetry_mock.wsdl.xml';
     $wsdl = file_get_contents($path);
     $base_path = $this->request->getSchemeAndHttpHost();
     if ($this->request->getBasePath() !== "/") {

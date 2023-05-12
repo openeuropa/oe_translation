@@ -149,7 +149,7 @@ class PoetryTranslationAcceptTest extends PoetryTranslationTestBase {
   protected function assertNodeRevisionCount(int $count, NodeInterface $node): void {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->entityTypeManager->getStorage('node');
-    $this->assertCount($count, $node_storage->getQuery()->condition('nid', $node->id())->allRevisions()->execute());
+    $this->assertCount($count, $node_storage->getQuery()->accessCheck(FALSE)->condition('nid', $node->id())->allRevisions()->execute());
   }
 
 }

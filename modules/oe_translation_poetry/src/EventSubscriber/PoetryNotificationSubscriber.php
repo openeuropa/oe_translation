@@ -241,6 +241,7 @@ class PoetryNotificationSubscriber implements EventSubscriberInterface {
    */
   protected function getJobsForIdentifier(Identifier $identifier): array {
     $ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
+      ->accessCheck(FALSE)
       ->condition('poetry_request_id.code', $identifier->getCode())
       ->condition('poetry_request_id.year', $identifier->getYear())
       ->condition('poetry_request_id.number', $identifier->getNumber())

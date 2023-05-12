@@ -155,7 +155,7 @@ class ContentTranslationController extends BaseContentTranslationController {
 
     $entity_type_id = $entity_type_id ?? '';
     $event = new ContentTranslationOverviewAlterEvent($build, $route_match, $entity_type_id);
-    $this->eventDispatcher->dispatch(ContentTranslationOverviewAlterEvent::NAME, $event);
+    $this->eventDispatcher->dispatch($event, ContentTranslationOverviewAlterEvent::NAME);
 
     return $event->getBuild();
   }

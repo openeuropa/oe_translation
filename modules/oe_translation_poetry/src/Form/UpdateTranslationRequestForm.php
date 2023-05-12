@@ -77,6 +77,7 @@ class UpdateTranslationRequestForm extends NewTranslationRequestForm {
    */
   protected function getActiveJobsForEntity(EntityInterface $entity): array {
     $ids = $this->entityTypeManager->getStorage('tmgmt_job_item')->getQuery()
+      ->accessCheck(FALSE)
       ->condition('item_type', $entity->getEntityType()->id())
       ->condition('item_id', $entity->id())
       ->condition('state', JobItem::STATE_ACTIVE)

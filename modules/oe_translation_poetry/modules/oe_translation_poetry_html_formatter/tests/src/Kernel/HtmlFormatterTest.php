@@ -147,7 +147,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
 
     /** @var \Drupal\Core\Render\Markup $export */
     $export = $formatter->export($this->job);
-    $expected = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html');
+    $expected = file_get_contents(\Drupal::service('extension.list.module')->getPath('oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html');
     $this->assertEquals($expected, $export);
   }
 
@@ -157,7 +157,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
   public function testHtmlFormatterImport() {
     /** @var \Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter $formatter */
     $formatter = $this->container->get('oe_translation_poetry.html_formatter');
-    $actual_data = $formatter->import(drupal_get_path('module', 'oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
+    $actual_data = $formatter->import(\Drupal::service('extension.list.module')->getPath('oe_translation_poetry_html_formatter') . '/tests/fixtures/formatted-content.html', TRUE);
     $expected_data = [
       1 => [
         'title' => [

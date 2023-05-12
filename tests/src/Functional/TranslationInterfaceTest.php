@@ -5,10 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\Tests\oe_translation\Functional;
 
 use Drupal\Core\Routing\CurrentRouteMatch;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -98,7 +98,7 @@ class TranslationInterfaceTest extends TranslationTestBase {
     $url->setRouteParameter('source', 'en');
     $url->setRouteParameter('target', 'bg');
     $this->drupalGet($url);
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
   }
 
   /**

@@ -6,7 +6,7 @@ namespace Drupal\oe_translation\Event;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\tmgmt\JobItemInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event class used for determining the entity to use in the content source.

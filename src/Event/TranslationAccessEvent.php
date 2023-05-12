@@ -10,7 +10,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event for altering the access to translate content.

@@ -183,7 +183,7 @@ class LocalTasksController extends ControllerBase {
 
     // Allow others to have a say in the access result.
     $event = new TranslationAccessEvent($entity, 'permission', $account, $source, $target);
-    $this->eventDispatcher->dispatch(TranslationAccessEvent::EVENT, $event);
+    $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
     $result = $result->orIf($event->getAccess());
 
     return $result;

@@ -72,8 +72,8 @@ class PoetryMockFixturesGenerator {
     $identifier->setSequence((string) $request->demandeId->sequence);
     $variables = $this->prepareIdentifierVariables($identifier);
 
-    $error_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/error_template.xml');
-    $success_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/successful_response_template.xml');
+    $error_template = file_get_contents(\Drupal::service('extension.list.module')->getPath('oe_translation_poetry_mock') . '/fixtures/error_template.xml');
+    $success_template = file_get_contents(\Drupal::service('extension.list.module')->getPath('oe_translation_poetry_mock') . '/fixtures/successful_response_template.xml');
 
     if ((empty($identifier->getNumber()) && empty($identifier->getSequence())) || $identifier->getNumber() === '0') {
       $variables['@message'] = 'Error in xmlActions:newRequest: Application general error : Element DEMANDEID.NUMERO.XMLTEXT is undefined in REQ_ROOT.,';
@@ -182,7 +182,7 @@ class PoetryMockFixturesGenerator {
     $variables = $this->prepareIdentifierVariables($identifier);
     $variables['@translation'] = base64_encode((string) $translation);
     $variables['@language'] = strtoupper($language);
-    $translation_notification_template = file_get_contents(drupal_get_path('module', 'oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
+    $translation_notification_template = file_get_contents(\Drupal::service('extension.list.module')->getPath('oe_translation_poetry_mock') . '/fixtures/translation_notification_template.xml');
     $notification = new FormattableMarkup($translation_notification_template, $variables);
     return (string) $notification;
   }

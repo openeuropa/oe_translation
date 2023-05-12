@@ -10,8 +10,8 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 /**
  * Subscribes to the Kernel request event.
@@ -73,7 +73,7 @@ class TranslationOverviewRequestSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public function onRequest(GetResponseEvent $event): void {
+  public function onRequest(RequestEvent $event): void {
     if (!preg_match('/^entity.([^\.]+).content_translation_overview$/', $this->routeMatch->getRouteName(), $matches)) {
       return;
     }

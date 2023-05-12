@@ -43,7 +43,7 @@ class PoetryRequirementsTest extends TranslationKernelTestBase {
    * Tests that the Poetry requirements values are set.
    */
   public function testStatusRequirements(): void {
-    \module_load_install('oe_translation_poetry');
+    \Drupal::moduleHandler()->loadInclude('oe_translation_poetry', 'install');
     $requirements = oe_translation_poetry_requirements('runtime');
 
     $values = [
