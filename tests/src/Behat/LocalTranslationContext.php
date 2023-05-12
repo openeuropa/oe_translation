@@ -8,15 +8,12 @@ use Behat\Behat\Hook\Scope\AfterFeatureScope;
 use Behat\Behat\Hook\Scope\BeforeFeatureScope;
 use Behat\Mink\Element\NodeElement;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
-use DrupalTest\BehatTraits\Traits\BrowserCapabilityDetectionTrait;
 use PHPUnit\Framework\Assert;
 
 /**
  * Context specific to TMGMT-based local translation.
  */
 class LocalTranslationContext extends RawDrupalContext {
-
-  use BrowserCapabilityDetectionTrait;
 
   /**
    * Installs the test module.
@@ -130,6 +127,38 @@ class LocalTranslationContext extends RawDrupalContext {
     $table = $table_header->getParent()->getParent()->getParent();
 
     return $table->findField('Translation');
+  }
+
+  /**
+   * Checks whether the browser supports JavaScript.
+   *
+   * @see https://github.com/drupaltest/behat-traits/blob/8.x-1.x/src/Traits/BrowserCapabilityDetectionTrait.php
+   *
+   * @return bool
+   *   Returns TRUE when the browser environment supports executing JavaScript
+   *   code, for example because the test is running in Selenium or PhantomJS.
+   */
+  protected function browserSupportsJavaScript(): bool {
+    $driver = $this->getSession()->getDriver();
+    try {
+      if (!$driver->isStarted()) {
+        $driver->start();
+      }
+    }
+    catch (DriverException $e) {
+      throw new \RuntimeException('Could not start webdriver.', 0, $e);
+    }
+
+    try {
+      $driver->executeScript('return;');
+      return TRUE;
+    }
+    catch (UnsupportedDriverActionException $e) {
+      return FALSE;
+    }
+    catch (DriverException $e) {
+      throw new \RuntimeException('Could not execute JavaScript.', 0, $e);
+    }
   }
 
 }
