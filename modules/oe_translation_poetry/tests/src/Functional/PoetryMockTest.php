@@ -31,7 +31,7 @@ class PoetryMockTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'starterkit_theme';
 
   /**
    * Tests that requests to Poetry are being mocked.

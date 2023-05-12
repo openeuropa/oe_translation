@@ -29,7 +29,7 @@ class BlockFieldTest extends ContentEntityTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'starterkit_theme';
 
   /**
    * The test entity.
