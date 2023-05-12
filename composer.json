@@ -8,7 +8,7 @@
     "require": {
         "php": ">=8.0",
         "cweagans/composer-patches": "~1.4",
-        "drupal/core": "^9.4",
+        "drupal/core": "^9.4 || ^10",
         "drupal/tmgmt": "1.11",
         "jakeasmith/http_build_url": "^1.0"
     },
@@ -17,7 +17,7 @@
         "drupal/address": "^1.9",
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
-        "drupal/core-composer-scaffold": "^9.4",
+        "drupal/core-composer-scaffold": "^9.4 || ^10",
         "drupal/drupal-extension": "^5.0",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.11",
