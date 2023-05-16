@@ -1,21 +1,5 @@
-diff --git a/drupalci.yml b/drupalci.yml
-new file mode 100644
-index 00000000..2ae545e6
---- /dev/null
-+++ b/drupalci.yml
-@@ -0,0 +1,10 @@
-+build:
-+  assessment:
-+    testing:
-+      run_tests:
-+        # Run all tests together with high concurrency.
-+        types: 'PHPUnit-Unit,PHPUnit-Kernel,PHPUnit-Functional,PHPUnit-FunctionalJavascript'
-+        testgroups: '--all'
-+        suppress-deprecations: true
-+        halt-on-fail: false
-+        concurrency: 15
 diff --git a/modules/demo/tmgmt_demo.info.yml b/modules/demo/tmgmt_demo.info.yml
-index 61fbff19..d4aec3b1 100644
+index aaf70c4..6a16daa 100644
 --- a/modules/demo/tmgmt_demo.info.yml
 +++ b/modules/demo/tmgmt_demo.info.yml
 @@ -2,7 +2,7 @@ name: Translation Management Demo
@@ -36,7 +20,7 @@ index 61fbff19..d4aec3b1 100644
  simplytest_dependencies:
   - paragraphs:paragraphs_demo
 diff --git a/sources/content/src/ContentEntitySourcePluginUi.php b/sources/content/src/ContentEntitySourcePluginUi.php
-index 28a4101c..08cbaab8 100644
+index 28a4101..08cbaab 100644
 --- a/sources/content/src/ContentEntitySourcePluginUi.php
 +++ b/sources/content/src/ContentEntitySourcePluginUi.php
 @@ -409,7 +409,7 @@ class ContentEntitySourcePluginUi extends SourcePluginUiBase {
@@ -58,7 +42,7 @@ index 28a4101c..08cbaab8 100644
        foreach ($search_tokens as $search_token) {
          $search_token = trim($search_token);
 diff --git a/sources/content/src/MetatagsFieldProcessor.php b/sources/content/src/MetatagsFieldProcessor.php
-index 033785fc..25bec713 100644
+index 033785f..25bec71 100644
 --- a/sources/content/src/MetatagsFieldProcessor.php
 +++ b/sources/content/src/MetatagsFieldProcessor.php
 @@ -14,6 +14,9 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
@@ -72,7 +56,7 @@ index 033785fc..25bec713 100644
      $metatag_manager = \Drupal::service('metatag.manager');
      $meta_tag_values = unserialize($field->value);
 diff --git a/sources/content/src/Routing/TmgmtContentRouteSubscriber.php b/sources/content/src/Routing/TmgmtContentRouteSubscriber.php
-index 3da9c3b8..f459aaa9 100644
+index 3da9c3b..f459aaa 100644
 --- a/sources/content/src/Routing/TmgmtContentRouteSubscriber.php
 +++ b/sources/content/src/Routing/TmgmtContentRouteSubscriber.php
 @@ -27,7 +27,7 @@ class TmgmtContentRouteSubscriber extends RouteSubscriberBase {
@@ -85,7 +69,7 @@ index 3da9c3b8..f459aaa9 100644
      //  ContentTranslationRouteSubscriber is -100, make sure we are later.
      $events[RoutingEvents::ALTER] = array('onAlterRoutes', -211);
 diff --git a/sources/content/tmgmt_content.info.yml b/sources/content/tmgmt_content.info.yml
-index a3bd5a1b..a3fa0e44 100644
+index 2dfdce4..59dcb45 100644
 --- a/sources/content/tmgmt_content.info.yml
 +++ b/sources/content/tmgmt_content.info.yml
 @@ -1,7 +1,7 @@
@@ -98,7 +82,7 @@ index a3bd5a1b..a3fa0e44 100644
  
  dependencies:
 diff --git a/sources/content/tmgmt_content.module b/sources/content/tmgmt_content.module
-index 23d526c1..5268b65a 100644
+index 23d526c..5268b65 100644
 --- a/sources/content/tmgmt_content.module
 +++ b/sources/content/tmgmt_content.module
 @@ -102,7 +102,7 @@ function tmgmt_content_tmgmt_source_suggestions(array $items, JobInterface $job)
@@ -111,7 +95,7 @@ index 23d526c1..5268b65a 100644
  
    $form['content'] = array(
 diff --git a/sources/locale/tmgmt_locale.info.yml b/sources/locale/tmgmt_locale.info.yml
-index 22bc0b30..b6c60bb9 100644
+index 8f42882..38013c4 100644
 --- a/sources/locale/tmgmt_locale.info.yml
 +++ b/sources/locale/tmgmt_locale.info.yml
 @@ -1,7 +1,7 @@
@@ -124,7 +108,7 @@ index 22bc0b30..b6c60bb9 100644
  dependencies:
   - tmgmt:tmgmt
 diff --git a/sources/tmgmt_config/src/ConfigSourcePluginUi.php b/sources/tmgmt_config/src/ConfigSourcePluginUi.php
-index d59cec65..d92f9707 100644
+index d59cec6..d92f970 100644
 --- a/sources/tmgmt_config/src/ConfigSourcePluginUi.php
 +++ b/sources/tmgmt_config/src/ConfigSourcePluginUi.php
 @@ -288,6 +288,7 @@ class ConfigSourcePluginUi extends SourcePluginUiBase {
@@ -136,7 +120,7 @@ index d59cec65..d92f9707 100644
  
      foreach ($property_conditions as $property_name => $property_value) {
 diff --git a/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php b/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php
-index 436a1f14..44e53ea6 100644
+index 436a1f1..44e53ea 100644
 --- a/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php
 +++ b/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php
 @@ -27,7 +27,7 @@ class TmgmtConfigRouteSubscriber extends RouteSubscriberBase {
@@ -149,7 +133,7 @@ index 436a1f14..44e53ea6 100644
      // \Drupal\config_translation\Routing\RouteSubscriber is -110,
      // make sure we are later.
 diff --git a/sources/tmgmt_config/tmgmt_config.info.yml b/sources/tmgmt_config/tmgmt_config.info.yml
-index 2268fb90..c3817f78 100644
+index e248d02..dc61183 100644
 --- a/sources/tmgmt_config/tmgmt_config.info.yml
 +++ b/sources/tmgmt_config/tmgmt_config.info.yml
 @@ -1,7 +1,7 @@
@@ -162,7 +146,7 @@ index 2268fb90..c3817f78 100644
  
  dependencies:
 diff --git a/src/ContinuousManager.php b/src/ContinuousManager.php
-index 23f96c55..bcbc4ae4 100644
+index 23f96c5..bcbc4ae 100644
 --- a/src/ContinuousManager.php
 +++ b/src/ContinuousManager.php
 @@ -77,6 +77,7 @@ class ContinuousManager {
@@ -191,7 +175,7 @@ index 23f96c55..bcbc4ae4 100644
      if ($event->shouldCreateItem()) {
        if ($most_recent_job_item) {
 diff --git a/src/Entity/Job.php b/src/Entity/Job.php
-index 42090601..ab452725 100644
+index 4209060..ab45272 100644
 --- a/src/Entity/Job.php
 +++ b/src/Entity/Job.php
 @@ -267,6 +267,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
@@ -251,7 +235,7 @@ index 42090601..ab452725 100644
        ->execute();
  
 diff --git a/src/Entity/JobItem.php b/src/Entity/JobItem.php
-index 559ff548..0f063799 100644
+index 559ff54..0f06379 100644
 --- a/src/Entity/JobItem.php
 +++ b/src/Entity/JobItem.php
 @@ -219,6 +219,7 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
@@ -313,7 +297,7 @@ index 559ff548..0f063799 100644
          'show_job_filter' => TRUE,
        ],
 diff --git a/src/Entity/ListBuilder/TranslatorListBuilder.php b/src/Entity/ListBuilder/TranslatorListBuilder.php
-index 5c23f2ce..ffb98696 100644
+index 5c23f2c..ffb9869 100644
 --- a/src/Entity/ListBuilder/TranslatorListBuilder.php
 +++ b/src/Entity/ListBuilder/TranslatorListBuilder.php
 @@ -106,10 +106,11 @@ class TranslatorListBuilder extends DraggableListBuilder implements EntityListBu
@@ -330,7 +314,7 @@ index 5c23f2ce..ffb98696 100644
          '#title' => $definition['label'],
          '#attributes' => [
 diff --git a/src/Entity/RemoteMapping.php b/src/Entity/RemoteMapping.php
-index ca4c608c..1098af66 100644
+index ca4c608..1098af6 100644
 --- a/src/Entity/RemoteMapping.php
 +++ b/src/Entity/RemoteMapping.php
 @@ -159,6 +159,7 @@ class RemoteMapping extends ContentEntityBase implements RemoteMappingInterface
@@ -350,7 +334,7 @@ index ca4c608c..1098af66 100644
        $query->condition('remote_identifier_1', $remote_identifier_1);
      }
 diff --git a/src/Entity/Translator.php b/src/Entity/Translator.php
-index afbeb368..4d68abb3 100644
+index afbeb36..4d68abb 100644
 --- a/src/Entity/Translator.php
 +++ b/src/Entity/Translator.php
 @@ -250,6 +250,7 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
@@ -362,7 +346,7 @@ index afbeb368..4d68abb3 100644
          ->condition('translator', $key)
          ->execute();
 diff --git a/src/Events/ShouldCreateJobEvent.php b/src/Events/ShouldCreateJobEvent.php
-index abae9e30..bf9fb676 100644
+index abae9e3..bf9fb67 100644
 --- a/src/Events/ShouldCreateJobEvent.php
 +++ b/src/Events/ShouldCreateJobEvent.php
 @@ -2,8 +2,8 @@
@@ -376,7 +360,7 @@ index abae9e30..bf9fb676 100644
  /**
   * Represents a job item about to be added to a continuous job.
 diff --git a/src/Form/JobForm.php b/src/Form/JobForm.php
-index 12413b86..3f5f4c52 100644
+index 12413b8..3f5f4c5 100644
 --- a/src/Form/JobForm.php
 +++ b/src/Form/JobForm.php
 @@ -425,10 +425,11 @@ class JobForm extends TmgmtFormBase {
@@ -393,7 +377,7 @@ index 12413b86..3f5f4c52 100644
            '#title' => $definition['label'],
            '#attributes' => [
 diff --git a/src/Form/JobItemForm.php b/src/Form/JobItemForm.php
-index a0cc02ef..233419fc 100644
+index a0cc02e..233419f 100644
 --- a/src/Form/JobItemForm.php
 +++ b/src/Form/JobItemForm.php
 @@ -534,16 +534,16 @@ class JobItemForm extends TmgmtFormBase {
@@ -417,7 +401,7 @@ index a0cc02ef..233419fc 100644
      }
  
 diff --git a/src/Form/TranslatorForm.php b/src/Form/TranslatorForm.php
-index d9f1bf6e..5e4e7f8c 100644
+index d9f1bf6..5e4e7f8 100644
 --- a/src/Form/TranslatorForm.php
 +++ b/src/Form/TranslatorForm.php
 @@ -140,10 +140,11 @@ class TranslatorForm extends EntityForm {
@@ -434,7 +418,7 @@ index d9f1bf6e..5e4e7f8c 100644
            '#title' => $definition['label'],
            '#attributes' => [
 diff --git a/src/Plugin/views/field/JobState.php b/src/Plugin/views/field/JobState.php
-index b31e0e4f..9298d29d 100644
+index b31e0e4..9298d29 100644
 --- a/src/Plugin/views/field/JobState.php
 +++ b/src/Plugin/views/field/JobState.php
 @@ -22,7 +22,7 @@ class JobState extends NumericField {
@@ -477,7 +461,7 @@ index b31e0e4f..9298d29d 100644
          '#alt' => $label,
          '#width' => 16,
 diff --git a/src/SourcePluginUiBase.php b/src/SourcePluginUiBase.php
-index 412dda5c..2b460a7b 100644
+index 412dda5..2b460a7 100644
 --- a/src/SourcePluginUiBase.php
 +++ b/src/SourcePluginUiBase.php
 @@ -304,7 +304,7 @@ class SourcePluginUiBase extends PluginBase implements SourcePluginUiInterface {
@@ -490,7 +474,7 @@ index 412dda5c..2b460a7b 100644
  
        default:
 diff --git a/src/Tests/TMGMTTestBase.php b/src/Tests/TMGMTTestBase.php
-index abaefca5..20bcb0df 100644
+index abaefca..20bcb0d 100644
 --- a/src/Tests/TMGMTTestBase.php
 +++ b/src/Tests/TMGMTTestBase.php
 @@ -63,7 +63,7 @@ abstract class TMGMTTestBase extends WebTestBase {
@@ -503,7 +487,7 @@ index abaefca5..20bcb0df 100644
      'tmgmt_test',
      'node',
 diff --git a/templates/tmgmt-data-items-form.html.twig b/templates/tmgmt-data-items-form.html.twig
-index 8d6b164e..cc605b9f 100644
+index 8d6b164..cc605b9 100644
 --- a/templates/tmgmt-data-items-form.html.twig
 +++ b/templates/tmgmt-data-items-form.html.twig
 @@ -25,45 +25,49 @@
@@ -592,7 +576,7 @@ index 8d6b164e..cc605b9f 100644
  
    </table>
 diff --git a/tmgmt.info.yml b/tmgmt.info.yml
-index 2811ad6a..1290c7d4 100644
+index 3b33ac9..4afb092 100644
 --- a/tmgmt.info.yml
 +++ b/tmgmt.info.yml
 @@ -1,7 +1,7 @@
@@ -607,13 +591,16 @@ index 2811ad6a..1290c7d4 100644
  type: module
  configure: tmgmt.settings
  
-@@ -13,4 +13,3 @@ dependencies:
- 
+@@ -14,7 +14,6 @@ dependencies:
  simplytest_dependencies:
   - tmgmt:tmgmt_demo
+ 
 -
+ # Information added by Drupal.org packaging script on 2020-06-02
+ version: '8.x-1.11'
+ project: 'tmgmt'
 diff --git a/tmgmt.install b/tmgmt.install
-index 4d17f084..2c8c5b67 100644
+index 4d17f08..2c8c5b6 100644
 --- a/tmgmt.install
 +++ b/tmgmt.install
 @@ -72,7 +72,7 @@ function tmgmt_update_8004() {
@@ -626,7 +613,7 @@ index 4d17f084..2c8c5b67 100644
    $storage_controller = \Drupal::entityTypeManager()->getStorage('view');
    $storage_controller->create($values)->save();
 diff --git a/tmgmt.module b/tmgmt.module
-index ed087f67..da8a9fb2 100644
+index ed087f6..da8a9fb 100644
 --- a/tmgmt.module
 +++ b/tmgmt.module
 @@ -77,6 +77,7 @@ function tmgmt_cron() {
@@ -763,7 +750,7 @@ index ed087f67..da8a9fb2 100644
      ],
    ];
 diff --git a/tmgmt.post_update.php b/tmgmt.post_update.php
-index ecc1de36..efd037a4 100644
+index ecc1de3..efd037a 100644
 --- a/tmgmt.post_update.php
 +++ b/tmgmt.post_update.php
 @@ -9,6 +9,7 @@ function tmgmt_post_update_json(&$sandbox = NULL) {
@@ -783,7 +770,7 @@ index ecc1de36..efd037a4 100644
    $query->sort('tjiid');
    $result = $query->execute();
 diff --git a/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php b/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php
-index 8fb83337..20085d6d 100644
+index 8fb8333..20085d6 100644
 --- a/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php
 +++ b/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php
 @@ -52,7 +52,7 @@ class TestContinuousEventSubscriber implements EventSubscriberInterface {
@@ -796,7 +783,7 @@ index 8fb83337..20085d6d 100644
      return $events;
    }
 diff --git a/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php b/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php
-index c3c6c96d..51e800bd 100644
+index c3c6c96..51e800b 100644
 --- a/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php
 +++ b/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php
 @@ -22,7 +22,7 @@ class TestHtmlSource extends TestSource {
@@ -809,7 +796,7 @@ index c3c6c96d..51e800bd 100644
          ),
        ),
 diff --git a/tmgmt_test/tmgmt_test.info.yml b/tmgmt_test/tmgmt_test.info.yml
-index fd31f6bd..fb236e1f 100644
+index 6280ea5..7a7b869 100644
 --- a/tmgmt_test/tmgmt_test.info.yml
 +++ b/tmgmt_test/tmgmt_test.info.yml
 @@ -1,6 +1,6 @@
@@ -821,7 +808,7 @@ index fd31f6bd..fb236e1f 100644
  type: module
  
 diff --git a/tmgmt_test/tmgmt_test.module b/tmgmt_test/tmgmt_test.module
-index 41b7758b..07027092 100644
+index 41b7758..0702709 100644
 --- a/tmgmt_test/tmgmt_test.module
 +++ b/tmgmt_test/tmgmt_test.module
 @@ -66,7 +66,7 @@ function tmgmt_test_tmgmt_job_item_state_definitions_alter(&$definitions) {
@@ -834,7 +821,7 @@ index 41b7758b..07027092 100644
    ];
  }
 diff --git a/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php b/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php
-index 0796b6cd..48c5c87c 100644
+index 0796b6c..48c5c87 100644
 --- a/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php
 +++ b/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php
 @@ -39,9 +39,9 @@ class FileTranslator extends TranslatorPluginBase {
@@ -849,323 +836,8 @@ index 0796b6cd..48c5c87c 100644
      }
      else {
        $job->rejected('Failed to create writable directory @dirname, check file system permissions.', ['@dirname' => $dirname]);
-diff --git a/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php b/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php
-index 1d60285e..9ac290db 100644
---- a/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php
-+++ b/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php
-@@ -22,7 +22,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-    *
-    * @var array
-    */
--  static public $modules = array('tmgmt_file', 'tmgmt');
-+  protected static $modules = array('tmgmt_file', 'tmgmt');
- 
-   /**
-    * {@inheritdoc}
-@@ -49,7 +49,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     ]);
- 
-     // Get the source text.
--    $source_text = trim(file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'));
-+    $source_text = trim(file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html'));
- 
-     // Create the reader instance, it will be used through the tests.
-     $reader = new \XMLReader();
-@@ -86,10 +86,11 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $message = reset($messages);
-     $translated_file = 'public://tmgmt_file/translated.xlf';
-     $this->createTranslationFile($message->variables->{'@link'}, 'one paragraph', 'one translated paragraph', $translated_file);
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-       'files[file]' => $translated_file,
-     );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
-+    $this->submitForm($edit, t('Import'));
-     // Reset caches and reload job.
-     \Drupal::entityTypeManager()->getStorage('tmgmt_job')->resetCache();
-     \Drupal::entityTypeManager()->getStorage('tmgmt_job_item')->resetCache();
-@@ -98,7 +99,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     // Do the comparison of the translation text and the source. It must be the
-     // same as there was no change done to the translation.
-     $item_data = $job->getData(array(1, 'dummy', 'deep_nesting'));
--    $this->assertEqual(trim($item_data[1]['#translation']['#text']), str_replace('one paragraph', 'one translated paragraph', $source_text));
-+    $this->assertEquals(str_replace('one paragraph', 'one translated paragraph', $source_text), trim($item_data[1]['#translation']['#text']));
-     $job_items = $job->getItems();
-     $job_item = array_shift($job_items);
-     // Job item must be in review.
-@@ -119,10 +120,11 @@ class FileTranslatorTest extends TMGMTTestBase {
-     // trigger an error and not import the translation.
-     $translated_file = 'public://tmgmt_file/translated.xlf';
-     $this->createTranslationFile($message->variables->{'@link'}, '<x id="tjiid2-4" ctype="lb"/>', '', $translated_file);
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-       'files[file]' => $translated_file,
-     );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
-+    $this->submitForm($edit, t('Import'));
-     \Drupal::entityTypeManager()->getStorage('tmgmt_job')->resetCache();
-     \Drupal::entityTypeManager()->getStorage('tmgmt_job_item')->resetCache();
-     $job = Job::load($job->id());
-@@ -138,7 +140,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $job->addItem('test_html_source', 'test', '1');
-     $job->requestTranslation();
-     $targets = $this->getTransUnitsContent($job);
--    $this->assertEqual(trim(html_entity_decode($targets['0']['source'])), $source_text);
-+    $this->assertEquals($source_text, trim(html_entity_decode($targets['0']['source'])));
-   }
- 
-   /**
-@@ -154,7 +156,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     ]);
- 
-     // Get the source text.
--    $source_text = trim(file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'));
-+    $source_text = trim(file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html'));
- 
-     // Create a new job.
-     $job = $this->createJob();
-@@ -172,7 +174,7 @@ class FileTranslatorTest extends TMGMTTestBase {
- 
-     $dom = new \DOMDocument();
-     $dom->loadXML($xliff);
--    $this->assertTrue($dom->schemaValidate(drupal_get_path('module', 'tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
-+    $this->assertTrue($dom->schemaValidate(\Drupal::service('extension.list.module')->getPath('tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
- 
-     // "Translate" items.
-     $xml = simplexml_import_dom($dom);
-@@ -181,7 +183,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-       foreach ($group->children() as $transunit) {
-         if ($transunit->getName() == 'trans-unit') {
-           // The target should be empty.
--          $this->assertEqual($transunit->target, '');
-+          $this->assertEquals('', $transunit->target);
- 
-           // Update translations using CDATA.
-           $node = dom_import_simplexml($transunit->target);
-@@ -198,10 +200,11 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $xml->asXML($translated_file);
- 
-     // Import the file and check translation for the "dummy" item.
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-       'files[file]' => $translated_file,
-     );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
-+    $this->submitForm($edit, t('Import'));
- 
-     // Reset caches and reload job.
-     \Drupal::entityTypeManager()->getStorage('tmgmt_job')->resetCache();
-@@ -209,7 +212,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $job = Job::load($job->id());
- 
-     $item_data = $job->getData(array(1, 'dummy', 'deep_nesting'));
--    $this->assertEqual(trim($item_data[1]['#translation']['#text']), str_replace($source_text, $xml->file['target-language'] . '_' . $source_text, $source_text));
-+    $this->assertEquals(str_replace($source_text, $xml->file['target-language'] . '_' . $source_text, $source_text), trim($item_data[1]['#translation']['#text']));
-   }
- 
-   /**
-@@ -295,7 +298,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     \Drupal::state()->set('tmgmt.test_source_data', array(
-       'dummy' => array(
-         'deep_nesting' => array(
--          '#text' => file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html') . ' @id.',
-+          '#text' => file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html') . ' @id.',
-           '#label' => 'Label of deep nested item @id',
-         ),
-         '#label' => 'Dummy item',
-@@ -323,7 +326,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $xliff = file_get_contents($download_url);
-     $dom = new \DOMDocument();
-     $dom->loadXML($xliff);
--    $this->assertTrue($dom->schemaValidate(drupal_get_path('module', 'tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
-+    $this->assertTrue($dom->schemaValidate(\Drupal::service('extension.list.module')->getPath('tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
- 
-     // Build a list of expected note labels.
-     $expected_notes = [
-@@ -340,9 +343,9 @@ class FileTranslatorTest extends TMGMTTestBase {
-       foreach ($group->children() as $transunit) {
-         if ($transunit->getName() == 'trans-unit') {
-           // The target should contain the source data.
--          $this->assertEqual($transunit->target, $transunit->source);
-+          $this->assertEquals($transunit->source, $transunit->target);
-           // Assert that notes contain parent and non-parent labels.
--          $this->assertEqual($expected_notes[(string) $transunit['id']], (string) $transunit->note);
-+          $this->assertEquals($expected_notes[(string) $transunit['id']], (string) $transunit->note);
-           $transunit->target = $xml->file['target-language'] . '_' . (string) $transunit->source;
-           // Store the text to allow assertions later on.
-           $translated_text[(string) $group['id']][(string) $transunit['id']] = (string) $transunit->target;
-@@ -355,11 +358,12 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $wrong_xml->file->header->{'phase-group'}->phase['job-id'] = 500;
-     $wrong_file = 'public://tmgmt_file/wrong_file.xlf';
-     $wrong_xml->asXML($wrong_file);
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-       'files[file]' => $wrong_file,
-     );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
--    $this->assertText(t('Failed to validate file, import aborted.'));
-+    $this->submitForm($edit, t('Import'));
-+    $this->assertSession()->pageTextContains(t('Failed to validate file, import aborted.'));
- 
-     // Change the job id to a wrong one and try to import it.
-     $wrong_xml = clone $xml;
-@@ -376,11 +380,12 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $wrong_xml->file->header->{'phase-group'}->phase['job-id'] = $second_job->id();
-     $wrong_file = 'public://tmgmt_file/wrong_file.xlf';
-     $wrong_xml->asXML($wrong_file);
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-       'files[file]' => $wrong_file,
-     );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
--    $this->assertRaw(t('The imported file job id @file_id does not match the job id @job_id.', array(
-+    $this->submitForm($edit, t('Import'));
-+    $this->assertSession()->responseContains(t('The imported file job id @file_id does not match the job id @job_id.', array(
-       '@file_id' => $second_job->id(),
-       '@job_id' => $job->id(),
-     )));
-@@ -390,11 +395,12 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $xml->asXML($translated_file);
- 
-     // Import the file and accept translation for the "dummy" item.
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-         'files[file]' => $translated_file,
-       );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
--    $this->assertText(t('The translation of @job_item to German is finished and can now be reviewed.', ['@job_item' => $first_item->label()]));
-+    $this->submitForm($edit, t('Import'));
-+    $this->assertSession()->pageTextContains(t('The translation of @job_item to German is finished and can now be reviewed.', ['@job_item' => $first_item->label()]));
- 
-     $this->clickLink(t('Review'));
-     $this->getSession()->getPage()->pressButton('reviewed-dummy|deep_nesting');
-@@ -402,24 +408,25 @@ class FileTranslatorTest extends TMGMTTestBase {
-     // Update the translation for "another" item and import.
-     $xml->file->body->group[0]->{'trans-unit'}[1]->target = $xml->file->body->group[0]->{'trans-unit'}[1]->target . ' updated';
-     $xml->asXML($translated_file);
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-         'files[file]' => $translated_file,
-       );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
-+    $this->submitForm($edit, t('Import'));
- 
-     // At this point we must have the "dummy" item accepted and intact. The
-     // "another" item must have updated translation.
--    $this->assertText('Review');
-+    $this->assertSession()->pageTextContains('Review');
-     $this->drupalGet($first_item->toUrl());
--    $this->assertFieldByName('dummy|deep_nesting[translation]', 'de_' . $first_item_data['dummy][deep_nesting']['#text']);
--    $this->assertFieldByName('another_item[translation]', 'de_' . $first_item_data['another_item']['#text'] . ' updated');
-+    $this->assertSession()->fieldValueEquals('dummy|deep_nesting[translation]', 'de_' . $first_item_data['dummy][deep_nesting']['#text']);
-+    $this->assertSession()->fieldValueEquals('another_item[translation]', 'de_' . $first_item_data['another_item']['#text'] . ' updated');
- 
-     // Now finish the import/save as completed process doing another extra
-     // import. The extra import will test that a duplicate import of the same
-     // file does not break the process.
-     $this->importFile($translated_file, $translated_text, $job);
- 
--    $this->assertNoText(t('Import translated file'));
-+    $this->assertSession()->pageTextNotContains(t('Import translated file'));
- 
-     // Create a job, assign to the file translator and delete before attaching
-     // a file.
-@@ -429,7 +436,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $other_job->delete();
-     // Make sure the file of the other job still exists.
-     $response = \Drupal::httpClient()->get($download_url);
--    $this->assertEqual(200, $response->getStatusCode());
-+    $this->assertEquals(200, $response->getStatusCode());
- 
-     // Delete the job and then make sure that the file has been deleted.
-     $job->delete();
-@@ -438,7 +445,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-       $this->fail('Expected exception not thrown.');
-     }
-     catch (RequestException $e) {
--      $this->assertEqual(404, $e->getResponse()->getStatusCode());
-+      $this->assertEquals(404, $e->getResponse()->getStatusCode());
-     }
-   }
- 
-@@ -471,7 +478,7 @@ class FileTranslatorTest extends TMGMTTestBase {
-     $this->clickLink(t('Manage'));
- 
-     // Assert that the label field is only shown once in page.
--    $this->assertEqual((count($this->xpath('//div[@id="tmgmt-ui-label"]'))), 1);
-+    $this->assertCount(1, $this->xpath('//div[@id="tmgmt-ui-label"]'));
- 
-     $download_url = $message->variables->{'@link'};
-     $this->assertFalse((bool) strpos('< a', $download_url));
-@@ -479,51 +486,52 @@ class FileTranslatorTest extends TMGMTTestBase {
-     // Verify that the URL is served using the private file system and the
-     // access checks work.
-     $this->assertNotEmpty(preg_match('|system/files|', $download_url));
--    $this->assertResponse(200);
-+    $this->assertSession()->statusCodeEquals(200);
- 
-     $this->drupalLogout();
-     // Verify that access is now protected.
-     $this->drupalGet($download_url);
--    $this->assertResponse(403);
-+    $this->assertSession()->statusCodeEquals(403);
-   }
- 
-   protected function importFile($translated_file, $translated_text, JobInterface $job) {
-     // To test the upload form functionality, navigate to the edit form.
-+    $this->drupalGet($job->toUrl());
-     $edit = array(
-       'files[file]' => $translated_file,
-     );
--    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
-+    $this->submitForm($edit, t('Import'));
- 
-     // Make sure the translations have been imported correctly.
--    $this->assertNoRaw('title="In progress"');
-+    $this->assertSession()->responseNotContains('title="In progress"');
-     // @todo: Enable this assertion once new releases for views and entity
-     // module are out.
--    //$this->assertText(t('Needs review'));
-+    //$this->assertSession()->pageTextContains(t('Needs review'));
- 
-     // Review both items.
-     list($item1, $item2) = array_values($job->getItems());
-     $this->drupalGet($item1->toUrl());
-     foreach ($translated_text[1] as $key => $value) {
--      $this->assertText(Html::escape($value));
-+      $this->assertSession()->responseContains(Html::escape($value));
-     }
-     foreach ($translated_text[2] as $key => $value) {
--      $this->assertNoText(Html::escape($value));
-+      $this->assertSession()->responseNotContains(Html::escape($value));
-     }
--    $this->drupalPostForm(NULL, array(), t('Save as completed'));
-+    $this->submitForm([], t('Save as completed'));
-     // Review both items.
-     $this->drupalGet($item2->toUrl());
-     foreach ($translated_text[1] as $key => $value) {
--      $this->assertNoText(Html::escape($value));
-+      $this->assertSession()->responseNotContains(Html::escape($value));
-     }
-     foreach ($translated_text[2] as $key => $value) {
--      $this->assertText(Html::escape($value));
-+      $this->assertSession()->responseContains(Html::escape($value));
-     }
--    $this->drupalPostForm(NULL, array(), t('Save as completed'));
-+    $this->submitForm([], t('Save as completed'));
-     // @todo: Enable this assertion once new releases for views and entity
-     // module are out.
--    //$this->assertText(t('Accepted'));
--    $this->assertText(t('Finished'));
--    $this->assertNoRaw('title="Needs review"');
-+    //$this->assertSession()->pageTextContains(t('Accepted'));
-+    $this->assertSession()->pageTextContains(t('Finished'));
-+    $this->assertSession()->responseNotContains('title="Needs review"');
-   }
- 
-   /**
 diff --git a/translators/tmgmt_file/tmgmt_file.info.yml b/translators/tmgmt_file/tmgmt_file.info.yml
-index 883a8ad7..fd828ab5 100644
+index f5c6c5d..b7f96f5 100644
 --- a/translators/tmgmt_file/tmgmt_file.info.yml
 +++ b/translators/tmgmt_file/tmgmt_file.info.yml
 @@ -1,7 +1,7 @@
@@ -1178,7 +850,7 @@ index 883a8ad7..fd828ab5 100644
  dependencies:
    - tmgmt:tmgmt
 diff --git a/translators/tmgmt_file/tmgmt_file.module b/translators/tmgmt_file/tmgmt_file.module
-index eb781e5f..7a6a7636 100644
+index eb781e5..7a6a763 100644
 --- a/translators/tmgmt_file/tmgmt_file.module
 +++ b/translators/tmgmt_file/tmgmt_file.module
 @@ -16,7 +16,7 @@ use Drupal\tmgmt\JobInterface;
@@ -1199,7 +871,7 @@ index eb781e5f..7a6a7636 100644
      ->execute();
    if ($fids) {
 diff --git a/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml b/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml
-index bbc01eb8..6ce77795 100755
+index f2c396e..390a72e 100644
 --- a/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml
 +++ b/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml
 @@ -1,7 +1,7 @@
@@ -1212,7 +884,7 @@ index bbc01eb8..6ce77795 100755
  
  dependencies:
 diff --git a/translators/tmgmt_local/src/Entity/LocalTask.php b/translators/tmgmt_local/src/Entity/LocalTask.php
-index dbb1855c..8de7ad34 100644
+index dbb1855..8de7ad3 100644
 --- a/translators/tmgmt_local/src/Entity/LocalTask.php
 +++ b/translators/tmgmt_local/src/Entity/LocalTask.php
 @@ -210,6 +210,7 @@ class LocalTask extends ContentEntityBase implements LocalTaskInterface {
@@ -1232,7 +904,7 @@ index dbb1855c..8de7ad34 100644
        ->execute();
      if (!empty($ids)) {
 diff --git a/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php b/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php
-index 51fde633..9ae383f8 100644
+index 51fde63..9ae383f 100644
 --- a/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php
 +++ b/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php
 @@ -101,7 +101,7 @@ class LocalTranslator extends TranslatorPluginBase implements ContinuousTranslat
@@ -1245,7 +917,7 @@ index 51fde633..9ae383f8 100644
        $query->condition($or_conditions);
      }
 diff --git a/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php b/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php
-index 9a9dd058..0d966f13 100644
+index 9a9dd05..0d966f1 100644
 --- a/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php
 +++ b/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php
 @@ -21,17 +21,17 @@ class TaskItemStatus extends NumericField {
@@ -1286,7 +958,7 @@ index 9a9dd058..0d966f13 100644
        ),
      ];
 diff --git a/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php b/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php
-index b2d0b219..b427db2f 100644
+index b2d0b21..b427db2 100644
 --- a/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php
 +++ b/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php
 @@ -21,17 +21,17 @@ class TaskStatus extends NumericField {
@@ -1327,7 +999,7 @@ index b2d0b219..b427db2f 100644
        ),
      ];
 diff --git a/translators/tmgmt_local/tmgmt_local.info.yml b/translators/tmgmt_local/tmgmt_local.info.yml
-index 310f8b23..c003c400 100644
+index 46792ec..eee7c8d 100644
 --- a/translators/tmgmt_local/tmgmt_local.info.yml
 +++ b/translators/tmgmt_local/tmgmt_local.info.yml
 @@ -1,7 +1,7 @@
@@ -1340,7 +1012,7 @@ index 310f8b23..c003c400 100644
  
  dependencies:
 diff --git a/translators/tmgmt_local/tmgmt_local.module b/translators/tmgmt_local/tmgmt_local.module
-index 9c544d57..d8959c24 100755
+index 9c544d5..d8959c2 100755
 --- a/translators/tmgmt_local/tmgmt_local.module
 +++ b/translators/tmgmt_local/tmgmt_local.module
 @@ -253,6 +253,7 @@ function tmgmt_local_translation_access(LocalTask $task, AccountInterface $accou
@@ -1449,7 +1121,7 @@ index 9c544d57..d8959c24 100755
      ],
    ];
 diff --git a/translators/tmgmt_local/tmgmt_local.post_update.php b/translators/tmgmt_local/tmgmt_local.post_update.php
-index 9d358561..28c18543 100644
+index 9d35856..28c1854 100644
 --- a/translators/tmgmt_local/tmgmt_local.post_update.php
 +++ b/translators/tmgmt_local/tmgmt_local.post_update.php
 @@ -9,6 +9,7 @@ function tmgmt_local_post_update_json(&$sandbox = NULL) {
@@ -1469,7 +1141,7 @@ index 9d358561..28c18543 100644
    $query->sort('tltiid');
    $result = $query->execute();
 diff --git a/translators/tmgmt_local/tmgmt_local.theme.inc b/translators/tmgmt_local/tmgmt_local.theme.inc
-index 4c63d6a9..aec6bf55 100644
+index 4c63d6a..aec6bf5 100644
 --- a/translators/tmgmt_local/tmgmt_local.theme.inc
 +++ b/translators/tmgmt_local/tmgmt_local.theme.inc
 @@ -62,12 +62,12 @@ function theme_tmgmt_local_translation_form_element_status($variables) {

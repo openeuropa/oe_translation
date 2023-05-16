@@ -1,0 +1,75 @@
+diff --git a/sources/content/src/DefaultFieldProcessor.php b/sources/content/src/DefaultFieldProcessor.php
+index d12da429..b942fda6 100644
+--- a/sources/content/src/DefaultFieldProcessor.php
++++ b/sources/content/src/DefaultFieldProcessor.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Drupal\tmgmt_content;
+ 
++use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+ use Drupal\Core\Render\Element;
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\TypedData\OptionsProviderInterface;
+@@ -36,6 +37,13 @@ class DefaultFieldProcessor implements FieldProcessorInterface {
+ 
+         $translate = $this->shouldTranslateProperty($property);
+ 
++        if ($field_definition instanceof ThirdPartySettingsInterface && $field_definition->isTranslatable() && $translation_sync = $field_definition->getThirdPartySetting('content_translation', 'translation_sync')) {
++          $synced = array_keys(array_diff($translation_sync, array_filter($translation_sync)));
++          if (in_array($property_key, $synced)) {
++            $translate = FALSE;
++          }
++        }
++
+         // All the labels are here, to make sure we don't have empty labels in
+         // the UI because of no data.
+         if ($translate === TRUE) {
+diff --git a/sources/content/tests/src/Kernel/ContentEntitySourceUnitTest.php b/sources/content/tests/src/Kernel/ContentEntitySourceUnitTest.php
+index 01d9561d..f9afdb5a 100644
+--- a/sources/content/tests/src/Kernel/ContentEntitySourceUnitTest.php
++++ b/sources/content/tests/src/Kernel/ContentEntitySourceUnitTest.php
+@@ -85,12 +85,22 @@ class ContentEntitySourceUnitTest extends ContentEntityTestBase {
+       'translatable' => TRUE,
+     ));
+     $field_storage->save();
+-    FieldConfig::create(array(
++    $image_field = FieldConfig::create(array(
+       'entity_type' => $this->entityTypeId,
+       'field_storage' => $field_storage,
+       'bundle' => $this->entityTypeId,
+       'label' => $this->image_label = $this->randomMachineName(),
+-    ))->save();
++    ));
++
++    // Configure the image field to only have it's title translatable, but not
++    // its alt text.
++    $image_field->setThirdPartySetting('content_translation', 'translation_sync', [
++      'title' => 'title',
++      'file' => '0',
++      'alt' => '0'
++    ]);
++    $image_field->save();
++
+     \Drupal::service('file_system')->copy(DRUPAL_ROOT . '/core/misc/druplicon.png', 'public://example.jpg');
+     $this->image = File::create([
+       'uri' => 'public://example.jpg',
+@@ -240,12 +250,15 @@ class ContentEntitySourceUnitTest extends ContentEntityTestBase {
+     $this->assertFalse($image_item['target_id']['#translate']);
+     $this->assertFalse($image_item['width']['#translate']);
+     $this->assertFalse($image_item['height']['#translate']);
+-    $this->assertTrue($image_item['alt']['#translate']);
+-    $this->assertEqual($image_item['alt']['#label'], t('Alternative text'));
+-    $this->assertEqual($image_item['alt']['#text'], $entity_test->image_test->alt);
++    // The alt column is not translatable but the title is.
++    $this->assertFalse($image_item['alt']['#translate']);
+     $this->assertTrue($image_item['title']['#translate']);
+-    $this->assertEqual($image_item['title']['#label'], t('Title'));
+     $this->assertEqual($image_item['title']['#text'], $entity_test->image_test->title);
++    $this->assertEqual($image_item['alt']['#text'], $entity_test->image_test->alt);
++    // Since only one translatable column remained, the labels have been
++    // removed.
++    $this->assertTrue(!isset($image_item['title']['#label']));
++    $this->assertTrue(!isset($image_item['alt']['#label']));
+ 
+     // Test the ignored field.
+     $this->assertFalse(isset($data['ignored_field']));
