@@ -1,0 +1,1489 @@
+diff --git a/drupalci.yml b/drupalci.yml
+new file mode 100644
+index 00000000..2ae545e6
+--- /dev/null
++++ b/drupalci.yml
+@@ -0,0 +1,10 @@
++build:
++  assessment:
++    testing:
++      run_tests:
++        # Run all tests together with high concurrency.
++        types: 'PHPUnit-Unit,PHPUnit-Kernel,PHPUnit-Functional,PHPUnit-FunctionalJavascript'
++        testgroups: '--all'
++        suppress-deprecations: true
++        halt-on-fail: false
++        concurrency: 15
+diff --git a/modules/demo/tmgmt_demo.info.yml b/modules/demo/tmgmt_demo.info.yml
+index 61fbff19..d4aec3b1 100644
+--- a/modules/demo/tmgmt_demo.info.yml
++++ b/modules/demo/tmgmt_demo.info.yml
+@@ -2,7 +2,7 @@ name: Translation Management Demo
+ type: module
+ description: All elements for a functioning demo.
+ package: Translation Management
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ hidden: false
+ 
+ dependencies:
+@@ -15,6 +15,7 @@ dependencies:
+  - drupal:path
+  - drupal:text
+  - drupal:menu_ui
++ - drupal:toolbar
+ 
+ simplytest_dependencies:
+  - paragraphs:paragraphs_demo
+diff --git a/sources/content/src/ContentEntitySourcePluginUi.php b/sources/content/src/ContentEntitySourcePluginUi.php
+index 28a4101c..08cbaab8 100644
+--- a/sources/content/src/ContentEntitySourcePluginUi.php
++++ b/sources/content/src/ContentEntitySourcePluginUi.php
+@@ -409,7 +409,7 @@ class ContentEntitySourcePluginUi extends SourcePluginUiBase {
+       $query->condition($langcode_table_alias . '.langcode', $property_conditions['target_language'], '<>');
+ 
+       if ($property_conditions['target_status'] == 'untranslated_or_outdated') {
+-        $or = new Condition('OR');
++        $or = \Drupal::database()->condition('OR');
+         $or->isNull("$translation_table_alias.langcode");
+         $or->condition("$translation_table_alias.content_translation_outdated", 1);
+         $query->condition($or);
+@@ -429,7 +429,7 @@ class ContentEntitySourcePluginUi extends SourcePluginUiBase {
+     // Searching for the source label.
+     if (!empty($label_key) && isset($property_conditions[$label_key])) {
+       $search_tokens = explode(' ', $property_conditions[$label_key]);
+-      $or = new Condition('OR');
++      $or = \Drupal::database()->condition('OR');
+ 
+       foreach ($search_tokens as $search_token) {
+         $search_token = trim($search_token);
+diff --git a/sources/content/src/MetatagsFieldProcessor.php b/sources/content/src/MetatagsFieldProcessor.php
+index 033785fc..25bec713 100644
+--- a/sources/content/src/MetatagsFieldProcessor.php
++++ b/sources/content/src/MetatagsFieldProcessor.php
+@@ -14,6 +14,9 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
+    * {@inheritdoc}
+    */
+   public function extractTranslatableData(FieldItemListInterface $field) {
++    if (empty($field->value)) {
++      return [];
++    }
+ 
+     $metatag_manager = \Drupal::service('metatag.manager');
+     $meta_tag_values = unserialize($field->value);
+diff --git a/sources/content/src/Routing/TmgmtContentRouteSubscriber.php b/sources/content/src/Routing/TmgmtContentRouteSubscriber.php
+index 3da9c3b8..f459aaa9 100644
+--- a/sources/content/src/Routing/TmgmtContentRouteSubscriber.php
++++ b/sources/content/src/Routing/TmgmtContentRouteSubscriber.php
+@@ -27,7 +27,7 @@ class TmgmtContentRouteSubscriber extends RouteSubscriberBase {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     $events = parent::getSubscribedEvents();
+     //  ContentTranslationRouteSubscriber is -100, make sure we are later.
+     $events[RoutingEvents::ALTER] = array('onAlterRoutes', -211);
+diff --git a/sources/content/tmgmt_content.info.yml b/sources/content/tmgmt_content.info.yml
+index a3bd5a1b..a3fa0e44 100644
+--- a/sources/content/tmgmt_content.info.yml
++++ b/sources/content/tmgmt_content.info.yml
+@@ -1,7 +1,7 @@
+ name: Content Entity Source
+ description: Content entity source plugin for the Translation Management system.
+ package: Translation Management
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ type: module
+ 
+ dependencies:
+diff --git a/sources/content/tmgmt_content.module b/sources/content/tmgmt_content.module
+index 23d526c1..5268b65a 100644
+--- a/sources/content/tmgmt_content.module
++++ b/sources/content/tmgmt_content.module
+@@ -102,7 +102,7 @@ function tmgmt_content_tmgmt_source_suggestions(array $items, JobInterface $job)
+    * @param \Drupal\Core\Form\FormStateInterface $form_state
+    */
+ function tmgmt_content_form_tmgmt_settings_form_alter(array &$form, FormStateInterface $form_state) {
+-  module_load_include('inc', 'views', 'views.views');
++  \Drupal::moduleHandler()->loadInclude('views', 'inc', 'views.views');
+   $entity_types = \Drupal::entitytypeManager()->getDefinitions();
+ 
+   $form['content'] = array(
+diff --git a/sources/locale/tmgmt_locale.info.yml b/sources/locale/tmgmt_locale.info.yml
+index 22bc0b30..b6c60bb9 100644
+--- a/sources/locale/tmgmt_locale.info.yml
++++ b/sources/locale/tmgmt_locale.info.yml
+@@ -1,7 +1,7 @@
+ name: 'Locales Source'
+ description: 'Locales source plugin for the Translation Management system.'
+ package: 'Translation Management'
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ type: module
+ dependencies:
+  - tmgmt:tmgmt
+diff --git a/sources/tmgmt_config/src/ConfigSourcePluginUi.php b/sources/tmgmt_config/src/ConfigSourcePluginUi.php
+index d59cec65..d92f9707 100644
+--- a/sources/tmgmt_config/src/ConfigSourcePluginUi.php
++++ b/sources/tmgmt_config/src/ConfigSourcePluginUi.php
+@@ -288,6 +288,7 @@ class ConfigSourcePluginUi extends SourcePluginUiBase {
+     unset($property_conditions['target_language']);
+ 
+     $search = \Drupal::entityQuery($entity_type_id);
++    $search->accessCheck(TRUE);
+     // unset($property_conditions['target_status']);
+ 
+     foreach ($property_conditions as $property_name => $property_value) {
+diff --git a/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php b/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php
+index 436a1f14..44e53ea6 100644
+--- a/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php
++++ b/sources/tmgmt_config/src/Routing/TmgmtConfigRouteSubscriber.php
+@@ -27,7 +27,7 @@ class TmgmtConfigRouteSubscriber extends RouteSubscriberBase {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     $events = parent::getSubscribedEvents();
+     // \Drupal\config_translation\Routing\RouteSubscriber is -110,
+     // make sure we are later.
+diff --git a/sources/tmgmt_config/tmgmt_config.info.yml b/sources/tmgmt_config/tmgmt_config.info.yml
+index 2268fb90..c3817f78 100644
+--- a/sources/tmgmt_config/tmgmt_config.info.yml
++++ b/sources/tmgmt_config/tmgmt_config.info.yml
+@@ -1,7 +1,7 @@
+ name: Config Entity Source
+ description: Config entity source plugin for the Translation Management system.
+ package: Translation Management
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ type: module
+ 
+ dependencies:
+diff --git a/src/ContinuousManager.php b/src/ContinuousManager.php
+index 23f96c55..bcbc4ae4 100644
+--- a/src/ContinuousManager.php
++++ b/src/ContinuousManager.php
+@@ -77,6 +77,7 @@ class ContinuousManager {
+    */
+   public function hasContinuousJobs() {
+     $id = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
++      ->accessCheck(TRUE)
+       ->condition('job_type', Job::TYPE_CONTINUOUS)
+       ->range(0, 1)
+       ->execute();
+@@ -95,6 +96,7 @@ class ContinuousManager {
+   public function getContinuousJobs($source_langcode) {
+     $jobs = array();
+     $ids = $this->entityTypeManager->getStorage('tmgmt_job')->getQuery()
++      ->accessCheck(TRUE)
+       ->condition('source_language', $source_langcode)
+       ->condition('job_type', Job::TYPE_CONTINUOUS)
+       ->condition('state', Job::STATE_CONTINUOUS)
+@@ -135,7 +137,7 @@ class ContinuousManager {
+ 
+     // Some modules might want to filter out candidates for items.
+     $event = new ShouldCreateJobEvent($job, $plugin, $item_type, $item_id, $should_create_item);
+-    $this->eventDispatcher->dispatch(ContinuousEvents::SHOULD_CREATE_JOB, $event);
++    $this->eventDispatcher->dispatch($event, ContinuousEvents::SHOULD_CREATE_JOB);
+ 
+     if ($event->shouldCreateItem()) {
+       if ($most_recent_job_item) {
+diff --git a/src/Entity/Job.php b/src/Entity/Job.php
+index 42090601..ab452725 100644
+--- a/src/Entity/Job.php
++++ b/src/Entity/Job.php
+@@ -267,6 +267,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+     // Since we are deleting one or multiple jobs here we also need to delete
+     // the attached job items and messages.
+     $tjiids = \Drupal::entityQuery('tmgmt_job_item')
++      ->accessCheck(TRUE)
+       ->condition('tjid', array_keys($entities), 'IN')
+       ->execute();
+     if (!empty($tjiids)) {
+@@ -275,6 +276,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+     }
+ 
+     $mids = \Drupal::entityQuery('tmgmt_message')
++      ->accessCheck(TRUE)
+       ->condition('tjid', array_keys($entities), 'IN')
+       ->execute();
+     if (!empty($mids)) {
+@@ -283,6 +285,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+     }
+ 
+     $trids = \Drupal::entityQuery('tmgmt_remote')
++      ->accessCheck(TRUE)
+       ->condition('tjid', array_keys($entities), 'IN')
+       ->execute();
+     if (!empty($trids)) {
+@@ -387,6 +390,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+   public function getItems($conditions = array()) {
+     $items = [];
+     $query = \Drupal::entityQuery('tmgmt_job_item')
++      ->accessCheck(TRUE)
+       ->condition('tjid', $this->id());
+     foreach ($conditions as $key => $condition) {
+       if (is_array($condition)) {
+@@ -415,6 +419,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+    */
+   public function getMostRecentItem($plugin, $item_type, $item_id) {
+     $query = \Drupal::entityQuery('tmgmt_job_item')
++      ->accessCheck(TRUE)
+       ->condition('tjid', $this->id())
+       ->condition('plugin', $plugin)
+       ->condition('item_type', $item_type)
+@@ -433,6 +438,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+    */
+   public function getMessages($conditions = array()) {
+     $query = \Drupal::entityQuery('tmgmt_message')
++      ->accessCheck(TRUE)
+       ->condition('tjid', $this->id());
+     foreach ($conditions as $key => $condition) {
+       if (is_array($condition)) {
+@@ -901,6 +907,7 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
+    */
+   public function getRemoteMappings() {
+     $trids = \Drupal::entityQuery('tmgmt_remote')
++      ->accessCheck(TRUE)
+       ->condition('tjid', $this->id())
+       ->execute();
+ 
+diff --git a/src/Entity/JobItem.php b/src/Entity/JobItem.php
+index 559ff548..0f063799 100644
+--- a/src/Entity/JobItem.php
++++ b/src/Entity/JobItem.php
+@@ -219,6 +219,7 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
+     // Since we are deleting one or multiple job items here we also need to
+     // delete the attached messages.
+     $mids = \Drupal::entityQuery('tmgmt_message')
++      ->accessCheck(TRUE)
+       ->condition('tjiid', array_keys($entities), 'IN')
+       ->execute();
+     if (!empty($mids)) {
+@@ -227,6 +228,7 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
+     }
+ 
+     $trids = \Drupal::entityQuery('tmgmt_remote')
++      ->accessCheck(TRUE)
+       ->condition('tjiid', array_keys($entities), 'IN')
+       ->execute();
+     if (!empty($trids)) {
+@@ -893,6 +895,7 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
+    */
+   public function getMessages($conditions = array()) {
+     $query = \Drupal::entityQuery('tmgmt_message')
++      ->accessCheck(TRUE)
+       ->condition('tjiid', $this->id());
+     foreach ($conditions as $key => $condition) {
+       if (is_array($condition)) {
+@@ -915,6 +918,7 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
+    */
+   public function getSiblings() {
+     $ids = \Drupal::entityQuery('tmgmt_job_item')
++      ->accessCheck(TRUE)
+       ->condition('tjiid', $this->id(), '<>')
+       ->condition('tjid', $this->getJobId())
+       ->execute();
+@@ -964,6 +968,7 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
+    */
+   public function getRemoteMappings() {
+     $trids = \Drupal::entityQuery('tmgmt_remote')
++      ->accessCheck(TRUE)
+       ->condition('tjiid', $this->id())
+       ->execute();
+ 
+@@ -1143,14 +1148,15 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
+       static::STATE_ACTIVE => [
+         'label' => t('In progress'),
+         'type' => 'state',
+-        'icon' => drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg',
++
++        'icon' => \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/hourglass.svg',
+         'weight' => 0,
+         'show_job_filter' => TRUE,
+       ],
+       static::STATE_REVIEW => [
+         'label' => t('Needs review'),
+         'type' => 'state',
+-        'icon' => drupal_get_path('module', 'tmgmt') . '/icons/ready.svg',
++        'icon' => \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg',
+         'weight' => 5,
+         'show_job_filter' => TRUE,
+       ],
+diff --git a/src/Entity/ListBuilder/TranslatorListBuilder.php b/src/Entity/ListBuilder/TranslatorListBuilder.php
+index 5c23f2ce..ffb98696 100644
+--- a/src/Entity/ListBuilder/TranslatorListBuilder.php
++++ b/src/Entity/ListBuilder/TranslatorListBuilder.php
+@@ -106,10 +106,11 @@ class TranslatorListBuilder extends DraggableListBuilder implements EntityListBu
+     // Add provider logo.
+     /** @var \Drupal\tmgmt\Entity\Translator $entity */
+     $definition = \Drupal::service('plugin.manager.tmgmt.translator')->getDefinition($entity->getPluginId());
++    $npath = \Drupal::service('extension.list.module')->getPath($definition['provider']);
+     if (isset($definition['logo'])) {
+       $logo_render_array = [
+         '#theme' => 'image',
+-        '#uri' => file_create_url(drupal_get_path('module', $definition['provider']) . '/' . $definition['logo']),
++        '#uri' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/' . $definition['logo']),
+         '#alt' => $definition['label'],
+         '#title' => $definition['label'],
+         '#attributes' => [
+diff --git a/src/Entity/RemoteMapping.php b/src/Entity/RemoteMapping.php
+index ca4c608c..1098af66 100644
+--- a/src/Entity/RemoteMapping.php
++++ b/src/Entity/RemoteMapping.php
+@@ -159,6 +159,7 @@ class RemoteMapping extends ContentEntityBase implements RemoteMappingInterface
+     $data_item_key = \Drupal::service('tmgmt.data')->ensureStringKey($data_item_key);
+ 
+     $query = \Drupal::entityQuery('tmgmt_remote');
++    $query->accessCheck(TRUE);
+     if (!empty($tjid)) {
+       $query->condition('tjid', $tjid);
+     }
+@@ -182,6 +183,7 @@ class RemoteMapping extends ContentEntityBase implements RemoteMappingInterface
+    */
+   static public function loadByRemoteIdentifier($remote_identifier_1 = NULL, $remote_identifier_2 = NULL, $remote_identifier_3 = NULL) {
+     $query = \Drupal::entityQuery('tmgmt_remote');
++    $query->accessCheck(TRUE);
+     if ($remote_identifier_1 !== NULL) {
+       $query->condition('remote_identifier_1', $remote_identifier_1);
+     }
+diff --git a/src/Entity/Translator.php b/src/Entity/Translator.php
+index afbeb368..4d68abb3 100644
+--- a/src/Entity/Translator.php
++++ b/src/Entity/Translator.php
+@@ -250,6 +250,7 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
+     foreach ($entities as $key => $name) {
+       // Find active jobs associated with the translator that is being deleted.
+       $job_ids = \Drupal::entityQuery('tmgmt_job')
++        ->accessCheck(TRUE)
+         ->condition('state', [Job::STATE_ACTIVE, Job::STATE_CONTINUOUS, Job::STATE_UNPROCESSED], 'IN')
+         ->condition('translator', $key)
+         ->execute();
+diff --git a/src/Events/ShouldCreateJobEvent.php b/src/Events/ShouldCreateJobEvent.php
+index abae9e30..bf9fb676 100644
+--- a/src/Events/ShouldCreateJobEvent.php
++++ b/src/Events/ShouldCreateJobEvent.php
+@@ -2,8 +2,8 @@
+ 
+ namespace Drupal\tmgmt\Events;
+ 
++use Drupal\Component\EventDispatcher\Event;
+ use Drupal\tmgmt\JobInterface;
+-use Symfony\Component\EventDispatcher\Event;
+ 
+ /**
+  * Represents a job item about to be added to a continuous job.
+diff --git a/src/Form/JobForm.php b/src/Form/JobForm.php
+index 12413b86..3f5f4c52 100644
+--- a/src/Form/JobForm.php
++++ b/src/Form/JobForm.php
+@@ -425,10 +425,11 @@ class JobForm extends TmgmtFormBase {
+       // Add the provider logo in the settings wrapper.
+       /** @var \Drupal\tmgmt\Entity\Translator $entity */
+       $definition = \Drupal::service('plugin.manager.tmgmt.translator')->getDefinition($job->getTranslatorPlugin()->getPluginId());
++      $npath = \Drupal::service('extension.list.module')->getPath($definition['provider']);
+       if (isset($definition['logo'])) {
+         $form['translator_wrapper']['logo'] = $logo_render_array = [
+           '#theme' => 'image',
+-          '#uri' => file_create_url(drupal_get_path('module', $definition['provider']) . '/' . $definition['logo']),
++          '#uri' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/' . $definition['logo']),
+           '#alt' => $definition['label'],
+           '#title' => $definition['label'],
+           '#attributes' => [
+diff --git a/src/Form/JobItemForm.php b/src/Form/JobItemForm.php
+index a0cc02ef..233419fc 100644
+--- a/src/Form/JobItemForm.php
++++ b/src/Form/JobItemForm.php
+@@ -534,16 +534,16 @@ class JobItemForm extends TmgmtFormBase {
+         break;
+       case TMGMT_DATA_ITEM_STATE_REVIEWED:
+         $title = t('Reviewed');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/gray-check.svg';
+         break;
+       case TMGMT_DATA_ITEM_STATE_TRANSLATED:
+         $title = t('Translated');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg';
+         break;
+       case TMGMT_DATA_ITEM_STATE_PENDING:
+       default:
+         $title = t('Pending');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/hourglass.svg';
+         break;
+     }
+ 
+diff --git a/src/Form/TranslatorForm.php b/src/Form/TranslatorForm.php
+index d9f1bf6e..5e4e7f8c 100644
+--- a/src/Form/TranslatorForm.php
++++ b/src/Form/TranslatorForm.php
+@@ -140,10 +140,11 @@ class TranslatorForm extends EntityForm {
+       );
+ 
+       // Add the provider logo in the settings wrapper.
++      $npath = \Drupal::service('extension.list.module')->getPath($definition['provider']);
+       if (isset($definition['logo'])) {
+         $form['plugin_wrapper']['logo'] = $logo_render_array = [
+           '#theme' => 'image',
+-          '#uri' => file_create_url(drupal_get_path('module', $definition['provider']) . '/' . $definition['logo']),
++          '#uri' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/' . $definition['logo']),
+           '#alt' => $definition['label'],
+           '#title' => $definition['label'],
+           '#attributes' => [
+diff --git a/src/Plugin/views/field/JobState.php b/src/Plugin/views/field/JobState.php
+index b31e0e4f..9298d29d 100644
+--- a/src/Plugin/views/field/JobState.php
++++ b/src/Plugin/views/field/JobState.php
+@@ -22,7 +22,7 @@ class JobState extends NumericField {
+     switch ($job->getState()) {
+       case JobInterface::STATE_UNPROCESSED:
+         $label = t('Unprocessed');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/rejected.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/rejected.svg';
+         break;
+ 
+       case JobInterface::STATE_ACTIVE:
+@@ -37,17 +37,17 @@ class JobState extends NumericField {
+           return $highest_weight_icon;
+         }
+         $label = t('In progress');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/hourglass.svg';
+         break;
+ 
+       case JobInterface::STATE_CONTINUOUS:
+         $label = t('Continuous');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/continuous.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/continuous.svg';
+         break;
+ 
+       case JobInterface::STATE_CONTINUOUS_INACTIVE:
+         $label = t('Continuous Inactive');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/continuous_inactive.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/continuous_inactive.svg';
+         break;
+ 
+       default:
+@@ -58,7 +58,7 @@ class JobState extends NumericField {
+     if ($icon && $label) {
+       return [
+         '#theme' => 'image',
+-        '#uri' => file_create_url($icon),
++        '#uri' => \Drupal::service('file_url_generator')->generateAbsoluteString($icon),
+         '#title' => $label,
+         '#alt' => $label,
+         '#width' => 16,
+diff --git a/src/SourcePluginUiBase.php b/src/SourcePluginUiBase.php
+index 412dda5c..2b460a7b 100644
+--- a/src/SourcePluginUiBase.php
++++ b/src/SourcePluginUiBase.php
+@@ -304,7 +304,7 @@ class SourcePluginUiBase extends PluginBase implements SourcePluginUiInterface {
+ 
+       case 'outofdate':
+         $label = t('Translation Outdated');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/outdated.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/outdated.svg';
+         break;
+ 
+       default:
+diff --git a/src/Tests/TMGMTTestBase.php b/src/Tests/TMGMTTestBase.php
+index abaefca5..20bcb0df 100644
+--- a/src/Tests/TMGMTTestBase.php
++++ b/src/Tests/TMGMTTestBase.php
+@@ -63,7 +63,7 @@ abstract class TMGMTTestBase extends WebTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = array(
++  protected static $modules = array(
+     'tmgmt',
+     'tmgmt_test',
+     'node',
+diff --git a/templates/tmgmt-data-items-form.html.twig b/templates/tmgmt-data-items-form.html.twig
+index 8d6b164e..cc605b9f 100644
+--- a/templates/tmgmt-data-items-form.html.twig
++++ b/templates/tmgmt-data-items-form.html.twig
+@@ -25,45 +25,49 @@
+     </tr>
+     </thead>
+ 
+-    {% for group_key, group in element if group_key|first != '#' %}
+-      <tbody>
+-      {% if group['#group_label'] %}
+-        <tr>
+-          <th colspan="4">{{ group['#group_label']|join(' > ') }}</th>
+-        </tr>
+-      {% endif %}
+-
+-      {% for key, item in group if key|first != '#' %}
+-        <tr>
+-          <td class="tmgmt-ui-data-item-label">
+-            <div class="form-item form-type-label">
+-              <label>{{ item.label }}</label>
+-            </div>
+-            <div class="tmgmt-ui-state">
+-              {{ item.status }}
+-            </div>
+-          </td>
+-          <td class="tmgmt-ui-data-item-source">
+-            {{ item.source }}
+-          </td>
+-          <td class="tmgmt-ui-data-item-translation">
+-            {{ item.translation }}
+-          </td>
+-          <td class="tmgmt-ui-data-item-actions">
+-            {{ item.actions }}
+-          </td>
+-        </tr>
+-
+-        {% if item.below %}
++    {% for group_key, group in element %}
++      {% if key|first != '#' %}
++        <tbody>
++        {% if group['#group_label'] %}
+           <tr>
+-            <td></td>
+-            <td colspan="2"> {{ item.below }}</td>
+-            <td>{{ item.below_actions }}</td>
++            <th colspan="4">{{ group['#group_label']|join(' > ') }}</th>
+           </tr>
+         {% endif %}
+-      {% endfor %}
+ 
+-      </tbody>
++        {% for key, item in group %}
++          {% if key|first != '#' %}
++            <tr>
++              <td class="tmgmt-ui-data-item-label">
++                <div class="form-item form-type-label">
++                  <label>{{ item.label }}</label>
++                </div>
++                <div class="tmgmt-ui-state">
++                  {{ item.status }}
++                </div>
++              </td>
++              <td class="tmgmt-ui-data-item-source">
++                {{ item.source }}
++              </td>
++              <td class="tmgmt-ui-data-item-translation">
++                {{ item.translation }}
++              </td>
++              <td class="tmgmt-ui-data-item-actions">
++                {{ item.actions }}
++              </td>
++            </tr>
++
++            {% if item.below %}
++              <tr>
++                <td></td>
++                <td colspan="2"> {{ item.below }}</td>
++                <td>{{ item.below_actions }}</td>
++              </tr>
++            {% endif %}
++          {% endif %}
++        {% endfor %}
++
++        </tbody>
++      {% endif %}
+     {% endfor %}
+ 
+   </table>
+diff --git a/tmgmt.info.yml b/tmgmt.info.yml
+index 2811ad6a..1290c7d4 100644
+--- a/tmgmt.info.yml
++++ b/tmgmt.info.yml
+@@ -1,7 +1,7 @@
+-name: 'Translation Management Core'
+-description: 'Core functionality for the Translation Management Suite.'
+-package: 'Translation Management'
+-core_version_requirement: ^8.8 || ^9
++name: "Translation Management Core"
++description: "Core functionality for the Translation Management Suite."
++package: "Translation Management"
++core_version_requirement: ^9.3 || ^10
+ type: module
+ configure: tmgmt.settings
+ 
+@@ -13,4 +13,3 @@ dependencies:
+ 
+ simplytest_dependencies:
+  - tmgmt:tmgmt_demo
+-
+diff --git a/tmgmt.install b/tmgmt.install
+index 4d17f084..2c8c5b67 100644
+--- a/tmgmt.install
++++ b/tmgmt.install
+@@ -72,7 +72,7 @@ function tmgmt_update_8004() {
+  * Add job items overview.
+  */
+ function tmgmt_update_8005() {
+-  $overview = file_get_contents(drupal_get_path('module', 'tmgmt') . '/config/install/views.view.tmgmt_translation_all_job_items.yml');
++  $overview = file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/config/install/views.view.tmgmt_translation_all_job_items.yml');
+   $values = Yaml::decode($overview);
+   $storage_controller = \Drupal::entityTypeManager()->getStorage('view');
+   $storage_controller->create($values)->save();
+diff --git a/tmgmt.module b/tmgmt.module
+index ed087f67..da8a9fb2 100644
+--- a/tmgmt.module
++++ b/tmgmt.module
+@@ -77,6 +77,7 @@ function tmgmt_cron() {
+     // Delete all finished translation jobs that haven't been changed for a
+     // time span longer than the given offset.
+     $ids = \Drupal::entityQuery('tmgmt_job')
++      ->accessCheck(TRUE)
+       ->condition('state', Job::STATE_FINISHED)
+       ->condition('changed', \Drupal::time()->getRequestTime() - $offset, '<=')
+       ->execute();
+@@ -93,6 +94,7 @@ function tmgmt_cron() {
+ 
+     // Look for inactive job items of continuous jobs.
+     $ids = \Drupal::entityQuery('tmgmt_job_item')
++      ->accessCheck(TRUE)
+       ->condition('tjid.entity.job_type', JobInterface::TYPE_CONTINUOUS)
+       ->condition('state', JobItemInterface::STATE_INACTIVE)
+       ->range(0, $tmgmt_settings->get('job_items_cron_limit'))
+@@ -252,6 +254,7 @@ function tmgmt_job_item_load_all_latest($plugin, $item_type, $item_id, $source_l
+ function tmgmt_job_match_item($source_language, $target_language, $account = NULL) {
+   $account = isset($account) ? $account : \Drupal::currentUser();
+   $tjid = \Drupal::entityQuery('tmgmt_job')
++    ->accessCheck(TRUE)
+     ->condition('source_language', $source_language)
+     ->condition('target_language', $target_language)
+     ->condition('uid', $account->id())
+@@ -274,6 +277,7 @@ function tmgmt_job_match_item($source_language, $target_language, $account = NUL
+  */
+ function tmgmt_job_check_finished($tjid) {
+   return !\Drupal::entityQuery('tmgmt_job_item')
++    ->accessCheck(TRUE)
+     ->condition('tjid', $tjid)
+     ->condition('state', [JobItem::STATE_ACCEPTED, JobItem::STATE_ABORTED], 'NOT IN')
+     ->range(0, 1)
+@@ -459,6 +463,7 @@ function tmgmt_translator_load_available($job) {
+  */
+ function tmgmt_translator_busy($translator) {
+   return (bool) \Drupal::entityQuery('tmgmt_job')
++    ->accessCheck(TRUE)
+     ->condition('state', [Job::STATE_ACTIVE, Job::STATE_CONTINUOUS], 'IN')
+     ->condition('translator', $translator)
+     ->range(0, 1)
+@@ -939,19 +944,19 @@ function tmgmt_redirect_queue_dequeue() {
+ function tmgmt_color_legend() {
+   $items = [
+     [
+-      'icon' => file_create_url('core/misc/icons/bebebe/house.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/bebebe/house.svg'),
+       'legend' => t('Original language'),
+     ],
+     [
+-      'icon' => file_create_url('core/misc/icons/bebebe/ex.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/bebebe/ex.svg'),
+       'legend' => t('Not translated'),
+     ],
+     [
+-      'icon' => file_create_url('core/misc/icons/73b355/check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/73b355/check.svg'),
+       'legend' => t('Translated'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/outdated.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/outdated.svg'),
+       'legend' => t('Translation Outdated'),
+     ],
+   ];
+@@ -967,7 +972,7 @@ function tmgmt_color_legend() {
+   foreach (JobItem::getStateDefinitions() as $state_definition) {
+     if (!empty($state_definition['icon'])) {
+       $items[] = [
+-        'icon' => file_url_transform_relative(file_create_url($state_definition['icon'])),
++        'icon' => \Drupal::service('file_url_generator')->transformRelative(\Drupal::service('file_url_generator')->generateAbsoluteString($state_definition['icon'])),
+         'legend' => $state_definition['label'],
+       ];
+     }
+@@ -998,7 +1003,7 @@ function tmgmt_color_job_item_legend() {
+   foreach (JobItem::getStateDefinitions() as $state_definition) {
+     if (!empty($state_definition['icon'])) {
+       $items[] = [
+-        'icon' => file_url_transform_relative(file_create_url($state_definition['icon'])),
++        'icon' => \Drupal::service('file_url_generator')->transformRelative(\Drupal::service('file_url_generator')->generateAbsoluteString($state_definition['icon'])),
+         'legend' => $state_definition['label'],
+       ];
+     }
+@@ -1025,7 +1030,7 @@ function tmgmt_color_job_item_legend() {
+ function tmgmt_color_job_legend() {
+   $items = [
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/rejected.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/rejected.svg'),
+       'legend' => t('Unprocessed'),
+     ],
+   ];
+@@ -1033,7 +1038,7 @@ function tmgmt_color_job_legend() {
+   foreach (JobItem::getStateDefinitions() as $state_definition) {
+     if (!empty($state_definition['icon'])) {
+       $items[] = [
+-        'icon' => file_url_transform_relative(file_create_url($state_definition['icon'])),
++        'icon' => \Drupal::service('file_url_generator')->transformRelative(\Drupal::service('file_url_generator')->generateAbsoluteString($state_definition['icon'])),
+         'legend' => $state_definition['label'],
+       ];
+     }
+@@ -1041,7 +1046,7 @@ function tmgmt_color_job_legend() {
+ 
+   if (\Drupal::service('tmgmt.continuous')->hasContinuousJobs()) {
+     $items[] = [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/continuous.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/continuous.svg'),
+       'legend' => t('Continuous'),
+     ];
+   };
+@@ -1067,19 +1072,19 @@ function tmgmt_color_job_legend() {
+ function tmgmt_color_review_legend() {
+   $items = [
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/hourglass.svg'),
+       'legend' => t('Pending'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/ready.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg'),
+       'legend' => t('Translated'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/gray-check.svg'),
+       'legend' => t('Reviewed'),
+     ],
+     [
+-      'icon' => file_create_url('core/misc/icons/73b355/check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/73b355/check.svg'),
+       'legend' => t('Accepted'),
+     ],
+   ];
+diff --git a/tmgmt.post_update.php b/tmgmt.post_update.php
+index ecc1de36..efd037a4 100644
+--- a/tmgmt.post_update.php
++++ b/tmgmt.post_update.php
+@@ -9,6 +9,7 @@ function tmgmt_post_update_json(&$sandbox = NULL) {
+   $job_item_storage = \Drupal::entityTypeManager()->getStorage('tmgmt_job_item');
+   if (!isset($sandbox['current_count'])) {
+     $query = $job_item_storage->getQuery();
++    $query->accessCheck(FALSE);
+     $sandbox['total_count'] = $query->count()->execute();
+     $sandbox['current_count'] = 0;
+ 
+@@ -19,6 +20,7 @@ function tmgmt_post_update_json(&$sandbox = NULL) {
+   }
+ 
+   $query = $job_item_storage->getQuery();
++  $query->accessCheck(FALSE);
+   $query->range($sandbox['current_count'], 25);
+   $query->sort('tjiid');
+   $result = $query->execute();
+diff --git a/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php b/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php
+index 8fb83337..20085d6d 100644
+--- a/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php
++++ b/tmgmt_test/src/EventSubscriber/TestContinuousEventSubscriber.php
+@@ -52,7 +52,7 @@ class TestContinuousEventSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     $events[ContinuousEvents::SHOULD_CREATE_JOB][] = ['onShouldCreateJob'];
+     return $events;
+   }
+diff --git a/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php b/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php
+index c3c6c96d..51e800bd 100644
+--- a/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php
++++ b/tmgmt_test/src/Plugin/tmgmt/Source/TestHtmlSource.php
+@@ -22,7 +22,7 @@ class TestHtmlSource extends TestSource {
+     return array(
+       'dummy' => array(
+         'deep_nesting' => array(
+-          '#text' => file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'),
++          '#text' => file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html'),
+           '#label' => 'Label for job item with type ' . $job_item->getItemType() . ' and id ' . $job_item->getItemId() . '.',
+         ),
+       ),
+diff --git a/tmgmt_test/tmgmt_test.info.yml b/tmgmt_test/tmgmt_test.info.yml
+index fd31f6bd..fb236e1f 100644
+--- a/tmgmt_test/tmgmt_test.info.yml
++++ b/tmgmt_test/tmgmt_test.info.yml
+@@ -1,6 +1,6 @@
+ name: Translation Management Test plugins
+ package: Translation Management
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ hidden: true
+ type: module
+ 
+diff --git a/tmgmt_test/tmgmt_test.module b/tmgmt_test/tmgmt_test.module
+index 41b7758b..07027092 100644
+--- a/tmgmt_test/tmgmt_test.module
++++ b/tmgmt_test/tmgmt_test.module
+@@ -66,7 +66,7 @@ function tmgmt_test_tmgmt_job_item_state_definitions_alter(&$definitions) {
+   $definitions['tmgmt_test_generating'] = [
+     'label' => t('Translation is requested from the elders of the Internet'),
+     'type' => 'translator_state',
+-    'icon' => drupal_get_path('module', 'tmgmt') . '/icons/earth.svg',
++    'icon' => \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/earth.svg',
+     'show_job_filter' => TRUE,
+   ];
+ }
+diff --git a/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php b/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php
+index 0796b6cd..48c5c87c 100644
+--- a/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php
++++ b/translators/tmgmt_file/src/Plugin/tmgmt/Translator/FileTranslator.php
+@@ -39,9 +39,9 @@ class FileTranslator extends TranslatorPluginBase {
+     $path = $job->getSetting('scheme') . '://tmgmt_file/' . $name . '.' .  $job->getSetting('export_format');
+     $dirname = dirname($path);
+     if (\Drupal::service('file_system')->prepareDirectory($dirname, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
+-      $file = file_save_data($export->export($job), $path, FileSystemInterface::EXISTS_REPLACE);
++      $file = \Drupal::service('file.repository')->writeData($export->export($job), $path, FileSystemInterface::EXISTS_REPLACE);
+       \Drupal::service('file.usage')->add($file, 'tmgmt_file', 'tmgmt_job', $job->id());
+-      $job->submitted('Exported file can be downloaded <a href="@link" download>here</a>.', array('@link' => file_create_url($path)));
++      $job->submitted('Exported file can be downloaded <a href="@link" download>here</a>.', array('@link' => \Drupal::service('file_url_generator')->generateAbsoluteString($path)));
+     }
+     else {
+       $job->rejected('Failed to create writable directory @dirname, check file system permissions.', ['@dirname' => $dirname]);
+diff --git a/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php b/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php
+index 1d60285e..9ac290db 100644
+--- a/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php
++++ b/translators/tmgmt_file/tests/src/Functional/FileTranslatorTest.php
+@@ -22,7 +22,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+    *
+    * @var array
+    */
+-  static public $modules = array('tmgmt_file', 'tmgmt');
++  protected static $modules = array('tmgmt_file', 'tmgmt');
+ 
+   /**
+    * {@inheritdoc}
+@@ -49,7 +49,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     ]);
+ 
+     // Get the source text.
+-    $source_text = trim(file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'));
++    $source_text = trim(file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html'));
+ 
+     // Create the reader instance, it will be used through the tests.
+     $reader = new \XMLReader();
+@@ -86,10 +86,11 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $message = reset($messages);
+     $translated_file = 'public://tmgmt_file/translated.xlf';
+     $this->createTranslationFile($message->variables->{'@link'}, 'one paragraph', 'one translated paragraph', $translated_file);
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+       'files[file]' => $translated_file,
+     );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
++    $this->submitForm($edit, t('Import'));
+     // Reset caches and reload job.
+     \Drupal::entityTypeManager()->getStorage('tmgmt_job')->resetCache();
+     \Drupal::entityTypeManager()->getStorage('tmgmt_job_item')->resetCache();
+@@ -98,7 +99,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     // Do the comparison of the translation text and the source. It must be the
+     // same as there was no change done to the translation.
+     $item_data = $job->getData(array(1, 'dummy', 'deep_nesting'));
+-    $this->assertEqual(trim($item_data[1]['#translation']['#text']), str_replace('one paragraph', 'one translated paragraph', $source_text));
++    $this->assertEquals(str_replace('one paragraph', 'one translated paragraph', $source_text), trim($item_data[1]['#translation']['#text']));
+     $job_items = $job->getItems();
+     $job_item = array_shift($job_items);
+     // Job item must be in review.
+@@ -119,10 +120,11 @@ class FileTranslatorTest extends TMGMTTestBase {
+     // trigger an error and not import the translation.
+     $translated_file = 'public://tmgmt_file/translated.xlf';
+     $this->createTranslationFile($message->variables->{'@link'}, '<x id="tjiid2-4" ctype="lb"/>', '', $translated_file);
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+       'files[file]' => $translated_file,
+     );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
++    $this->submitForm($edit, t('Import'));
+     \Drupal::entityTypeManager()->getStorage('tmgmt_job')->resetCache();
+     \Drupal::entityTypeManager()->getStorage('tmgmt_job_item')->resetCache();
+     $job = Job::load($job->id());
+@@ -138,7 +140,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $job->addItem('test_html_source', 'test', '1');
+     $job->requestTranslation();
+     $targets = $this->getTransUnitsContent($job);
+-    $this->assertEqual(trim(html_entity_decode($targets['0']['source'])), $source_text);
++    $this->assertEquals($source_text, trim(html_entity_decode($targets['0']['source'])));
+   }
+ 
+   /**
+@@ -154,7 +156,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     ]);
+ 
+     // Get the source text.
+-    $source_text = trim(file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'));
++    $source_text = trim(file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html'));
+ 
+     // Create a new job.
+     $job = $this->createJob();
+@@ -172,7 +174,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+ 
+     $dom = new \DOMDocument();
+     $dom->loadXML($xliff);
+-    $this->assertTrue($dom->schemaValidate(drupal_get_path('module', 'tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
++    $this->assertTrue($dom->schemaValidate(\Drupal::service('extension.list.module')->getPath('tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
+ 
+     // "Translate" items.
+     $xml = simplexml_import_dom($dom);
+@@ -181,7 +183,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+       foreach ($group->children() as $transunit) {
+         if ($transunit->getName() == 'trans-unit') {
+           // The target should be empty.
+-          $this->assertEqual($transunit->target, '');
++          $this->assertEquals('', $transunit->target);
+ 
+           // Update translations using CDATA.
+           $node = dom_import_simplexml($transunit->target);
+@@ -198,10 +200,11 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $xml->asXML($translated_file);
+ 
+     // Import the file and check translation for the "dummy" item.
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+       'files[file]' => $translated_file,
+     );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
++    $this->submitForm($edit, t('Import'));
+ 
+     // Reset caches and reload job.
+     \Drupal::entityTypeManager()->getStorage('tmgmt_job')->resetCache();
+@@ -209,7 +212,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $job = Job::load($job->id());
+ 
+     $item_data = $job->getData(array(1, 'dummy', 'deep_nesting'));
+-    $this->assertEqual(trim($item_data[1]['#translation']['#text']), str_replace($source_text, $xml->file['target-language'] . '_' . $source_text, $source_text));
++    $this->assertEquals(str_replace($source_text, $xml->file['target-language'] . '_' . $source_text, $source_text), trim($item_data[1]['#translation']['#text']));
+   }
+ 
+   /**
+@@ -295,7 +298,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     \Drupal::state()->set('tmgmt.test_source_data', array(
+       'dummy' => array(
+         'deep_nesting' => array(
+-          '#text' => file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html') . ' @id.',
++          '#text' => file_get_contents(\Drupal::service('extension.list.module')->getPath('tmgmt') . '/tests/testing_html/sample.html') . ' @id.',
+           '#label' => 'Label of deep nested item @id',
+         ),
+         '#label' => 'Dummy item',
+@@ -323,7 +326,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $xliff = file_get_contents($download_url);
+     $dom = new \DOMDocument();
+     $dom->loadXML($xliff);
+-    $this->assertTrue($dom->schemaValidate(drupal_get_path('module', 'tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
++    $this->assertTrue($dom->schemaValidate(\Drupal::service('extension.list.module')->getPath('tmgmt_file') . '/xliff-core-1.2-strict.xsd'));
+ 
+     // Build a list of expected note labels.
+     $expected_notes = [
+@@ -340,9 +343,9 @@ class FileTranslatorTest extends TMGMTTestBase {
+       foreach ($group->children() as $transunit) {
+         if ($transunit->getName() == 'trans-unit') {
+           // The target should contain the source data.
+-          $this->assertEqual($transunit->target, $transunit->source);
++          $this->assertEquals($transunit->source, $transunit->target);
+           // Assert that notes contain parent and non-parent labels.
+-          $this->assertEqual($expected_notes[(string) $transunit['id']], (string) $transunit->note);
++          $this->assertEquals($expected_notes[(string) $transunit['id']], (string) $transunit->note);
+           $transunit->target = $xml->file['target-language'] . '_' . (string) $transunit->source;
+           // Store the text to allow assertions later on.
+           $translated_text[(string) $group['id']][(string) $transunit['id']] = (string) $transunit->target;
+@@ -355,11 +358,12 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $wrong_xml->file->header->{'phase-group'}->phase['job-id'] = 500;
+     $wrong_file = 'public://tmgmt_file/wrong_file.xlf';
+     $wrong_xml->asXML($wrong_file);
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+       'files[file]' => $wrong_file,
+     );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
+-    $this->assertText(t('Failed to validate file, import aborted.'));
++    $this->submitForm($edit, t('Import'));
++    $this->assertSession()->pageTextContains(t('Failed to validate file, import aborted.'));
+ 
+     // Change the job id to a wrong one and try to import it.
+     $wrong_xml = clone $xml;
+@@ -376,11 +380,12 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $wrong_xml->file->header->{'phase-group'}->phase['job-id'] = $second_job->id();
+     $wrong_file = 'public://tmgmt_file/wrong_file.xlf';
+     $wrong_xml->asXML($wrong_file);
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+       'files[file]' => $wrong_file,
+     );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
+-    $this->assertRaw(t('The imported file job id @file_id does not match the job id @job_id.', array(
++    $this->submitForm($edit, t('Import'));
++    $this->assertSession()->responseContains(t('The imported file job id @file_id does not match the job id @job_id.', array(
+       '@file_id' => $second_job->id(),
+       '@job_id' => $job->id(),
+     )));
+@@ -390,11 +395,12 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $xml->asXML($translated_file);
+ 
+     // Import the file and accept translation for the "dummy" item.
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+         'files[file]' => $translated_file,
+       );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
+-    $this->assertText(t('The translation of @job_item to German is finished and can now be reviewed.', ['@job_item' => $first_item->label()]));
++    $this->submitForm($edit, t('Import'));
++    $this->assertSession()->pageTextContains(t('The translation of @job_item to German is finished and can now be reviewed.', ['@job_item' => $first_item->label()]));
+ 
+     $this->clickLink(t('Review'));
+     $this->getSession()->getPage()->pressButton('reviewed-dummy|deep_nesting');
+@@ -402,24 +408,25 @@ class FileTranslatorTest extends TMGMTTestBase {
+     // Update the translation for "another" item and import.
+     $xml->file->body->group[0]->{'trans-unit'}[1]->target = $xml->file->body->group[0]->{'trans-unit'}[1]->target . ' updated';
+     $xml->asXML($translated_file);
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+         'files[file]' => $translated_file,
+       );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
++    $this->submitForm($edit, t('Import'));
+ 
+     // At this point we must have the "dummy" item accepted and intact. The
+     // "another" item must have updated translation.
+-    $this->assertText('Review');
++    $this->assertSession()->pageTextContains('Review');
+     $this->drupalGet($first_item->toUrl());
+-    $this->assertFieldByName('dummy|deep_nesting[translation]', 'de_' . $first_item_data['dummy][deep_nesting']['#text']);
+-    $this->assertFieldByName('another_item[translation]', 'de_' . $first_item_data['another_item']['#text'] . ' updated');
++    $this->assertSession()->fieldValueEquals('dummy|deep_nesting[translation]', 'de_' . $first_item_data['dummy][deep_nesting']['#text']);
++    $this->assertSession()->fieldValueEquals('another_item[translation]', 'de_' . $first_item_data['another_item']['#text'] . ' updated');
+ 
+     // Now finish the import/save as completed process doing another extra
+     // import. The extra import will test that a duplicate import of the same
+     // file does not break the process.
+     $this->importFile($translated_file, $translated_text, $job);
+ 
+-    $this->assertNoText(t('Import translated file'));
++    $this->assertSession()->pageTextNotContains(t('Import translated file'));
+ 
+     // Create a job, assign to the file translator and delete before attaching
+     // a file.
+@@ -429,7 +436,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $other_job->delete();
+     // Make sure the file of the other job still exists.
+     $response = \Drupal::httpClient()->get($download_url);
+-    $this->assertEqual(200, $response->getStatusCode());
++    $this->assertEquals(200, $response->getStatusCode());
+ 
+     // Delete the job and then make sure that the file has been deleted.
+     $job->delete();
+@@ -438,7 +445,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+       $this->fail('Expected exception not thrown.');
+     }
+     catch (RequestException $e) {
+-      $this->assertEqual(404, $e->getResponse()->getStatusCode());
++      $this->assertEquals(404, $e->getResponse()->getStatusCode());
+     }
+   }
+ 
+@@ -471,7 +478,7 @@ class FileTranslatorTest extends TMGMTTestBase {
+     $this->clickLink(t('Manage'));
+ 
+     // Assert that the label field is only shown once in page.
+-    $this->assertEqual((count($this->xpath('//div[@id="tmgmt-ui-label"]'))), 1);
++    $this->assertCount(1, $this->xpath('//div[@id="tmgmt-ui-label"]'));
+ 
+     $download_url = $message->variables->{'@link'};
+     $this->assertFalse((bool) strpos('< a', $download_url));
+@@ -479,51 +486,52 @@ class FileTranslatorTest extends TMGMTTestBase {
+     // Verify that the URL is served using the private file system and the
+     // access checks work.
+     $this->assertNotEmpty(preg_match('|system/files|', $download_url));
+-    $this->assertResponse(200);
++    $this->assertSession()->statusCodeEquals(200);
+ 
+     $this->drupalLogout();
+     // Verify that access is now protected.
+     $this->drupalGet($download_url);
+-    $this->assertResponse(403);
++    $this->assertSession()->statusCodeEquals(403);
+   }
+ 
+   protected function importFile($translated_file, $translated_text, JobInterface $job) {
+     // To test the upload form functionality, navigate to the edit form.
++    $this->drupalGet($job->toUrl());
+     $edit = array(
+       'files[file]' => $translated_file,
+     );
+-    $this->drupalPostForm($job->toUrl(), $edit, t('Import'));
++    $this->submitForm($edit, t('Import'));
+ 
+     // Make sure the translations have been imported correctly.
+-    $this->assertNoRaw('title="In progress"');
++    $this->assertSession()->responseNotContains('title="In progress"');
+     // @todo: Enable this assertion once new releases for views and entity
+     // module are out.
+-    //$this->assertText(t('Needs review'));
++    //$this->assertSession()->pageTextContains(t('Needs review'));
+ 
+     // Review both items.
+     list($item1, $item2) = array_values($job->getItems());
+     $this->drupalGet($item1->toUrl());
+     foreach ($translated_text[1] as $key => $value) {
+-      $this->assertText(Html::escape($value));
++      $this->assertSession()->responseContains(Html::escape($value));
+     }
+     foreach ($translated_text[2] as $key => $value) {
+-      $this->assertNoText(Html::escape($value));
++      $this->assertSession()->responseNotContains(Html::escape($value));
+     }
+-    $this->drupalPostForm(NULL, array(), t('Save as completed'));
++    $this->submitForm([], t('Save as completed'));
+     // Review both items.
+     $this->drupalGet($item2->toUrl());
+     foreach ($translated_text[1] as $key => $value) {
+-      $this->assertNoText(Html::escape($value));
++      $this->assertSession()->responseNotContains(Html::escape($value));
+     }
+     foreach ($translated_text[2] as $key => $value) {
+-      $this->assertText(Html::escape($value));
++      $this->assertSession()->responseContains(Html::escape($value));
+     }
+-    $this->drupalPostForm(NULL, array(), t('Save as completed'));
++    $this->submitForm([], t('Save as completed'));
+     // @todo: Enable this assertion once new releases for views and entity
+     // module are out.
+-    //$this->assertText(t('Accepted'));
+-    $this->assertText(t('Finished'));
+-    $this->assertNoRaw('title="Needs review"');
++    //$this->assertSession()->pageTextContains(t('Accepted'));
++    $this->assertSession()->pageTextContains(t('Finished'));
++    $this->assertSession()->responseNotContains('title="Needs review"');
+   }
+ 
+   /**
+diff --git a/translators/tmgmt_file/tmgmt_file.info.yml b/translators/tmgmt_file/tmgmt_file.info.yml
+index 883a8ad7..fd828ab5 100644
+--- a/translators/tmgmt_file/tmgmt_file.info.yml
++++ b/translators/tmgmt_file/tmgmt_file.info.yml
+@@ -1,7 +1,7 @@
+ name: 'Export / Import File'
+ description: 'A translator which allows you to export source data into a file and import the translated in return.'
+ package: 'Translation Management'
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ type: module
+ dependencies:
+   - tmgmt:tmgmt
+diff --git a/translators/tmgmt_file/tmgmt_file.module b/translators/tmgmt_file/tmgmt_file.module
+index eb781e5f..7a6a7636 100644
+--- a/translators/tmgmt_file/tmgmt_file.module
++++ b/translators/tmgmt_file/tmgmt_file.module
+@@ -16,7 +16,7 @@ use Drupal\tmgmt\JobInterface;
+ function tmgmt_file_theme() {
+   return array(
+     'tmgmt_file_html_template' => array(
+-      'path' => drupal_get_path('module', 'tmgmt_file') . '/templates',
++      'path' => \Drupal::service('extension.list.module')->getPath('tmgmt_file') . '/templates',
+       'template' => 'tmgmt_file_html_template',
+       'variables' => array('tjid' => NULL, 'source_language' => NULL, 'target_language' => NULL, 'items' => NULL),
+     ),
+@@ -100,6 +100,7 @@ function tmgmt_file_tmgmt_job_delete(JobInterface $job) {
+ function tmgmt_file_file_download($uri) {
+   // Get the file record based on the URI. If not in the database just return.
+   $fids = \Drupal::entityQuery('file')
++    ->accessCheck(TRUE)
+     ->condition('uri', $uri)
+     ->execute();
+   if ($fids) {
+diff --git a/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml b/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml
+index bbc01eb8..6ce77795 100755
+--- a/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml
++++ b/translators/tmgmt_local/skills/tmgmt_language_combination.info.yml
+@@ -1,7 +1,7 @@
+ name: 'Translation Language abilities'
+ description: 'Provides a field that allows users to select language combinations.'
+ package: 'Translation Management'
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ type: module
+ 
+ dependencies:
+diff --git a/translators/tmgmt_local/src/Entity/LocalTask.php b/translators/tmgmt_local/src/Entity/LocalTask.php
+index dbb1855c..8de7ad34 100644
+--- a/translators/tmgmt_local/src/Entity/LocalTask.php
++++ b/translators/tmgmt_local/src/Entity/LocalTask.php
+@@ -210,6 +210,7 @@ class LocalTask extends ContentEntityBase implements LocalTaskInterface {
+    */
+   public function getItems($conditions = array()) {
+     $query = \Drupal::entityQuery('tmgmt_local_task_item');
++    $query->accessCheck(TRUE);
+     $query->condition('tltid', $this->id());
+     foreach ($conditions as $key => $condition) {
+       if (is_array($condition)) {
+@@ -384,6 +385,7 @@ class LocalTask extends ContentEntityBase implements LocalTaskInterface {
+   public static function postDelete(EntityStorageInterface $storage, array $entities) {
+     parent::postDelete($storage, $entities);
+     $ids = \Drupal::entityQuery('tmgmt_local_task_item')
++      ->accessCheck(TRUE)
+       ->condition('tltid', array_keys($entities), 'IN')
+       ->execute();
+     if (!empty($ids)) {
+diff --git a/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php b/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php
+index 51fde633..9ae383f8 100644
+--- a/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php
++++ b/translators/tmgmt_local/src/Plugin/tmgmt/Translator/LocalTranslator.php
+@@ -101,7 +101,7 @@ class LocalTranslator extends TranslatorPluginBase implements ContinuousTranslat
+ 
+     if (!in_array(AccountInterface::AUTHENTICATED_ROLE, array_keys($roles))) {
+       $query->join('users_roles', 'ur', 'ur.uid = u.uid AND ur.rid');
+-      $or_conditions = (new Condition('OR'))->condition('ur.rid', array_keys($roles), 'IN')
++      $or_conditions = \Drupal::database()->condition('OR')->condition('ur.rid', array_keys($roles), 'IN')
+         ->condition('u.uid', 1);
+       $query->condition($or_conditions);
+     }
+diff --git a/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php b/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php
+index 9a9dd058..0d966f13 100644
+--- a/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php
++++ b/translators/tmgmt_local/src/Plugin/views/field/TaskItemStatus.php
+@@ -21,17 +21,17 @@ class TaskItemStatus extends NumericField {
+     switch ($value) {
+       case LocalTaskItemInterface::STATUS_PENDING:
+         $label = t('Untranslated');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg';
+         break;
+ 
+       case LocalTaskItemInterface::STATUS_COMPLETED:
+         $label = t('Translated');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/gray-check.svg';
+         break;
+ 
+       case LocalTaskItemInterface::STATUS_REJECTED:
+         $label = t('Rejected');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/rejected.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/rejected.svg';
+         break;
+ 
+       case LocalTaskItemInterface::STATUS_CLOSED:
+@@ -41,13 +41,13 @@ class TaskItemStatus extends NumericField {
+ 
+       default:
+         $label = t('Untranslated');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg';
+     }
+     $element = [
+       '#type' => 'inline_template',
+       '#template' => '<img src="{{ icon }}" title="{{ label }}"><span></span></img>',
+       '#context' => array(
+-        'icon' => file_create_url($icon),
++        'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($icon),
+         'label' => $label,
+       ),
+     ];
+diff --git a/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php b/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php
+index b2d0b219..b427db2f 100644
+--- a/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php
++++ b/translators/tmgmt_local/src/Plugin/views/field/TaskStatus.php
+@@ -21,17 +21,17 @@ class TaskStatus extends NumericField {
+     switch ($value) {
+       case LocalTaskInterface::STATUS_PENDING:
+         $label = t('Needs action');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg';
+         break;
+ 
+       case LocalTaskInterface::STATUS_COMPLETED:
+         $label = t('In review');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/hourglass.svg';
+         break;
+ 
+       case LocalTaskInterface::STATUS_REJECTED:
+         $label = t('Rejected');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/ex-red.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ex-red.svg';
+         break;
+ 
+       case LocalTaskInterface::STATUS_CLOSED:
+@@ -41,13 +41,13 @@ class TaskStatus extends NumericField {
+ 
+       default:
+         $label = t('Unassigned');
+-        $icon = drupal_get_path('module', 'tmgmt') . '/icons/rejected.svg';
++        $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/rejected.svg';
+     }
+     $element = [
+       '#type' => 'inline_template',
+       '#template' => '<img src="{{ icon }}" title="{{ label }}"><span></span></img>',
+       '#context' => array(
+-        'icon' => file_create_url($icon),
++        'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($icon),
+         'label' => $label,
+       ),
+     ];
+diff --git a/translators/tmgmt_local/tmgmt_local.info.yml b/translators/tmgmt_local/tmgmt_local.info.yml
+index 310f8b23..c003c400 100644
+--- a/translators/tmgmt_local/tmgmt_local.info.yml
++++ b/translators/tmgmt_local/tmgmt_local.info.yml
+@@ -1,7 +1,7 @@
+ name: Drupal user
+ description: 'Allows local users to provide translation services.'
+ package: Translation Management
+-core_version_requirement: ^8.8 || ^9
++core_version_requirement: ^9.3 || ^10
+ type: module
+ 
+ dependencies:
+diff --git a/translators/tmgmt_local/tmgmt_local.module b/translators/tmgmt_local/tmgmt_local.module
+index 9c544d57..d8959c24 100755
+--- a/translators/tmgmt_local/tmgmt_local.module
++++ b/translators/tmgmt_local/tmgmt_local.module
+@@ -253,6 +253,7 @@ function tmgmt_local_translation_access(LocalTask $task, AccountInterface $accou
+  */
+ function tmgmt_local_clear_languages_cache() {
+   $results = \Drupal::entityQuery('tmgmt_translator')
++    ->accessCheck(TRUE)
+     ->condition('plugin', 'local')
+     ->execute();
+   if ($results) {
+@@ -421,6 +422,7 @@ function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
+ 
+       // Check if the task can be marked as closed as well.
+       $unclosed_tasks = \Drupal::entityQuery('tmgmt_local_task_item')
++        ->accessCheck(TRUE)
+         ->condition('tltid', $task_item->id())
+         ->condition('status', LocalTaskItemInterface::STATUS_CLOSED, '<>')
+         ->count()
+@@ -439,6 +441,7 @@ function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
+  */
+ function tmgmt_local_tmgmt_job_delete(JobInterface $job) {
+   $tltids = \Drupal::entityQuery('tmgmt_local_task')
++    ->accessCheck(TRUE)
+     ->condition('tjid', $job->id())
+     ->execute();
+   if (!empty($tltids)) {
+@@ -701,21 +704,22 @@ function tmgmt_local_rules_component_access($type, $name) {
+  *   Color legend render array.
+  */
+ function tmgmt_color_legend_local_task_item() {
++  $npath = \Drupal::service('extension.list.module')->getPath('tmgmt');
+   $items = [
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/ready.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/ready.svg'),
+       'legend' => t('Untranslated'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/gray-check.svg'),
+       'legend' => t('Translated'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/rejected.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/rejected.svg'),
+       'legend' => t('Rejected'),
+     ],
+     [
+-      'icon' => file_create_url('core/misc/icons/73b355/check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/73b355/check.svg'),
+       'legend' => t('Completed'),
+     ],
+   ];
+@@ -739,25 +743,26 @@ function tmgmt_color_legend_local_task_item() {
+  *   Color legend render array.
+  */
+ function tmgmt_color_legend_local_task() {
++  $npath = \Drupal::service('extension.list.module')->getPath('tmgmt');
+   $items = [
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/rejected.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/rejected.svg'),
+       'legend' => t('Unassigned'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/ready.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/ready.svg'),
+       'legend' => t('Needs action'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/hourglass.svg'),
+       'legend' => t('In review'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/ex-red.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/ex-red.svg'),
+       'legend' => t('Rejected'),
+     ],
+     [
+-      'icon' => file_create_url('core/misc/icons/73b355/check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/73b355/check.svg'),
+       'legend' => t('Closed'),
+     ],
+   ];
+@@ -781,17 +786,18 @@ function tmgmt_color_legend_local_task() {
+  *   Color legend render array.
+  */
+ function tmgmt_color_local_review_legend() {
++  $npath = \Drupal::service('extension.list.module')->getPath('tmgmt');
+   $items = [
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/ready.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/ready.svg'),
+       'legend' => t('Untranslated'),
+     ],
+     [
+-      'icon' => file_create_url(drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString($npath . '/icons/gray-check.svg'),
+       'legend' => t('Translated'),
+     ],
+     [
+-      'icon' => file_create_url('core/misc/icons/73b355/check.svg'),
++      'icon' => \Drupal::service('file_url_generator')->generateAbsoluteString('core/misc/icons/73b355/check.svg'),
+       'legend' => t('Accepted'),
+     ],
+   ];
+diff --git a/translators/tmgmt_local/tmgmt_local.post_update.php b/translators/tmgmt_local/tmgmt_local.post_update.php
+index 9d358561..28c18543 100644
+--- a/translators/tmgmt_local/tmgmt_local.post_update.php
++++ b/translators/tmgmt_local/tmgmt_local.post_update.php
+@@ -9,6 +9,7 @@ function tmgmt_local_post_update_json(&$sandbox = NULL) {
+   $task_item_storage = \Drupal::entityTypeManager()->getStorage('tmgmt_local_task_item');
+   if (!isset($sandbox['current_count'])) {
+     $query = $task_item_storage->getQuery();
++    $query->accessCheck(FALSE);
+     $sandbox['total_count'] = $query->count()->execute();
+     $sandbox['current_count'] = 0;
+ 
+@@ -19,6 +20,7 @@ function tmgmt_local_post_update_json(&$sandbox = NULL) {
+   }
+ 
+   $query = $task_item_storage->getQuery();
++  $query->accessCheck(FALSE);
+   $query->range($sandbox['current_count'], 25);
+   $query->sort('tltiid');
+   $result = $query->execute();
+diff --git a/translators/tmgmt_local/tmgmt_local.theme.inc b/translators/tmgmt_local/tmgmt_local.theme.inc
+index 4c63d6a9..aec6bf55 100644
+--- a/translators/tmgmt_local/tmgmt_local.theme.inc
++++ b/translators/tmgmt_local/tmgmt_local.theme.inc
+@@ -62,12 +62,12 @@ function theme_tmgmt_local_translation_form_element_status($variables) {
+       break;
+     case TMGMT_DATA_ITEM_STATE_TRANSLATED:
+       $title = t('Translated');
+-      $icon = drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg';
++      $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/gray-check.svg';
+       break;
+     case TMGMT_DATA_ITEM_STATE_UNTRANSLATED:
+     default:
+       $title = t('Untranslated');
+-      $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
++      $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg';
+       break;
+   }
+   return new FormattableMarkup('<div class="@c"><img src="@s" alt="@t"/><span></span></div>', array("@c" => implode(' ', $classes), "@s" => file_create_url($icon), "@t" => $title));
