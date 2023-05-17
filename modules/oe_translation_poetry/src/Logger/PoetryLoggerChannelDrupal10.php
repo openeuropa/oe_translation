@@ -7,16 +7,16 @@ namespace Drupal\oe_translation_poetry\Logger;
 /**
  * Custom logger channel for Poetry events.
  *
- * This class is used with Drupal 9.
+ * This class is used for Drupal 10.
  *
  * @see \Drupal\oe_translation_poetry\Poetry
  */
-class PoetryLoggerChannel extends PoetryLoggerChannelBase {
+class PoetryLoggerChannelDrupal10 extends PoetryLoggerChannelBase {
 
   /**
    * {@inheritdoc}
    */
-  public function log($level, $message, array $context = []) {
+  public function log($level, string|\Stringable $message, array $context = []): void {
     $this->doLog($level, $message, $context);
   }
 

@@ -24,7 +24,11 @@ class PoetryLoggerChannelFactory extends LoggerChannelFactory {
    */
   public function get($channel) {
     if (!isset($this->channels[$channel])) {
-      $instance = new PoetryLoggerChannel($channel);
+      $is_d10 = version_compare(\Drupal::VERSION, '10.0.0') >= 0;
+
+      $instance = version_compare(\Drupal::VERSION, '10.0.0') >= 0
+        ? new PoetryLoggerChannelDrupal10($channel)
+        : new PoetryLoggerChannel($channel);
 
       // If we have a container set the request_stack and current_user services
       // on the channel. It is up to the channel to determine if there is a
