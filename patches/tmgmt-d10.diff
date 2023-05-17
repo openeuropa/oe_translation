@@ -1020,6 +1020,48 @@ index b2d0b21..b427db2 100644
          'label' => $label,
        ),
      ];
+diff --git a/translators/tmgmt_local/templates/tmgmt-local-translation-form-element-status.html.twig b/translators/tmgmt_local/templates/tmgmt-local-translation-form-element-status.html.twig
+new file mode 100644
+index 0000000..ec4c449
+--- /dev/null
++++ b/translators/tmgmt_local/templates/tmgmt-local-translation-form-element-status.html.twig
+@@ -0,0 +1,16 @@
++{#
++/**
++ * @file
++ * Default theme implementation for local form element status.
++ *
++ * Available variables:
++ * - wrapper_attributes: The HTML attributes object of status wrapper.
++ * - icon_url: The URL of the icon in use.
++ * - title: The title of the icon.
++ *
++ * @ingroup themeable
++ */
++#}
++<div{{ wrapper_attributes }}>
++  <img src="{{ icon_url }}" alt="{{ title }}"/><span></span>
++</div>
+diff --git a/translators/tmgmt_local/templates/tmgmt-local-translation-form-element.html.twig b/translators/tmgmt_local/templates/tmgmt-local-translation-form-element.html.twig
+new file mode 100644
+index 0000000..0f2bb23
+--- /dev/null
++++ b/translators/tmgmt_local/templates/tmgmt-local-translation-form-element.html.twig
+@@ -0,0 +1,14 @@
++{#
++/**
++ * @file
++ * Default theme implementation for local form element.
++ *
++ * Available variables:
++ * - ajax_container: The ajax container element.
++ * - form_element: The row form element, output as a table.
++ *
++ * @ingroup themeable
++ */
++#}
++{{ ajax_container }}
++{{ form_element }}
 diff --git a/translators/tmgmt_local/tmgmt_local.info.yml b/translators/tmgmt_local/tmgmt_local.info.yml
 index 46792ec..eee7c8d 100644
 --- a/translators/tmgmt_local/tmgmt_local.info.yml
@@ -1034,10 +1076,23 @@ index 46792ec..eee7c8d 100644
  
  dependencies:
 diff --git a/translators/tmgmt_local/tmgmt_local.module b/translators/tmgmt_local/tmgmt_local.module
-index 9c544d5..d8959c2 100755
+index 9c544d5..af3e268 100755
 --- a/translators/tmgmt_local/tmgmt_local.module
 +++ b/translators/tmgmt_local/tmgmt_local.module
-@@ -253,6 +253,7 @@ function tmgmt_local_translation_access(LocalTask $task, AccountInterface $accou
+@@ -73,12 +73,10 @@ function tmgmt_local_theme() {
+     'tmgmt_local_translation_form_element' => array(
+       'render element' => 'element',
+       'file' => 'tmgmt_local.theme.inc',
+-      'function' => 'tmgmt_local_translation_form_element',
+     ),
+     'tmgmt_local_translation_form_element_status' => array(
+       'render element' => 'status',
+       'file' => 'tmgmt_local.theme.inc',
+-      'function' => 'theme_tmgmt_local_translation_form_element_status',
+     ),
+     'tmgmt_local_progress_bar' => array(
+       'variables' => array(
+@@ -253,6 +251,7 @@ function tmgmt_local_translation_access(LocalTask $task, AccountInterface $accou
   */
  function tmgmt_local_clear_languages_cache() {
    $results = \Drupal::entityQuery('tmgmt_translator')
@@ -1045,7 +1100,7 @@ index 9c544d5..d8959c2 100755
      ->condition('plugin', 'local')
      ->execute();
    if ($results) {
-@@ -421,6 +422,7 @@ function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
+@@ -421,6 +420,7 @@ function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
  
        // Check if the task can be marked as closed as well.
        $unclosed_tasks = \Drupal::entityQuery('tmgmt_local_task_item')
@@ -1053,7 +1108,7 @@ index 9c544d5..d8959c2 100755
          ->condition('tltid', $task_item->id())
          ->condition('status', LocalTaskItemInterface::STATUS_CLOSED, '<>')
          ->count()
-@@ -439,6 +441,7 @@ function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
+@@ -439,6 +439,7 @@ function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
   */
  function tmgmt_local_tmgmt_job_delete(JobInterface $job) {
    $tltids = \Drupal::entityQuery('tmgmt_local_task')
@@ -1061,7 +1116,7 @@ index 9c544d5..d8959c2 100755
      ->condition('tjid', $job->id())
      ->execute();
    if (!empty($tltids)) {
-@@ -701,21 +704,22 @@ function tmgmt_local_rules_component_access($type, $name) {
+@@ -701,21 +702,22 @@ function tmgmt_local_rules_component_access($type, $name) {
   *   Color legend render array.
   */
  function tmgmt_color_legend_local_task_item() {
@@ -1088,7 +1143,7 @@ index 9c544d5..d8959c2 100755
        'legend' => t('Completed'),
      ],
    ];
-@@ -739,25 +743,26 @@ function tmgmt_color_legend_local_task_item() {
+@@ -739,25 +741,26 @@ function tmgmt_color_legend_local_task_item() {
   *   Color legend render array.
   */
  function tmgmt_color_legend_local_task() {
@@ -1120,7 +1175,7 @@ index 9c544d5..d8959c2 100755
        'legend' => t('Closed'),
      ],
    ];
-@@ -781,17 +786,18 @@ function tmgmt_color_legend_local_task() {
+@@ -781,17 +784,18 @@ function tmgmt_color_legend_local_task() {
   *   Color legend render array.
   */
  function tmgmt_color_local_review_legend() {
@@ -1163,10 +1218,91 @@ index 9d35856..28c1854 100644
    $query->sort('tltiid');
    $result = $query->execute();
 diff --git a/translators/tmgmt_local/tmgmt_local.theme.inc b/translators/tmgmt_local/tmgmt_local.theme.inc
-index 4c63d6a..aec6bf5 100644
+index 4c63d6a..45a7953 100644
 --- a/translators/tmgmt_local/tmgmt_local.theme.inc
 +++ b/translators/tmgmt_local/tmgmt_local.theme.inc
-@@ -62,12 +62,12 @@ function theme_tmgmt_local_translation_form_element_status($variables) {
+@@ -5,56 +5,53 @@
+  * Theme file stub for tmgmt.
+  */
+ 
+-use Drupal\Component\Render\FormattableMarkup;
++use Drupal\Component\Utility\Unicode;
++use Drupal\Core\Template\Attribute;
+ 
+ /**
+- * Render one single data item as a table row.
++ * Implememnts template_preprocess_HOOK().
+  */
+-function tmgmt_local_translation_form_element($variables) {
+-  // Theme table which contains source, translation and action state button.
++function template_preprocess_tmgmt_local_translation_form_element(array &$variables) {
+   $element = $variables['element'];
+-
+   $parts = explode('|', $element['#parents'][0]);
+-  $header_title = ucfirst(str_replace('_', ' ', $parts[0]));
+-
+-  // Container for ajax messages.
+-  $result = '<div id="tmgmt-status-messages-' . strtolower($element['#parent_label'][0]) . '"></div>';
++  $header_title = Unicode::ucfirst(str_replace('_', ' ', $parts[0]));
+ 
+-  $table = [
++  $variables['ajax_container'] = [
++    '#type' => 'container',
++    '#attributes' => [
++      'id' => 'tmgmt-status-messages-' . mb_strtolower($element['#parent_label'][0]),
++    ],
++  ];
++  $variables['form_element'] = [
+     '#type' => 'table',
+-    '#attributes' => array(
++    '#attributes' => [
+       'id' => $element['#ajaxid'],
+-      'class' => array($element['#zebra']),
+-    ),
++      'class' => [$element['#zebra']],
++    ],
+     '#header' => [
+       [
+         'data' => $header_title,
+         'colspan' => 4,
+       ]
+     ],
+-    '#rows' => array(
+-      array(
+-        'data' => array(
++    '#rows' => [
++      [
++        'data' => [
+           \Drupal::service('renderer')->render($element['status']),
+           \Drupal::service('renderer')->render($element['source']),
+           \Drupal::service('renderer')->render($element['translation']),
+           \Drupal::service('renderer')->render($element['actions']),
+-        ),
+-      ),
+-    ),
++        ],
++      ],
++    ],
+   ];
+-  $result .= \Drupal::service('renderer')->render($table);
+-
+-  return $result;
+ }
+ 
+ /**
+- * Renders a data item status as an HTML/CSS icon.
++ * Implements template_preprocess_HOOK().
+  */
+-function theme_tmgmt_local_translation_form_element_status($variables) {
+-  $classes = array();
+-  $classes[] = 'tmgmt-ui-icon';
+-  $classes[] = 'tmgmt-ui-icon-32'; // Icon size 32px square.
++function template_preprocess_tmgmt_local_translation_form_element_status(array &$variables) {
++  $classes = ['tmgmt-ui-icon', 'tmgmt-ui-icon-32'];
+   switch ($variables['status']['#value']) {
+     case TMGMT_DATA_ITEM_STATE_COMPLETED:
+       $title = t('Accepted');
+@@ -62,13 +59,17 @@ function theme_tmgmt_local_translation_form_element_status($variables) {
        break;
      case TMGMT_DATA_ITEM_STATE_TRANSLATED:
        $title = t('Translated');
@@ -1180,4 +1316,10 @@ index 4c63d6a..aec6bf5 100644
 +      $icon = \Drupal::service('extension.list.module')->getPath('tmgmt') . '/icons/ready.svg';
        break;
    }
-   return new FormattableMarkup('<div class="@c"><img src="@s" alt="@t"/><span></span></div>', array("@c" => implode(' ', $classes), "@s" => file_create_url($icon), "@t" => $title));
+-  return new FormattableMarkup('<div class="@c"><img src="@s" alt="@t"/><span></span></div>', array("@c" => implode(' ', $classes), "@s" => file_create_url($icon), "@t" => $title));
++  $variables['wrapper_attributes'] = new Attribute([
++    'class' => $classes,
++  ]);
++  $variables['icon_url'] = \Drupal::service('file_url_generator')->generateAbsoluteString($icon);
++  $variables['title'] = $title;
+ }
