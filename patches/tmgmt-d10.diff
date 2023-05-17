@@ -68,6 +68,28 @@ index 3da9c3b..f459aaa 100644
      $events = parent::getSubscribedEvents();
      //  ContentTranslationRouteSubscriber is -100, make sure we are later.
      $events[RoutingEvents::ALTER] = array('onAlterRoutes', -211);
+diff --git a/sources/content/tests/src/Kernel/ContentEntityTestBase.php b/sources/content/tests/src/Kernel/ContentEntityTestBase.php
+index 53162ba..ec7a084 100644
+--- a/sources/content/tests/src/Kernel/ContentEntityTestBase.php
++++ b/sources/content/tests/src/Kernel/ContentEntityTestBase.php
+@@ -17,7 +17,7 @@ abstract class ContentEntityTestBase extends EntityKernelTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'tmgmt',
+     'tmgmt_content',
+     'tmgmt_test',
+@@ -31,7 +31,7 @@ abstract class ContentEntityTestBase extends EntityKernelTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  public function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+ 
+     // Add the languages.
 diff --git a/sources/content/tmgmt_content.info.yml b/sources/content/tmgmt_content.info.yml
 index 2dfdce4..59dcb45 100644
 --- a/sources/content/tmgmt_content.info.yml
