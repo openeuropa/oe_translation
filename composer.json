@@ -23,6 +23,7 @@
         "drupal/paragraphs": "^1.11",
         "drush/drush": "^11.1",
         "ec-europa/oe-poetry-client": "dev-EWPP-2965",
+        "mikey179/vfsstream": "^1.6.10",
         "openeuropa/behat-transformation-context": "^0.2",
         "openeuropa/code-review": "^2.0",
         "openeuropa/oe_multilingual": "^1.14",
