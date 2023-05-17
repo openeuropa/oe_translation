@@ -46,6 +46,8 @@ pipeline:
       - composer config --merge --json extra.drupal-lenient.allowed-list '["drupal/tmgmt"]' --ansi --no-interaction --no-plugins --no-scripts
       # Delete the lock file to ignore all dependencies when requiring D10.
       - rm -f composer.lock
+      # When dependencies are installed without plugins above, the installer doesn't place Drupal packages in the correct folder.
+      - rm -rf vendor/drupal
     when:
       matrix:
         CORE_VERSION: "10.0"
