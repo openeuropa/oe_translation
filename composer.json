@@ -23,7 +23,6 @@
         "drupal/entity_version": "^1.0-beta8",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.13",
-        "drupaltest/behat-traits": "^0.3",
         "drush/drush": "^11.1",
         "openeuropa/behat-transformation-context": "dev-master",
         "openeuropa/code-review": "2.x-dev",
