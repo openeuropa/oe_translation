@@ -40,7 +40,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
@@ -92,7 +92,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     // Assert we do have two translations of the node.
     $this->assertCount(2, $node->getTranslationLanguages());
     // Assert that we have 2 revisions of the node.
-    $this->assertCount(2, $entity_type_manager->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
+    $this->assertCount(2, $entity_type_manager->getStorage('node')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('nid', $node->id())->execute());
 
     $node->removeTranslation('fr');
     $node->save();
@@ -103,7 +103,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     // Assert that we still have only 2 revisions of the node and the
     // translation deletion did not create a new one.
     $this->assertCount(1, $node->getTranslationLanguages());
-    $this->assertCount(2, $entity_type_manager->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
+    $this->assertCount(2, $entity_type_manager->getStorage('node')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('nid', $node->id())->execute());
 
     // Do the same tests but with another entity type which does not use
     // our local translation.
@@ -118,7 +118,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     $entity->save();
 
     $this->assertCount(2, $entity->getTranslationLanguages());
-    $this->assertCount(2, $entity_type_manager->getStorage('entity_test_mulrev')->getQuery()->allRevisions()->condition('id', $entity->id())->execute());
+    $this->assertCount(2, $entity_type_manager->getStorage('entity_test_mulrev')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('id', $entity->id())->execute());
 
     $entity->removeTranslation('fr');
     $entity->save();
@@ -129,7 +129,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     $this->assertCount(1, $entity->getTranslationLanguages());
     // This time we should have an extra revision after deleting the
     // translation because that is the core default.
-    $this->assertCount(3, $entity_type_manager->getStorage('entity_test_mulrev')->getQuery()->allRevisions()->condition('id', $entity->id())->execute());
+    $this->assertCount(3, $entity_type_manager->getStorage('entity_test_mulrev')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('id', $entity->id())->execute());
   }
 
 }

@@ -131,7 +131,7 @@ class ContentTranslationDashboardController extends ControllerBase {
     // Dispatch an event to allow other modules to contribute to the dashboard.
     $entity_type_id = $entity_type_id ?? '';
     $event = new ContentTranslationDashboardAlterEvent($build, $route_match, $entity_type_id);
-    $this->eventDispatcher->dispatch(ContentTranslationDashboardAlterEvent::NAME, $event);
+    $this->eventDispatcher->dispatch($event, ContentTranslationDashboardAlterEvent::NAME);
 
     return $event->getBuild();
   }

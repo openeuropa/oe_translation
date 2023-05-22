@@ -184,6 +184,7 @@ function oe_translation_epoetry_form_oe_translation_remote_new_form_alter(array 
 
   $ids = \Drupal::entityTypeManager()->getStorage('oe_translation_request')
     ->getQuery()
+    ->accessCheck(FALSE)
     ->condition('content_entity__entity_type', $entity->getEntityTypeId())
     ->condition('content_entity__entity_id', $entity->id())
     ->condition('bundle', 'epoetry')

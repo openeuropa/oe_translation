@@ -611,6 +611,7 @@ class Epoetry extends RemoteTranslationProviderBase {
   protected function getLastRequest(ContentEntityInterface $entity): ?TranslationRequestEpoetryInterface {
     $ids = $this->entityTypeManager->getStorage('oe_translation_request')
       ->getQuery()
+      ->accessCheck(FALSE)
       ->condition('content_entity__entity_type', $entity->getEntityTypeId())
       ->condition('content_entity__entity_id', $entity->id())
       ->condition('bundle', 'epoetry')

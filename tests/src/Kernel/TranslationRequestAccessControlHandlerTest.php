@@ -21,7 +21,7 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'options',
     'language',
     'content_translation',
@@ -39,7 +39,7 @@ class TranslationRequestAccessControlHandlerTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installConfig([

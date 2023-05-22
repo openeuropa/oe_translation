@@ -6,7 +6,7 @@ namespace Drupal\oe_translation_poetry\Event;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\oe_translation_poetry\PoetryRequestType;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event class for determining what kind of Poetry request can be made.

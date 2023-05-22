@@ -23,7 +23,7 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'options',
   ];
 

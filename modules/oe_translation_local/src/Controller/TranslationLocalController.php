@@ -171,7 +171,7 @@ class TranslationLocalController extends ControllerBase {
     // Dispatch an event to allow other modules to alter the overview.
     $entity_type_id = $entity_type_id ?? '';
     $event = new TranslationLocalControllerAlterEvent($build, $route_match, $entity_type_id);
-    $this->eventDispatcher->dispatch(TranslationLocalControllerAlterEvent::NAME, $event);
+    $this->eventDispatcher->dispatch($event, TranslationLocalControllerAlterEvent::NAME);
 
     return $event->getBuild();
   }

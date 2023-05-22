@@ -446,7 +446,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ContainerFactoryP
     $entity = $build['#entity'];
 
     $event = new TranslationAccessEvent($entity, 'poetry', $this->currentUser, $entity->language());
-    $this->eventDispatcher->dispatch(TranslationAccessEvent::EVENT, $event);
+    $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
     $access = $event->getAccess();
     if ($access instanceof AccessResultForbidden) {
       if ($access instanceof AccessResultReasonInterface && $access->getReason()) {
@@ -935,7 +935,7 @@ class PoetryTranslator extends TranslatorPluginBase implements ContainerFactoryP
     }
     $job_info = $accepted_jobs ? reset($accepted_jobs) : NULL;
     $event = new PoetryRequestTypeEvent($entity, $request_type, $job_info);
-    $this->eventDispatcher->dispatch(PoetryRequestTypeEvent::EVENT, $event);
+    $this->eventDispatcher->dispatch($event, PoetryRequestTypeEvent::EVENT);
     return $event->getRequestType();
   }
 
