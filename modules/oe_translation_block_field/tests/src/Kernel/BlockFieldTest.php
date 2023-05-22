@@ -29,7 +29,7 @@ class BlockFieldTest extends TranslationKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'starterkit_theme';
 
   /**
    * The test node.
