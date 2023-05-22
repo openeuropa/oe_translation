@@ -87,14 +87,14 @@ class LocalTranslationTest extends TranslationTestBase {
     $this->drupalGet($custom_block->toUrl('drupal:content-translation-overview'));
 
     // Translate in BG.
-    $this->getSession()->getPage()->find('css', 'li.tmgmttranslate-localadd a[hreflang="bg"]')->click();
+    $this->getSession()->getPage()->find('xpath', '//a[@hreflang="bg"][text()="Translate locally"]')->click();
     $this->getSession()->getPage()->find('css', '#edit-info0value-translation')->setValue('BG translation');
     $this->getSession()->getPage()->pressButton('Save and complete translation');
     $this->assertSession()->pageTextContainsOnce('The translation for Custom Block has been saved as completed.');
     $this->assertSession()->linkExistsExact('BG translation');
 
     // Update the BG translation.
-    $this->getSession()->getPage()->find('css', 'li.tmgmttranslate-localadd a[hreflang="bg"]')->click();
+    $this->getSession()->getPage()->find('xpath', '//a[@hreflang="bg"][text()="Translate locally"]')->click();
     $translation_field = $this->getSession()->getPage()->find('css', '#edit-info0value-translation');
     $this->assertEquals('BG translation', $translation_field->getValue());
     $translation_field->setValue('Updated BG translation');
