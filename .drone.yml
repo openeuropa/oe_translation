@@ -50,6 +50,7 @@ pipeline:
       - apt install php${PHP_VERSION}-bcmath -y
       - composer self-update --2
       - composer install --ansi --no-progress
+      - composer require drupal/core:~${CORE_VERSION} drupal/core-composer-scaffold:~${CORE_VERSION} --update-with-all-dependencies --ansi --no-progress --no-interaction
 
   ensure-phpunit-batching:
     group: test
@@ -86,7 +87,9 @@ pipeline:
 
 matrix:
   include:
-    - { PHP_VERSION: 8.0, TYPE: phpunit, BATCH: batch1 }
-    - { PHP_VERSION: 8.0, TYPE: phpunit, BATCH: batch2 }
-    - { PHP_VERSION: 8.1, TYPE: phpunit, BATCH: batch1 }
-    - { PHP_VERSION: 8.1, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.0, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.0, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 10.0, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 10.0, TYPE: phpunit, BATCH: batch2 }
