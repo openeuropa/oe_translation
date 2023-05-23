@@ -40,6 +40,18 @@ services:
       - SCREEN_HEIGHT=800
 
 pipeline:
+  composer-drop-patch:
+    group: warmup
+    image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
+    volumes:
+      - /cache:/cache
+    commands:
+      # Drop Drupal patch that is needed only for 9.4.x.
+      - composer config --unset --json "extra.patches.drupal/core"
+    when:
+      matrix:
+        CORE_VERSION: "10.0"
+
   composer-install:
     group: prepare
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
