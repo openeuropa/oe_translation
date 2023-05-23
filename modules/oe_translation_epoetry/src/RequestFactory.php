@@ -281,6 +281,7 @@ class RequestFactory extends RequestClientFactory {
 
     $request_details = new RequestDetailsIn();
     $deadline = $request->getDeadline()->getPhpDateTime();
+    $deadline->setTimezone(new \DateTimeZone('Europe/Brussels'));
     // Set the end of the day in case the user picks today.
     $deadline->setTime(23, 59, 00);
     $request_details
