@@ -1,8 +1,0 @@
-name: OpenEuropa Translation Poetry Mock
-description: Mocks the Poetry service with a a SOAP server and fixtures
-package: OpenEuropa
-
-type: module
-core_version_requirement: ^9.4 || ^10
-dependencies:
-  - oe_translation_poetry:oe_translation_poetry
