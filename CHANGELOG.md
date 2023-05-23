@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.0.0-alpha3](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha3) (2023-05-23)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha2...2.0.0-alpha3)
+
+**Merged pull requests:**
+
+- EWPP-3332: Using Brussels timezone in ePoetry requests. [\#256](https://github.com/openeuropa/oe_translation/pull/256) ([upchuk](https://github.com/upchuk))
+
 ## [2.0.0-alpha2](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha2) (2023-05-02)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha1...2.0.0-alpha2)
 
