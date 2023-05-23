@@ -49,8 +49,7 @@ pipeline:
       - apt update -y
       - apt install php${PHP_VERSION}-bcmath -y
       - composer self-update --2
-      - composer install --ansi --no-progress
-      - composer require drupal/core:~${CORE_VERSION} drupal/core-composer-scaffold:~${CORE_VERSION} --update-with-all-dependencies --ansi --no-progress --no-interaction
+      - composer require drupal/core:~${CORE_VERSION} drupal/core-composer-scaffold:~${CORE_VERSION} drupal/core-dev:~${CORE_VERSION} --update-with-all-dependencies --ansi --no-progress --no-interaction
 
   ensure-phpunit-batching:
     group: test

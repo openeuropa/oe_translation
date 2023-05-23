@@ -19,23 +19,20 @@
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
         "drupal/core-composer-scaffold": "^9.4 || ^10",
-        "drupal/drupal-extension": "^5.0",
+        "drupal/core-dev": "^9.4 || ^10",
         "drupal/entity_version": "^1.0-beta8",
         "drupal/metatag": "^1.16",
         "drupal/paragraphs": "^1.13",
         "drush/drush": "^11.1",
-        "openeuropa/behat-transformation-context": "~0.2",
         "openeuropa/code-review": "^2.0",
         "openeuropa/epoetry-client": "1.x-dev || 2.x-dev",
         "openeuropa/oe_multilingual": "^1.13",
         "openeuropa/oe_editorial": "dev-EWPP-3027",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
-        "phpspec/prophecy-phpunit": "^2",
-        "symfony/phpunit-bridge": "^6.0"
+        "phpspec/prophecy-phpunit": "^2"
     },
     "_readme": [
-        "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation (needed because of the php soap client event) Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791.",
-        "Explicit requirement of symfony/phpunit-bridge to replace drupal/core-dev testing classes and traits."
+        "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation (needed because of the php soap client event) Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
