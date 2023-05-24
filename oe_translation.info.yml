@@ -8,5 +8,5 @@ dependencies:
   - drupal:content_translation
 
 config_devel:
-  install:
+  optional:
     - user.role.oe_translator
