@@ -29,9 +29,12 @@
         "openeuropa/oe_multilingual": "^1.13",
         "openeuropa/oe_editorial": "dev-EWPP-3027",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
-        "phpspec/prophecy-phpunit": "^2"
+        "phpspec/prophecy-phpunit": "^2",
+        "symfony/property-access": "~4",
+        "symfony/property-info": "~4"
     },
     "_readme": [
+        "Requireding symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
         "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation (needed because of the php soap client event) Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791."
     ],
     "conflict": {
