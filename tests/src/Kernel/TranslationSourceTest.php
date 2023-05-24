@@ -266,7 +266,7 @@ class TranslationSourceTest extends TranslationKernelTestBase {
       'title' => 'Image title',
     ])->save();
 
-    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
+    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('nid', $node->id())->execute());
 
     // Extract the translatable data.
     $data = $this->translationManager->extractData($node);
@@ -359,7 +359,7 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     $this->translationManager->saveData($data, $node, 'fr');
 
     // Assert we still only have 1 node revision.
-    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
+    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('nid', $node->id())->execute());
 
     // Check that the translation was saved correctly on the entity.
     $translation = $node->getTranslation('fr');
@@ -396,7 +396,7 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     $this->assertEquals($data['translatable_text_field'][2]['value']['#translation']['#text'], $translation->translatable_text_field[2]->value);
 
     // Assert we still only have 1 node revision.
-    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->allRevisions()->condition('nid', $node->id())->execute());
+    $this->assertCount(1, \Drupal::entityTypeManager()->getStorage('node')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('nid', $node->id())->execute());
   }
 
   /**
