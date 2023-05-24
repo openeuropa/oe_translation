@@ -5,7 +5,6 @@ dependencies:
     - content_translation
     - node
     - oe_translation
-    - oe_translation_local
     - system
     - toolbar
 id: oe_translator
@@ -18,7 +17,6 @@ permissions:
   - 'access content'
   - 'access content overview'
   - 'access toolbar'
-  - 'delete local translation request'
   - 'sync translation request'
   - 'translate any entity'
   - 'view the administration theme'
