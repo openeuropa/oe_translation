@@ -7,14 +7,12 @@ dependencies:
     - oe_translation
     - oe_translation_local
     - system
-    - tmgmt
     - toolbar
 id: oe_translator
 label: 'Translate content'
 weight: 2
 is_admin: null
 permissions:
-  - 'accept translation jobs'
   - 'accept translation request'
   - 'access administration pages'
   - 'access content'
