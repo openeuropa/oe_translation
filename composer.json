@@ -25,7 +25,7 @@
         "drupal/paragraphs": "^1.13",
         "drush/drush": "^11.1",
         "openeuropa/code-review": "^2.0",
-        "openeuropa/epoetry-client": "dev-EWPP-2965-1.x || dev-EWPP-2965-2.x",
+        "openeuropa/epoetry-client": "1.x-dev || 2.x-dev",
         "openeuropa/oe_multilingual": "^1.13",
         "openeuropa/oe_editorial": "dev-EWPP-3027",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
