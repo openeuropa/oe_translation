@@ -4,7 +4,7 @@ services:
     arguments: ['@state']
     tags:
       - { name: http_client_middleware }
-  oe_translation_epoetry_mock.logger.mail_logger:
+  oe_translation_epoetry_mock.logger.mock_logger:
     class: Drupal\oe_translation_epoetry_mock\Logger\MockLoggerBase
     factory: Drupal\oe_translation_epoetry_mock\Logger\MockLoggerFactory::create
     arguments: ['@state']
