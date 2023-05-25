@@ -58,16 +58,16 @@ abstract class MockLoggerBase implements LoggerInterface {
    * @return array
    *   The logs.
    */
-  public static function getLogs(): array {
-    \Drupal::state()->resetCache();
-    return \Drupal::state()->get('oe_translation_epoetry_mock_logs', []);
+  public function getLogs(): array {
+    $this->state->resetCache();
+    return $this->state->get('oe_translation_epoetry_mock_logs', []);
   }
 
   /**
    * Clears all the logs.
    */
-  public static function clearLogs(): void {
-    \Drupal::state()->set('oe_translation_epoetry_mock_logs', []);
+  public function clearLogs(): void {
+    $this->state->set('oe_translation_epoetry_mock_logs', []);
   }
 
 }
