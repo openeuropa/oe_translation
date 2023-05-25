@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.1.0](https://github.com/openeuropa/oe_translation/tree/2.1.0) (2023-05-25)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0...2.1.0)
+
+**Merged pull requests:**
+
+- EWPP-2965: Drupal 10 compatibility for 2.x branch. [\#257](https://github.com/openeuropa/oe_translation/pull/257) ([brummbar](https://github.com/brummbar))
+
+## [2.0.0](https://github.com/openeuropa/oe_translation/tree/2.0.0) (2023-05-23)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha3...2.0.0)
+
 ## [2.0.0-alpha3](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha3) (2023-05-23)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha2...2.0.0-alpha3)
 
