@@ -1,3 +1,7 @@
 language_checkboxes:
   js:
     js/language_checkboxes.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

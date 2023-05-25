@@ -29,13 +29,6 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   use TranslationFormTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The translation source manager.
    *
    * @var \Drupal\oe_translation\TranslationSourceManagerInterface
@@ -50,7 +43,20 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   protected $currentUser;
 
   /**
-   * {@inheritdoc}
+   * Constructs a new instance of this class.
+   *
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   *   The entity repository service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\oe_translation\TranslationSourceManagerInterface $translation_source_manager
+   *   The translation source manager.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   The current user.
    */
   public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);

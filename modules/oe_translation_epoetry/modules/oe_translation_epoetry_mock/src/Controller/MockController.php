@@ -8,6 +8,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
@@ -40,6 +41,13 @@ class MockController extends ControllerBase {
   protected $classResolver;
 
   /**
+   * The module extension list service.
+   *
+   * @var \Drupal\Core\Extension\ModuleExtensionList
+   */
+  protected $moduleExtensionList;
+
+  /**
    * The state service.
    *
    * @var \Drupal\Core\State\StateInterface
@@ -55,11 +63,14 @@ class MockController extends ControllerBase {
    *   The class resolver.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $module_extension_list
+   *   The module extension list service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $classResolver, StateInterface $state) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $classResolver, StateInterface $state, ModuleExtensionList $module_extension_list) {
     $this->entityTypeManager = $entity_type_manager;
     $this->classResolver = $classResolver;
     $this->state = $state;
+    $this->moduleExtensionList = $module_extension_list;
   }
 
   /**
@@ -69,7 +80,8 @@ class MockController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('class_resolver'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('extension.list.module')
     );
   }
 
@@ -92,7 +104,7 @@ class MockController extends ControllerBase {
 
     $error_response = $this->state->get('oe_translation_epoetry_mock_response_error', []);
     if ($error_response) {
-      $wrapper = file_get_contents(drupal_get_path('module', 'oe_translation_epoetry_mock') . '/fixtures/error_wrapper.xml');
+      $wrapper = file_get_contents($this->moduleExtensionList->getPath('oe_translation_epoetry_mock') . '/fixtures/error_wrapper.xml');
       $wrapper = str_replace(['@code', '@string'], $error_response, $wrapper);
       $response = new Response($wrapper);
       $response->headers->set('Content-type', 'application/xml; charset=utf-8');
@@ -133,7 +145,7 @@ class MockController extends ControllerBase {
     $xml_string = $serializer->serialize($response_object, 'xml', ['xml_root_node_name' => 'ns0:' . $method . 'Response']);
     $xml_string = trim(str_replace('<?xml version="1.0"?>', '', $xml_string));
 
-    $wrapper = file_get_contents(drupal_get_path('module', 'oe_translation_epoetry_mock') . '/fixtures/response_wrapper.xml');
+    $wrapper = file_get_contents($this->moduleExtensionList->getPath('oe_translation_epoetry_mock') . '/fixtures/response_wrapper.xml');
     $wrapper = str_replace('@response', $xml_string, $wrapper);
 
     $response = new Response($wrapper);

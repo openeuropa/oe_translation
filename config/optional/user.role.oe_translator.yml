@@ -1,17 +1,22 @@
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - content_translation
+    - node
+    - oe_translation
+    - system
+    - toolbar
 id: oe_translator
-label: Translate content
+label: 'Translate content'
 weight: 2
 is_admin: null
 permissions:
+  - 'accept translation request'
   - 'access administration pages'
   - 'access content'
   - 'access content overview'
   - 'access toolbar'
-  - 'translate any entity'
-  - 'accept translation request'
   - 'sync translation request'
-  - 'accept translation jobs'
+  - 'translate any entity'
   - 'view the administration theme'

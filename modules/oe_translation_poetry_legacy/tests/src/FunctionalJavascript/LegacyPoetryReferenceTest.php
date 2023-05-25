@@ -35,7 +35,7 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'starterkit_theme';
 
   /**
    * Tests the view of the entity type.

@@ -3,6 +3,6 @@ description: Provides a local translation system
 package: OpenEuropa
 
 type: module
-core_version_requirement: ^9.4
+core_version_requirement: ^9.4 || ^10
 dependencies:
   - oe_translation:oe_translation

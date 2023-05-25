@@ -32,7 +32,7 @@ class LocalTranslationsTest extends TranslationTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'starterkit_theme';
 
   /**
    * Array of fields.

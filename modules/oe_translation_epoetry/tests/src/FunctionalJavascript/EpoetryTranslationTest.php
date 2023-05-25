@@ -14,7 +14,6 @@ use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
-use Drupal\oe_translation_epoetry_mock\Logger\MockLogger;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
@@ -1486,7 +1485,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'status' => 'Accepted',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = MockLogger::getLogs();
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
     // The last two logs should show the missing request: the last one is our
     // response to ePoetry and the one before last is us logging that we are
     // missing the request.
@@ -1561,7 +1560,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'language' => 'fr',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = MockLogger::getLogs();
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
     // The last two logs should show the missing request: the last one is our
     // response to ePoetry and the one before last is us logging that we are
     // missing the request.
@@ -1571,9 +1570,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
-    MockLogger::clearLogs();
+    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
-    $logs = MockLogger::getLogs();
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::INFO, $log['level']);
     $log = array_pop($logs);
@@ -2398,12 +2397,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'status' => 'Accepted',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = MockLogger::getLogs();
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
     foreach ($logs as $log) {
       $this->assertStringNotContainsString('The mock ticket validation kicked in.', $log['message']);
     }
 
-    MockLogger::clearLogs();
+    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
 
     // Turn on the ticket validation.
     $this->writeSettings([
@@ -2418,7 +2417,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     );
 
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = MockLogger::getLogs();
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
     $found = FALSE;
     foreach ($logs as $log) {
       if (str_contains('The mock ticket validation kicked in.', $log['message'])) {

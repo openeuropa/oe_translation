@@ -40,6 +40,18 @@ services:
       - SCREEN_HEIGHT=800
 
 pipeline:
+  composer-drop-patch:
+    group: warmup
+    image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
+    volumes:
+      - /cache:/cache
+    commands:
+      # Drop Drupal patch that is needed only for 9.4.x.
+      - composer config --unset --json "extra.patches.drupal/core"
+    when:
+      matrix:
+        CORE_VERSION: "10.0"
+
   composer-install:
     group: prepare
     image: registry.fpfis.eu/fpfis/httpd-php:${PHP_VERSION}-ci
@@ -49,7 +61,7 @@ pipeline:
       - apt update -y
       - apt install php${PHP_VERSION}-bcmath -y
       - composer self-update --2
-      - composer install --ansi --no-progress
+      - composer require drupal/core:~${CORE_VERSION} drupal/core-composer-scaffold:~${CORE_VERSION} drupal/core-dev:~${CORE_VERSION} --update-with-all-dependencies --ansi --no-progress --no-interaction
 
   ensure-phpunit-batching:
     group: test
@@ -86,7 +98,9 @@ pipeline:
 
 matrix:
   include:
-    - { PHP_VERSION: 8.0, TYPE: phpunit, BATCH: batch1 }
-    - { PHP_VERSION: 8.0, TYPE: phpunit, BATCH: batch2 }
-    - { PHP_VERSION: 8.1, TYPE: phpunit, BATCH: batch1 }
-    - { PHP_VERSION: 8.1, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.0, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.0, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 9.4.0, TYPE: phpunit, BATCH: batch2 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 10.0, TYPE: phpunit, BATCH: batch1 }
+    - { PHP_VERSION: 8.1, CORE_VERSION: 10.0, TYPE: phpunit, BATCH: batch2 }

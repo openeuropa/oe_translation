@@ -1,4 +1,0 @@
-services:
-  oe_translation_poetry.html_formatter:
-    class: Drupal\oe_translation_poetry_html_formatter\PoetryHtmlFormatter
-    arguments: ['@tmgmt.data', '@renderer', '@entity_type.manager']

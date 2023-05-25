@@ -31,13 +31,6 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
   use TranslationFormTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountInterface
@@ -52,10 +45,28 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
   protected $translationSynchroniser;
 
   /**
-   * {@inheritdoc}
+   * Constructs a new instance of this class.
+   *
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   *   The entity repository service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
+   *   The route match.
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
+   *   The current user.
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   *   The messenger service.
+   * @param \Drupal\oe_translation_remote\RemoteTranslationSynchroniser $translationSynchroniser
+   *   The remote translation synchroniser service.
    */
   public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, RouteMatchInterface $routeMatch, AccountInterface $currentUser, Messenger $messenger, RemoteTranslationSynchroniser $translationSynchroniser) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
+
     $this->entityTypeManager = $entity_type_manager;
     $this->routeMatch = $routeMatch;
     $this->currentUser = $currentUser;

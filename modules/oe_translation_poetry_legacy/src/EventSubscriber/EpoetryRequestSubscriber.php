@@ -68,6 +68,7 @@ class EpoetryRequestSubscriber implements EventSubscriberInterface {
       TranslationRequestEpoetryInterface::STATUS_REQUEST_FAILED_FINISHED,
     ];
     $ids = $this->entityTypeManager->getStorage('oe_translation_request')->getQuery()
+      ->accessCheck(FALSE)
       ->condition('content_entity__entity_type', $entity->getEntityTypeId())
       ->condition('content_entity__entity_id', $entity->id())
       ->condition('id', $request->id(), '!=')
@@ -80,6 +81,7 @@ class EpoetryRequestSubscriber implements EventSubscriberInterface {
     }
 
     $ids = $this->entityTypeManager->getStorage('poetry_legacy_reference')->getQuery()
+      ->accessCheck(FALSE)
       ->condition('node', $entity->id())
       ->execute();
 

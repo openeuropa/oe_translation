@@ -3,12 +3,12 @@
  * Check/uncheck all the language checkboxes.
  */
 
-(function ($, Drupal) {
+(function ($, Drupal, once) {
   "use strict";
 
   Drupal.behaviors.languageCheckboxes = {
     attach: function (context) {
-      $('.js-language-checkboxes-wrapper', context).once('languageCheckboxes').each(function() {
+      $(once('languageCheckboxes', '.js-language-checkboxes-wrapper', context)).each(function() {
         var $check_all = $('.js-checkbox-all');
 
         /**
@@ -53,4 +53,4 @@
       })
     }
   }
-})(jQuery, Drupal);
+})(jQuery, Drupal, once);

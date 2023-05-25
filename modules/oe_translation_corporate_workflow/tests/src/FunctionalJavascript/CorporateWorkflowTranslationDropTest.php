@@ -298,7 +298,7 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $storage->resetCache();
     $field = $entity_type === 'content_moderation_state' ? 'content_entity_id' : 'nid';
-    $revision_ids = $storage->getQuery()->condition($field, 1)->allRevisions()->execute();
+    $revision_ids = $storage->getQuery()->condition($field, 1)->accessCheck(FALSE)->allRevisions()->execute();
     $this->assertCount($count, $revision_ids);
 
     $revisions = $storage->loadMultipleRevisions(array_keys($revision_ids));

@@ -60,14 +60,14 @@ class EntityRevisionWithTypeFieldTest extends TranslationKernelTestBase {
     $violations = $node->validate();
     $this->assertCount(2, $violations);
     $violation = $violations->get(0);
-    $this->assertEqual('The entity type is missing.', $violation->getMessage());
+    $this->assertEquals('The entity type is missing.', $violation->getMessage());
 
     $value['entity_type'] = 'non_existing_entity_type';
     $node->set('entity_revision_type_item', $value);
     $violations = $node->validate();
     $this->assertCount(1, $violations);
     $violation = $violations->get(0);
-    $this->assertEqual('The entity type is invalid.', $violation->getMessage());
+    $this->assertEquals('The entity type is invalid.', $violation->getMessage());
 
     $value['entity_type'] = 'node';
     $node->set('entity_revision_type_item', $value);

@@ -56,7 +56,9 @@ class RemoteTranslationProviderManager extends DefaultPluginManager {
    *   The IDs of the bundles.
    */
   public function getRemoteTranslationBundles(): array {
-    $types = $this->entityTypeManager->getStorage('oe_translation_request_type')->getQuery()
+    $types = $this->entityTypeManager->getStorage('oe_translation_request_type')
+      ->getQuery()
+      ->accessCheck(FALSE)
       ->condition('third_party_settings.oe_translation_remote.remote_bundle', TRUE)
       ->execute();
 
@@ -83,7 +85,9 @@ class RemoteTranslationProviderManager extends DefaultPluginManager {
       return [];
     }
 
-    $query = $this->entityTypeManager->getStorage('oe_translation_request')->getQuery()
+    $query = $this->entityTypeManager->getStorage('oe_translation_request')
+      ->getQuery()
+      ->accessCheck(FALSE)
       ->condition('content_entity__entity_type', $entity->getEntityTypeId())
       ->condition('content_entity__entity_id', $entity->id());
 
