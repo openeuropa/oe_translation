@@ -12,7 +12,6 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Form\TranslationRequestForm;
@@ -52,8 +51,6 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   The entity type bundle service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\oe_translation\TranslationSourceManagerInterface $translation_source_manager
@@ -61,8 +58,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, RendererInterface $renderer, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
-    parent::__construct($entity_repository, $entity_type_bundle_info, $time, $renderer);
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
+    parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->translationSourceManager = $translation_source_manager;
     $this->currentUser = $current_user;
@@ -76,7 +73,6 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $container->get('entity.repository'),
       $container->get('entity_type.bundle.info'),
       $container->get('datetime.time'),
-      $container->get('renderer'),
       $container->get('entity_type.manager'),
       $container->get('oe_translation.translation_source_manager'),
       $container->get('current_user')
