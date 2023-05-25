@@ -45,7 +45,7 @@ class MockController extends ControllerBase {
    *
    * @var \Drupal\Core\Extension\ModuleExtensionList
    */
-  protected ModuleExtensionList $moduleExtensionList;
+  protected $moduleExtensionList;
 
   /**
    * The state service.
