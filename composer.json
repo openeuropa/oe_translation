@@ -27,7 +27,7 @@
         "openeuropa/code-review": "^2.0",
         "openeuropa/epoetry-client": "1.x-dev || 2.x-dev",
         "openeuropa/oe_multilingual": "^1.13",
-        "openeuropa/oe_editorial": "dev-EWPP-3027",
+        "openeuropa/oe_editorial": "^2.0",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
         "phpspec/prophecy-phpunit": "^2",
         "symfony/property-access": "^4 || ^5.4 || ^6",
