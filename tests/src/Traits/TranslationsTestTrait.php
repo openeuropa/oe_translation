@@ -129,14 +129,16 @@ trait TranslationsTestTrait {
    *
    * @param string $bundle
    *   The node bundle.
+   * @param string $title
+   *   The title.
    *
    * @return \Drupal\node\NodeInterface
    *   The created node.
    */
-  protected function createBasicTestNode(string $bundle = 'oe_demo_translatable_page'): NodeInterface {
+  protected function createBasicTestNode(string $bundle = 'oe_demo_translatable_page', string $title = 'Basic translation node'): NodeInterface {
     $node = Node::create([
       'type' => $bundle,
-      'title' => 'Basic translation node',
+      'title' => $title,
     ]);
 
     $node->save();

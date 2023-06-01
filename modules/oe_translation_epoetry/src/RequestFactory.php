@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_epoetry;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
@@ -278,11 +277,7 @@ class RequestFactory extends RequestClientFactory {
   protected function toRequestDetails(TranslationRequestEpoetryInterface $request): RequestDetailsIn {
     $entity = $request->getContentEntity();
     $plugin_configuration = $request->getTranslatorProvider()->getProviderConfiguration();
-    $request_title = (new FormattableMarkup('@prefix: @site_id - @title', [
-      '@prefix' => $plugin_configuration['title_prefix'],
-      '@site_id' => $plugin_configuration['site_id'],
-      '@title' => $entity->label(),
-    ]))->__toString();
+    $request_title = sprintf('%s: %s - %s', $plugin_configuration['title_prefix'], $plugin_configuration['site_id'], $entity->label());
 
     $request_details = new RequestDetailsIn();
     $deadline = $request->getDeadline()->getPhpDateTime();
@@ -306,7 +301,7 @@ class RequestFactory extends RequestClientFactory {
     $content = $this->formatter->export($request);
     $original_document = (new OriginalDocumentIn())
       ->setTrackChanges(FALSE)
-      ->setFileName(str_replace(' ', '-', $entity->label()) . '.html')
+      ->setFileName(str_replace([' ', "'"], ['-', ''], $entity->label()) . '.html')
       ->setContent((string) $content)
       ->setLinguisticSections($linguistic_sections);
     $request_details->setOriginalDocument($original_document);
