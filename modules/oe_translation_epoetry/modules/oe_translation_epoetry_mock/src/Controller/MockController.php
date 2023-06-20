@@ -107,6 +107,7 @@ class MockController extends ControllerBase {
       $wrapper = file_get_contents($this->moduleExtensionList->getPath('oe_translation_epoetry_mock') . '/fixtures/error_wrapper.xml');
       $wrapper = str_replace(['@code', '@string'], $error_response, $wrapper);
       $response = new Response($wrapper);
+      $response->setStatusCode(500);
       $response->headers->set('Content-type', 'application/xml; charset=utf-8');
       return $response;
     }
