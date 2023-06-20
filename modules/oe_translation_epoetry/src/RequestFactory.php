@@ -5,10 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_epoetry;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
-use GuzzleHttp\ClientInterface;
 use Http\Adapter\Guzzle7\Client;
 use OpenEuropa\EPoetry\Authentication\AuthenticationInterface;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier;
@@ -61,14 +61,14 @@ class RequestFactory extends RequestClientFactory {
    *   The event dispatcher.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger factory.
-   * @param \GuzzleHttp\ClientInterface $guzzle
+   * @param \Drupal\Core\Http\ClientFactory $guzzle_factory
    *   The Guzzle client.
    * @param \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $formatter
    *   The content formatter.
    * @param \OpenEuropa\EPoetry\Authentication\AuthenticationInterface $authentication
    *   The authentication object.
    */
-  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, ClientInterface $guzzle, ContentFormatterInterface $formatter, AuthenticationInterface $authentication) {
+  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, ClientFactory $guzzle_factory, ContentFormatterInterface $formatter, AuthenticationInterface $authentication) {
     $logger = $loggerChannelFactory->get('oe_translation_epoetry');
     $endpoint = static::getEpoetryServiceUrl();
     $this->formatter = $formatter;
@@ -79,6 +79,11 @@ class RequestFactory extends RequestClientFactory {
       // @todo handle failure.
     }
 
+    // Increase the timeout to 60 seconds to accommodate for slower ePoetry
+    // responses.
+    $guzzle = $guzzle_factory->fromOptions([
+      'timeout' => 60,
+    ]);
     $authentication = $this->getAuthentication();
     $http_client = new Client($guzzle);
     parent::__construct($endpoint, $authentication, $eventDispatcher, $logger, $http_client);

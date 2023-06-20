@@ -14,8 +14,8 @@ use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterfac
 use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\oe_translation_epoetry\NotificationTicketValidation;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
-use Http\Discovery\Psr17Factory;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+use Http\Discovery\Psr17Factory;
 use OpenEuropa\EPoetry\NotificationServerFactory;
 use OpenEuropa\EPoetry\Serializer\Serializer;
 use OpenEuropa\EPoetry\TicketValidation\TicketValidationInterface;

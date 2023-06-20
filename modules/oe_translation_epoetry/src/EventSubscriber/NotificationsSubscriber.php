@@ -24,13 +24,13 @@ use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeReadyToBeSentEvent
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeRejectedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeRequestedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeSentEvent;
+use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeSuspendedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\BaseEvent as RequestBaseEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeAcceptedEvent as RequestStatusChangeAcceptedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeCancelledEvent as RequestStatusChangeCancelledEvent;
+use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeExecutedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeRejectedEvent as RequestStatusChangeRejectedEvent;
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeSuspendedEvent as RequestStatusChangeSuspendedEvent;
-use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeExecutedEvent;
-use OpenEuropa\EPoetry\Notification\Event\Product\StatusChangeSuspendedEvent;
 use OpenEuropa\EPoetry\Notification\Type\RequestReference;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
