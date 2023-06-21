@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\oe_translation_corporate_workflow\Routing;
 
-use Drupal\oe_translation\TranslatorProvidersInterface;
-use Drupal\oe_translation_corporate_workflow\Controller\TranslationLocalController;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
+use Drupal\oe_translation\TranslatorProvidersInterface;
+use Drupal\oe_translation_corporate_workflow\Controller\TranslationLocalController;
 use Drupal\oe_translation_corporate_workflow\Form\RemoteTranslationNewForm;
 use Symfony\Component\Routing\RouteCollection;
 

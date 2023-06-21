@@ -31,7 +31,8 @@
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
         "phpspec/prophecy-phpunit": "^2",
         "symfony/property-access": "^4 || ^5.4 || ^6",
-        "symfony/property-info": "^4 || ^5.4 || ^6"
+        "symfony/property-info": "^4 || ^5.4 || ^6",
+        "symfony/validator": "~v4.4.48 || ~v6.2.5"
     },
     "_readme": [
         "Requireding symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",

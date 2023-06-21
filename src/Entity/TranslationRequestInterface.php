@@ -5,9 +5,9 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\user\EntityOwnerInterface;
-use Drupal\Core\Entity\EntityChangedInterface;
 
 /**
  * Provides an interface defining a translation request entity type.
