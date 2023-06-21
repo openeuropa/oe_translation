@@ -22,8 +22,11 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderBase;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+use Http\Client\Exception\HttpException;
 use OpenEuropa\EPoetry\Request\Type\LinguisticRequestOut;
+use Phpro\SoapClient\Exception\SoapException;
 use Phpro\SoapClient\Type\ResultInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -35,6 +38,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *   label = @Translation("ePoetry"),
  *   description = @Translation("ePoetry translator provider plugin."),
  * )
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Epoetry extends RemoteTranslationProviderBase {
 
@@ -393,12 +398,50 @@ class Epoetry extends RemoteTranslationProviderBase {
     catch (\Throwable $exception) {
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
       $this->messenger->addError($this->t('There was a problem sending the request to ePoetry.'));
+      $message = $exception->getMessage();
+      $fault = static::getFaultStringFromException($exception);
+      if ($fault !== '') {
+        $message = $fault;
+      }
+
       $request->log('@type: <strong>@message</strong>', [
         '@type' => get_class($exception),
-        '@message' => $exception->getMessage(),
+        '@message' => $message,
       ], TranslationRequestLogInterface::ERROR);
     }
     $request->save();
+  }
+
+  /**
+   * Given a Soap exception, extracts the fault string from the XML.
+   *
+   * @param \Throwable $exception
+   *   The exception.
+   *
+   * @return string
+   *   The fault string.
+   */
+  public static function getFaultStringFromException(\Throwable $exception): string {
+    if ($exception instanceof SoapException && $exception->getPrevious() instanceof HttpException) {
+      $response = $exception->getPrevious()->getResponse();
+      if ($response instanceof ResponseInterface) {
+        $xml = (string) $response->getBody();
+
+        $xml = str_ireplace([
+          'S:',
+          'env:',
+          'S:',
+          'ns0:',
+        ], '', $xml);
+        $xml = simplexml_load_string($xml);
+        $fault = (string) $xml->Body->Fault->faultstring;
+        if ($fault) {
+          return $fault;
+        }
+      }
+    }
+
+    return '';
   }
 
   /**

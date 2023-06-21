@@ -1413,6 +1413,15 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $request = TranslationRequestEpoetry::load($request->id());
     $this->assertCount(1, $request->getTargetLanguages());
     $this->assertEquals('fr', $request->getTargetLanguage('fr')->getLangcode());
+
+    $expected_logs = [
+      1 => [
+        'Error',
+        'There was an error with the modifyLinguisticRequest for adding the following extra languages: German. The error: There was an error in your request.',
+        $this->user->label(),
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
   }
 
   /**

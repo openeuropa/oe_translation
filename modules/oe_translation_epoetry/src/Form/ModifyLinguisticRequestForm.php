@@ -17,6 +17,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider\Epoetry;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
@@ -283,10 +284,16 @@ class ModifyLinguisticRequestForm extends FormBase {
       $this->entityTypeManager->getStorage('oe_translation_request')->resetCache();
       $translation_request = $this->entityTypeManager->getStorage('oe_translation_request')->load($translation_request->id());
 
+      $message = $exception->getMessage();
+      $fault = Epoetry::getFaultStringFromException($exception);
+      if ($fault !== '') {
+        $message = $fault;
+      }
+
       // We log but we don't change any statuses.
       $translation_request->log('There was an error with the <strong>modifyLinguisticRequest</strong> for adding the following extra languages: <strong>@languages</strong>. The error: @error', [
         '@languages' => implode(', ', $new_language_labels),
-        '@error' => $exception->getMessage(),
+        '@error' => $message,
       ], TranslationRequestLogInterface::ERROR);
 
       $translation_request->save();
