@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.2.0](https://github.com/openeuropa/oe_translation/tree/2.2.0) (2023-06-22)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.1.0...2.2.0)
+
+**Merged pull requests:**
+
+- EWPP-3388: Ensuring that ePoetry server errors are logged correctly in the request log. [\#263](https://github.com/openeuropa/oe_translation/pull/263) ([upchuk](https://github.com/upchuk))
+- EWPP-3396: Increase ePoetry request timeout. [\#262](https://github.com/openeuropa/oe_translation/pull/262) ([upchuk](https://github.com/upchuk))
+
 ## [2.1.0](https://github.com/openeuropa/oe_translation/tree/2.1.0) (2023-05-25)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0...2.1.0)
 
