@@ -7,7 +7,6 @@ namespace Drupal\oe_translation_active_revision;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
-use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 
 /**
  * Defines the storage handler class for Active Revision entities.
@@ -61,34 +60,18 @@ class ActiveRevisionStorage extends SqlContentEntityStorage {
    * @param \Drupal\Core\Cache\CacheableMetadata $cache
    *   Cache metadata to bubble up.
    *
-   * @return \Drupal\Core\Entity\ContentEntityInterface|null
-   *   The entity revision.
+   * @return \Drupal\oe_translation_active_revision\LanguageRevisionMapping
+   *   The language revision mapping.
    */
-  public function getLangcodeMappedRevision(string $langcode, ContentEntityInterface $entity, CacheableMetadata $cache): ?ContentEntityInterface {
+  public function getLangcodeMapping(string $langcode, ContentEntityInterface $entity, CacheableMetadata $cache): LanguageRevisionMapping {
     $active_revision = $this->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
     if (!$active_revision instanceof ActiveRevisionInterface) {
       $cache->addCacheTags(['oe_translation_active_revision_list']);
-      return NULL;
+      return new LanguageRevisionMapping($langcode, NULL);
     }
 
     $cache->addCacheableDependency($active_revision);
-    $is_validated = $entity->get('moderation_state')->value === 'validated';
-
-    $language_revisions = $active_revision->get('field_language_revision')->getValue();
-    foreach ($language_revisions as $delta => $values) {
-      if ($values['langcode'] === $langcode) {
-        if ($is_validated && (int) $values['scope'] === LanguageWithEntityRevisionItem::SCOPE_PUBLISHED) {
-          // We don't want to use the mapping if the scope is restricted to
-          // the current published version and the current entity for which
-          // we are finding the map is validated (the next version).
-          return NULL;
-        }
-
-        return $this->entityTypeManager->getStorage('node')->loadRevision($values['entity_revision_id']);
-      }
-    }
-
-    return NULL;
+    return $active_revision->getLanguageMapping($langcode, $entity);
   }
 
 }

@@ -71,6 +71,13 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
       'patch' => 0,
     ];
     \Drupal::service('entity_version.entity_version_installer')->install('node', ['page'], $default_values);
+
+    \Drupal::entityTypeManager()->getStorage('entity_version_settings')->create([
+      'target_entity_type_id' => 'node',
+      'target_bundle' => 'page',
+      'target_field' => 'version',
+    ])->save();
+
     \Drupal::service('router.builder')->rebuild();
 
     $user = $this->setUpTranslatorUser();
@@ -136,10 +143,10 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     // Assert the translation overview page shows the FR translation link.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertSession()->linkExistsExact('My node');
-    $this->assertSession()->linkExistsExact('My node FR');
+    $this->assertEquals('Version 1.0.0', $this->getSession()->getPage()->find('xpath', '//tr[@hreflang="fr"]/td[2]')->getText());
     $this->assertDashboardExistingTranslations([
       'en' => ['title' => 'My node'],
-      'fr' => ['title' => 'My node FR'],
+      'fr' => ['title' => 'Version 1.0.0'],
     ]);
 
     // Create a new draft.
@@ -207,11 +214,10 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     // Assert the translation overview page no longer shows the FR translation
     // link.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-
     $this->assertSession()->linkExistsExact('My node 2');
     $this->assertSession()->linkNotExistsExact('My node FR');
     $this->assertDashboardExistingTranslations([
-      'en' => ['title' => 'My node'],
+      'en' => ['title' => 'My node 2'],
     ]);
   }
 
@@ -243,6 +249,8 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     $this->assertRevisions('content_moderation_state', 5);
 
     // Translate the content.
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
     $request = $this->createLocalTranslationRequest($node, 'fr');
     $this->drupalGet($request->toUrl('local-translation'));
     $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');

@@ -4,3 +4,6 @@
 .existing-translations-table td:nth-child(3), .existing-translations-table th:nth-child(3) {
   border-right: 1px solid #bfbfba;
 }
+.existing-translations-table td:nth-child(5), .existing-translations-table th:nth-child(5) {
+  border-right: 1px solid #bfbfba;
+}

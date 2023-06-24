@@ -665,7 +665,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertDashboardExistingTranslations([
-      'en' => ['title' => 'Basic translation node'],
+      'en' => ['title' => 'Basic translation node - update'],
       'fr' => ['title' => 'Basic translation node fr'],
     ]);
 

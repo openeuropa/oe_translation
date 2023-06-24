@@ -8,6 +8,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -32,10 +33,13 @@ class ContentTranslationDashboardController extends ControllerBase {
    *   The entity type manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, LanguageManagerInterface $language_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->eventDispatcher = $event_dispatcher;
+    $this->languageManager = $language_manager;
   }
 
   /**
@@ -45,6 +49,7 @@ class ContentTranslationDashboardController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
+      $container->get('language_manager'),
     );
   }
 
@@ -82,7 +87,7 @@ class ContentTranslationDashboardController extends ControllerBase {
 
     $cache->addCacheableDependency($entity);
 
-    $translation_languages = $entity->getTranslationLanguages();
+    $translation_languages = $this->languageManager->getLanguages();
 
     $header = [
       $this->t('Language'),
@@ -92,23 +97,35 @@ class ContentTranslationDashboardController extends ControllerBase {
 
     $rows = [];
     foreach ($translation_languages as $language) {
-      $translation = $entity->getTranslation($language->getId());
+      $translation = $entity->hasTranslation($language->getId()) ? $entity->getTranslation($language->getId()) : NULL;
       $row = [
         'data' => [
           'language' => $language->getName(),
-          'title' => [
-            'data' => [
-              '#type' => 'link',
-              '#title' => $translation->label(),
-              '#url' => $translation->toUrl(),
-            ],
-          ],
-          'operations' => [
-            'data' => $this->getTranslationOperationLinks($translation),
-          ],
         ],
       ];
-      if ($translation->isDefaultTranslation()) {
+
+      if ($translation) {
+        $row['data']['title'] = [
+          'data' => [
+            '#type' => 'link',
+            '#title' => $translation->label(),
+            '#url' => $translation->toUrl(),
+          ],
+        ];
+      }
+      else {
+        $row['data']['title'] = [
+          'data' => [
+            '#markup' => $this->t('No translation'),
+          ],
+        ];
+      }
+
+      $row['data']['operations'] = [
+        'data' => $this->getTranslationOperationLinks($translation),
+      ];
+
+      if ($translation && $translation->isDefaultTranslation()) {
         $row['class'][] = 'color-success';
       }
 
@@ -158,13 +175,18 @@ class ContentTranslationDashboardController extends ControllerBase {
   /**
    * Builds the operations for a given existing entity translation.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $translation
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $translation
    *   The entity translation.
    *
    * @return array
    *   The operations.
    */
-  protected function getTranslationOperationLinks(ContentEntityInterface $translation): array {
+  protected function getTranslationOperationLinks(ContentEntityInterface $translation = NULL): array {
+    if (!$translation) {
+      // It means we don't yet have a translation.
+      return [];
+    }
+
     if ($translation->isDefaultTranslation()) {
       // We don't want operations links on the original language.
       return [];
