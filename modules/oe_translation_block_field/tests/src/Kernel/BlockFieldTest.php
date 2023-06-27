@@ -104,8 +104,36 @@ class BlockFieldTest extends TranslationKernelTestBase {
     // Check that the translation was saved correctly on the entity.
     $this->testNode = $this->container->get('entity_type.manager')->getStorage('node')->load($this->testNode->id());
     $translation = $this->testNode->getTranslation('de');
-    $field_block_field = $translation->get('field_block_field')->settings;
-    $this->assertEquals($field_block_field['label'], 'Hello DE');
+    $settings = $translation->get('field_block_field')->settings;
+    $plugin_id = $translation->get('field_block_field')->plugin_id;
+    $this->assertEquals('system_powered_by_block', $plugin_id);
+    $this->assertEquals('Hello DE', $settings['label']);
+
+    // Update the value of the block reference to change the block.
+    $this->testNode->get('field_block_field')->plugin_id = 'system_branding_block';
+    $this->testNode->get('field_block_field')->settings = [
+      'label' => 'Hello - updated',
+      'label_display' => TRUE,
+      'content' => 'World',
+    ];
+    $this->testNode->setNewRevision(TRUE);
+    $this->testNode->save();
+
+    // Re-extract.
+    /** @var \Drupal\oe_translation\TranslationSourceManagerInterface $manager */
+    $manager = \Drupal::service('oe_translation.translation_source_manager');
+    $data = $manager->extractData($this->testNode);
+    $this->assertEquals('Hello - updated', $data['field_block_field'][0]['settings__label']['#text']);
+
+    // Save the translated data onto the entity.
+    $data['field_block_field'][0]['settings__label']['#translation']['#text'] = 'Hello - updated DE';
+    $manager->saveData($data, $this->testNode, 'de');
+    $this->testNode = $this->container->get('entity_type.manager')->getStorage('node')->load($this->testNode->id());
+    $translation = $this->testNode->getTranslation('de');
+    $settings = $translation->get('field_block_field')->settings;
+    $plugin_id = $translation->get('field_block_field')->plugin_id;
+    $this->assertEquals('system_branding_block', $plugin_id);
+    $this->assertEquals('Hello - updated DE', $settings['label']);
   }
 
 }
