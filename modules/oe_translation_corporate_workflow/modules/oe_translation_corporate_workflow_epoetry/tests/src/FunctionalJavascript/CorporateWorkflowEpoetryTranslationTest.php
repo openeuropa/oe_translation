@@ -106,6 +106,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
     $configuration['title_prefix'] = 'A title prefix';
     $configuration['site_id'] = 'A site ID';
     $configuration['auto_accept'] = FALSE;
+    $provider->set('enabled', TRUE);
     $provider->setProviderConfiguration($configuration);
     $provider->save();
 

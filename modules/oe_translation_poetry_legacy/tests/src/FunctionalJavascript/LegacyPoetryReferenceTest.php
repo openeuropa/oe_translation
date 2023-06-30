@@ -147,6 +147,7 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
     $configuration['auto_accept'] = FALSE;
     $configuration['language_mapping'] = [];
     $provider->setProviderConfiguration($configuration);
+    $provider->set('enabled', TRUE);
     $provider->save();
 
     $user = $this->setUpTranslatorUser();

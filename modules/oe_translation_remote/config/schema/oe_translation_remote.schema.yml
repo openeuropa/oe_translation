@@ -16,6 +16,9 @@ oe_translation_remote.remote_translation_provider.*:
     plugin_configuration:
       type: oe_translation_remote.remote_translation_provider.plugin.[%parent.plugin]
       label: 'Remote translation provider plugin settings'
+    enabled:
+      type: boolean
+      label: 'Whether the provider is enabled'
 
 oe_translation_remote.remote_translation_provider.plugin.*:
   type: mapping

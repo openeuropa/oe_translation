@@ -219,3 +219,29 @@ function oe_translation_remote_oe_translation_request_view(array &$build, Entity
   // and doesn't sort them otherwise.
   $build['#sorted'] = FALSE;
 }
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ */
+function oe_translation_remote_remote_translation_provider_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if ($operation !== 'delete') {
+    return AccessResult::neutral();
+  }
+
+  if ($account->hasPermission('administer site configuration')) {
+    return AccessResult::neutral()->cachePerPermissions();
+  }
+
+  // Prevent deleting a translation provider if there are translation requests
+  // using it.
+  $ids = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->getQuery()
+    ->condition('translator_provider', $entity->id())
+    ->accessCheck(FALSE)
+    ->execute();
+
+  if ($ids) {
+    return AccessResult::forbidden()->addCacheTags(['oe_translation_request_list']);
+  }
+
+  return AccessResult::neutral()->addCacheTags(['oe_translation_request_list']);
+}

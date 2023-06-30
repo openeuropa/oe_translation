@@ -70,6 +70,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $configuration['site_id'] = 'A site ID';
     $configuration['auto_accept'] = FALSE;
     $configuration['language_mapping'] = [];
+    $provider->set('enabled', TRUE);
     $provider->setProviderConfiguration($configuration);
     $provider->save();
 
@@ -2417,7 +2418,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $request->setRequestId($request_id);
     $request->save();
 
-    // Assert the dashboard only accessible to users with the correct
+    // Assert the dashboard is only accessible to users with the correct
     // permission.
     $this->drupalLogout();
     $this->drupalGet('admin/content/epoetry-translation-requests');
@@ -2494,6 +2495,17 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('Ongoing [in ePoetry]: Italian', strip_tags($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Second node')]]/td[5]")->find('css', '.oe-translation-tooltip--text')->getHtml()));
     $this->assertEquals('1 / 0 ⓘ', $this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Third node')]]/td[5]")->getText());
     $this->assertEquals('Requested [in ePoetry]: Romanian', strip_tags($this->getSession()->getPage()->find('xpath', "//table/tbody/tr[td//text()[contains(., 'Third node')]]/td[5]")->find('css', '.oe-translation-tooltip--text')->getHtml()));
+
+    // Delete the ePoetry remote translator and assert we longer have access
+    // to the view.
+    /** @var \Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface[] $translators */
+    $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadByProperties(['plugin' => 'epoetry']);
+    foreach ($translators as $translator) {
+      $translator->delete();
+    }
+
+    $this->drupalGet('admin/content/epoetry-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
   }
 
   /**

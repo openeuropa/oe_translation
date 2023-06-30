@@ -743,9 +743,7 @@ display:
           sort_asc_label: Asc
           sort_desc_label: Desc
       access:
-        type: perm
-        options:
-          perm: 'translate any entity'
+        type: oe_translation_epoetry_translation_requests
       cache:
         type: tag
         options: {  }

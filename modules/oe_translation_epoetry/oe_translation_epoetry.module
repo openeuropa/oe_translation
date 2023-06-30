@@ -116,10 +116,23 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   /** @var \Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface $new_version_handler */
   $new_version_handler = \Drupal::service('oe_translation_epoetry.new_version_request_handler');
 
+  $url = Url::fromRoute('oe_translation_epoetry.new_version_request', [
+    'translation_request' => $entity->id(),
+  ], [
+    'query' => [
+      'destination' => Url::fromRoute('entity.' . $entity->getContentEntity()
+        ->getEntityTypeId() . '.remote_translation', [
+          $entity->getContentEntity()
+            ->getEntityTypeId() => $entity->getContentEntity()->id(),
+        ])->toString(),
+    ],
+    'attributes' => ['class' => ['button', 'button--primary']],
+  ]);
+
   $build['update_request'] = [
     '#type' => 'fieldset',
     '#title' => t('Request an update'),
-    '#access' => $new_version_handler->canCreateRequest($entity),
+    '#access' => $new_version_handler->canCreateRequest($entity) && $url->access(),
   ];
 
   $build['update_request'][] = [
@@ -129,14 +142,7 @@ function oe_translation_epoetry_oe_translation_request_view_alter(array &$build,
   $build['update_request'][] = [
     '#type' => 'link',
     '#title' => t('Update'),
-    '#url' => Url::fromRoute('oe_translation_epoetry.new_version_request', [
-      'translation_request' => $entity->id(),
-    ], [
-      'query' => [
-        'destination' => Url::fromRoute('entity.' . $entity->getContentEntity()->getEntityTypeId() . '.remote_translation', [$entity->getContentEntity()->getEntityTypeId() => $entity->getContentEntity()->id()])->toString(),
-      ],
-      'attributes' => ['class' => ['button', 'button--primary']],
-    ]),
+    '#url' => $url,
   ];
 
   $url = Url::fromRoute('oe_translation_epoetry.modify_linguistic_request', [
