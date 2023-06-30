@@ -24,4 +24,4 @@ services:
 
   oe_translation_remote.translation_synchroniser:
     class: Drupal\oe_translation_remote\RemoteTranslationSynchroniser
-    arguments: ['@language_manager', '@oe_translation.translation_source_manager', '@messenger']
+    arguments: ['@language_manager', '@oe_translation.translation_source_manager', '@messenger', '@event_dispatcher']

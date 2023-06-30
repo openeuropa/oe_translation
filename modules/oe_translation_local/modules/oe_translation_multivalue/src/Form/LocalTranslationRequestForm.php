@@ -15,6 +15,7 @@ use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_local\Form\LocalTranslationRequestForm as LocalTranslationRequestFormOriginal;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Form handler for the translation request entity add/edit forms.
@@ -31,8 +32,8 @@ class LocalTranslationRequestForm extends LocalTranslationRequestFormOriginal {
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EntityFieldManagerInterface $entityFieldManager) {
-    parent::__construct($entity_repository, $entity_type_bundle_info, $time, $entity_type_manager, $translation_source_manager, $current_user);
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EventDispatcherInterface $event_dispatcher, EntityFieldManagerInterface $entityFieldManager) {
+    parent::__construct($entity_repository, $entity_type_bundle_info, $time, $entity_type_manager, $translation_source_manager, $current_user, $event_dispatcher);
     $this->entityFieldManager = $entityFieldManager;
   }
 
@@ -47,6 +48,7 @@ class LocalTranslationRequestForm extends LocalTranslationRequestFormOriginal {
       $container->get('entity_type.manager'),
       $container->get('oe_translation.translation_source_manager'),
       $container->get('current_user'),
+      $container->get('event_dispatcher'),
       $container->get('entity_field.manager')
     );
   }

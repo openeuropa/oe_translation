@@ -56,6 +56,23 @@ interface ActiveRevisionInterface extends ContentEntityInterface, EntityOwnerInt
   public function setLanguageMapping(string $langcode, string $entity_type, int $entity_id, int $entity_revision_id, int $scope = LanguageWithEntityRevisionItem::SCOPE_BOTH): ActiveRevisionInterface;
 
   /**
+   * Updates the scope of a mapping.
+   *
+   * @param string $langcode
+   *   The langcode.
+   * @param string $entity_type
+   *   The entity type.
+   * @param int $entity_id
+   *   The entity ID.
+   * @param int $scope
+   *   The mapping scope.
+   *
+   * @return ActiveRevisionInterface
+   *   The current entity.
+   */
+  public function updateMappingScope(string $langcode, string $entity_type, int $entity_id, int $scope): ActiveRevisionInterface;
+
+  /**
    * Returns the language mapping for a given language.
    *
    * @param string $langcode

@@ -8,7 +8,9 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
+use Drupal\oe_translation\Event\TranslationSynchronisationEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Handles the synchronization of the translation data onto the node.
@@ -39,6 +41,13 @@ class RemoteTranslationSynchroniser {
   protected $messenger;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Constructs a RemoteTranslationSynchroniser.
    *
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
@@ -47,11 +56,14 @@ class RemoteTranslationSynchroniser {
    *   The translation source manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(LanguageManagerInterface $languageManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger) {
+  public function __construct(LanguageManagerInterface $languageManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, EventDispatcherInterface $eventDispatcher) {
     $this->languageManager = $languageManager;
     $this->translationSourceManager = $translationSourceManager;
     $this->messenger = $messenger;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -100,6 +112,8 @@ class RemoteTranslationSynchroniser {
     ]);
     $translation_request->save();
     $this->messenger->addStatus($this->t('The translation in @language has been synchronised.', ['@language' => $language->getName()]));
+    $event = new TranslationSynchronisationEvent($entity, $translation_request, $language_code);
+    $this->eventDispatcher->dispatch($event, TranslationSynchronisationEvent::NAME);
   }
 
 }
