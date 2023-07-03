@@ -286,7 +286,9 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     $translation_request = $this->entity;
 
     $entity = $translation_request->getContentEntity();
-    $saved = $this->translationSourceManager->saveData($translation_request->getData(), $entity, $translation_request->getTargetLanguageWithStatus()->getLangcode());
+    $data = $translation_request->getData();
+    $data['#translation_request'] = $translation_request;
+    $saved = $this->translationSourceManager->saveData($data, $entity, $translation_request->getTargetLanguageWithStatus()->getLangcode());
     if ($saved) {
       $translation_request->updateTargetLanguageStatus(TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED);
       $translation_request->save();

@@ -10,6 +10,8 @@ declare(strict_types = 1);
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\TranslationStatusInterface;
 use Drupal\node\NodeInterface;
@@ -36,6 +38,19 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
     return;
   }
 
+  // If we are saving a new draft, we need to remove the translation_request
+  // reference for all the languages. This is because, by definition, we only
+  // want to keep this reference on the revisions onto which we actually
+  // synchronised the translation.
+  if ($entity->moderation_state->value === 'draft' && $entity->hasField('translation_request')) {
+    foreach ($entity->getTranslationLanguages(FALSE) as $langcode => $language) {
+      $translation = $entity->getTranslation($langcode);
+      $translation->set('translation_request', NULL);
+    }
+  }
+
+  // Drop the translations if we are saving a validated revision if the node
+  // was marked for it.
   if (isset($entity->translation_drop) && $entity->translation_drop === TRUE && $entity->moderation_state->value === 'validated') {
     foreach ($entity->getTranslationLanguages(FALSE) as $langcode => $language) {
       $entity->removeTranslation($langcode);
@@ -354,4 +369,24 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
   // request started from Validated, but we have a Published one meanwhile.
   $revision = \Drupal::service('oe_translation.entity_revision_info')->getEntityRevision($content_entity, 'en');
   $row['version'] = $version . ' / ' . $revision->get('moderation_state')->value;
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function oe_translation_corporate_workflow_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'node') {
+    $fields = [];
+    $fields['translation_request'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('The originating translation request'))
+      ->setDescription(t('The translation request where the translation came from'))
+      ->setSetting('target_type', 'oe_translation_request')
+      ->setRevisionable(TRUE)
+      // Normally entity reference fields should not really be translatable but
+      // in this case we want to be able to have a different reference per
+      // language as the translations can come from different requests.
+      ->setTranslatable(TRUE);
+
+    return $fields;
+  }
 }

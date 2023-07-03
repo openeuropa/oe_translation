@@ -16,6 +16,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Render\Element;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\TranslationSourceEvent;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\TranslationSourceFieldProcessorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -314,6 +315,10 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
     }
 
     if ($save) {
+      if ($translation->hasField('translation_request') && isset($data['#translation_request']) && $data['#translation_request'] instanceof TranslationRequestInterface) {
+        $translation_request = $data['#translation_request'];
+        $translation->set('translation_request', $translation_request->id());
+      }
       $translation->save();
     }
 
