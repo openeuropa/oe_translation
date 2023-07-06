@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_corporate_workflow_epoetry\FunctionalJavas
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
+use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
@@ -244,6 +245,61 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
 
       $node->delete();
     }
+  }
+
+  /**
+   * Tests that node translations keep track of the translation requests.
+   *
+   * This tests that we keep track of which are the translations that have been
+   * created as part of a synchronisation and focuses on the remote translation.
+   */
+  public function testTranslationRequestTrackingRemote(): void {
+    \Drupal::service('module_installer')->install(['oe_translation_epoetry_mock']);
+
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+    $revision_ids = $node_storage->revisionIds($node);
+    $this->assertCount(5, $revision_ids);
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->selectFieldOption('Translator', 'epoetry');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->checkField('French');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $this->assertCount(1, $requests);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $this->getSession()->reload();
+    $this->clickLink('Review');
+    $this->submitForm([], t('Save and synchronise'));
+    $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    // The EN version doesn't have the reference.
+    $this->assertNull($node->get('translation_request')->entity);
+    $this->assertInstanceOf(TranslationRequestEpoetryInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
+
   }
 
 }

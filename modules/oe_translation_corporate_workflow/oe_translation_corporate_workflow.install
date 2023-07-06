@@ -7,6 +7,8 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\Field\BaseFieldDefinition;
+
 /**
  * Implements hook_install().
  */
@@ -31,4 +33,19 @@ function oe_translation_corporate_workflow_install($is_syncing) {
     }
     $oe_translator->save();
   }
+}
+
+/**
+ * Creates the translation_request reference field on the Node entity type.
+ */
+function oe_translation_corporate_workflow_update_10001() {
+  $field = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(t('The originating translation request'))
+    ->setDescription(t('The translation request where the translation came from'))
+    ->setSetting('target_type', 'oe_translation_request')
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('translation_request', 'node', 'oe_translation_corporate_workflow', $field);
 }

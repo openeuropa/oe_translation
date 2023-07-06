@@ -11,6 +11,7 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Drupal\paragraphs\Entity\Paragraph;
@@ -934,6 +935,74 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertEquals('published', $published->get('moderation_state')->value);
     $this->assertFalse($published->isDefaultRevision());
     $this->assertCount(2, $published->getTranslationLanguages());
+  }
+
+  /**
+   * Tests that node translations keep track of the translation requests.
+   *
+   * This tests that we keep track of which are the translations that have been
+   * created as part of a synchronisation and focuses on the local translation.
+   */
+  public function testTranslationRequestTrackingLocal(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+    $revision_ids = $node_storage->revisionIds($node);
+    $this->assertCount(5, $revision_ids);
+
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->submitForm([], t('Save and synchronise'));
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    // The EN version doesn't have the reference.
+    $this->assertNull($node->get('translation_request')->entity);
+    $this->assertInstanceOf(TranslationRequestInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
+    // Keep track of the translation request.
+    $version_one_request = $node->getTranslation('fr')->get('translation_request')->entity;
+
+    // Make a new draft and assert the reference is not kept.
+    $node->set('moderation_state', 'draft');
+    $node->setNewRevision(TRUE);
+    $node->save();
+    $revision_ids = $node_storage->revisionIds($node);
+    $this->assertCount(6, $revision_ids);
+
+    $node_storage->resetCache();
+    // This is still the published version.
+    $node = $node_storage->load($node->id());
+    $this->assertNull($node->get('translation_request')->entity);
+    $this->assertInstanceOf(TranslationRequestInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
+    // This is the new draft.
+    $node = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $this->assertNull($node->get('translation_request')->entity);
+    $this->assertNull($node->getTranslation('fr')->get('translation_request')->entity);
+    // Published the draft.
+    $node = $this->moderateNode($node, 'published');
+    $revision_ids = $node_storage->revisionIds($node);
+    $this->assertCount(10, $revision_ids);
+
+    // Translate again the node.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->submitForm([], t('Save and synchronise'));
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    // The EN version doesn't have the reference.
+    $this->assertNull($node->get('translation_request')->entity);
+    $this->assertInstanceOf(TranslationRequestInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
+    $version_two_request = $node->getTranslation('fr')->get('translation_request')->entity;
+    $this->assertNotEquals($version_one_request->id(), $version_two_request->id());
   }
 
   /**
