@@ -178,7 +178,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   protected function alterExistingTranslationsTable(array &$build, ContentEntityInterface $entity): void {
-    $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing translations'|t }}</h3>";
+    $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing synchronised translations'|t }}</h3>";
 
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     if ($entity->get('moderation_state')->value !== 'published') {
@@ -270,7 +270,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $row['data']['language'] = $language_names[$langcode];
       $row['data']['title_published'] = isset($info[$published_version]) ? $info[$published_version]['title'] : 'N/A';
       $row['data']['operations_published'] = isset($info[$published_version]) ? ['data' => $info[$published_version]['operations']] : 'N/A';
-      $row['data']['title_validated'] = isset($info[$latest_entity_version]) ? $info[$latest_entity_version]['title'] : 'N/A';
+      $row['data']['title_validated'] = isset($info[$latest_entity_version]) ? $info[$latest_entity_version]['title'] : $this->t('No translation');
       $row['data']['operations_validated'] = isset($info[$latest_entity_version]) ? ['data' => $info[$latest_entity_version]['operations']] : 'N/A';
 
       $row['hreflang'] = $langcode;

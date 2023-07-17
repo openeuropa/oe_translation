@@ -16,6 +16,7 @@
       <directory>./tests/</directory>
       <directory>./modules/*/tests/</directory>
       <directory>./modules/*/modules/*/tests</directory>
+      <directory>./modules/*/modules/*/modules/*/tests</directory>
     </testsuite>
   </testsuites>
 </phpunit>

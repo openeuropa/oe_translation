@@ -55,7 +55,9 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    * Access callback to the form.
    *
    * Here we check that there is actually a translation for this language to
-   * hide.
+   * hide. In doing so, we need to check both the published version of exists
+   * and the latest version that it may have which is not yet published (
+   * validated).
    *
    * @param string|null $langcode
    *   The langcode.
@@ -69,11 +71,17 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    */
   public function access(string $langcode = NULL, string $entity_type = NULL, string $entity_id = NULL): AccessResultInterface {
     $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
-    if (!$entity->hasTranslation($langcode)) {
-      return AccessResult::forbidden()->addCacheableDependency($entity);
+    if ($entity->hasTranslation($langcode)) {
+      return AccessResult::allowed()->addCacheableDependency($entity);
     }
 
-    return AccessResult::allowed()->addCacheableDependency($entity);
+    $storage = $this->entityTypeManager->getStorage($entity_type);
+    $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
+    if ($latest_entity->get('moderation_state')->value === 'validated' && $latest_entity->hasTranslation($langcode)) {
+      return AccessResult::allowed()->addCacheableDependency($entity);
+    }
+
+    return AccessResult::forbidden()->addCacheableDependency($entity);
   }
 
   /**
@@ -96,7 +104,15 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
 
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value === 'validated' && $mapping->getScope() === LanguageWithEntityRevisionItem::SCOPE_BOTH && !$form_state->getUserInput()) {
-      $this->messenger()->addWarning('Please be aware that mapping to "hidden" will apply to both the currently Published version and the new Validated major version.');
+      // Create correcting messaging for the user depending on what this mapping
+      // will apply to. It may be that there is a translation available only
+      // for the Validated version.
+      if ($entity->hasTranslation($langcode)) {
+        $this->messenger()->addWarning('Please be aware that mapping to "hidden" will apply to both the currently Published version and the new Validated major version.');
+      }
+      else {
+        $this->messenger()->addWarning('Please be aware that mapping to "hidden" will be relevant to the new Validated major version as there is no translation to hide in the Published version.');
+      }
     }
 
     $form_state->set('active_revision', $active_revision);

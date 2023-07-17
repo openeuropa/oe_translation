@@ -20,6 +20,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Subscribes to the translation dashboard alteration event.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
@@ -232,6 +234,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    *   The mapping for this langcode.
    * @param \Drupal\Core\Cache\CacheableMetadata $cache
    *   Cache data.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   protected function alterExistingTranslationsTableRowMultiVersion(array &$row, ContentEntityInterface $entity, ContentEntityInterface $latest_entity, string $langcode, LanguageRevisionMapping $mapping, CacheableMetadata $cache): void {
     // Determine the title columns we need to alter depending on the potential
@@ -246,11 +250,22 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     if ($mapping->isMappedToNull()) {
       foreach ($cols as $col) {
-        $row['data'][$col] = [
-          'data' => [
-            '#markup' => $this->t('Mapped to "hidden" (translation hidden)'),
-          ],
-        ];
+        // Check that it actually has a translation that is being hidden before
+        // altering the label.
+        if ($col === 'title_published' && $entity->hasTranslation($langcode)) {
+          $row['data'][$col] = [
+            'data' => [
+              '#markup' => $this->t('Mapped to "hidden" (translation hidden)'),
+            ],
+          ];
+        }
+        if ($col === 'title_validated' && $latest_entity->hasTranslation($langcode)) {
+          $row['data'][$col] = [
+            'data' => [
+              '#markup' => $this->t('Mapped to "hidden" (translation hidden)'),
+            ],
+          ];
+        }
       }
 
       return;
@@ -327,9 +342,15 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
         ],
       ];
     }
+    // Update the label of the Delete link.
     $operations_validated = &$row['data']['operations_validated']['data']['#links'];
     if (isset($operations_validated['delete'])) {
       $operations_validated['delete']['title'] = $this->t('Delete translation');
+      // However, if we have a mapping, remove the Delete link because for the
+      // user it makes no sense to have it there while it's mapped.
+      if ($mapping->isMapped() && $mapping->getScope() === LanguageWithEntityRevisionItem::SCOPE_BOTH) {
+        unset($operations_validated['delete']);
+      }
     }
   }
 
@@ -376,7 +397,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       'langcode' => $langcode,
       'entity_type' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),
-    ], ['query' => ['destination' => \Drupal::service('redirect.destination')->get()]]);
+    ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
 
     if (!$active_revision) {
       // It means we don't yet have an active revision entity for this entity.
@@ -384,7 +405,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
         'langcode' => $langcode,
         'entity_type' => $entity->getEntityTypeId(),
         'entity_id' => $entity->id(),
-      ], ['query' => ['destination' => \Drupal::service('redirect.destination')->get()]]);
+      ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
 
       if ($add_mapping->access()) {
         $links['update_mapping'] = [
@@ -412,14 +433,14 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       'langcode' => $langcode,
       'entity_type' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),
-    ], ['query' => ['destination' => \Drupal::service('redirect.destination')->get()]]);
+    ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
 
     $update_mapping = Url::fromRoute('oe_translation_active_revision.mapping_update', [
       'active_revision' => $active_revision->id(),
       'langcode' => $langcode,
       'entity_type' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),
-    ], ['query' => ['destination' => \Drupal::service('redirect.destination')->get()]]);
+    ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
 
     // The case in which we are mapped to nothing, we have the option to add
     // a mapping to some other version or to remove the mapping.
