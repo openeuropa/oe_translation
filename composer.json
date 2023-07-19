@@ -6,7 +6,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "drupal/core": "^9.4 || ^10",
         "drupal/tmgmt": "^1.14",
         "jakeasmith/http_build_url": "^1.0",
@@ -31,8 +31,7 @@
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
         "phpspec/prophecy-phpunit": "^2",
         "symfony/property-access": "^4 || ^5.4 || ^6",
-        "symfony/property-info": "^4 || ^5.4 || ^6",
-        "symfony/validator": "~v4.4.48 || ~v6.2.5"
+        "symfony/property-info": "^4 || ^5.4 || ^6"
     },
     "_readme": [
         "Requireding symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
