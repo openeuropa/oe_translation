@@ -6,10 +6,12 @@ namespace Drupal\oe_translation_epoetry\EventSubscriber;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
+use Drupal\oe_translation_epoetry\Event\EpoetryNotificationRequestUpdateEvent;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -33,9 +35,12 @@ use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeRejectedEvent as R
 use OpenEuropa\EPoetry\Notification\Event\Request\StatusChangeSuspendedEvent as RequestStatusChangeSuspendedEvent;
 use OpenEuropa\EPoetry\Notification\Type\RequestReference;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Subscribes to the ePoetry notification events.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class NotificationsSubscriber implements EventSubscriberInterface {
 
@@ -75,6 +80,20 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   protected $translationSynchroniser;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
+   * The lock backend.
+   *
+   * @var \Drupal\Core\Lock\LockBackendInterface
+   */
+  protected $lockBackend;
+
+  /**
    * Constructs a new NotificationsSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -87,13 +106,19 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The logger channel factory.
    * @param \Drupal\oe_translation_remote\RemoteTranslationSynchroniser $translationSynchroniser
    *   The translation synchroniser.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
+   * @param \Drupal\Core\Lock\LockBackendInterface $lockBackend
+   *   The lock backend.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory, RemoteTranslationSynchroniser $translationSynchroniser) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ContentFormatterInterface $contentFormatter, LanguageManagerInterface $languageManager, LoggerChannelFactoryInterface $loggerChannelFactory, RemoteTranslationSynchroniser $translationSynchroniser, EventDispatcherInterface $eventDispatcher, LockBackendInterface $lockBackend) {
     $this->entityTypeManager = $entityTypeManager;
     $this->contentFormatter = $contentFormatter;
     $this->languageManager = $languageManager;
     $this->logger = $loggerChannelFactory->get('oe_translation_epoetry');
     $this->translationSynchroniser = $translationSynchroniser;
+    $this->eventDispatcher = $eventDispatcher;
+    $this->lockBackend = $lockBackend;
   }
 
   /**
@@ -233,6 +258,20 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $translation_request->log('The <strong>@language</strong> product could not be updated to <strong>@status</strong> due to Lock issues. Please check the logs.', [
+          '@language' => $language->getName(),
+          '@status' => $status,
+        ], TranslationRequestLogInterface::ERROR);
+        return;
+      }
+    }
+
     // If we already have a translation for this language, do not change the
     // status anymore. Any status updates that may come after have no real
     // relevance for our system because from this moment we start our own flow
@@ -250,8 +289,15 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     if ($event instanceof ProductEventWithDeadlineInterface && $event->getAcceptedDeadline() instanceof \DateTimeInterface) {
       $translation_request->updateTargetLanguageAcceptedDeadline($langcode, $event->getAcceptedDeadline());
     }
+
+    // Dispatch an event to allow others to alter the translation request
+    // before saving it.
+    $notification_event = new EpoetryNotificationRequestUpdateEvent($translation_request, $event);
+    $this->eventDispatcher->dispatch($notification_event, EpoetryNotificationRequestUpdateEvent::NAME);
+
     $translation_request->save();
     $event->setSuccessResponse('The language status has been updated successfully.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -273,6 +319,19 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $language = $product->getProductReference()->getLanguage();
     $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
+
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $translation_request->log('The <strong>@language</strong> translation could not be delivered to Lock issues. Please check the logs.', [
+          '@language' => $language->getName(),
+        ], TranslationRequestLogInterface::ERROR);
+        return;
+      }
+    }
 
     // Process the translated file.
     $file = $product->getFile();
@@ -300,6 +359,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
     $translation_request->save();
     $event->setSuccessResponse('The translation has been saved.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -318,12 +378,24 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $this->logRequestStatusChangeEvent($event, $translation_request, TRUE);
+        return;
+      }
+    }
+
     // Set the ePoetry request status but keep the request active.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
     $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED);
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -342,12 +414,24 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $this->logRequestStatusChangeEvent($event, $translation_request, TRUE);
+        return;
+      }
+    }
+
     // Set the ePoetry request status and finish the request if it was rejected.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_REJECTED);
     $translation_request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -366,11 +450,23 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $this->logRequestStatusChangeEvent($event, $translation_request, TRUE);
+        return;
+      }
+    }
+
     // Set the ePoetry request status.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED);
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -389,6 +485,17 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $this->logRequestStatusChangeEvent($event, $translation_request, TRUE);
+        return;
+      }
+    }
+
     // Set the ePoetry request status and finish the request if it was
     // cancelled.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED);
@@ -396,6 +503,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -414,11 +522,23 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
+    if (!$this->lockBackend->acquire($lock_id)) {
+      $this->logger->log('notice', sprintf('Lock already acquired: The translation request %s is already being updated.', $translation_request->id()));
+      if ($this->lockBackend->wait($lock_id, 60)) {
+        $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
+        $this->logger->error($message);
+        $this->logRequestStatusChangeEvent($event, $translation_request, TRUE);
+        return;
+      }
+    }
+
     // Set the ePoetry request status.
     $translation_request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_SUSPENDED);
     $this->logRequestStatusChangeEvent($event, $translation_request);
     $translation_request->save();
     $event->setSuccessResponse('The translation request status has been updated successfully.');
+    $this->lockBackend->release($lock_id);
   }
 
   /**
@@ -480,9 +600,14 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *   The event.
    * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request
    *   The request.
+   * @param bool $failed
+   *   Whether the update failed or not due to lock.
    */
-  protected function logRequestStatusChangeEvent(RequestBaseEvent $event, TranslationRequestEpoetryInterface $request): void {
+  protected function logRequestStatusChangeEvent(RequestBaseEvent $event, TranslationRequestEpoetryInterface $request, bool $failed = FALSE): void {
     $message = 'The request has been <strong>@status</strong> by ePoetry.';
+    if ($failed) {
+      $message = 'The request could not be <strong>@status</strong> by ePoetry due to Lock issues.';
+    }
     $variables = ['@status' => $event->getLinguisticRequest()->getStatus()];
     if ($event->getPlanningAgent()) {
       $message .= ' Planning agent: <strong>@agent</strong>.';
@@ -505,6 +630,9 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       TranslationRequestEpoetryInterface::STATUS_REQUEST_CANCELLED,
     ])) {
       $type = TranslationRequestLogInterface::WARNING;
+    }
+    if ($failed) {
+      $type = TranslationRequestLogInterface::ERROR;
     }
     $request->log($message, $variables, $type);
   }

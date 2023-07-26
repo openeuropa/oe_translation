@@ -1,0 +1,8 @@
+name: OE Translation Epoetrry Test
+description: Test module for OE Translation Epoetry
+core_version_requirement: ^9.4 || ^10
+type: module
+package: Testing
+
+dependencies:
+  - oe_translation:oe_translation_epoetry
