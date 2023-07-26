@@ -48,6 +48,13 @@ class BlockFieldProcessor extends DefaultFieldProcessor {
    * {@inheritdoc}
    */
   public function setTranslations($field_data, FieldItemListInterface $field): void {
+    // The block field is usually marked as translatable so that its title
+    // can be translated. However, this means that the referenced block also
+    // would get "translated" and we don't want that. We want the referenced
+    // block to always be the same as on the source.
+    $source_field = $field->getEntity()->getUntranslated()->get($field->getName());
+    $field->setValue($source_field->getValue());
+
     foreach (Element::children($field_data) as $delta) {
       $field_item = $field_data[$delta];
       $property_data = $field_item['settings__label'];
