@@ -409,12 +409,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs[3] = [
       'Info',
       'The request has been Accepted by ePoetry. Planning agent: test. Planning sector: DGT. Message: The request status has been changed to Accepted.',
-      'Anonymous',
+      'Anonymous (not verified)',
     ];
     $expected_logs[4] = [
       'Info',
       'The Portuguese product status has been updated to Accepted.',
-      'Anonymous',
+      'Anonymous (not verified)',
     ];
     $this->assertLogMessagesTable($expected_logs);
 
@@ -440,12 +440,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_logs[5] = [
       'Info',
       'The Portuguese product status has been updated to Ongoing.',
-      'Anonymous',
+      'Anonymous (not verified)',
     ];
     $expected_logs[6] = [
       'Info',
       'The Portuguese translation has been delivered.',
-      'Anonymous',
+      'Anonymous (not verified)',
     ];
 
     $this->assertLogMessagesTable($expected_logs);
@@ -473,6 +473,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $this->user->label(),
     ];
     $this->assertLogMessagesTable($expected_logs);
+    // Assert link to user profile in the log messages table.
+    $rows = $this->getSession()->getPage()->findAll('css', 'table.translation-request-log-messages tbody tr');
+    $this->assertEquals($this->user->toUrl()->toString(), $rows[7]->find('css', 'td:nth-child(4) a')->getAttribute('href'));
+
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('pt-pt'));
     $this->assertEquals("The translation's page - PT", $node->getTranslation('pt-pt')->label());

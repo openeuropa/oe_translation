@@ -295,7 +295,15 @@ function _oe_translation_create_request_logs_tables(TranslationRequestInterface 
       $i,
       ucfirst($log->getType()),
       $log->getMessage(),
-      $log->getOwner()->label(),
+      [
+        'data' => [
+          '#theme' => 'username',
+          '#account' => $log->getOwner(),
+          '#cache' => [
+            'tags' => $log->getOwner()->getCacheTags(),
+          ],
+        ],
+      ],
       \Drupal::service('date.formatter')->format($log->getCreatedTime(), 'short'),
     ];
     $rows[] = [
