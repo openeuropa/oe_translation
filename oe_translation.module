@@ -131,16 +131,35 @@ function oe_translation_field_info_alter(&$info) {
   if (isset($info['path'])) {
     $info['path']['oe_translation_source_field_processor'] = PathFieldProcessor::class;
   }
+  if (isset($info['address'])) {
+    $info['address']['oe_translation_source_field_processor'] = AddressFieldProcessor::class;
+  }
+  if (isset($info['typed_link'])) {
+    $info['typed_link']['column_groups'] = [
+      'uri' => [
+        'label' => t('URI'),
+        'translatable' => TRUE,
+      ],
+      'title' => [
+        'label' => t('Title'),
+        'translatable' => TRUE,
+      ],
+      'options' => [
+        'label' => t('Options'),
+        'translatable' => FALSE,
+      ],
+      'link_type' => [
+        'label' => t('Link type'),
+        'translatable' => TRUE,
+      ],
+    ];
+  }
 
   // Set a default processor class for all fields that do not have one yet.
   foreach ($info as &$field_type) {
     if (!isset($field_type['oe_translation_source_field_processor'])) {
       $field_type['oe_translation_source_field_processor'] = DefaultFieldProcessor::class;
     }
-  }
-
-  if (isset($info['address'])) {
-    $info['address']['oe_translation_source_field_processor'] = AddressFieldProcessor::class;
   }
 }
 
