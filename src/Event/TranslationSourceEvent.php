@@ -51,6 +51,13 @@ class TranslationSourceEvent extends Event {
   protected $originalData = [];
 
   /**
+   * For the save action, whether to actually perform save.
+   *
+   * @var bool
+   */
+  protected $save = FALSE;
+
+  /**
    * TranslationSourceEvent constructor.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -59,11 +66,14 @@ class TranslationSourceEvent extends Event {
    *   The translation data.
    * @param string $langcode
    *   The langcode.
+   * @param bool $save
+   *   Whether the values are being saved.
    */
-  public function __construct(ContentEntityInterface $entity, array $data, string $langcode) {
+  public function __construct(ContentEntityInterface $entity, array $data, string $langcode, bool $save = TRUE) {
     $this->entity = $entity;
     $this->data = $data;
     $this->langcode = $langcode;
+    $this->save = $save;
   }
 
   /**
@@ -124,6 +134,16 @@ class TranslationSourceEvent extends Event {
    */
   public function setOriginalData(array $original_data): void {
     $this->originalData = $original_data;
+  }
+
+  /**
+   * Checks whether the values are being saved.
+   *
+   * @return bool
+   *   Whether the values are being saved.
+   */
+  public function isSave(): bool {
+    return $this->save;
   }
 
 }

@@ -222,7 +222,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, bool $save = TRUE, array $original_data = []): bool {
+  public function saveData(array $data, ContentEntityInterface $entity, string $langcode, bool $save = TRUE, array $original_data = []): ContentEntityInterface {
     // Use the entity revision info service to resolve the correct revision
     // onto which to save the translation.
     $entity = $this->entityRevisionInfo->getEntityRevision($entity, $langcode);
@@ -239,7 +239,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
       $entity->isDefaultRevision($default_revision);
     }
 
-    $event = new TranslationSourceEvent($entity, $data, $langcode);
+    $event = new TranslationSourceEvent($entity, $data, $langcode, $save);
     $event->setOriginalData($original_data);
     $this->eventDispatcher->dispatch($event, TranslationSourceEvent::SAVE);
     $data = $event->getData();
@@ -322,7 +322,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
       $translation->save();
     }
 
-    return TRUE;
+    return $translation;
   }
 
   /**

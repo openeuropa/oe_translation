@@ -7,6 +7,7 @@ namespace Drupal\oe_translation\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\TranslationPreviewManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -38,6 +39,13 @@ class ContentTranslationPreviewController extends ControllerBase {
   protected $previewManager;
 
   /**
+   * The current route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
    * Creates an ContentTranslationPreviewController object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -46,11 +54,14 @@ class ContentTranslationPreviewController extends ControllerBase {
    *   The page cache kill switch.
    * @param \Drupal\oe_translation\TranslationPreviewManagerInterface $previewManager
    *   The translation preview manager.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
+   *   The current route match.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, KillSwitch $killSwitch, TranslationPreviewManagerInterface $previewManager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, KillSwitch $killSwitch, TranslationPreviewManagerInterface $previewManager, RouteMatchInterface $routeMatch) {
     $this->entityTypeManager = $entity_type_manager;
     $this->killSwitch = $killSwitch;
     $this->previewManager = $previewManager;
+    $this->routeMatch = $routeMatch;
   }
 
   /**
@@ -60,7 +71,8 @@ class ContentTranslationPreviewController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('page_cache_kill_switch'),
-      $container->get('oe_translation.content_translation_preview_manager')
+      $container->get('oe_translation.content_translation_preview_manager'),
+      $container->get('current_route_match')
     );
   }
 
@@ -78,6 +90,10 @@ class ContentTranslationPreviewController extends ControllerBase {
   public function previewRequest(TranslationRequestInterface $oe_translation_request, string $language): array {
     $translation = $this->previewManager->getTranslation($oe_translation_request, $language);
     $translation->in_preview = TRUE;
+
+    // Set the current translation into the current route so it can be
+    // accessible by others.
+    $this->routeMatch->getRouteObject()->setDefault('translation_preview_entity', $translation);
 
     // Build view for entity.
     $entity = $oe_translation_request->getContentEntity();
