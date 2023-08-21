@@ -102,18 +102,25 @@ class TranslationRequestEntityTest extends TranslationKernelTestBase {
     $translation_request->setData($data_for_translation);
     $this->assertEquals($data_for_translation, $translation_request->getData());
     // Create a second translation request log entity.
-    $log_message = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_log')->create([
+    $logs_storage = $this->container->get('entity_type.manager')->getStorage('oe_translation_request_log');
+    $log_message = $logs_storage->create([
       'message' => 'The second translation request message.',
       'variables' => [],
       'type' => TranslationRequestLogInterface::ERROR,
     ]);
     $log_message->save();
     $translation_request->addLogMessage($log_message);
+    // Assert the 2 existing log entities.
+    $this->assertCount(2, $logs_storage->loadMultiple());
     $logs = $translation_request->getLogMessages();
     $this->assertEquals('Draft: The translation request message.', $logs[0]->getMessage());
     $this->assertEquals('info', $logs[0]->getType());
     $this->assertEquals('The second translation request message.', $logs[1]->getMessage());
     $this->assertEquals('error', $logs[1]->getType());
+    // Assert the log entities get deleted when the request referencing them is
+    // deleted.
+    $translation_request->delete();
+    $this->assertCount(0, $logs_storage->loadMultiple());
   }
 
 }
