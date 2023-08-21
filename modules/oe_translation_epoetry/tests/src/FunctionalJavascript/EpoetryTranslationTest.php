@@ -263,13 +263,14 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('epoetry', $select->find('css', 'option[selected]')->getValue());
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
 
-    // Pick a deadline, contacts and a message.
-    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    // Select a weekend deadline.
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '08/18/2035');
     $contact_fields = [
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
       'Editor' => 'test_editor',
     ];
+    // Fill in contacts.
     foreach ($contact_fields as $field => $value) {
       $this->getSession()->getPage()->fillField($field, $value);
     }
@@ -282,7 +283,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->checkField('Portuguese');
 
-    // Assert the message length is under 1700 characters.
+    // Add a message and assert its length is over 1700 characters.
     $this->getSession()->getPage()->fillField('Message', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cup');
     $this->getSession()->getPage()->pressButton('Save and send');
     $this->assertSession()->pageTextContains('Please keep the message under 1700 characters.');
@@ -290,6 +291,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Put a smaller message and send.
     $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
     $this->getSession()->getPage()->pressButton('Save and send');
+    // Assert the weekend deadline warning.
+    $this->assertSession()->pageTextContains('The selected deadline is a weekend day and it can delay receiving the translation request.');
 
     $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
 
@@ -297,7 +300,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
     $this->assertCount(1, $requests);
     $xml = reset($requests);
-    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createLinguisticRequest><requestDetails><title>A title prefix: A site ID - The translation\'s page</title><internalReference>Translation request 1</internalReference><requestedDeadline>2032-10-10T23:59:00+02:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Message to the provider. Page URL: http://web:8080/build/en/translations-page</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>The-translations-page.html</fileName><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMSIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDE8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0xIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzFdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTVYxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5UaGUgdHJhbnNsYXRpb24ncyBwYWdlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2032-10-10T23:59:00+02:00" trackChanges="false"><language>BG</language></product><product requestedDeadline="2032-10-10T23:59:00+02:00" trackChanges="false"><language>PT</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:createLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:createLinguisticRequest><requestDetails><title>A title prefix: A site ID - The translation\'s page</title><internalReference>Translation request 1</internalReference><requestedDeadline>2035-08-18T23:59:00+02:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Message to the provider. Page URL: http://web:8080/build/en/translations-page</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>The-translations-page.html</fileName><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMSIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJFTiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDE8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0xIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzFdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTVYxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5UaGUgdHJhbnNsYXRpb24ncyBwYWdlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>EN</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2035-08-18T23:59:00+02:00" trackChanges="false"><language>BG</language></product><product requestedDeadline="2035-08-18T23:59:00+02:00" trackChanges="false"><language>PT</language></product></products></requestDetails><applicationName>digit</applicationName><templateName>WEBTRA</templateName></ns1:createLinguisticRequest></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
 
     // Assert that we got back a correct response and our request was correctly
     // updated.
@@ -314,7 +317,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('epoetry', $request->getTranslatorProvider()->id());
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
-    $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
+    $this->assertEquals('2035-08-18', $request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Message to the provider', $request->getMessage());
     $this->assertEquals('DIGIT/' . date('Y') . '/1001/0/0/TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
@@ -331,7 +334,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'DIGIT/' . date('Y') . '/1001/0/0/TRA',
       'No',
       'No',
-      '2032-Oct-10',
+      '2035-Aug-18',
       // The mock link tu accept the request.
       'Accept',
     ]);
@@ -395,7 +398,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'DIGIT/' . date('Y') . '/1001/0/0/TRA',
       'No',
       'No',
-      '2032-Oct-10',
+      '2035-Aug-18',
       // The mock link tu cancel the request since it's been Accepted.
       'Cancel',
     ]);
@@ -2278,7 +2281,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->clickLink('Remote translations');
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->checkField('Auto sync translations');
-    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/11/2032');
     $contact_fields = [
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -2291,6 +2294,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
     $this->getSession()->getPage()->pressButton('Save and send');
     $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+    // Assert there is no weekend deadline warning.
+    $this->assertSession()->pageTextNotContains('The selected deadline is a weekend day and it can delay receiving the translation request.');
 
     // Translate the language.
     $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
