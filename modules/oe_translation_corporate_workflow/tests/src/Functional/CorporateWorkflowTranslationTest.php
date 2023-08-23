@@ -18,6 +18,7 @@ use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the local translation revision capability.
@@ -1003,6 +1004,97 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertInstanceOf(TranslationRequestInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
     $version_two_request = $node->getTranslation('fr')->get('translation_request')->entity;
     $this->assertNotEquals($version_one_request->id(), $version_two_request->id());
+  }
+
+  /**
+   * Tests that we can delete a revision translation individually.
+   */
+  public function testTranslationRevisionDelete() {
+    $role = Role::load('oe_translator');
+    $role->grantPermission('delete any page content');
+    $role->grantPermission('delete content translations');
+    $role->grantPermission('delete all revisions');
+    $role->save();
+
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+
+    // Translate to FR in version 1.0.0.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in French (version 1.0.0)');
+    $values = [
+      'Translation' => 'My node FR',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Create a new draft and validate it.
+    $node = $node_storage->load($node->id());
+    $node->set('title', 'My node 2');
+    $node->set('moderation_state', 'draft');
+    $node->save();
+    $node = $this->moderateNode($node, 'validated');
+
+    // Go to the dashboard and assert our table now has columns indicating
+    // translation info for each version.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertExtendedDashboardExistingTranslations([
+      'en' => [
+        'published_title' => 'My node',
+        'validated_title' => 'My node 2',
+      ],
+      'fr' => [
+        'published_title' => 'My node FR',
+        'validated_title' => 'My node FR',
+      ],
+    ], ['1.0.0 / published', '2.0.0 / validated']);
+
+    // Count all the node revisions and their translations to establish a
+    // baseline.
+    $revision_ids = $node_storage->getQuery()->allRevisions()->accessCheck(FALSE)->execute();
+    $revisions = $node_storage->loadMultipleRevisions(array_keys($revision_ids));
+    $this->assertCount(9, $revisions);
+    $non_translated_revision_ids = [1, 2, 3, 4];
+    $translated_revision_ids = [5, 6, 7, 8, 9];
+    foreach ($non_translated_revision_ids as $id) {
+      $revision = $node_storage->loadRevision($id);
+      $this->assertFalse($revision->hasTranslation('fr'));
+    }
+    foreach ($translated_revision_ids as $id) {
+      $revision = $node_storage->loadRevision($id);
+      $this->assertTrue($revision->hasTranslation('fr'));
+    }
+
+    // Delete the validated FR translation.
+    $this->getSession()->getPage()->find('xpath', '//table[@class="existing-translations-table"]//tr[@hreflang="fr"]//td[5]')->clickLink('Delete');
+    $this->assertSession()->pageTextContains('Are you sure you want to delete the French translation of the revision');
+    $this->getSession()->getPage()->pressButton('Delete');
+    $this->assertSession()->pageTextContains(sprintf('Revision translation in French from %s of My node FR has been deleted.', \Drupal::service('date.formatter')->format($node_storage->loadRevision(9)->getRevisionCreationTime())));
+    $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
+    // The last revision no longer has a translation and there are the same
+    // number of revisions in the system.
+    $non_translated_revision_ids = [1, 2, 3, 4, 9];
+    $translated_revision_ids = [5, 6, 7, 8];
+    foreach ($non_translated_revision_ids as $id) {
+      $revision = $node_storage->loadRevision($id);
+      $this->assertFalse($revision->hasTranslation('fr'));
+    }
+    foreach ($translated_revision_ids as $id) {
+      $revision = $node_storage->loadRevision($id);
+      $this->assertTrue($revision->hasTranslation('fr'));
+    }
+    $revisions = $node_storage->loadMultipleRevisions(array_keys($revision_ids));
+    $this->assertCount(9, $revisions);
   }
 
   /**
