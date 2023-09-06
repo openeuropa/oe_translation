@@ -303,7 +303,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $delete = Url::fromRoute('node.revision_delete_confirm', [
         'node' => $translation->id(),
         'node_revision' => $translation->getRevisionId(),
-      ], ['language' => $translation->language()]);
+      ], [
+        'language' => $translation->language(),
+        'query' => ['destination' => Url::fromRoute('<current>')->toString()],
+      ]);
     }
     if ($delete->access()) {
       $links['delete'] = [

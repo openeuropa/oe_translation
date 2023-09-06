@@ -8,6 +8,7 @@ use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
 use Drupal\oe_translation\TranslatorProvidersInterface;
 use Drupal\oe_translation_corporate_workflow\Controller\TranslationLocalController;
+use Drupal\oe_translation_corporate_workflow\Form\NodeRevisionTranslationDeleteForm;
 use Drupal\oe_translation_corporate_workflow\Form\RemoteTranslationNewForm;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -58,6 +59,14 @@ class RouteSubscriber extends RouteSubscriberBase {
         $defaults['_form'] = RemoteTranslationNewForm::class;
         $route->setDefaults($defaults);
       }
+    }
+
+    // Switch out the node revision delete confirm route.
+    $route = $collection->get('node.revision_delete_confirm');
+    if ($route) {
+      $defaults = $route->getDefaults();
+      $defaults['_form'] = NodeRevisionTranslationDeleteForm::class;
+      $route->setDefaults($defaults);
     }
 
     return $collection;
