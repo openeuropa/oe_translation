@@ -350,8 +350,22 @@ function oe_translation_epoetry_oe_translation_request_presave(TranslationReques
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REJECTED,
       TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW,
     ])) {
-      // It means at least one language is still not Cancelled or Synchronised.
+      // It means at least one language is still not Cancelled or in Review.
       $request_translated = FALSE;
+    }
+  }
+
+  if (!$request_translated && $request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED) {
+    // If the request has been marked as finished BUT one of the languages
+    // becomes in Review again, we need to mark the request back to Translated.
+    // This can happen if a translation is dispatched again from ePoetry once
+    // the request has already been finished. And we do this to give the user
+    // a chance to see it and review it.
+    foreach ($languages as $language_with_status) {
+      if ($language_with_status->getStatus() === TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW) {
+        $request_translated = TRUE;
+        break;
+      }
     }
   }
 

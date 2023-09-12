@@ -2272,6 +2272,24 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->find('css', 'summary')->click();
     $this->assertSession()->pageTextContains('The French translation has been automatically accepted.');
     $this->assertSession()->pageTextNotContains('The French translation has been accepted.');
+
+    // Sync the translation and assert that if we resend the translation, it
+    // doesn't get auto-accepted anymore.
+    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
+    $storage->resetCache();
+    $request = $storage->load($request->id());
+    \Drupal::service('oe_translation_remote.translation_synchroniser')->synchronise($request, 'fr');
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    $languages = $request->getTargetLanguages();
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED, $languages['fr']->getStatus());
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    $languages = $request->getTargetLanguages();
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW, $languages['fr']->getStatus());
   }
 
   /**
@@ -2320,6 +2338,18 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->find('css', 'summary')->click();
     $this->assertSession()->pageTextContains('The Bulgarian translation has been automatically synchronised with the content.');
     $this->assertSession()->pageTextNotContains('The Bulgarian translation has been synchronised with the content.');
+
+    // Sync the translation and assert that if we resend the translation, it
+    // doesn't get auto-synced anymore.
+    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
+    $storage->resetCache();
+    $request = $storage->load($request->id());
+    EpoetryTranslationMockHelper::translateRequest($request, 'bg');
+    $storage->resetCache();
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
+    $request = $storage->load($request->id());
+    $languages = $request->getTargetLanguages();
+    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW, $languages['bg']->getStatus());
   }
 
   /**
@@ -2668,8 +2698,19 @@ class EpoetryTranslationTest extends TranslationTestBase {
       $storage->resetCache();
       /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
       $request = $storage->load($request->id());
-      // The request status has been marked as Finished.
+      // The request status has been marked as Translated if one of the
+      // languages is in Review or Finished if one of the languages is synced.
       $this->assertEquals($expected_status, $request->getRequestStatus());
+
+      if ($expected_status === TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED) {
+        // If the request was marked as Finished, resend the synced translation
+        // and assert the request was marked back to Translated.
+        EpoetryTranslationMockHelper::translateRequest($request, 'it');
+        $storage->resetCache();
+        /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+        $request = $storage->load($request->id());
+        $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
+      }
       $part++;
     }
   }
