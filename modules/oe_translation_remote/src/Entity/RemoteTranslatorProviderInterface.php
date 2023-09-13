@@ -49,4 +49,12 @@ interface RemoteTranslatorProviderInterface extends ConfigEntityInterface {
    */
   public function setProviderConfiguration(array $configuration): RemoteTranslatorProviderInterface;
 
+  /**
+   * Returns whether the translator is enabled.
+   *
+   * @return bool
+   *   Whether it's enabled or not.
+   */
+  public function isEnabled(): bool;
+
 }

@@ -137,6 +137,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextNotContains('Plugin configuration for Remote one');
     $this->assertSession()->pageTextNotContains('This plugin does not have any configuration options.');
     $this->assertSession()->fieldExists('A test configuration string');
+    $this->assertSession()->checkboxChecked('Enabled');
 
     // Create a new remote translator provider.
     $this->getSession()->getPage()->fillField('Name', 'Test provider');
@@ -149,7 +150,23 @@ class RemoteTranslationTest extends TranslationTestBase {
     $remote_translator = \Drupal::entityTypeManager()->getStorage('remote_translation_provider')->load('test_provider');
     $this->assertEquals('Test provider', $remote_translator->label());
     $this->assertEquals('remote_two', $remote_translator->getProviderPlugin());
+    $this->assertEquals('remote_two', $remote_translator->isEnabled());
     $this->assertEquals(['configuration_string' => 'Plugin configuration.'], $remote_translator->getProviderConfiguration());
+
+    // Assert we can see the Delete link on the edit form because we don't
+    // yet have any translation requests with that provider.
+    $this->drupalGet($remote_translator->toUrl('edit-form'));
+    $this->assertSession()->linkExistsExact('Delete');
+
+    // Create a translation request with the remote_two provider to test we
+    // can no longer delete the provider.
+    $request = TranslationRequestTestRemote::create([
+      'translator_provider' => 'test_provider',
+    ]);
+    $request->save();
+    $this->getSession()->reload();
+    $this->assertSession()->linkNotExistsExact('Delete');
+    $request->delete();
 
     // Edit the provider.
     $this->drupalGet($remote_translator->toUrl('edit-form'));
@@ -159,10 +176,54 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains('Saved the Test provider edited Remote Translator Provider.');
 
+    // Disable the provider and assert the form checkbox.
+    $this->drupalGet($remote_translator->toUrl('edit-form'));
+    $this->getSession()->getPage()->uncheckField('Enabled');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Saved the Test provider edited Remote Translator Provider.');
+    $this->drupalGet($remote_translator->toUrl('edit-form'));
+    $this->assertSession()->checkboxNotChecked('Enabled');
+
     // Delete the provider.
     $this->drupalGet($remote_translator->toUrl('delete-form'));
     $this->getSession()->getPage()->pressButton('Delete');
     $this->assertSession()->pageTextContains('The remote translator provider Test provider edited has been deleted.');
+
+    // Assert that we can see the Remote translation page on a node translation
+    // page because we have the two remote translators.
+    $user = $this->setUpTranslatorUser();
+    $this->drupalLogin($user);
+    $node = $this->createBasicTestNode();
+    $this->drupalGet('/node/' . $node->id() . '/translations');
+    $this->assertSession()->linkExistsExact('Remote translations');
+    $this->clickLink('Remote translations');
+
+    // Assert we have the form for selecting the translator.
+    $select = $this->assertSession()->selectExists('Translator');
+    $options = $select->findAll('css', 'option');
+    array_walk($options, function (NodeElement &$option) {
+      $option = $option->getValue();
+    });
+    $this->assertEquals([
+      '',
+      'remote_one',
+      'remote_two',
+    ], $options);
+
+    // Delete a remote translators and disable one, and assert we no longer
+    // have a Remote translations page.
+    /** @var \Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface[] $translators */
+    $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadMultiple();
+    $translator = array_pop($translators);
+    $translator->delete();
+    $translator = array_pop($translators);
+    $translator->set('enabled', FALSE);
+    $translator->save();
+
+    $this->drupalGet('/node/' . $node->id() . '/translations');
+    $this->assertSession()->linkNotExistsExact('Remote translations');
+    $this->drupalGet('/node/' . $node->id() . '/translations/remote');
+    $this->assertSession()->pageTextContains('Access denied');
   }
 
   /**

@@ -79,6 +79,19 @@ class RemoteTranslationNewForm extends FormBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function access(): AccessResultInterface {
+    /** @var \Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface[] $translators */
+    $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadByProperties(['enabled' => TRUE]);
+    if (!$translators) {
+      return AccessResult::forbidden()->addCacheTags(['config:remote_translation_provider_list']);
+    }
+
+    return AccessResult::allowed()->addCacheTags(['config:remote_translation_provider_list']);
+  }
+
+  /**
    * Title callback for the page.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
@@ -115,7 +128,7 @@ class RemoteTranslationNewForm extends FormBase {
     }
 
     /** @var \Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface[] $translators */
-    $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadMultiple();
+    $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadByProperties(['enabled' => TRUE]);
     $options = [];
     foreach ($translators as $translator) {
       $options[$translator->id()] = $translator->label();

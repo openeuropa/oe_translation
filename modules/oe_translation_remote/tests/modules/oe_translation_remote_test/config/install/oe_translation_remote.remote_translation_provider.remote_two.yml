@@ -6,3 +6,4 @@ label: 'Remote two'
 plugin: remote_two
 plugin_configuration:
   configuration_string: bla
+enabled: true

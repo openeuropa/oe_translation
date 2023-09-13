@@ -128,6 +128,12 @@ class ModifyLinguisticRequestForm extends FormBase {
       return AccessResult::forbidden()->addCacheableDependency($cache);
     }
 
+    $provider = $translation_request->getTranslatorProvider();
+    $cache->addCacheableDependency($provider);
+    if (!$provider->isEnabled()) {
+      return AccessResult::forbidden()->addCacheableDependency($cache);
+    }
+
     // If there are no more languages to request, do not allow access.
     $existing_languages = $translation_request->getTargetLanguages();
     $all_languages = \Drupal::languageManager()->getLanguages();

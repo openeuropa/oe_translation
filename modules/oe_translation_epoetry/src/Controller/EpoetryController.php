@@ -8,6 +8,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
@@ -72,12 +73,15 @@ class EpoetryController extends ControllerBase {
    *   The logger channel factory.
    * @param \OpenEuropa\EPoetry\TicketValidation\TicketValidationInterface $ticketValidation
    *   The ticket validation service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, TicketValidationInterface $ticketValidation) {
+  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, TicketValidationInterface $ticketValidation, EntityTypeManagerInterface $entityTypeManager) {
     $this->newVersionRequestHandler = $newVersionRequestHandler;
     $this->eventDispatcher = $eventDispatcher;
     $this->loggerChannelFactory = $loggerChannelFactory;
     $this->ticketValidation = $ticketValidation;
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -88,8 +92,38 @@ class EpoetryController extends ControllerBase {
       $container->get('oe_translation_epoetry.new_version_request_handler'),
       $container->get('event_dispatcher'),
       $container->get('logger.factory'),
-      $container->get('oe_translation_epoetry.notification_ticket_validation')
+      $container->get('oe_translation_epoetry.notification_ticket_validation'),
+      $container->get('entity_type.manager')
     );
+  }
+
+  /**
+   * Access checker for the admin view.
+   *
+   * Only accessible if the user has the permission and we have an ePoetry
+   * translator configured.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user.
+   */
+  public function adminViewAccess(AccountInterface $account) {
+    $cache = new CacheableMetadata();
+    $cache->addCacheContexts(['user.permissions']);
+    if (!$account->hasPermission('translate any entity')) {
+      return AccessResult::forbidden()->addCacheableDependency($cache);
+    }
+
+    $cache->addCacheTags(['config:remote_translation_provider_list']);
+    /** @var \Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface[] $translators */
+    $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadByProperties([
+      'plugin' => 'epoetry',
+      'enabled' => TRUE,
+    ]);
+    if (!$translators) {
+      return AccessResult::forbidden()->addCacheableDependency($cache);
+    }
+
+    return AccessResult::allowed()->addCacheableDependency($cache);
   }
 
   /**
@@ -199,6 +233,12 @@ class EpoetryController extends ControllerBase {
     $cache->addCacheableDependency($translation_request);
 
     if (!$account->hasPermission('translate any entity')) {
+      return AccessResult::forbidden()->addCacheableDependency($cache);
+    }
+
+    $provider = $translation_request->getTranslatorProvider();
+    $cache->addCacheableDependency($provider);
+    if (!$provider->isEnabled()) {
       return AccessResult::forbidden()->addCacheableDependency($cache);
     }
 

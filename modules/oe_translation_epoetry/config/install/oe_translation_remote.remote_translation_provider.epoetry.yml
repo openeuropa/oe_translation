@@ -7,3 +7,4 @@ plugin: epoetry
 plugin_configuration:
   contacts: { }
   auto_accept: false
+enabled: false

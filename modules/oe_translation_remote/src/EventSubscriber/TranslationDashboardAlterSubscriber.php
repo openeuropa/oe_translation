@@ -112,9 +112,11 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $rows = [];
     foreach ($translation_requests as $translation_request) {
+      $provider = $translation_request->getTranslatorProvider();
+      $provider_label = $provider->isEnabled() ? $provider->label() : $provider->label() . ' [Disabled]';
       $entity = $translation_request->getContentEntity();
       $row = [
-        'translator' => $translation_request->getTranslatorProvider()->label(),
+        'translator' => $provider_label,
         'status' => [
           'data' => [
             '#theme' => 'tooltip',

@@ -74,8 +74,10 @@ class RequestFactory extends RequestClientFactory {
     $this->certificateAuthentication = $authentication;
     if (!$endpoint) {
       $logger->error('The ePoetry endpoint is not configured');
-      throw new \Exception('The ePoetry endpoint is not configured');
-      // @todo handle failure.
+      // Nullify the endpoint so the application doesn't crash. This may happen
+      // if a system doesn't use ePoetry but the module is enabled and there is
+      // a translator provider config using it.
+      $endpoint = '';
     }
 
     // Increase the timeout to 60 seconds to accommodate for slower ePoetry
@@ -95,7 +97,13 @@ class RequestFactory extends RequestClientFactory {
    *   The ePoetry service URL.
    */
   public static function getEpoetryServiceUrl(): ?string {
-    return Settings::get('epoetry.service_url');
+    $service_url = Settings::get('epoetry.service_url');
+    if ($service_url === FALSE) {
+      // It means the value comes from an env variable that is not set.
+      return NULL;
+    }
+
+    return $service_url;
   }
 
   /**
@@ -105,7 +113,13 @@ class RequestFactory extends RequestClientFactory {
    *   The ePoetry application name.
    */
   public static function getEpoetryApplicationName(): ?string {
-    return Settings::get('epoetry.application_name');
+    $application_name = Settings::get('epoetry.application_name');
+    if ($application_name === FALSE) {
+      // It means the value comes from an env variable that is not set.
+      return NULL;
+    }
+
+    return $application_name;
   }
 
   /**

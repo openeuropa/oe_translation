@@ -40,7 +40,8 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "id",
  *     "label",
  *     "plugin",
- *     "plugin_configuration"
+ *     "plugin_configuration",
+ *     "enabled"
  *   }
  * )
  */
@@ -75,6 +76,13 @@ class RemoteTranslatorProvider extends ConfigEntityBase implements RemoteTransla
   protected $plugin_configuration;
 
   /**
+   * Whether the translator is enabled.
+   *
+   * @var bool
+   */
+  protected $enabled = TRUE;
+
+  /**
    * {@inheritdoc}
    */
   public function getProviderPlugin(): ?string {
@@ -102,6 +110,13 @@ class RemoteTranslatorProvider extends ConfigEntityBase implements RemoteTransla
   public function setProviderConfiguration(array $configuration): RemoteTranslatorProviderInterface {
     $this->plugin_configuration = $configuration;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEnabled(): bool {
+    return (bool) $this->enabled;
   }
 
 }

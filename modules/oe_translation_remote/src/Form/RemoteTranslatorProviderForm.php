@@ -121,6 +121,13 @@ class RemoteTranslatorProviderForm extends EntityForm {
       ];
     }
 
+    $form['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#description' => $this->t('Whether this plugin can be used'),
+      '#default_value' => $translator->isEnabled(),
+    ];
+
     return $form;
   }
 

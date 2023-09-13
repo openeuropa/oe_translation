@@ -64,6 +64,7 @@ class RouteSubscriber extends RouteSubscriberBase {
         ],
         [
           '_permission' => 'translate any entity',
+          '_custom_access' => '\Drupal\oe_translation_remote\Form\RemoteTranslationNewForm::access',
         ],
         [
           'parameters' => [
