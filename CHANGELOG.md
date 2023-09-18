@@ -1,10 +1,32 @@
-# Change Log
+# Changelog
+
+## [2.3.0](https://github.com/openeuropa/oe_translation/tree/2.3.0) (2023-09-14)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.2.0...2.3.0)
+
+**Merged pull requests:**
+
+- EWPP-3547: Allow the deletion of a revision translation. [\#275](https://github.com/openeuropa/oe_translation/pull/275) ([upchuk](https://github.com/upchuk))
+- EWPP-3449: Use link to the user on the request log message. [\#273](https://github.com/openeuropa/oe_translation/pull/273) ([sergepavle](https://github.com/sergepavle))
+- EWPP-3477: Dropping PHP 8.0 support and fixing ePoetry assertions. [\#272](https://github.com/openeuropa/oe_translation/pull/272) ([upchuk](https://github.com/upchuk))
+- EWPP-3413: Tracking the translation request on sync. [\#270](https://github.com/openeuropa/oe_translation/pull/270) ([upchuk](https://github.com/upchuk))
+- EWPP-3430: Allow a site to function correctly without ePoetry enabled. [\#269](https://github.com/openeuropa/oe_translation/pull/269) ([upchuk](https://github.com/upchuk))
+- EWPP-3285: Ensuring that block field reference value is not translatable [\#267](https://github.com/openeuropa/oe_translation/pull/267) ([upchuk](https://github.com/upchuk))
+- EWPP-3341: Fixing ePoetry request titles to not mess up quotes. [\#261](https://github.com/openeuropa/oe_translation/pull/261) ([upchuk](https://github.com/upchuk))
+- EWPP-3327: Adding translation column groups to the typed link field t… [\#260](https://github.com/openeuropa/oe_translation/pull/260) ([upchuk](https://github.com/upchuk))
+- EWPP-3250: Refactoring the preview system to use the source manager. [\#253](https://github.com/openeuropa/oe_translation/pull/253) ([upchuk](https://github.com/upchuk))
+- EWPP-3291: Update request in corporate workflow should not be possible before a new version. [\#252](https://github.com/openeuropa/oe_translation/pull/252) ([upchuk](https://github.com/upchuk))
+- EWPP-3253: Adding a lock to the translation request status updates. [\#251](https://github.com/openeuropa/oe_translation/pull/251) ([upchuk](https://github.com/upchuk))
+- EWPP-3034: Show warning message upon submitting a request with weekend deadline. [\#241](https://github.com/openeuropa/oe_translation/pull/241) ([22Alexandra](https://github.com/22Alexandra))
+- EWPP-3193: Delete log messages when deleting a translation request. [\#240](https://github.com/openeuropa/oe_translation/pull/240) ([22Alexandra](https://github.com/22Alexandra))
 
 ## [2.2.0](https://github.com/openeuropa/oe_translation/tree/2.2.0) (2023-06-22)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.1.0...2.2.0)
 
 **Merged pull requests:**
 
+- Release 2.2.0 changelog. [\#265](https://github.com/openeuropa/oe_translation/pull/265) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-3388: Ensuring that ePoetry server errors are logged correctly in the request log. [\#263](https://github.com/openeuropa/oe_translation/pull/263) ([upchuk](https://github.com/upchuk))
 - EWPP-3396: Increase ePoetry request timeout. [\#262](https://github.com/openeuropa/oe_translation/pull/262) ([upchuk](https://github.com/upchuk))
 
