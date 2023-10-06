@@ -264,6 +264,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       if ($this->lockBackend->wait($lock_id, 60)) {
         $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
         $this->logger->error($message);
+        $event->setErrorResponse($message);
         $translation_request->log('The <strong>@language</strong> product could not be updated to <strong>@status</strong> due to Lock issues. Please check the logs.', [
           '@language' => $language->getName(),
           '@status' => $status,
@@ -305,6 +306,9 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *
    * @param \OpenEuropa\EPoetry\Notification\Event\Product\DeliveryEvent $event
    *   The event.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function onProductDelivery(DeliveryEvent $event): void {
     $product = $event->getProduct();
@@ -326,6 +330,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       if ($this->lockBackend->wait($lock_id, 60)) {
         $message = sprintf('Acquiring lock failed: The translation request %s cannot be updated.', $translation_request->id());
         $this->logger->error($message);
+        $event->setErrorResponse($message);
         $translation_request->log('The <strong>@language</strong> translation could not be delivered to Lock issues. Please check the logs.', [
           '@language' => $language->getName(),
         ], TranslationRequestLogInterface::ERROR);
@@ -336,6 +341,13 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     // Process the translated file.
     $file = $product->getFile();
     $data = $this->contentFormatter->import($file, $translation_request);
+    if (!$data) {
+      $event->setErrorResponse('Translation data is missing or is invalid.');
+      $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
+      $this->logger->error('The ePoetry notification did not provide a valid translation. Reference: <strong>@reference</strong>.', ['@reference' => $reference]);
+      return;
+    }
+
     $translation_request->setTranslatedData($langcode, reset($data));
     $translation_request->log('The <strong>@language</strong> translation has been delivered.', ['@language' => $language->getName()]);
     // Check if we need to auto-accept and/or auto-sync the request.

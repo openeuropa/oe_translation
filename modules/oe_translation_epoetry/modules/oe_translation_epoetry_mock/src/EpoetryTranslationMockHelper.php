@@ -28,6 +28,13 @@ class EpoetryTranslationMockHelper {
   public static $databasePrefix;
 
   /**
+   * Potential errors to include when sending a translation.
+   *
+   * @var array
+   */
+  public static $translationRequestErrors = [];
+
+  /**
    * Adds dummy translation request values for a given language.
    *
    * @param \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $request
@@ -53,6 +60,11 @@ class EpoetryTranslationMockHelper {
     // Set the translated data onto the request as the original so that we can
     // export it using the content exporter.
     $request->setData($data);
+
+    if (isset(static::$translationRequestErrors['missing translation'])) {
+      $request->setData([]);
+    }
+
     $exported = \Drupal::service('oe_translation_epoetry.html_formatter')->export($request);
 
     $values = [

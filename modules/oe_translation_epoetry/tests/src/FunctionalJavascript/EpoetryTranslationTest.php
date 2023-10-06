@@ -431,6 +431,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['pt-pt']['accepted_deadline'] = '2050-Apr-04';
 
     // Send the translation.
+    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
     EpoetryTranslationMockHelper::translateRequest($request, 'pt-pt');
     $this->getSession()->reload();
     $expected_languages['pt-pt']['status'] = 'Review';
@@ -450,6 +451,11 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ];
 
     $this->assertLogMessagesTable($expected_logs);
+
+    // Assert the logs themselves.
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $log = $logs[3];
+    $this->assertStringContainsString('The translation has been saved.', $log['context']['response']);
 
     // Sync the translation (first accept it).
     $this->getSession()->getPage()->clickLink('Review');
@@ -1597,6 +1603,25 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
     $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
+  }
+
+  /**
+   * Tests the product delivery errors.
+   */
+  public function testProductDeliveryErrors(): void {
+    $node = $this->createBasicTestNode();
+    $request = $this->createNodeTranslationRequest($node);
+    $request->save();
+
+    // Translate the request with a missing/broken translation file.
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::$translationRequestErrors['missing translation'] = TRUE;
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $log = $logs[3];
+    $this->assertStringContainsString('The ePoetry notification did not provide a valid translation. Reference:', $log['message']);
+    $log = $logs[4];
+    $this->assertStringContainsString('<success>false</success><message>Translation data is missing or is invalid.</message>', $log['context']['response']);
   }
 
   /**
