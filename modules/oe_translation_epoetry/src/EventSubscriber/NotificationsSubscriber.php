@@ -338,6 +338,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $data = $this->contentFormatter->import($file, $translation_request);
     $translation_request->setTranslatedData($langcode, reset($data));
     $translation_request->log('The <strong>@language</strong> translation has been delivered.', ['@language' => $language->getName()]);
+    // Check if we need to auto-accept and/or auto-sync the request.
     $auto_accept = $translation_request->isAutoAccept();
     $auto_sync = $translation_request->isAutoSync();
     // Check the provider configuration because we may have global settings for
@@ -345,6 +346,14 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     $provider_configuration = $translation_request->getTranslatorProvider()->getProviderConfiguration();
     if ((bool) $provider_configuration['auto_accept'] === TRUE) {
       $auto_accept = TRUE;
+    }
+
+    // We can only auto-accept and auto-sync if the language has not already
+    // been synced. This is to prevent issues if ePoetry sends a translation
+    // again after it has done already and the request is potentially finished.
+    if ($translation_request->getTargetLanguage($langcode)->getStatus() === TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED) {
+      $auto_accept = FALSE;
+      $auto_sync = FALSE;
     }
 
     $status = $auto_accept ? TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED : TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW;
