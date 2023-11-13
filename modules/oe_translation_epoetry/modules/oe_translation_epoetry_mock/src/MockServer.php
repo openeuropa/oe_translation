@@ -8,6 +8,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\State\StateInterface;
+use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossierResponse;
@@ -329,9 +330,9 @@ class MockServer implements ContainerInjectionInterface {
     /** @var \OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier $request_in */
     $request_in = $serializer->deserialize($xml_request->Body->addNewPartToDossier->asXml(), AddNewPartToDossier::class, 'xml');
 
+    $dossiers = RequestFactory::getEpoetryDossiers();
     $number = $request_in->getDossier()->getNumber();
-    $last_part_for_number = $this->state->get('oe_translation_epoetry_mock.last_part_for_number', []);
-    $last_part = $last_part_for_number[$number] ?? 0;
+    $last_part = $dossiers[$number]['part'] ?? 0;
     $new_part = $last_part + 1;
 
     $dossier = (new DossierReference())
@@ -355,9 +356,6 @@ class MockServer implements ContainerInjectionInterface {
 
     $response = new AddNewPartToDossierResponse();
     $response->setReturn($linguistic_request);
-
-    $last_part_for_number[$number] = $new_part;
-    $this->state->set('oe_translation_epoetry_mock.last_part_for_number', $last_part_for_number);
 
     return $response;
   }
