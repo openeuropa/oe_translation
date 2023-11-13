@@ -1,0 +1,41 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_address
+    - node.type.multivalue
+  module:
+    - address
+    - content_translation
+third_party_settings:
+  content_translation:
+    translation_sync:
+      langcode: langcode
+      country_code: country_code
+      administrative_area: administrative_area
+      locality: locality
+      dependent_locality: dependent_locality
+      postal_code: postal_code
+      sorting_code: sorting_code
+      address_line1: address_line1
+      address_line2: address_line2
+      organization: organization
+      given_name: given_name
+      additional_name: additional_name
+      family_name: family_name
+id: node.multivalue.field_address
+field_name: field_address
+entity_type: node
+bundle: multivalue
+label: Address
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  available_countries: {  }
+  langcode_override: ''
+  field_overrides: {  }
+  fields: {  }
+field_type: address

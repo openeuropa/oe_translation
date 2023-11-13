@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - oe_content_timeline_field
+id: node.field_timeline
+field_name: field_timeline
+entity_type: node
+type: timeline_field
+settings:
+  translation_multivalue: false
+module: oe_content_timeline_field
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

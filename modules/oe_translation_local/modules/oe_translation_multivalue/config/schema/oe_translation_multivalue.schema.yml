@@ -1,0 +1,23 @@
+field.storage_settings.description_list_field:
+  type: mapping
+  label: 'Description list storage settings'
+  mapping:
+    translation_multivalue:
+      type: boolean
+      label: Translation multivalue
+
+field.storage_settings.address:
+  type: mapping
+  label: 'Address storage settings'
+  mapping:
+    translation_multivalue:
+      type: boolean
+      label: Translation multivalue
+
+field.storage_settings.timeline_field:
+  type: mapping
+  label: 'Timeline storage settings'
+  mapping:
+    translation_multivalue:
+      type: boolean
+      label: Translation multivalue

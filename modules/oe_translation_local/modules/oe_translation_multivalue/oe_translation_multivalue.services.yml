@@ -1,0 +1,4 @@
+services:
+  oe_translation_multivalue.translation_id_generator:
+    class: Drupal\oe_translation_multivalue\MultivalueTranslationIdGenerator
+    arguments: ['@entity_type.manager', '@uuid', '@database']

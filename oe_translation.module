@@ -24,6 +24,7 @@ use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\AddressFieldProcessor;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\DefaultFieldProcessor;
+use Drupal\oe_translation\TranslationSourceFieldProcessor\DescriptionListFieldProcessor;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\MetatagsFieldProcessor;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\PathFieldProcessor;
 
@@ -133,6 +134,9 @@ function oe_translation_field_info_alter(&$info) {
   }
   if (isset($info['address'])) {
     $info['address']['oe_translation_source_field_processor'] = AddressFieldProcessor::class;
+  }
+  if (isset($info['description_list_field'])) {
+    $info['description_list_field']['oe_translation_source_field_processor'] = DescriptionListFieldProcessor::class;
   }
   if (isset($info['typed_link'])) {
     $info['typed_link']['column_groups'] = [
