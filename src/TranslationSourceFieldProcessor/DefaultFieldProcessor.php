@@ -144,6 +144,11 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
           }
 
           $field->offsetGet($delta)->set($property, $property_data['#translation']['#text']);
+
+          // If the field has a format, set it.
+          if (isset($property_data['#format'])) {
+            $field->offsetGet($delta)->set('format', $property_data['#format']);
+          }
         }
       }
     }
