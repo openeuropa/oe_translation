@@ -1,11 +1,30 @@
 # Changelog
 
-## [2.3.0](https://github.com/openeuropa/oe_translation/tree/2.3.0) (2023-09-14)
+## [2.4.0](https://github.com/openeuropa/oe_translation/tree/2.4.0) (2023-11-21)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.3.0...2.4.0)
+
+**Closed issues:**
+
+- Cannot apply patch stop\_propagation [\#279](https://github.com/openeuropa/oe_translation/issues/279)
+- Dependency to older version of tmgmt module [\#185](https://github.com/openeuropa/oe_translation/issues/185)
+- Openeuropa Translation use of deprecated function [\#182](https://github.com/openeuropa/oe_translation/issues/182)
+- Route "view.tmgmt\_translation\_all\_job\_items.page\_1" does not exist [\#180](https://github.com/openeuropa/oe_translation/issues/180)
+- "The job has no provider assigned" when submitting a job from the TMGMT/sources page. [\#116](https://github.com/openeuropa/oe_translation/issues/116)
+
+**Merged pull requests:**
+
+- EWPP-3684: Add handling for missing translation data. [\#278](https://github.com/openeuropa/oe_translation/pull/278) ([upchuk](https://github.com/upchuk))
+- EWPP-3254: Re-opening translation if resent and prevent auto-accept/sync in this case. [\#276](https://github.com/openeuropa/oe_translation/pull/276) ([upchuk](https://github.com/upchuk))
+- EWPP-3263: Translation multivalue submodule [\#255](https://github.com/openeuropa/oe_translation/pull/255) ([upchuk](https://github.com/upchuk))
+
+## [2.3.0](https://github.com/openeuropa/oe_translation/tree/2.3.0) (2023-09-18)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.2.0...2.3.0)
 
 **Merged pull requests:**
 
+- Prepare release 2.3.0. [\#277](https://github.com/openeuropa/oe_translation/pull/277) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-3547: Allow the deletion of a revision translation. [\#275](https://github.com/openeuropa/oe_translation/pull/275) ([upchuk](https://github.com/upchuk))
 - EWPP-3449: Use link to the user on the request log message. [\#273](https://github.com/openeuropa/oe_translation/pull/273) ([sergepavle](https://github.com/sergepavle))
 - EWPP-3477: Dropping PHP 8.0 support and fixing ePoetry assertions. [\#272](https://github.com/openeuropa/oe_translation/pull/272) ([upchuk](https://github.com/upchuk))
