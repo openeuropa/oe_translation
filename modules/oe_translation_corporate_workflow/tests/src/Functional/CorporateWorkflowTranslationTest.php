@@ -1098,6 +1098,71 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
   }
 
   /**
+   * Test that we don't get a validation.
+   */
+  public function testEntityChangedConstraint() {
+    // Log in so that validation doesn't fail due to lack of access to move
+    // from transition to transition.
+    $user = $this->createUser([], NULL, TRUE);
+    $this->drupalLogin($user);
+
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    // Create a translated node.
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->create([
+      'type' => 'page',
+      'title' => 'My node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+
+    // Translate to FR in version 1.0.0.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $values = [
+      'Translation' => 'My node FR',
+    ];
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Create a new version and start a translation, saving it as draft.
+    $node = $node_storage->load($node->id());
+    $node->set('title', 'My node 2');
+    $node->set('moderation_state', 'draft');
+    $node->save();
+    $node = $this->moderateNode($node, 'published');
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $values = [
+      'Translation' => 'My node FR 2',
+    ];
+    $this->submitForm($values, t('Save as draft'));
+
+    // Start a draft on the node.
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->load($node->id());
+    $node->set('title', 'My node 3');
+    $node->set('moderation_state', 'draft');
+    $node->save();
+
+    // Sync the started translation.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Edit draft translation');
+    $this->submitForm($values, t('Save and synchronise'));
+
+    // Try to make a change to the draft node and assert there is no violation.
+    $node_storage->resetCache();
+    $node = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $node->set('title', 'My node 4');
+    $node->set('moderation_state', 'draft');
+    $violations = $node->validate();
+    $this->assertEquals(0, $violations->count());
+  }
+
+  /**
    * Asserts the existing translations table.
    *
    * @param array $languages

@@ -390,3 +390,16 @@ function oe_translation_corporate_workflow_entity_base_field_info(EntityTypeInte
     return $fields;
   }
 }
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function oe_translation_corporate_workflow_entity_type_alter(array &$entity_types) {
+  // Swap out the default EntityChanged constraint with a custom one with
+  // different logic for corporate workflow translated entities.
+  $constraints = $entity_types['node']->getConstraints();
+  unset($constraints['EntityChanged']);
+  $constraints['CorporateWorkflowEntityChanged'] = NULL;
+  $entity_types['node']->setConstraints($constraints);
+
+}
