@@ -119,4 +119,12 @@ class RemoteTranslatorProvider extends ConfigEntityBase implements RemoteTransla
     return (bool) $this->enabled;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setEnabled($enabled): RemoteTranslatorProviderInterface {
+    $this->enabled = (bool) $enabled;
+    return $this;
+  }
+
 }
