@@ -210,6 +210,22 @@ class ActiveRevision extends ContentEntityBase implements ActiveRevisionInterfac
   /**
    * {@inheritdoc}
    */
+  public function updateMappingScope(string $langcode, string $entity_type, int $entity_id, int $scope): ActiveRevisionInterface {
+    $language_revisions = $this->get('field_language_revision')->getValue();
+    foreach ($language_revisions as &$values) {
+      if ($values['langcode'] === $langcode) {
+        $values['scope'] = $scope;
+        $this->set('field_language_revision', $language_revisions);
+        return $this;
+      }
+    }
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getLanguageMapping(string $langcode, ContentEntityInterface $entity): LanguageRevisionMapping {
     $is_validated = $entity->get('moderation_state')->value === 'validated';
 

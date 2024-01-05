@@ -14,12 +14,14 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation\Event\TranslationSynchronisationEvent;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\TranslationFormTrait;
 use Drupal\oe_translation\TranslationSourceHelper;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Form handler for the translation request entity add/edit forms.
@@ -43,6 +45,13 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   protected $currentUser;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Constructs a new instance of this class.
    *
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
@@ -57,12 +66,15 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   The translation source manager.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->translationSourceManager = $translation_source_manager;
     $this->currentUser = $current_user;
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -75,7 +87,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $container->get('datetime.time'),
       $container->get('entity_type.manager'),
       $container->get('oe_translation.translation_source_manager'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -291,6 +304,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $translation_request->updateTargetLanguageStatus(TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED);
       $translation_request->save();
       $this->messenger()->addStatus($this->t('The translation has been synchronised.'));
+      $event = new TranslationSynchronisationEvent($entity, $translation_request, $translation_request->getTargetLanguageWithStatus()->getLangcode());
+      $this->eventDispatcher->dispatch($event, TranslationSynchronisationEvent::NAME);
       return;
     }
 

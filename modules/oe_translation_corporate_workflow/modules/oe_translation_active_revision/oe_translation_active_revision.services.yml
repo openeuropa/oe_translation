@@ -16,3 +16,8 @@ services:
     arguments: ['@entity_type.manager', '@language_manager', '@content_moderation.moderation_information', '@oe_translation.entity_revision_info']
     tags:
       - { name: event_subscriber }
+  oe_translation_active_revision.translation_sync_subscriber:
+    class: Drupal\oe_translation_active_revision\EventSubscriber\TranslationSynchronisationSubscriber
+    arguments: ['@entity_type.manager', '@oe_translation.entity_revision_info']
+    tags:
+      - { name: event_subscriber }
