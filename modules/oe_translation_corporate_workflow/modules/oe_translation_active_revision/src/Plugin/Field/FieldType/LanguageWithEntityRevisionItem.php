@@ -33,7 +33,7 @@ class LanguageWithEntityRevisionItem extends EntityRevisionWithTypeItem {
   public const SCOPE_BOTH = 0;
 
   /**
-   * The mapping applies only to the validated version.
+   * The mapping applies only to the published version.
    *
    * This can happen if we have a published version mapped to a previous version
    * but we also have a new major (validated) which receives and syncs a

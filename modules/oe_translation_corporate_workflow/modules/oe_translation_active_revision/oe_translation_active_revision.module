@@ -58,7 +58,7 @@ function oe_translation_active_revision_oe_translation_corporate_workflow_modera
     '#type' => 'radios',
     '#options' => [
       'use_previous_version_translations' => t('Keep current translations until new ones are synchronised.'),
-      'delete_translations' => t('Delete current translations until new ones are synchronized'),
+      'delete_translations' => t('Delete current translations for this version until new ones are synchronised'),
     ],
     '#default_value' => 'use_previous_version_translations',
   ];
@@ -289,21 +289,34 @@ function oe_translation_active_revision_entity_presave(EntityInterface $entity):
     return;
   }
 
-  if (isset($entity->translation_drop) && $entity->translation_drop === TRUE && $entity->moderation_state->value === 'validated') {
+  $original = $entity->original;
+
+  if (isset($entity->translation_drop) && $entity->translation_drop === TRUE) {
     // If translations are being dropped, it means we need remove the active
-    // remote for this entity. It means the user said that with the new
+    // revision for this entity. It means the user said that with the new
     // version, they don't want to show anymore any translations (at least
     // until new ones they create).
     $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
     if ($active_revision instanceof ActiveRevisionInterface) {
-      $active_revision->delete();
+      // However, we need to check what state is it being saved into. If it's
+      // being saved into validated, we don't delete the active revision but
+      // instead mark its scope to only apply to the published version. If we
+      // are saving in Published state, we outright delete it.
+      if ($entity->get('moderation_state')->value === 'validated' && $original) {
+        foreach ($original->getTranslationLanguages(FALSE) as $language) {
+          $active_revision->updateMappingScope($language->getId(), $entity->getEntityTypeId(), (int) $entity->id(), LanguageWithEntityRevisionItem::SCOPE_PUBLISHED);
+        }
+        $active_revision->save();
+      }
+      if ($entity->get('moderation_state')->value === 'published') {
+        $active_revision->delete();
+      }
     }
   }
 
   // If we are moving from validated to published AND we had a mapping with a
   // scope that applies only for the published version, we need to remove that
   // mapping.
-  $original = $entity->original;
   if ($original && $original->get('moderation_state')->value === 'validated' && $entity->get('moderation_state')->value === 'published') {
     $updated = FALSE;
     /** @var \Drupal\oe_translation_active_revision\ActiveRevisionInterface $active_revision */

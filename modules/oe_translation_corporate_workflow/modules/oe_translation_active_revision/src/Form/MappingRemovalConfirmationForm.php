@@ -62,7 +62,10 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value === 'validated' && $mapping->getScope() === LanguageWithEntityRevisionItem::SCOPE_BOTH && !$form_state->getUserInput()) {
-      $this->messenger()->addWarning('Please be aware that this will remove the mapping for both the currently Published version and the new Validated major version.');
+      $this->messenger()->addWarning('Please be aware that this will remove the mapping for both the currently Published version and the new Validated major version. If there is one, the  carried over translation will be used instead.');
+    }
+    else {
+      $this->messenger()->addWarning('Please be aware that this will remove the mapping. If there is one, the carried over translation will be used instead.');
     }
 
     $form_state->set('active_revision', $active_revision);

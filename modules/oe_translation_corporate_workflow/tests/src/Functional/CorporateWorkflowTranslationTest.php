@@ -233,7 +233,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $node->save();
     $node = $this->moderateNode($node, 'validated');
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
+    $this->assertSession()->responseContains('<h3>Existing synchronised translations</h3>');
     // Assert that before we have a published version AND a validated one,
     // the table looks normal.
     $this->assertDashboardExistingTranslations([
@@ -255,7 +255,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     // Go to the dashboard and assert the table title has been changed.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
+    $this->assertSession()->responseContains('<h3>Existing synchronised translations</h3>');
 
     // Create a new draft and validate it.
     $node = $node_storage->load($node->id());
@@ -302,7 +302,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'published_title' => 'Version 1.0.0',
         // Since we made the IT translation after the new version was created,
         // we don't have any translations on the new version.
-        'validated_title' => 'N/A',
+        'validated_title' => 'No translation',
       ],
     ], ['1.0.0 / published', '2.0.0 / validated']);
   }
