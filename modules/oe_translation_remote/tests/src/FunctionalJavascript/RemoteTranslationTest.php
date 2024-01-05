@@ -802,6 +802,7 @@ class RemoteTranslationTest extends TranslationTestBase {
    * method will not have in the data array this metadata.
    */
   public function testTranslationSourceSyncWithEvent(): void {
+    \Drupal::state()->set('oe_translation_remote_test_set_fake_value_on_node', TRUE);
     $node_storage = \Drupal::entityTypeManager()->getStorage('node');
     $node = $this->createFullTestNode();
     $this->drupalGet($node->toUrl());

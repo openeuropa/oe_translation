@@ -37,7 +37,7 @@ class TranslationSourceEventSubscriber implements EventSubscriberInterface {
 
     // Get the #fake_value from the original data and set it onto a node title
     // so we can assert it in the test.
-    if ($node instanceof NodeInterface) {
+    if ($node instanceof NodeInterface && (bool) \Drupal::state()->get('oe_translation_remote_test_set_fake_value_on_node')) {
       $node->set('title', $node->label() . ' ' . $event->getOriginalData()['oe_translation_test_field']['#fake_value']);
     }
 

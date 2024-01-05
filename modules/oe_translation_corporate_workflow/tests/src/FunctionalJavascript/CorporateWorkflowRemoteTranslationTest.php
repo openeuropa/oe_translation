@@ -246,7 +246,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->assertSession()->pageTextContains('There are no ongoing remote translation requests');
     $this->assertDashboardExistingTranslations([
       'en' => ['title' => 'My node'],
-      'fr' => ['title' => 'My node - fr'],
+      'fr' => ['title' => 'Version 1.0.0'],
     ]);
 
     $node_storage->resetCache();

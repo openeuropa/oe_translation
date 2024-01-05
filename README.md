@@ -3,15 +3,6 @@
 The OpenEuropa Translation provides the translation capabilities for
 OpenEuropa contents and translatable items.
 
-## Usage with Drupal 10
-
-For Drupal 9, the "stop_propagation "patch declared in [composer.json](./composer.json) is required. This is not the case for Drupal 10.\
-If you require this module in Drupal 10 you must set said patch as ignored in your composer.json.\
-You can do this with the following command:
-```bash
-composer config --merge --json "extra.patches-ignore.openeuropa/oe_translation" '{"drupal/core": {"stop_propagation": "https://raw.githubusercontent.com/openeuropa/oe_translation/2.x/patches/stop-propagation.patch"}}'
-```
-
 ## Development setup
 
 You can build the development site by running the following steps:

@@ -1,0 +1,354 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation Active Revision module file.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
+use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
+
+/**
+ * Implements hook_oe_translation_corporate_workflow_moderation_form_alter().
+ *
+ * @see oe_translation_corporate_workflow_form_content_moderation_entity_moderation_form_alter()
+ */
+function oe_translation_active_revision_oe_translation_corporate_workflow_moderation_form_alter(array &$form, FormStateInterface $form_state) {
+  unset($form['translation_options_wrapper']['translation_drop']);
+
+  $entity = $form_state->get('entity');
+  $current_state = $entity->moderation_state->value;
+  if ($current_state === 'validated') {
+    // If the content is already validated and only needs to be published,
+    // we don't have to do anything.
+    return;
+  }
+
+  $form['translation_options_wrapper']['#type'] = 'fieldset';
+  $form['translation_options_wrapper']['#title'] = 'Translation options';
+  $form['translation_options_wrapper']['#tree'] = TRUE;
+
+  $form['translation_options_wrapper']['translation_option'] = [
+    '#type' => 'radios',
+    '#options' => [
+      'new_translations_needed' => t('The new version needs NEW translations'),
+      'new_translations_not_needed' => t('The new version does NOT need NEW translations (there have been only changes to non-translatable fields)'),
+    ],
+    '#default_value' => 'new_translations_needed',
+  ];
+
+  $form['translation_options_wrapper']['translation_option_needs_new_wrapper'] = [
+    '#type' => 'container',
+    0 => [
+      '#markup' => t('You are planning to create or request new translations. What would you like to happen with the current translations?'),
+    ],
+    '#states' => [
+      'visible' => [
+        'input[name="translation_options_wrapper[translation_option]"]' => ['value' => 'new_translations_needed'],
+      ],
+    ],
+  ];
+  $form['translation_options_wrapper']['translation_option_needs_new_wrapper']['translation_option_needs_new'] = [
+    '#type' => 'radios',
+    '#options' => [
+      'use_previous_version_translations' => t('Keep current translations until new ones are synchronised.'),
+      'delete_translations' => t('Delete current translations for this version until new ones are synchronised'),
+    ],
+    '#default_value' => 'use_previous_version_translations',
+  ];
+  $form['translation_options_wrapper']['translation_option_needs_no_new_wrapper'] = [
+    '#type' => 'container',
+    0 => [
+      '#markup' => t('You are not planning to create or request new translations. The current translations will continue to be used.'),
+    ],
+    '#states' => [
+      'visible' => [
+        'input[name="translation_options_wrapper[translation_option]"]' => ['value' => 'new_translations_not_needed'],
+      ],
+    ],
+  ];
+
+  // Remove the default corporate workflow submit handler.
+  $form['#submit'] = array_filter($form['#submit'], function (string $callback) {
+    return $callback !== 'oe_translation_corporate_workflow_form_content_moderation_entity_moderation_form_submit';
+  });
+
+  $form['#submit'] = array_merge(['oe_translation_active_revision_form_content_moderation_entity_moderation_form_submit'], $form['#submit']);
+}
+
+/**
+ * Custom submit handler for the content entity moderation form.
+ *
+ * It replaces
+ * oe_translation_corporate_workflow_form_content_moderation_entity_moderation_form_submit().
+ *
+ * @param array $form
+ *   The form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @see oe_translation_active_revision_oe_translation_corporate_workflow_moderation_form_alter()
+ */
+function oe_translation_active_revision_form_content_moderation_entity_moderation_form_submit(array &$form, FormStateInterface $form_state): void {
+  $values = $form_state->getValue('translation_options_wrapper');
+  // Handle the case for dropping the existing translations.
+  if ($values['translation_option'] === 'new_translations_needed' && $values['translation_option_needs_new_wrapper']['translation_option_needs_new'] === 'delete_translations') {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $form_state->get('entity');
+    // Mark the entity to drop its translations on presave.
+    // @see oe_translation_corporate_workflow_entity_presave()
+    // @see oe_translation_corporate_workflow_node_presave()
+    $entity->translation_drop = TRUE;
+    return;
+  }
+
+  // Handle the case for mapping the current translations to the new version.
+  if ($values['translation_option'] === 'new_translations_needed' && $values['translation_option_needs_new_wrapper']['translation_option_needs_new'] === 'use_previous_version_translations') {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $form_state->get('entity');
+
+    // We need to determine the latest revision of the previous major.
+    /** @var \Drupal\entity_version\Plugin\Field\FieldType\EntityVersionItem $original_version */
+    $version = $entity->get('version')->first();
+    $major = $version->get('major')->getValue();
+
+    $results = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())
+      ->getQuery()
+      ->condition($entity->getEntityType()->getKey('id'), $entity->id())
+      ->condition('version.major', $major)
+      ->condition('version.minor', 0)
+      ->sort($entity->getEntityType()->getKey('revision'), 'DESC')
+      ->accessCheck(FALSE)
+      ->allRevisions()
+      ->execute();
+
+    $vid = key($results);
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->loadRevision($vid);
+
+    // Check if we already have an active revision entity for this entity.
+    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
+    if (!$active_revision instanceof ActiveRevisionInterface) {
+      // Create the active revision entity.
+      $active_revision = \Drupal::entityTypeManager()
+        ->getStorage('oe_translation_active_revision')
+        ->create([
+          'status' => 1,
+        ]);
+    }
+
+    // If we don't yet have an active revision, it's simple, set the entity
+    // revision ID of the previous version for each language it has a
+    // translation.
+    if ($active_revision->isNew()) {
+      $language_values = [];
+      foreach ($entity->getTranslationLanguages(FALSE) as $language) {
+        $language_values[] = [
+          'langcode' => $language->getId(),
+          'entity_type' => $entity->getEntityTypeId(),
+          'entity_id' => $entity->id(),
+          'entity_revision_id' => $entity->getRevisionId(),
+          'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
+        ];
+      }
+
+      $active_revision->set('field_language_revision', $language_values);
+      $active_revision->save();
+
+      return;
+    }
+
+    // If we already have an active revision entity, it's a bit more complicated
+    // because the revision ID for the translation languages that have been
+    // configured may be older than the last version of the entity. However,
+    // the last version of the entity may have new translations that the older
+    // version did not.
+    $structured_language_values = [];
+    foreach ($active_revision->get('field_language_revision')->getValue() as $language_value) {
+      $structured_language_values[$language_value['langcode']] = $language_value;
+    }
+
+    $change = FALSE;
+    foreach ($entity->getTranslationLanguages(FALSE) as $language) {
+      if (isset($structured_language_values[$language->getId()])) {
+        // We don't set anything for this language as it was already there in
+        // an older major version. Unless, we need to switch back the scope
+        // to apply to both major version moderation states.
+        if ((int) $structured_language_values[$language->getId()]['scope'] === LanguageWithEntityRevisionItem::SCOPE_PUBLISHED) {
+          $structured_language_values[$language->getId()]['scope'] = LanguageWithEntityRevisionItem::SCOPE_BOTH;
+          $change = TRUE;
+        }
+
+        continue;
+      }
+
+      // If we have a new language in the newer last major version, we set it
+      // using its revision ID.
+      $structured_language_values[$language->getId()] = [
+        'langcode' => $language->getId(),
+        'entity_type' => $entity->getEntityTypeId(),
+        'entity_id' => $entity->id(),
+        'entity_revision_id' => $entity->getRevisionId(),
+        'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
+      ];
+
+      $change = TRUE;
+    }
+
+    if ($change) {
+      $active_revision->set('field_language_revision', array_values($structured_language_values));
+      $active_revision->save();
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_build_defaults_alter().
+ */
+function oe_translation_active_revision_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+
+  if ($entity->isDefaultTranslation()) {
+    return;
+  }
+
+  $view_modes = [
+    'teaser',
+    'full',
+  ];
+
+  \Drupal::service('module_handler')->alter('oe_translation_active_revision_view_modes', $view_modes);
+  if (!in_array($view_mode, $view_modes)) {
+    return;
+  }
+
+  $cache = CacheableMetadata::createFromRenderArray($build);
+
+  $language = $entity->language();
+
+  /** @var \Drupal\oe_translation_active_revision\LanguageRevisionMapping $mapping */
+  $mapping = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getLangcodeMapping($language->getId(), $entity, $cache);
+  if (!$mapping->isMapped()) {
+    $cache->applyTo($build);
+    return;
+  }
+
+  if ($mapping->isMappedToNull()) {
+    // If it's mapped to null, we leave the current entity, but change it to
+    // the source language.
+    $build['#' . $entity->getEntityTypeId()] = $entity->getUntranslated();
+    $cache->applyTo($build);
+    return;
+  }
+
+  $revision = $mapping->getEntity();
+  if (!$revision) {
+    $cache->applyTo($build);
+    return;
+  }
+
+  $build['#' . $entity->getEntityTypeId()] = $revision->getTranslation($language->getId());
+  $cache->applyTo($build);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function oe_translation_active_revision_entity_delete(EntityInterface $entity) {
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+
+  // Delete any active revision entities this entity might have.
+  $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
+  if ($active_revision instanceof ActiveRevisionInterface) {
+    $active_revision->delete();
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function oe_translation_active_revision_entity_presave(EntityInterface $entity): void {
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+
+  /** @var \Drupal\workflows\WorkflowInterface $workflow */
+  $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
+  if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    // We only care about content using the corporate workflow.
+    return;
+  }
+
+  $original = $entity->original;
+
+  if (isset($entity->translation_drop) && $entity->translation_drop === TRUE) {
+    // If translations are being dropped, it means we need remove the active
+    // revision for this entity. It means the user said that with the new
+    // version, they don't want to show anymore any translations (at least
+    // until new ones they create).
+    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
+    if ($active_revision instanceof ActiveRevisionInterface) {
+      // However, we need to check what state is it being saved into. If it's
+      // being saved into validated, we don't delete the active revision but
+      // instead mark its scope to only apply to the published version. If we
+      // are saving in Published state, we outright delete it.
+      if ($entity->get('moderation_state')->value === 'validated' && $original) {
+        foreach ($original->getTranslationLanguages(FALSE) as $language) {
+          $active_revision->updateMappingScope($language->getId(), $entity->getEntityTypeId(), (int) $entity->id(), LanguageWithEntityRevisionItem::SCOPE_PUBLISHED);
+        }
+        $active_revision->save();
+      }
+      if ($entity->get('moderation_state')->value === 'published') {
+        $active_revision->delete();
+      }
+    }
+  }
+
+  // If we are moving from validated to published AND we had a mapping with a
+  // scope that applies only for the published version, we need to remove that
+  // mapping.
+  if ($original && $original->get('moderation_state')->value === 'validated' && $entity->get('moderation_state')->value === 'published') {
+    $updated = FALSE;
+    /** @var \Drupal\oe_translation_active_revision\ActiveRevisionInterface $active_revision */
+    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
+    if (!$active_revision) {
+      return;
+    }
+
+    $values = $active_revision->get('field_language_revision')->getValue();
+    foreach ($values as $value) {
+      if ((int) $value['scope'] === LanguageWithEntityRevisionItem::SCOPE_BOTH) {
+        // If the scope for this language mapping still applies to both
+        // versions, we don't remove it. It means we don't have a new
+        // translation synced.
+        continue;
+      }
+
+      $active_revision->removeLanguageMapping($value['langcode']);
+      $updated = TRUE;
+    }
+
+    if (!$updated) {
+      // If there was no change done to the entity, we bail out.
+      return;
+    }
+
+    // Otherwise we remove the save or delete the entity.
+    if ($active_revision->get('field_language_revision')->isEmpty()) {
+      $active_revision->delete();
+      return;
+    }
+
+    $active_revision->save();
+  }
+}

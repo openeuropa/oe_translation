@@ -1,0 +1,6 @@
+services:
+  oe_translation_active_revision_link_lists.event_subscriber.entity_value_link_resolver:
+    class: Drupal\oe_translation_active_revision_link_lists\EventSubscriber\LinkListsResolverSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
