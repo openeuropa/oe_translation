@@ -1,0 +1,13 @@
+services:
+  oe_translation_active_revision.paramconverter.node:
+    class: Drupal\oe_translation_active_revision\ParamConverter\ActiveRevisionNodeConverter
+    arguments: ['@language_manager', '@context.repository']
+    tags:
+      - { name: paramconverter, priority: 100 }
+    parent: paramconverter.entity
+  oe_translation_active_revision.paramconverter.node_revision:
+    class: Drupal\oe_translation_active_revision\ParamConverter\ActiveRevisionNodeRevisionConverter
+    arguments: ['@language_manager', '@context.repository']
+    tags:
+      - { name: paramconverter, priority: 100 }
+    parent: paramconverter.entity

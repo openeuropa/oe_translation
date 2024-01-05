@@ -1,0 +1,9 @@
+name: OpenEuropa Translation Active Revision Test
+description: Test module for the OpenEuropa Translation Editorial Active Revision
+package: Testing
+type: module
+core_version_requirement: ^9.4 || ^10
+
+dependencies:
+  - oe_translation:oe_translation_active_revision
+  - drupal:views

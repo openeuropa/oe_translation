@@ -89,7 +89,7 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->entityTypeManager->getStorage('node');
 
-    // Create a validated node directly and translate it.
+    // Create a node and translate it.
     /** @var \Drupal\node\NodeInterface $node */
     $node = $node_storage->create([
       'type' => 'page',

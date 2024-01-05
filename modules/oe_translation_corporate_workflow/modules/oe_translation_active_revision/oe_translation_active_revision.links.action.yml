@@ -1,0 +1,5 @@
+oe_translation_active_revision.add_form:
+  title: 'Add active revision'
+  route_name: entity.oe_translation_active_revision.add_form
+  appears_on:
+    - entity.oe_translation_active_revision.collection
