@@ -33,18 +33,29 @@ trait ActiveRevisionConverterTrait {
     $current_langcode = $this->getContentLanguageFromContexts($contexts);
 
     $node = $this->getNodeFromDefaults($defaults, $definition);
-
-    $language_active_revision = $this->entityTypeManager->getStorage('oe_translation_active_revision')->getLangcodeMappedRevision($current_langcode, $node, new CacheableMetadata());
-    if (!$language_active_revision) {
+    if (!$node instanceof NodeInterface) {
+      return parent::convert($value, $definition, $name, $defaults);
+    }
+    /** @var \Drupal\oe_translation_active_revision\LanguageRevisionMapping $mapping */
+    $mapping = $this->entityTypeManager->getStorage('oe_translation_active_revision')->getLangcodeMapping($current_langcode, $node, new CacheableMetadata());
+    if (!$mapping->isMapped()) {
       return parent::convert($value, $definition, $name, $defaults);
     }
 
-    if ($language_active_revision->getUntranslated()->language()->getId() === $current_langcode) {
+    if ($mapping->isMappedToNull()) {
+      // If mapped to NULL, we need to defer to the parent, but switch back
+      // the language to the source.
+      $converted = parent::convert($value, $definition, $name, $defaults);
+      return $converted->getUntranslated();
+    }
+
+    $revision = $mapping->getEntity();
+    if ($revision->getUntranslated()->language()->getId() === $current_langcode) {
       // If we are on the untranslated version, we defer back to the parent.
       return parent::convert($value, $definition, $name, $defaults);
     }
 
-    return $this->entityRepository->getTranslationFromContext($language_active_revision);
+    return $this->entityRepository->getTranslationFromContext($revision);
   }
 
   /**
@@ -58,7 +69,7 @@ trait ActiveRevisionConverterTrait {
    * @return \Drupal\node\NodeInterface
    *   The node.
    */
-  protected function getNodeFromDefaults(array $defaults, array $definition): NodeInterface {
+  protected function getNodeFromDefaults(array $defaults, array $definition): ?NodeInterface {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->entityTypeManager->getStorage('node');
     if ($definition['type'] === 'entity_revision:node') {

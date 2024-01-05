@@ -233,13 +233,29 @@ function oe_translation_active_revision_entity_build_defaults_alter(array &$buil
   $cache = CacheableMetadata::createFromRenderArray($build);
 
   $language = $entity->language();
-  $language_active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getLangcodeMappedRevision($language->getId(), $entity, $cache);
 
-  if (!$language_active_revision) {
+  /** @var \Drupal\oe_translation_active_revision\LanguageRevisionMapping $mapping */
+  $mapping = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getLangcodeMapping($language->getId(), $entity, $cache);
+  if (!$mapping->isMapped()) {
+    $cache->applyTo($build);
     return;
   }
 
-  $build['#' . $entity->getEntityTypeId()] = $language_active_revision->getTranslation($language->getId());
+  if ($mapping->isMappedToNull()) {
+    // If it's mapped to null, we leave the current entity, but change it to
+    // the source language.
+    $build['#' . $entity->getEntityTypeId()] = $entity->getUntranslated();
+    $cache->applyTo($build);
+    return;
+  }
+
+  $revision = $mapping->getEntity();
+  if (!$revision) {
+    $cache->applyTo($build);
+    return;
+  }
+
+  $build['#' . $entity->getEntityTypeId()] = $revision->getTranslation($language->getId());
   $cache->applyTo($build);
 }
 

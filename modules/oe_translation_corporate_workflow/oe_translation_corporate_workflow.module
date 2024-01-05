@@ -38,17 +38,6 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
     return;
   }
 
-  // If we are saving a new draft, we need to remove the translation_request
-  // reference for all the languages. This is because, by definition, we only
-  // want to keep this reference on the revisions onto which we actually
-  // synchronised the translation.
-  if ($entity->moderation_state->value === 'draft' && $entity->hasField('translation_request')) {
-    foreach ($entity->getTranslationLanguages(FALSE) as $langcode => $language) {
-      $translation = $entity->getTranslation($langcode);
-      $translation->set('translation_request', NULL);
-    }
-  }
-
   // Drop the translations if we are saving a validated revision if the node
   // was marked for it.
   if (isset($entity->translation_drop) && $entity->translation_drop === TRUE && $entity->moderation_state->value === 'validated') {

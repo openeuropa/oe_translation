@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\oe_translation_corporate_workflow\Functional;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\content_moderation\Entity\ContentModerationState;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -232,7 +233,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $node->save();
     $node = $this->moderateNode($node, 'validated');
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->responseContains('<h3>Existing synchronised translations</h3>');
+    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
     // Assert that before we have a published version AND a validated one,
     // the table looks normal.
     $this->assertDashboardExistingTranslations([
@@ -254,7 +255,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     // Go to the dashboard and assert the table title has been changed.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertSession()->responseContains('<h3>Existing synchronised translations</h3>');
+    $this->assertSession()->responseContains('<h3>Existing translations</h3>');
 
     // Create a new draft and validate it.
     $node = $node_storage->load($node->id());
@@ -272,8 +273,8 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'validated_title' => 'My node 2',
       ],
       'fr' => [
-        'published_title' => 'My node FR',
-        'validated_title' => 'My node FR',
+        'published_title' => 'Version 1.0.0',
+        'validated_title' => 'Version 1.0.0 (carried over to the current version)',
       ],
     ], ['1.0.0 / published', '2.0.0 / validated']);
 
@@ -294,11 +295,11 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'validated_title' => 'My node 2',
       ],
       'fr' => [
-        'published_title' => 'My node FR',
-        'validated_title' => 'My node FR',
+        'published_title' => 'Version 1.0.0',
+        'validated_title' => 'Version 1.0.0 (carried over to the current version)',
       ],
       'it' => [
-        'published_title' => 'My node IT',
+        'published_title' => 'Version 1.0.0',
         // Since we made the IT translation after the new version was created,
         // we don't have any translations on the new version.
         'validated_title' => 'N/A',
@@ -971,27 +972,6 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     // Keep track of the translation request.
     $version_one_request = $node->getTranslation('fr')->get('translation_request')->entity;
 
-    // Make a new draft and assert the reference is not kept.
-    $node->set('moderation_state', 'draft');
-    $node->setNewRevision(TRUE);
-    $node->save();
-    $revision_ids = $node_storage->revisionIds($node);
-    $this->assertCount(6, $revision_ids);
-
-    $node_storage->resetCache();
-    // This is still the published version.
-    $node = $node_storage->load($node->id());
-    $this->assertNull($node->get('translation_request')->entity);
-    $this->assertInstanceOf(TranslationRequestInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
-    // This is the new draft.
-    $node = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
-    $this->assertNull($node->get('translation_request')->entity);
-    $this->assertNull($node->getTranslation('fr')->get('translation_request')->entity);
-    // Published the draft.
-    $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
-    $this->assertCount(10, $revision_ids);
-
     // Translate again the node.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Local translations');
@@ -1054,8 +1034,8 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'validated_title' => 'My node 2',
       ],
       'fr' => [
-        'published_title' => 'My node FR',
-        'validated_title' => 'My node FR',
+        'published_title' => 'Version 1.0.0',
+        'validated_title' => 'Version 1.0.0 (carried over to the current version)',
       ],
     ], ['1.0.0 / published', '2.0.0 / validated']);
 
@@ -1172,7 +1152,11 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    */
   protected function assertExtendedDashboardExistingTranslations(array $languages, array $versions): void {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
-    $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
+    $rows = array_filter($table->findAll('css', 'tbody tr'), function (NodeElement $row) {
+      // Filter out the rows that don't have a translation.
+      return $row->find('xpath', '//td[2]')->getText() !== 'No translation';
+    });
+    $this->assertCount(count($languages), $rows);
     $header = $table->findAll('css', 'thead th');
     $this->assertEquals('Language', $header[0]->getText());
     $this->assertEquals($versions[0], $header[1]->getText());
@@ -1180,25 +1164,30 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertEquals($versions[1], $header[3]->getText());
     $this->assertEquals('Operations', $header[4]->getText());
 
-    $rows = $table->findAll('css', 'tbody tr');
     foreach ($rows as $row) {
       $cols = $row->findAll('css', 'td');
       $hreflang = $row->getAttribute('hreflang');
       $expected_info = $languages[$hreflang];
       $language = ConfigurableLanguage::load($hreflang);
       $this->assertEquals($language->getName(), $cols[0]->getText());
+      if ($hreflang === 'en') {
+        $this->assertNotNull($cols[1]->findLink($expected_info['published_title']));
+        $this->assertNotNull($cols[3]->findLink($expected_info['validated_title']));
+        continue;
+      }
+
       if ($expected_info['published_title'] === 'N/A') {
         $this->assertEquals('N/A', $cols[1]->getText());
       }
       else {
-        $this->assertNotNull($cols[1]->findLink($expected_info['published_title']));
+        $this->assertEquals($expected_info['published_title'], $cols[1]->getText());
       }
 
       if ($expected_info['validated_title'] === 'N/A') {
         $this->assertEquals('N/A', $cols[3]->getText());
       }
       else {
-        $this->assertNotNull($cols[3]->findLink($expected_info['validated_title']));
+        $this->assertEquals($expected_info['validated_title'], $cols[3]->getText());
       }
     }
   }

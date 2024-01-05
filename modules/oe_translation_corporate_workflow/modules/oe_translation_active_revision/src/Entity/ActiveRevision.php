@@ -5,11 +5,14 @@ declare(strict_types = 1);
 namespace Drupal\oe_translation_active_revision\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
+use Drupal\oe_translation_active_revision\LanguageRevisionMapping;
+use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 use Drupal\user\EntityOwnerTrait;
 
 /**
@@ -142,6 +145,114 @@ class ActiveRevision extends ContentEntityBase implements ActiveRevisionInterfac
       ->setDescription(t('The time that the active revision was last edited.'));
 
     return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasLanguageMapping(string $langcode): bool {
+    $language_revisions = $this->get('field_language_revision')->getValue();
+    foreach ($language_revisions as $values) {
+      if ($values['langcode'] === $langcode) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function removeLanguageMapping(string $langcode): ActiveRevisionInterface {
+    $language_revisions = $this->get('field_language_revision')->getValue();
+    foreach ($language_revisions as $delta => &$values) {
+      if ($values['langcode'] === $langcode) {
+        unset($language_revisions[$delta]);
+      }
+    }
+
+    $this->set('field_language_revision', array_values($language_revisions));
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLanguageMapping(string $langcode, string $entity_type, int $entity_id, int $entity_revision_id, int $scope = LanguageWithEntityRevisionItem::SCOPE_BOTH): ActiveRevisionInterface {
+    $language_revisions = $this->get('field_language_revision')->getValue();
+    $changed = FALSE;
+    foreach ($language_revisions as &$values) {
+      if ($values['langcode'] === $langcode) {
+        // If we found a record already for this language code, just update
+        // the revision ID.
+        $values['entity_revision_id'] = $entity_revision_id;
+        $changed = TRUE;
+        break;
+      }
+    }
+
+    if (!$changed) {
+      // It means we need a new entry.
+      $language_revisions[] = [
+        'langcode' => $langcode,
+        'entity_type' => $entity_type,
+        'entity_id' => $entity_id,
+        'entity_revision_id' => $entity_revision_id,
+        'scope' => $scope,
+      ];
+    }
+
+    $this->set('field_language_revision', $language_revisions);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLanguageMapping(string $langcode, ContentEntityInterface $entity): LanguageRevisionMapping {
+    $is_validated = $entity->get('moderation_state')->value === 'validated';
+
+    $language_revisions = $this->get('field_language_revision')->getValue();
+    foreach ($language_revisions as $values) {
+      if ($values['langcode'] === $langcode) {
+        $revision_id = (int) $values['entity_revision_id'];
+        if ($revision_id === 0) {
+          // It means we are supposed to not show a translation at all, even
+          // if the node does have on in the system.
+          $mapping = new LanguageRevisionMapping($langcode, NULL);
+          $mapping->setMappedToNull(TRUE);
+          $mapping->setScope((int) $values['scope']);
+
+          return $mapping;
+        }
+
+        if ($is_validated && (int) $values['scope'] === LanguageWithEntityRevisionItem::SCOPE_PUBLISHED) {
+          // If the current entity is validated and the scope for the mapping
+          // is only for published, we don't have a mapping.
+          $mapping = new LanguageRevisionMapping($langcode, NULL);
+          $mapping->setScope((int) $values['scope']);
+
+          return $mapping;
+        }
+
+        $revision = \Drupal::entityTypeManager()->getStorage($values['entity_type'])->loadRevision($values['entity_revision_id']);
+        if (!$revision instanceof ContentEntityInterface) {
+          // In case the revision was deleted, we map to null.
+          $mapping = new LanguageRevisionMapping($langcode, NULL);
+          $mapping->setMappedToNull(TRUE);
+          $mapping->setScope((int) $values['scope']);
+
+          return $mapping;
+        }
+
+        $mapping = new LanguageRevisionMapping($langcode, $revision);
+        $mapping->setScope((int) $values['scope']);
+        return $mapping;
+      }
+    }
+
+    return new LanguageRevisionMapping($langcode, NULL);
   }
 
 }

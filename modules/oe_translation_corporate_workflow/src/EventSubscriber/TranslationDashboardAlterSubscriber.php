@@ -10,8 +10,10 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
@@ -176,7 +178,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   protected function alterExistingTranslationsTable(array &$build, ContentEntityInterface $entity): void {
-    $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing synchronised translations'|t }}</h3>";
+    $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing translations'|t }}</h3>";
 
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     if ($entity->get('moderation_state')->value !== 'published') {
@@ -185,37 +187,54 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $all_languages = $this->languageManager->getLanguages();
+
     // Load the default version.
     $published_version = $this->getEntityVersion($entity);
 
     // Load the latest entity version and see if it's validated.
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value !== 'validated') {
-      // It means we have not reached far enough to have a new version.
+      // It means we have not reached far enough to have a new version so all
+      // we have to do is alter the titles of the translations.
+      $rows = &$build['existing_translations']['table']['#rows'];
+      foreach ($rows as &$row) {
+        $langcode = $row['hreflang'];
+        $translation = $entity->hasTranslation($langcode) ? $entity->getTranslation($langcode) : NULL;
+        if ($translation && !$translation->isDefaultTranslation()) {
+          $row['data']['title'] = $this->getTranslationVersionTitle($translation);
+        }
+      }
+
       return;
     }
+
     $latest_entity_version = $this->getEntityVersion($latest_entity);
 
     // Create an array of languages across both versions, with info related
     // to each.
     $languages = [];
     $language_names = [];
-    foreach ($entity->getTranslationLanguages(TRUE) as $language) {
-      $translation = $entity->getTranslation($language->getId());
+    foreach ($all_languages as $language) {
+      $translation = $entity->hasTranslation($language->getId()) ? $entity->getTranslation($language->getId()) : NULL;
+      if ($translation) {
+        $title = $translation->isDefaultTranslation() ? $translation->toLink() : $this->getTranslationVersionTitle($translation);
+      }
+      else {
+        $title = [
+          '#markup' => $this->t('No translation'),
+        ];
+      }
       $info = [
         'title' => [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $translation->label(),
-            '#url' => $translation->toUrl(),
-          ],
+          'data' => $title,
         ],
         'version' => $published_version,
         'operations' => $this->getTranslationOperations($translation, TRUE),
       ];
 
       $languages[$language->getId()][$published_version] = $info;
-      if ($translation->isDefaultTranslation()) {
+      if ($translation && $translation->isDefaultTranslation()) {
         $languages[$language->getId()]['default_language'] = TRUE;
       }
       $language_names[$language->getId()] = $language->getName();
@@ -223,13 +242,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     foreach ($latest_entity->getTranslationLanguages(TRUE) as $language) {
       $translation = $latest_entity->getTranslation($language->getId());
+      $title = $translation->isDefaultTranslation() ? $translation->toLink(NULL, 'latest-version') : $this->getTranslationVersionTitle($translation);
       $info = [
         'title' => [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $translation->label(),
-            '#url' => $translation->toUrl(),
-          ],
+          'data' => $title,
         ],
         'version' => $latest_entity_version,
         'operations' => $this->getTranslationOperations($translation, FALSE),
@@ -250,7 +266,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $rows = [];
     foreach ($languages as $langcode => $info) {
-      $row['data'] = [];
+      $row = [];
       $row['data']['language'] = $language_names[$langcode];
       $row['data']['title_published'] = isset($info[$published_version]) ? $info[$published_version]['title'] : 'N/A';
       $row['data']['operations_published'] = isset($info[$published_version]) ? ['data' => $info[$published_version]['operations']] : 'N/A';
@@ -271,9 +287,39 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Prepares operations for a given translation.
+   * Returns the title of a given translation based on the synced version.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $translation
+   *   The translation.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The label.
+   */
+  protected function getTranslationVersionTitle(ContentEntityInterface $translation): TranslatableMarkup {
+    $version = $this->getEntityVersion($translation);
+    $translation_request = $translation->get('translation_request')->entity;
+    if (!$translation_request instanceof TranslationRequestInterface) {
+      // We cannot determine.
+      return $this->t('Version @version (carried over)', ['@version' => $version]);
+    }
+
+    $translated_entity = $translation_request->getContentEntity();
+    $translation_version = $this->getEntityVersion($translated_entity);
+    if ($translation_version === $version) {
+      // If the current translation version is the one onto which the
+      // translation was synced, we just have the version.
+      return $this->t('Version @version', ['@version' => $version]);
+    }
+
+    // Otherwise, we indicate which one was the version it was translated on +
+    // the fact that now we are ahead and it was carried over.
+    return $this->t('Version @version (carried over to the current version)', ['@version' => $translation_version]);
+  }
+
+  /**
+   * Prepares operations for a given translation.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $translation
    *   The translation language for which to get the operations.
    * @param bool $default
    *   If we are creating the links for the default revision.
@@ -281,7 +327,11 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    * @return array
    *   The operations links.
    */
-  protected function getTranslationOperations(ContentEntityInterface $translation, bool $default): array {
+  protected function getTranslationOperations(ContentEntityInterface $translation = NULL, bool $default): array {
+    if (!$translation) {
+      return [];
+    }
+
     if (!$default && !$translation instanceof NodeInterface) {
       // We only support the operations for non default revisions for Node
       // entities.
@@ -308,7 +358,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
         'query' => ['destination' => Url::fromRoute('<current>')->toString()],
       ]);
     }
-    if ($delete->access()) {
+    if ($delete->access() && !$translation->isDefaultTranslation()) {
+      // We don't want to present a link to delete the original translation.
       $links['delete'] = [
         'title' => $this->t('Delete'),
         'url' => $delete,

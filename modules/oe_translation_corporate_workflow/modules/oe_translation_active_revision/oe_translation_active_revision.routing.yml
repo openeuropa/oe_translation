@@ -5,3 +5,50 @@ entity.oe_translation_active_revision.settings:
     _title: 'Active Revision'
   requirements:
     _permission: 'administer active revision settings'
+
+oe_translation_active_revision.mapping_removal_confirmation:
+  path: '/admin/active-revision/remove-mapping/{active_revision}/{langcode}/{entity_type}/{entity_id}'
+  defaults:
+    _title: 'Mapping removal confirmation'
+    _form: 'Drupal\oe_translation_active_revision\Form\MappingRemovalConfirmationForm'
+  requirements:
+    _custom_access: 'Drupal\oe_translation_active_revision\Form\MappingRemovalConfirmationForm::access'
+    _csrf_token: 'TRUE'
+  options:
+    parameters:
+      active_revision:
+        type: entity:oe_translation_active_revision
+
+oe_translation_active_revision.mapping_update:
+  path: '/admin/active-revision/update-mapping/{active_revision}/{langcode}/{entity_type}/{entity_id}'
+  defaults:
+    _title: 'Mapping update'
+    _form: 'Drupal\oe_translation_active_revision\Form\MappingUpdateForm'
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'translate any entity'
+    _custom_access: 'Drupal\oe_translation_active_revision\Form\MappingUpdateForm::access'
+  options:
+    parameters:
+      active_revision:
+        type: entity:oe_translation_active_revision
+
+oe_translation_active_revision.mapping_create:
+  path: '/admin/active-revision/create-mapping/{langcode}/{entity_type}/{entity_id}'
+  defaults:
+    _title: 'Mapping create'
+    _form: 'Drupal\oe_translation_active_revision\Form\MappingCreateForm'
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'translate any entity'
+    _custom_access: 'Drupal\oe_translation_active_revision\Form\MappingCreateForm::access'
+
+oe_translation_active_revision.map_to_null:
+  path: '/admin/active-revision/map-to-null/{langcode}/{entity_type}/{entity_id}'
+  defaults:
+    _title: 'Mapping create'
+    _form: 'Drupal\oe_translation_active_revision\Form\MapToNullConfirmationForm'
+  requirements:
+    _csrf_token: 'TRUE'
+    _permission: 'translate any entity'
+    _custom_access: 'Drupal\oe_translation_active_revision\Form\MapToNullConfirmationForm::access'

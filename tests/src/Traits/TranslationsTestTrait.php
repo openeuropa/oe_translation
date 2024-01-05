@@ -238,15 +238,18 @@ trait TranslationsTestTrait {
    */
   protected function assertDashboardExistingTranslations(array $languages): void {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
-    $this->assertCount(count($languages), $table->findAll('css', 'tbody tr'));
-    $rows = $table->findAll('css', 'tbody tr');
+    $rows = array_filter($table->findAll('css', 'tbody tr'), function (NodeElement $row) {
+      // Filter out the rows that don't have a translation.
+      return $row->find('xpath', '//td[2]')->getText() !== 'No translation';
+    });
+    $this->assertCount(count($languages), $rows);
     foreach ($rows as $row) {
       $cols = $row->findAll('css', 'td');
       $hreflang = $row->getAttribute('hreflang');
       $expected_info = $languages[$hreflang];
       $language = ConfigurableLanguage::load($hreflang);
       $this->assertEquals($language->getName(), $cols[0]->getText());
-      $this->assertNotNull($cols[1]->findLink($expected_info['title']));
+      $this->assertEquals($expected_info['title'], $cols[1]->getText());
       if ($row->getAttribute('hreflang') === 'en') {
         $this->assertEmpty($cols[2]->getText());
       }
