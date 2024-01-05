@@ -114,10 +114,10 @@ class MultivalueTranslationsJsTest extends TranslationTestBase {
     $this->drupalGet($node->toUrl('edit-form'));
     $this->getSession()->getPage()->find('css', '.field--name-field-textfield')->pressButton('Show row weights');
     $this->assertSession()->waitForElementVisible('css', '[name="field_textfield[0][_weight]"]');
-    $this->getSession()->getPage()->selectFieldOption('field_textfield[0][_weight]', 1);
-    $this->getSession()->getPage()->selectFieldOption('field_textfield[1][_weight]', 0);
-    $this->getSession()->getPage()->selectFieldOption('field_address[0][_weight]', 1);
-    $this->getSession()->getPage()->selectFieldOption('field_address[1][_weight]', 0);
+    $this->getSession()->getPage()->selectFieldOption('field_textfield[0][_weight]', '1');
+    $this->getSession()->getPage()->selectFieldOption('field_textfield[1][_weight]', '0');
+    $this->getSession()->getPage()->selectFieldOption('field_address[0][_weight]', '1');
+    $this->getSession()->getPage()->selectFieldOption('field_address[1][_weight]', '0');
     $this->getSession()->executeScript('window.scrollTo(0,0);');
     $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains('Multivalue Test title has been updated.');

@@ -38,8 +38,7 @@
         "symfony/property-info": "^4 || ^5.4 || ^6"
     },
     "_readme": [
-        "Requireding symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
-        "Patching core event dispatcher for 9.4.x to prevent indiscriminate calls to stopPropagation (needed because of the php soap client event) Can be removed when we go to D10. See https://www.drupal.org/project/drupal/issues/3319791."
+        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -85,9 +84,6 @@
         "patches": {
             "drupal/address": {
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
-            },
-            "drupal/core": {
-                "stop_propagation": "https://raw.githubusercontent.com/openeuropa/oe_translation/2.x/patches/stop-propagation.patch"
             }
         }
     },
