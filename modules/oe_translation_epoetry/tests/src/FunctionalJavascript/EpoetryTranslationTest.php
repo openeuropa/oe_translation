@@ -100,8 +100,8 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Assert we have the contact form elements.
     foreach ($contact_fields as $field => $description) {
       $this->assertSession()->fieldExists($field);
-      if (empty($field)) {
-        $this->assertSession()->elementTextEquals('css', '#form-item-translator-configuration-epoetry-' . strtolower($field) . '--description', $description);
+      if (!empty($description)) {
+        $this->assertSession()->elementTextEquals('css', '.form-item-plugin-configuration-epoetry-contacts-' . strtolower($field) . ' div', $description->__toString());
       }
     }
 
