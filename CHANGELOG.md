@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.5.0](https://github.com/openeuropa/oe_translation/tree/2.5.0) (2024-01-15)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.4.0...2.5.0)
+
+**Merged pull requests:**
+
+- Epic EWPP-3389: Active revision [\#290](https://github.com/openeuropa/oe_translation/pull/290) ([upchuk](https://github.com/upchuk))
+- EWPP-3390: Active revision submodule. [\#289](https://github.com/openeuropa/oe_translation/pull/289) ([upchuk](https://github.com/upchuk))
+- EWPP-3860: Drop support for D9 and fix tests + coverage for D10.2. [\#288](https://github.com/openeuropa/oe_translation/pull/288) ([upchuk](https://github.com/upchuk))
+- EWPP-3743: EntityChanged validation disabling. [\#285](https://github.com/openeuropa/oe_translation/pull/285) ([upchuk](https://github.com/upchuk))
+- EWPP-3719: Fix contact types description. [\#282](https://github.com/openeuropa/oe_translation/pull/282) ([22Alexandra](https://github.com/22Alexandra))
+- EWPP-3393: Supporting active revision on link lists. [\#271](https://github.com/openeuropa/oe_translation/pull/271) ([upchuk](https://github.com/upchuk))
+- EWPP-3392: Clear mapping on sync. [\#268](https://github.com/openeuropa/oe_translation/pull/268) ([upchuk](https://github.com/upchuk))
+- EWPP-3391: Allow to configure active revision. [\#266](https://github.com/openeuropa/oe_translation/pull/266) ([upchuk](https://github.com/upchuk))
+
 ## [2.4.0](https://github.com/openeuropa/oe_translation/tree/2.4.0) (2023-11-21)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.3.0...2.4.0)
@@ -14,6 +29,8 @@
 
 **Merged pull requests:**
 
+- EWPP-3789: Updating assertions after change in PHP version. [\#286](https://github.com/openeuropa/oe_translation/pull/286) ([upchuk](https://github.com/upchuk))
+- Prepare release 2.4.0 [\#284](https://github.com/openeuropa/oe_translation/pull/284) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-3684: Add handling for missing translation data. [\#278](https://github.com/openeuropa/oe_translation/pull/278) ([upchuk](https://github.com/upchuk))
 - EWPP-3254: Re-opening translation if resent and prevent auto-accept/sync in this case. [\#276](https://github.com/openeuropa/oe_translation/pull/276) ([upchuk](https://github.com/upchuk))
 - EWPP-3263: Translation multivalue submodule [\#255](https://github.com/openeuropa/oe_translation/pull/255) ([upchuk](https://github.com/upchuk))
