@@ -8,6 +8,7 @@ use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\node\NodeInterface;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\user\Entity\Role;
 
@@ -538,12 +539,16 @@ class LocalTranslationsTest extends TranslationTestBase {
     $first_node->save();
     $this->drupalGet($first_node->toUrl());
     $this->clickLink('Translate');
+    $this->assertAddLocalTranslationOperation($first_node, ['en']);
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
     $element = $this->getSession()->getPage()->find('xpath', "//textarea[contains(@name,'[translation]')]");
     $element->setValue('First node FR');
     $this->getSession()->getPage()->pressButton('Save as draft');
     $this->assertSession()->pageTextContains('The translation has been saved.');
+    $this->drupalGet($first_node->toUrl());
+    $this->clickLink('Translate');
+    $this->assertAddLocalTranslationOperation($first_node, ['fr', 'en']);
 
     $second_node = $this->createBasicTestNode();
     $second_node->set('title', 'Second node');
@@ -753,6 +758,28 @@ class LocalTranslationsTest extends TranslationTestBase {
         // We expect one operation only.
         $this->assertCount(1, $operations);
       }
+    }
+  }
+
+  /**
+   * Asserts that on the dashboard, we have an operation to add new local trans.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   * @param array $excluded_languages
+   *   The languages for which we don't have.
+   */
+  protected function assertAddLocalTranslationOperation(NodeInterface $node, array $excluded_languages = []): void {
+    foreach ($this->getSession()->getPage()->findAll('css', 'table.existing-translations-table tbody tr') as $row) {
+      $langcode = $row->getAttribute('hreflang');
+      $col = $row->find('xpath', '//td[3]');
+      $link = $col->findLink('Add new local translation');
+      if (in_array($langcode, $excluded_languages)) {
+        $this->assertNull($link);
+        continue;
+      }
+
+      $this->assertEquals('/build/en/admin/oe_translation/translate-local/node/' . $node->getRevisionId() . '/en/' . $langcode . '?destination=/build/en/node/' . $node->id() . '/translations', $link->getAttribute('href'));
     }
   }
 
