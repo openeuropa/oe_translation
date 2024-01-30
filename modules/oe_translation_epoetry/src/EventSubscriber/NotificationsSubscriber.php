@@ -360,14 +360,6 @@ class NotificationsSubscriber implements EventSubscriberInterface {
       $auto_accept = TRUE;
     }
 
-    // We can only auto-accept and auto-sync if the language has not already
-    // been synced. This is to prevent issues if ePoetry sends a translation
-    // again after it has done already and the request is potentially finished.
-    if ($translation_request->getTargetLanguage($langcode)->getStatus() === TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED) {
-      $auto_accept = FALSE;
-      $auto_sync = FALSE;
-    }
-
     $status = $auto_accept ? TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED : TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW;
     $translation_request->updateTargetLanguageStatus($langcode, $status);
     if ($auto_accept) {
