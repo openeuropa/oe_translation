@@ -35,6 +35,13 @@ class ActiveRevisionNodeRevisionConverter extends EntityRevisionParamConverter {
   protected $contextRepository;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, ContextRepositoryInterface $contextRepository) {

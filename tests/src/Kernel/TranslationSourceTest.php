@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
@@ -34,6 +35,13 @@ class TranslationSourceTest extends TranslationKernelTestBase {
    * @var \Drupal\node\NodeInterface
    */
   protected $referencingNode;
+
+  /**
+   * A file created for test purposes.
+   *
+   * @var \Drupal\file\FileInterface
+   */
+  protected FileInterface $imageFile;
 
   /**
    * {@inheritdoc}
@@ -98,10 +106,10 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     ])->save();
     // Create an image file.
     \Drupal::service('file_system')->copy(DRUPAL_ROOT . '/core/misc/druplicon.png', 'public://example.jpg');
-    $this->image_file = File::create([
+    $this->imageFile = File::create([
       'uri' => 'public://example.jpg',
     ]);
-    $this->image_file->save();
+    $this->imageFile->save();
     // Create a text field that will be ignored using a hook.
     FieldStorageConfig::create([
       'entity_type' => 'node',
@@ -261,7 +269,7 @@ class TranslationSourceTest extends TranslationKernelTestBase {
     // translation data.
     $node->setExtraTranslationField = TRUE;
     $node->set('image_field', [
-      'target_id' => $this->image_file->id(),
+      'target_id' => $this->imageFile->id(),
       'alt' => 'Alt text',
       'title' => 'Image title',
     ])->save();

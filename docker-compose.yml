@@ -34,7 +34,7 @@ services:
 #    ports:
 #      - 3306:3306
 
-    # Visit localhost:7900 to access the browser.
+  # Visit localhost:7900 to access the browser.
   selenium:
     image: selenium/standalone-chrome:4.1.3-20220405
     environment:
