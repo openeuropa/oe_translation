@@ -2,7 +2,7 @@ name: OpenEuropa Translation Corporate Workflow ePoetry
 description: Integrates the editorial workflow with OE Translation ePoetry
 package: OpenEuropa
 type: module
-core_version_requirement: ^9.4 || ^10
+core_version_requirement: ^10
 
 dependencies:
   - oe_translation:oe_translation_corporate_workflow
