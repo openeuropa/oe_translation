@@ -7,6 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.1",
+        "cweagans/composer-patches": "^1.7 || ^2",
         "drupal/core": "^10",
         "drupal/tmgmt": "^1.14",
         "jakeasmith/http_build_url": "^1.0",
@@ -14,7 +15,6 @@
     },
     "require-dev": {
         "composer/installers": "^1.11",
-        "cweagans/composer-patches": "^1.7 || ^2",
         "drupal/address": "^1.11",
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
