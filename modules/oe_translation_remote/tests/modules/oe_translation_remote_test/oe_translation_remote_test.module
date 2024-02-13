@@ -5,7 +5,7 @@
  * OE Translation remote module file.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\Core\Url;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;

@@ -5,7 +5,7 @@
  * Post update functions for OE Translation.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\user\Entity\Role;
 
