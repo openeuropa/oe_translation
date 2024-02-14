@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\oe_translation_active_revision_link_lists_test\Plugin\LinkDisplay;
 

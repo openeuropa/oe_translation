@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
 
@@ -133,7 +133,7 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // We still only have 5 revisions of each and only the published one has a
     // translation.
@@ -257,7 +257,7 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // We still only 5 revisions of each and only the published one has a
     // translation.

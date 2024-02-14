@@ -309,7 +309,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
     $this->getSession()->reload();
     $this->clickLink('Review');
-    $this->submitForm([], t('Save and synchronise'));
+    $this->submitForm([], 'Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());

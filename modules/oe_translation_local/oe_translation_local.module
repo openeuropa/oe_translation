@@ -5,7 +5,7 @@
  * Contains hook implementations for oe_translation_local.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Link;

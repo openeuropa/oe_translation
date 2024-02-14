@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\oe_translation_active_revision\ParamConverter;
 
@@ -33,6 +33,13 @@ class ActiveRevisionNodeRevisionConverter extends EntityRevisionParamConverter {
    * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
    */
   protected $contextRepository;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected LanguageManagerInterface $languageManager;
 
   /**
    * {@inheritdoc}

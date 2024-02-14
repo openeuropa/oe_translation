@@ -5,7 +5,7 @@
  * OpenEuropa Translation Corporate Workflow install file.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\Core\Field\BaseFieldDefinition;
 

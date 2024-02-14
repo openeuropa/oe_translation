@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_corporate_workflow\Functional;
 
@@ -251,7 +251,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Go to the dashboard and assert the table title has been changed.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
@@ -285,7 +285,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node IT',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Go back to the dashboard and assert our table got this new language.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
@@ -368,7 +368,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
     $node_storage->resetCache();
     /** @var \Drupal\node\NodeInterface[] $revisions */
     $revisions = $node_storage->loadMultipleRevisions($revision_ids);
@@ -449,7 +449,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'Translation' => 'My node 2 FR',
     ];
     $this->drupalGet($second_request->toUrl('local-translation'));
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
     $node_storage->resetCache();
     $validated_node = $node_storage->loadRevision($validated_node->getRevisionId());
     // The second validated revision should have the old FR translation.
@@ -503,7 +503,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node 2 FR (updated but no actual change cause we already have a translation)',
     ];
-    $this->submitForm($values, t('Save as draft'));
+    $this->submitForm($values, 'Save as draft');
     $this->assertSession()->pageTextContains('The translation has been saved.');
     // Assert we now have an edit link instead.
     $edit_link_published = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a');
@@ -520,7 +520,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node 3 FR (brand new translation)',
     ];
-    $this->submitForm($values, t('Save as draft'));
+    $this->submitForm($values, 'Save as draft');
     $this->assertSession()->pageTextContains('The translation has been saved.');
     // Assert we now have an edit link instead.
     $edit_link_validated = $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="3.0.0"] a');
@@ -615,7 +615,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     $node = $node_storage->load($node->id());
     // Publish the node and check that the translation is available in the
@@ -650,7 +650,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node 2 FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Publish the node and check that the published versions have the correct
     // translations. Since we have previously published revisions, we need to
@@ -693,7 +693,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       $values = [
         'Translation' => "My node $langcode 3",
       ];
-      $this->submitForm($values, t('Save and synchronise'));
+      $this->submitForm($values, 'Save and synchronise');
     }
 
     // Publish the content and assert that the new published version has
@@ -740,7 +740,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'title|0|value[translation]' => 'Node with a paragraph FR',
       'field_workflow_paragraphs|0|entity|field_workflow_paragraph_text|0|value[translation]' => 'the paragraph text value FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Make a new draft and change the node and paragraph.
     $user = $this->createUser([], NULL, TRUE);
@@ -768,7 +768,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'title|0|value[translation]' => 'Node with a paragraph FR 2',
       'field_workflow_paragraphs|0|entity|field_workflow_paragraph_text|0|value[translation]' => 'the paragraph text value FR 2',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
     // Go back to the node and publish it.
     $this->drupalGet($node->toUrl());
     $this->clickLink('View draft');
@@ -809,7 +809,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Assert that the node has two translations and the moderation state entity
     // also has two translations.
@@ -853,7 +853,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR 2',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Assert the node is still in validated state and the content moderation
     // state entity got its translation back.
@@ -892,7 +892,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
     // Save the translation request as draft.
-    $this->submitForm([], t('Save as draft'));
+    $this->submitForm([], 'Save as draft');
     $node_storage->resetCache();
 
     // Unpublish the node.
@@ -918,7 +918,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
     $node_storage->resetCache();
 
     // Assert we don't have extra revisions created, nor is the default
@@ -963,7 +963,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
-    $this->submitForm([], t('Save and synchronise'));
+    $this->submitForm([], 'Save and synchronise');
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());
     // The EN version doesn't have the reference.
@@ -976,7 +976,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
-    $this->submitForm([], t('Save and synchronise'));
+    $this->submitForm([], 'Save and synchronise');
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());
     // The EN version doesn't have the reference.
@@ -1016,7 +1016,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Create a new draft and validate it.
     $node = $node_storage->load($node->id());
@@ -1105,7 +1105,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR',
     ];
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Create a new version and start a translation, saving it as draft.
     $node = $node_storage->load($node->id());
@@ -1119,7 +1119,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $values = [
       'Translation' => 'My node FR 2',
     ];
-    $this->submitForm($values, t('Save as draft'));
+    $this->submitForm($values, 'Save as draft');
 
     // Start a draft on the node.
     /** @var \Drupal\node\NodeInterface $node */
@@ -1131,7 +1131,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     // Sync the started translation.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Edit draft translation');
-    $this->submitForm($values, t('Save and synchronise'));
+    $this->submitForm($values, 'Save and synchronise');
 
     // Try to make a change to the draft node and assert there is no violation.
     $node_storage->resetCache();

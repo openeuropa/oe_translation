@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_poetry_legacy\FunctionalJavascript;
 
@@ -163,9 +163,9 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
     $this->clickLink('Remote translations');
 
     // Select the ePoetry translator.
+    // The ePoetry translator is selected by default.
     $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertEquals('epoetry', $select->getValue());
 
     // Select 2 languages.
     $this->getSession()->getPage()->checkField('Bulgarian');
@@ -203,9 +203,6 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
 
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -238,9 +235,6 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
     // Make another request.
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
-    $select = $this->assertSession()->selectExists('Translator');
-    $select->selectOption('epoetry');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->checkField('Bulgarian');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [

@@ -3,6 +3,6 @@ description: Provides IDs for the values of multivalue fields to aid in the pre-
 package: OpenEuropa
 
 type: module
-core_version_requirement: ^9.4 || ^10
+core_version_requirement: ^10
 dependencies:
   - oe_translation:oe_translation_local
