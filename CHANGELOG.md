@@ -1,11 +1,20 @@
 # Changelog
 
+## [2.6.0](https://github.com/openeuropa/oe_translation/tree/2.6.0) (2024-02-14)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.5.0...2.6.0)
+
+**Merged pull requests:**
+
+- EWPP-4077: Support D10.2 and drop D9 [\#294](https://github.com/openeuropa/oe_translation/pull/294) ([brummbar](https://github.com/brummbar))
+
 ## [2.5.0](https://github.com/openeuropa/oe_translation/tree/2.5.0) (2024-01-15)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.4.0...2.5.0)
 
 **Merged pull requests:**
 
+- Release-2.5.0: Update changelog and dependencies. [\#291](https://github.com/openeuropa/oe_translation/pull/291) ([nagyad](https://github.com/nagyad))
 - Epic EWPP-3389: Active revision [\#290](https://github.com/openeuropa/oe_translation/pull/290) ([upchuk](https://github.com/upchuk))
 - EWPP-3390: Active revision submodule. [\#289](https://github.com/openeuropa/oe_translation/pull/289) ([upchuk](https://github.com/upchuk))
 - EWPP-3860: Drop support for D9 and fix tests + coverage for D10.2. [\#288](https://github.com/openeuropa/oe_translation/pull/288) ([upchuk](https://github.com/upchuk))
@@ -67,10 +76,12 @@
 - EWPP-3396: Increase ePoetry request timeout. [\#262](https://github.com/openeuropa/oe_translation/pull/262) ([upchuk](https://github.com/upchuk))
 
 ## [2.1.0](https://github.com/openeuropa/oe_translation/tree/2.1.0) (2023-05-25)
-[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0...2.1.0)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha3...2.1.0)
 
 **Merged pull requests:**
 
+- Release-2.1.0: Changelog. [\#259](https://github.com/openeuropa/oe_translation/pull/259) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-2965: Drupal 10 compatibility for 2.x branch. [\#257](https://github.com/openeuropa/oe_translation/pull/257) ([brummbar](https://github.com/brummbar))
 
 ## [2.0.0](https://github.com/openeuropa/oe_translation/tree/2.0.0) (2023-05-23)
@@ -81,9 +92,11 @@
 
 **Merged pull requests:**
 
+- Release-2.0.0-alpha3: Changelog [\#258](https://github.com/openeuropa/oe_translation/pull/258) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-3332: Using Brussels timezone in ePoetry requests. [\#256](https://github.com/openeuropa/oe_translation/pull/256) ([upchuk](https://github.com/upchuk))
 
 ## [2.0.0-alpha2](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha2) (2023-05-02)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.0.0-alpha1...2.0.0-alpha2)
 
 **Closed issues:**
@@ -94,13 +107,16 @@
 
 **Merged pull requests:**
 
+- Release-2.0.0-alpha2: Changelog. [\#250](https://github.com/openeuropa/oe_translation/pull/250) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-3205: Allow to update incoming remote translations. [\#247](https://github.com/openeuropa/oe_translation/pull/247) ([upchuk](https://github.com/upchuk))
 
 ## [2.0.0-alpha1](https://github.com/openeuropa/oe_translation/tree/2.0.0-alpha1) (2023-04-21)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/0.20.0...2.0.0-alpha1)
 
 **Merged pull requests:**
 
+- Release-2.0.0-alpha1: Changelog. [\#242](https://github.com/openeuropa/oe_translation/pull/242) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-3205: Using the absolute URL of the patch. [\#239](https://github.com/openeuropa/oe_translation/pull/239) ([upchuk](https://github.com/upchuk))
 - Fix queries when using table prefix [\#237](https://github.com/openeuropa/oe_translation/pull/237) ([upchuk](https://github.com/upchuk))
 - EWPP-3205: Various sync and mock related fixes. [\#235](https://github.com/openeuropa/oe_translation/pull/235) ([upchuk](https://github.com/upchuk))
