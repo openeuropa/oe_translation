@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_local\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -83,6 +85,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       return $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED;
     });
 
+    $this->addLocalTranslationOperation($build, $translation_requests, $current_entity);
+
     $cache->addCacheTags(['oe_translation_request_list']);
     if (!$translation_requests) {
       $element[] = [
@@ -129,6 +133,60 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $cache->applyTo($build);
     $event->setBuild($build);
+  }
+
+  /**
+   * Adds the link to create a new local translation.
+   *
+   * @param array $build
+   *   The page build.
+   * @param array $translation_requests
+   *   The existing translation requests.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The current entity.
+   */
+  protected function addLocalTranslationOperation(array &$build, array $translation_requests, ContentEntityInterface $entity) {
+    $started_local_requests = [];
+    foreach ($translation_requests as $request) {
+      $started_local_requests[] = $request->getTargetLanguageWithStatus()->getLangcode();
+    }
+    foreach ($build['existing_translations']['table']['#rows'] as $index => &$row) {
+      $langcode = $row['hreflang'];
+      if (in_array($langcode, $started_local_requests) || $langcode === $entity->getUntranslated()->language()->getId()) {
+        // If there is already a started translation request, we don't add any
+        // operation.
+        continue;
+      }
+
+      $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+        'entity_type' => $entity->getEntityTypeId(),
+        'entity' => $entity->getRevisionId(),
+        'source' => $entity->getUntranslated()->language()->getId(),
+        'target' => $langcode,
+      ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
+
+      if (!$url->access()) {
+        continue;
+      }
+      $link = [
+        'title' => $this->t('Add new local translation'),
+        'weight' => -100,
+        'url' => $url,
+      ];
+      if (isset($row['data']['operations']['data']['#links'])) {
+        // It means we have already the operations.
+        $row['data']['operations']['data']['#links']['add'] = $link;
+        continue;
+      }
+
+      // Otherwise, start the operations.
+      $row['data']['operations']['data'] = [
+        '#type' => 'operations',
+        '#links' => [
+          'add' => $link,
+        ],
+      ];
+    }
   }
 
 }

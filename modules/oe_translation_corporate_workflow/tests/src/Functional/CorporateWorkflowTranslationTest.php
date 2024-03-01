@@ -11,6 +11,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
@@ -35,6 +36,7 @@ use Drupal\user\Entity\Role;
  * versions.
  *
  * @group batch1
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
@@ -278,6 +280,8 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       ],
     ], ['1.0.0 / published', '2.0.0 / validated']);
 
+    $this->assertNewLocalTranslationLinks($node, ['en'], ['en']);
+
     // Create a translation in IT for the published version.
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'tr[hreflang="it"] td[data-version="1.0.0"] a')->click();
@@ -286,8 +290,6 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'Translation' => 'My node IT',
     ];
     $this->submitForm($values, 'Save and synchronise');
-
-    // Go back to the dashboard and assert our table got this new language.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->assertExtendedDashboardExistingTranslations([
       'en' => [
@@ -305,6 +307,34 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'validated_title' => 'No translation',
       ],
     ], ['1.0.0 / published', '2.0.0 / validated']);
+
+    // Start another translation and save as draft.
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="it"] td[data-version="1.0.0"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in Italian (version 1.0.0)');
+    $values = [
+      'Translation' => 'My node IT',
+    ];
+    $this->submitForm($values, 'Save as draft');
+    // Go back to the dashboard and assert the "add local translation" links
+    // are reflecting this change.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->assertNewLocalTranslationLinks($node, ['en', 'it'], ['en']);
+    // Sync the translation and create one for the validated version.
+    $this->clickLink('Edit draft translation');
+    $this->submitForm($values, 'Save and synchronise');
+    $this->assertNewLocalTranslationLinks($node, ['en'], ['en']);
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="it"] td[data-version="2.0.0"] a')->click();
+    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node 2 in Italian (version 2.0.0)');
+    $values = [
+      'Translation' => 'My node IT 2',
+    ];
+    $this->submitForm($values, 'Save as draft');
+    $this->assertNewLocalTranslationLinks($node, ['en'], ['en', 'it']);
+    // Synchronise it.
+    $this->clickLink('Edit draft translation');
+    $this->submitForm($values, 'Save and synchronise');
   }
 
   /**
@@ -1207,6 +1237,46 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         $col = $columns[$col_key];
         $this->assertEquals($col_value, $col->getText(), sprintf('The %s column value is not correct', $col_value));
       }
+    }
+  }
+
+  /**
+   * Asserts that on the dashboard, we have an operation to add new local trans.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   * @param array $current_excluded_languages
+   *   The languages for which we don't have (current entity).
+   * @param array $latest_excluded_languages
+   *   The languages for which we don't have (current version).
+   */
+  protected function assertNewLocalTranslationLinks(NodeInterface $node, array $current_excluded_languages = [], array $latest_excluded_languages = []): void {
+    foreach ($this->getSession()->getPage()->findAll('css', 'table.existing-translations-table tbody tr') as $row) {
+      $langcode = $row->getAttribute('hreflang');
+      $col_current = $row->find('xpath', '//td[3]');
+      $col_latest = $row->find('xpath', '//td[5]');
+      // Current entity.
+      $current_entity_link = $col_current->findLink('Add new local translation');
+      $latest_version_link = $col_latest->findLink('Add new local translation');
+      $continue = FALSE;
+      if (in_array($langcode, $current_excluded_languages)) {
+        $this->assertNull($current_entity_link);
+        $continue = TRUE;
+      }
+      if (in_array($langcode, $latest_excluded_languages)) {
+        $this->assertNull($latest_version_link);
+        $continue = TRUE;
+      }
+
+      if ($continue) {
+        continue;
+      }
+
+      $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+      $current_node = $node_storage->load($node->id());
+      $latest_node = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+      $this->assertEquals('/build/admin/oe_translation/translate-local/node/' . $current_node->getRevisionId() . '/en/' . $langcode . '?destination=/build/node/' . $current_node->id() . '/translations', $current_entity_link->getAttribute('href'));
+      $this->assertEquals('/build/admin/oe_translation/translate-local/node/' . $latest_node->getRevisionId() . '/en/' . $langcode . '?destination=/build/node/' . $latest_node->id() . '/translations', $latest_version_link->getAttribute('href'));
     }
   }
 
