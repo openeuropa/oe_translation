@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_active_revision\FunctionalJavascript;
 
+use Drupal\node\Entity\Node;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Entity\ActiveRevision;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
@@ -1977,6 +1978,65 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertCount(1, $language_values);
     $this->assertEquals(LanguageWithEntityRevisionItem::SCOPE_BOTH, $language_values[0]['scope']);
     $this->assertEquals('it', $language_values[0]['langcode']);
+  }
+
+  /**
+   * Tests a case with incorrectly versioned node.
+   *
+   * We might have nodes migrated as published with version 0.1 which don't have
+   * a major so we cannot rely on ALWAYS having a major.
+   */
+  public function testIncorrectlyVersionedNode(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    $node = Node::create([
+      'type' => 'page',
+      'title' => 'Test incorrect version',
+      'moderation_state' => 'published',
+      'status' => 1,
+    ]);
+    $node->addTranslation('fr', ['title' => 'test fr'] + $node->toArray());
+    $node->save();
+
+    $this->assertEquals(0, $node->get('version')->major);
+    $this->assertEquals(1, $node->get('version')->minor);
+
+    // Edit the node to make a new draft and then publish it.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->fillField('Title', 'Test incorrect version 2');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page Test incorrect version 2 has been updated.');
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->pageTextContains('The moderation state has been updated.');
+
+    // No active revisions were created.
+    $this->assertCount(0, ActiveRevision::loadMultiple());
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    // We now have a major version.
+    $this->assertEquals(1, $node->get('version')->major);
+    $this->assertEquals(0, $node->get('version')->minor);
+
+    // And if now we make a new draft and then publish, we'll also get an
+    // active revision entity.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->fillField('Title', 'Test incorrect version 3');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page Test incorrect version 3 has been updated.');
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->pageTextContains('The moderation state has been updated.');
+    $this->assertCount(1, ActiveRevision::loadMultiple());
+    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity('node', $node->id());
+    $this->assertInstanceOf(ActiveRevisionInterface::class, $active_revision);
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    $this->assertEquals(2, $node->get('version')->major);
+    $this->assertEquals(0, $node->get('version')->minor);
   }
 
 }
