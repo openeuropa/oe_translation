@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.target_languages
+    - oe_translation.oe_translation_request_type.cdt
+  module:
+    - oe_translation
+id: oe_translation_request.cdt.target_languages
+field_name: target_languages
+entity_type: oe_translation_request
+bundle: cdt
+label: 'Target languages'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: oe_translation_language_with_status
