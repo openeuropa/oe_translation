@@ -24,6 +24,17 @@ services:
       - EPOETRY_AUTH_CERT_PATH=""
       - EPOETRY_AUTH_CERT_PASSWORD=""
       - EPOETRY_AUTH_EU_LOGIN_BASEPATH=""
+      - CDT_TOKEN_API_ENDPOINT=https://example.com/token
+      - CDT_MAIN_API_ENDPOINT=https://example.com/v2/CheckConnection
+      - CDT_REFERENCE_DATA_API_ENDPOINT=https://example.com/v2/requests/businessReferenceData
+      - CDT_VALIDATE_API_ENDPOINT=https://example.com/v2/requests/validate
+      - CDT_REQUESTS_API_ENDPOINT=https://example.com/v2/requests
+      - CDT_IDENTIFIER_API_ENDPOINT=https://example.com/v2/requests/requestIdentifierByCorrelationId/:correlationId
+      - CDT_STATUS_API_ENDPOINT=https://example.com/v2/requests/:requestyear/:requestnumber
+      - CDT_FILE_API_ENDPOINT=https://example.com/v2/requests/:requestyear/:requestnumber/targets-base64
+      - CDT_CLIENT=test_client
+      - CDT_USERNAME=test_username
+      - CDT_PASSWORD=test_password
   mysql:
     image: registry.fpfis.eu/fpfis/sql:percona-5.7
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3
