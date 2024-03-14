@@ -2,6 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.oe_translation_request.cdt.cdt_status
     - field.field.oe_translation_request.cdt.comments
     - field.field.oe_translation_request.cdt.confidentiality
     - field.field.oe_translation_request.cdt.contact_usernames
@@ -30,6 +31,7 @@ content:
     weight: 0
     region: content
 hidden:
+  cdt_status: true
   comments: true
   confidentiality: true
   contact_usernames: true
