@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.translated_data
+    - oe_translation.oe_translation_request_type.cdt
+  module:
+    - oe_translation_remote
+id: oe_translation_request.cdt.translated_data
+field_name: translated_data
+entity_type: oe_translation_request
+bundle: cdt
+label: 'Translated data'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: oe_translation_remote_translated_data
