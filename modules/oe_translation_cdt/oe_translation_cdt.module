@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for OpenEuropa Translation CDT module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\oe_translation_cdt\TranslationRequestCdt;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function oe_translation_cdt_entity_bundle_info_alter(array &$bundles): void {
+  if (isset($bundles['oe_translation_request']['cdt'])) {
+    $bundles['oe_translation_request']['cdt']['class'] = TranslationRequestCdt::class;
+  }
+}
