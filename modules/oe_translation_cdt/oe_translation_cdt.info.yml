@@ -1,0 +1,8 @@
+name: OpenEuropa Translation CDT
+description: Integration of the CDT service into the OpenEuropa translation framework.
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^10
+dependencies:
+  - oe_translation:oe_translation_remote
