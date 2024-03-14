@@ -1,0 +1,8 @@
+name: OpenEuropa Translation CDT Mock
+description: Provides a fake endpoint to test CDT locally.
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^10
+dependencies:
+  - oe_translation:oe_translation_cdt
