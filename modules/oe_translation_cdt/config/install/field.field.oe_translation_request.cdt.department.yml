@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.department
+    - oe_translation.oe_translation_request_type.cdt
+id: oe_translation_request.cdt.department
+field_name: department
+entity_type: oe_translation_request
+bundle: cdt
+label: Department
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
