@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.cdt_id
+    - oe_translation.oe_translation_request_type.cdt
+id: oe_translation_request.cdt.cdt_id
+field_name: cdt_id
+entity_type: oe_translation_request
+bundle: cdt
+label: Id
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
