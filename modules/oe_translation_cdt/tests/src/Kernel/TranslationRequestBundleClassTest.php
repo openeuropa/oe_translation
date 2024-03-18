@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Drupal\oe_translation\Entity\TranslationRequest;
-use Drupal\oe_translation_cdt\TranslationRequestCdt;
+use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -40,7 +40,7 @@ class TranslationRequestBundleClassTest extends TranslationKernelTestBase {
     $request = TranslationRequest::create([
       'bundle' => 'cdt',
     ]);
-    assert($request instanceof TranslationRequestCdt);
+    assert($request instanceof TranslationRequestCdtInterface);
 
     $request->setCdtId('test_cdt_id');
     $this->assertEquals('test_cdt_id', $request->getCdtId());
