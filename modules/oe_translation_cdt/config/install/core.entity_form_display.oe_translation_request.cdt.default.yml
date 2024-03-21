@@ -5,7 +5,7 @@ dependencies:
     - field.field.oe_translation_request.cdt.cdt_status
     - field.field.oe_translation_request.cdt.comments
     - field.field.oe_translation_request.cdt.confidentiality
-    - field.field.oe_translation_request.cdt.contacts
+    - field.field.oe_translation_request.cdt.contact_usernames
     - field.field.oe_translation_request.cdt.correlation_id
     - field.field.oe_translation_request.cdt.deliver_to
     - field.field.oe_translation_request.cdt.department
@@ -25,7 +25,7 @@ hidden:
   cdt_status: true
   comments: true
   confidentiality: true
-  contacts: true
+  contact_usernames: true
   correlation_id: true
   deliver_to: true
   department: true
