@@ -1,0 +1,15 @@
+oe_translation_cdt.request_status_callback:
+  path: '/translation-request/cdt/request-status'
+  methods: [POST]
+  defaults:
+    _controller: '\Drupal\oe_translation_cdt\Controller\CallbackController::requestStatus'
+  requirements:
+    _permission: 'access content'
+
+oe_translation_cdt.job_status_callback:
+  path: '/translation-request/cdt/job-status'
+  methods: [POST]
+  defaults:
+    _controller: '\Drupal\oe_translation_cdt\Controller\CallbackController::jobStatus'
+  requirements:
+    _permission: 'access content'
