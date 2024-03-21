@@ -3,8 +3,8 @@ status: true
 dependencies:
   module:
     - oe_translation
-id: oe_translation_request.contacts
-field_name: contacts
+id: oe_translation_request.contact_usernames
+field_name: contact_usernames
 entity_type: oe_translation_request
 type: string
 settings:
