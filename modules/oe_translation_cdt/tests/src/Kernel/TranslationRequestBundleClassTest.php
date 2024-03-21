@@ -54,14 +54,14 @@ class TranslationRequestBundleClassTest extends TranslationKernelTestBase {
     $request->setConfidentiality('test_confidentiality');
     $this->assertEquals('test_confidentiality', $request->getConfidentiality());
 
-    $request->setContacts([
+    $request->setContactUsernames([
       'test_contact1',
       'test_contact2',
     ]);
     $this->assertEquals([
       'test_contact1',
       'test_contact2',
-    ], $request->getContacts());
+    ], $request->getContactUsernames());
 
     $request->setDeliverTo([
       'test_deliver_to1',

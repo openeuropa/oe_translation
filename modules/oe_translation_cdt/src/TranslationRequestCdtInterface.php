@@ -89,7 +89,7 @@ interface TranslationRequestCdtInterface {
    * @return string[]
    *   The contacts.
    */
-  public function getContacts(): array;
+  public function getContactUsernames(): array;
 
   /**
    * Sets the contacts.
@@ -100,7 +100,7 @@ interface TranslationRequestCdtInterface {
    * @return TranslationRequestCdtInterface
    *   The current request.
    */
-  public function setContacts(array $values): TranslationRequestCdtInterface;
+  public function setContactUsernames(array $values): TranslationRequestCdtInterface;
 
   /**
    * Returns the "deliver to" contact list.
