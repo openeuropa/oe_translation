@@ -17,3 +17,22 @@ function oe_translation_cdt_entity_bundle_info_alter(array &$bundles): void {
     $bundles['oe_translation_request']['cdt']['class'] = TranslationRequestCdt::class;
   }
 }
+
+/**
+ * Implements hook_theme().
+ */
+function oe_translation_cdt_theme(): array {
+  return [
+    'translation_request_xml_file' => [
+      'variables' => [
+        'drupal_version' => NULL,
+        'module_version' => NULL,
+        'producer_date' => NULL,
+        'transaction_identifier' => NULL,
+        'transaction_code' => NULL,
+        'translations' => [],
+        'total_character_length' => NULL,
+      ],
+    ],
+  ];
+}
