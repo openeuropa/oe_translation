@@ -2,13 +2,13 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.oe_translation_request.contacts
+    - field.storage.oe_translation_request.contact_usernames
     - oe_translation.oe_translation_request_type.cdt
-id: oe_translation_request.cdt.contacts
-field_name: contacts
+id: oe_translation_request.cdt.contact_usernames
+field_name: contact_usernames
 entity_type: oe_translation_request
 bundle: cdt
-label: Contacts
+label: Contact usernames
 description: ''
 required: true
 translatable: false

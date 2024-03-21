@@ -76,9 +76,9 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   /**
    * {@inheritdoc}
    */
-  public function getContacts(): array {
+  public function getContactUsernames(): array {
     $contacts = [];
-    foreach ($this->get('contacts')->getValue() as $value) {
+    foreach ($this->get('contact_usernames')->getValue() as $value) {
       $contacts[] = $value['value'];
     }
     return $contacts;
@@ -87,8 +87,8 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   /**
    * {@inheritdoc}
    */
-  public function setContacts(array $values): TranslationRequestCdtInterface {
-    $this->set('contacts', $values);
+  public function setContactUsernames(array $values): TranslationRequestCdtInterface {
+    $this->set('contact_usernames', $values);
     return $this;
   }
 
