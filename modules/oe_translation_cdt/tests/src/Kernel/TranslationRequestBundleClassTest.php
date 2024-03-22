@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -45,8 +46,11 @@ class TranslationRequestBundleClassTest extends TranslationKernelTestBase {
     $request->setCdtId('test_cdt_id');
     $this->assertEquals('test_cdt_id', $request->getCdtId());
 
-    $request->setCdtStatus('test_cdt_status');
-    $this->assertEquals('test_cdt_status', $request->getCdtStatus());
+    $request->setRequestStatusFromCdt('COMP');
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
+
+    $request->updateTargetLanguageStatusFromCdt('en', 'CMP');
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguage('en')?->getStatus());
 
     $request->setComments('test_comments');
     $this->assertEquals('test_comments', $request->getComments());
