@@ -2,18 +2,20 @@
 
 namespace Drupal\oe_translation_cdt;
 
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+
 /**
  * An interface for CDT bundle class for oe_translation_request entities.
  */
-interface TranslationRequestCdtInterface {
+interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterface {
 
   /**
    * Returns the CDT ID.
    *
-   * @return string
-   *   The CDT ID including request year.
+   * @return string|null
+   *   The CDT ID including request year, or NULL if not set.
    */
-  public function getCdtId(): string;
+  public function getCdtId(): ?string;
 
   /**
    * Sets the CDT ID.
@@ -27,23 +29,22 @@ interface TranslationRequestCdtInterface {
   public function setCdtId(string $value): TranslationRequestCdtInterface;
 
   /**
-   * Returns the CDT status.
+   * Set the request status based on CDT code.
    *
-   * @return string
-   *   The status.
+   * @param string $cdt_status
+   *   The CDT status code.
    */
-  public function getCdtStatus(): string;
+  public function setRequestStatusFromCdt(string $cdt_status): TranslationRequestCdtInterface;
 
   /**
-   * Sets the CDT status.
+   * Set the language status based on CDT code.
    *
-   * @param string $value
-   *   The status.
-   *
-   * @return TranslationRequestCdtInterface
-   *   The current request.
+   * @param string $langcode
+   *   The Drupal language code.
+   * @param string $cdt_status
+   *   The CDT status code.
    */
-  public function setCdtStatus(string $value): TranslationRequestCdtInterface;
+  public function updateTargetLanguageStatusFromCdt(string $langcode, string $cdt_status): void;
 
   /**
    * Returns the comments.
