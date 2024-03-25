@@ -29,6 +29,7 @@
         "drupal/paragraphs": "^1.13",
         "drupal/typed_link": "^2.0",
         "drush/drush": "^12",
+        "openeuropa/cdt-client": "dev-D8AGE-289",
         "openeuropa/code-review": "^2.0",
         "openeuropa/epoetry-client": "1.x-dev || 2.x-dev",
         "openeuropa/oe_content": "^3.0.0-beta2",
@@ -54,6 +55,10 @@
         "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
+        },
+        "cdt": {
+            "type": "vcs",
+            "url": "https://github.com/openeuropa/cdt-client"
         }
     },
     "autoload": {
@@ -90,7 +95,10 @@
             "drupal/address": {
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
             }
-        }
+        },
+        "_readme": [
+            "CDT client is temporarily fetched from the repository, until it's added to packagist.org."
+        ]
     },
     "config": {
         "sort-packages": true,
