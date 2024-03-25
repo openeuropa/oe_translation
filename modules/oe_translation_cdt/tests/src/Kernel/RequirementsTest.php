@@ -49,7 +49,7 @@ class RequirementsTest extends TranslationKernelTestBase {
       else {
         $this->assertEquals($value, $requirements[$name]['value']);
       }
-      $this->assertEquals(0, $requirements[$name]['severity']);
+      $this->assertEquals(REQUIREMENT_OK, $requirements[$name]['severity']);
     }
 
     // Test missing settings.
@@ -58,7 +58,7 @@ class RequirementsTest extends TranslationKernelTestBase {
     foreach ($settings as $name => $value) {
       $this->assertArrayHasKey($name, $requirements);
       $this->assertEquals('Value not set', $requirements[$name]['value']);
-      $this->assertEquals(1, $requirements[$name]['severity']);
+      $this->assertEquals(REQUIREMENT_WARNING, $requirements[$name]['severity']);
     }
   }
 
