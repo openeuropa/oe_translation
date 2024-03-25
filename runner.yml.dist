@@ -54,6 +54,7 @@ drupal:
       $settings["cdt.username"] = getenv('CDT_USERNAME');
       $settings["cdt.password"] = getenv('CDT_PASSWORD');
       $settings["cdt.client"] = getenv('CDT_CLIENT');
+      $settings["cdt.api_key"] = getenv('CDT_API_KEY');
 
 selenium:
   host: "http://selenium"
@@ -100,6 +101,7 @@ commands:
         $settings["cdt.username"] = getenv('CDT_USERNAME');
         $settings["cdt.password"] = getenv('CDT_PASSWORD');
         $settings["cdt.client"] = getenv('CDT_CLIENT');
+        $settings["cdt.api_key"] = getenv('CDT_API_KEY');
   toolkit:code-review:
     - { task: "exec", command: "./vendor/bin/grumphp run --verbose" }
   toolkit:test-phpunit:
