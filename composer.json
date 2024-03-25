@@ -30,6 +30,7 @@
         "drupal/paragraphs": "^1.13",
         "drupal/typed_link": "^2.2.0",
         "drush/drush": "^12 || ^13",
+        "openeuropa/cdt-client": "dev-D8AGE-289",
         "openeuropa/code-review-drupal": "^1.0.0-alpha",
         "openeuropa/epoetry-client": "2.x-dev || 3.x-dev || 4.x-dev",
         "openeuropa/oe_content": "4.x-dev",
@@ -55,6 +56,14 @@
         {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/openeuropa/DrupalDriver.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/openeuropa/cdt-client"
         }
     ],
     "autoload": {
@@ -88,7 +97,10 @@
             "locations": {
                 "web-root": "./build"
             }
-        }
+        },
+        "_readme": [
+            "CDT client is temporarily fetched from the repository, until it's added to packagist.org."
+        ]
     },
     "config": {
         "sort-packages": true,
