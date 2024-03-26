@@ -66,9 +66,7 @@ class CallbackController extends ControllerBase {
       assert($request instanceof TranslationRequestCdtInterface);
       return $request;
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
   /**
