@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Drupal\oe_translation_cdt;
+namespace Drupal\oe_translation_cdt\Mapper;
+
+use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 
 /**
  * Maps the Drupal language to the configured CDT language.
  */
-class CdtLanguageMapper {
+class LanguageCodeMapper {
 
   /**
    * Returns the CDT language code configured in the request translator.

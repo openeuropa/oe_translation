@@ -6,7 +6,7 @@ namespace Drupal\oe_translation_cdt\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Site\Settings;
-use Drupal\oe_translation_cdt\CdtLanguageMapper;
+use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use OpenEuropa\CdtClient\Serializer\CallbackSerializer;
 use Symfony\Component\HttpFoundation\Request;
@@ -124,7 +124,7 @@ class CallbackController extends ControllerBase {
     if (!$translation_request) {
       throw new NotFoundHttpException('Translation request not found');
     }
-    $drupal_langcode = CdtLanguageMapper::getDrupalLanguageCode($job_status->getTargetLanguageCode(), $translation_request);
+    $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job_status->getTargetLanguageCode(), $translation_request);
     $translation_request->updateTargetLanguageStatusFromCdt($drupal_langcode, $job_status->getStatus());
     $translation_request->save();
 
