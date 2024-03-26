@@ -10,7 +10,7 @@ use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterface {
 
   /**
-   * Returns the CDT ID.
+   * Gets the CDT ID.
    *
    * @return string|null
    *   The CDT ID including request year, or NULL if not set.
@@ -29,7 +29,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function setCdtId(string $value): TranslationRequestCdtInterface;
 
   /**
-   * Set the request status based on CDT code.
+   * Sets the request status based on CDT code.
    *
    * @param string $cdt_status
    *   The CDT status code.
@@ -37,7 +37,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function setRequestStatusFromCdt(string $cdt_status): TranslationRequestCdtInterface;
 
   /**
-   * Set the language status based on CDT code.
+   * Updates the language status based on CDT code.
    *
    * @param string $langcode
    *   The Drupal language code.
@@ -47,7 +47,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function updateTargetLanguageStatusFromCdt(string $langcode, string $cdt_status): void;
 
   /**
-   * Returns the comments.
+   * Gets the comments.
    *
    * @return string
    *   The comments.
@@ -66,7 +66,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function setComments(string $value): TranslationRequestCdtInterface;
 
   /**
-   * Returns the confidentiality.
+   * Gets the confidentiality.
    *
    * @return string
    *   The confidentiality.
@@ -85,7 +85,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function setConfidentiality(string $value): TranslationRequestCdtInterface;
 
   /**
-   * Returns the contacts.
+   * Gets the contacts.
    *
    * @return string[]
    *   The contacts.
@@ -104,7 +104,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function setContactUsernames(array $values): TranslationRequestCdtInterface;
 
   /**
-   * Returns the "deliver to" contact list.
+   * Gets the "deliver to" contact list.
    *
    * @return string[]
    *   The contacts
@@ -123,7 +123,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   public function setDeliverTo(array $values): TranslationRequestCdtInterface;
 
   /**
-   * Returns the correlation ID.
+   * Gets the correlation ID.
    *
    * @return string
    *   The correlation ID.
