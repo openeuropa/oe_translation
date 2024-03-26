@@ -13,7 +13,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
    * Gets the CDT ID.
    *
    * @return string|null
-   *   The CDT ID including request year, or NULL if not set.
+   *   The CDT ID in the format "2024/12345", or NULL if not set.
    */
   public function getCdtId(): ?string;
 
@@ -21,7 +21,7 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
    * Sets the CDT ID.
    *
    * @param string $value
-   *   The CDT ID including request year.
+   *   The CDT ID in the format "2024/12345".
    *
    * @return TranslationRequestCdtInterface
    *   The current request.
