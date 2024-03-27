@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * OE Translation CDT install file.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Site\Settings;
+
+/**
+ * Implements hook_requirements().
+ */
+function oe_translation_cdt_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    $cdt_environment_variables = [
+      'cdt.main_api_endpoint' => t('CDT Main API endpoint'),
+      'cdt.token_api_endpoint' => t('CDT Token API endpoint'),
+      'cdt.reference_data_api_endpoint' => t('CDT Reference Data API endpoint'),
+      'cdt.validate_api_endpoint' => t('CDT Validate API endpoint'),
+      'cdt.requests_api_endpoint' => t('CDT Requests API endpoint'),
+      'cdt.identifier_api_endpoint' => t('CDT Identifier API endpoint'),
+      'cdt.status_api_endpoint' => t('CDT Status API endpoint'),
+      'cdt.username' => t('CDT Username'),
+      'cdt.client' => t('CDT Client'),
+      'cdt.password' => t('CDT Password'),
+      'cdt.api_key' => t('CDT API Key'),
+    ];
+
+    $hide_values = [
+      'cdt.password',
+      'cdt.api_key',
+    ];
+
+    foreach ($cdt_environment_variables as $variable => $name) {
+      $value = Settings::get($variable, FALSE);
+      if ($value && in_array($variable, $hide_values)) {
+        $value = t('Value set');
+      }
+      $requirements[$variable] = [
+        'title' => $name,
+        'value' => $value ?: t('Value not set'),
+        'severity' => $value ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+      ];
+    }
+  }
+
+  return $requirements;
+}
