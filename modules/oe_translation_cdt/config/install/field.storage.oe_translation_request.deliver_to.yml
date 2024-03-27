@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - oe_translation
+id: oe_translation_request.deliver_to
+field_name: deliver_to
+entity_type: oe_translation_request
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
