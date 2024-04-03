@@ -8,8 +8,10 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\node\Entity\Node;
+use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\ContentFormatter\XmlFormatter;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
+use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -29,15 +31,17 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     'oe_translation_cdt',
     'oe_translation_remote',
     'filter',
-    'twig_xdebug',
   ];
 
   /**
    * A test request.
-   *
-   * @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
    */
-  protected $request;
+  protected TranslationRequestCdtInterface $request;
+
+  /**
+   * The XML content.
+   */
+  protected string $xml;
 
   /**
    * {@inheritdoc}
@@ -49,7 +53,6 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     $this->installConfig(['filter']);
     $this->installConfig(['oe_translation_remote']);
     $this->installConfig(['oe_translation_cdt']);
-    $this->installConfig(['twig_xdebug']);
 
     // Add a formatted field to the content type.
     $field_storage_definition = [
@@ -129,7 +132,6 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     $node->save();
 
     // Create a translation request with the node data.
-    /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $request */
     $this->request = TranslationRequestCdt::create([
       'bundle' => 'cdt',
       'source_language_code' => $node->language()->getId(),
@@ -144,14 +146,17 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     $data = $this->container->get('oe_translation.translation_source_manager')->extractData($node->getUntranslated());
     $this->request->setData($data);
     $this->request->save();
+
+    $this->xml = (string) file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_cdt') . '/tests/fixtures/cdt-source-file.xml');
+    $this->xml = (string) str_replace('@transaction_identifier', (string) $this->request->id(), $this->xml);
+    $this->xml = (string) str_replace('@drupal_version', \Drupal::VERSION, $this->xml);
+    $this->xml = (string) str_replace('@node_id', (string) $this->request->getContentEntity()?->id(), $this->xml);
   }
 
   /**
-   * Test the HTML content formatter.
+   * Test the XML content formatter export.
    */
   public function testXmlContentExporter(): void {
-    /** @var \Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface $formatter */
-
     $extension_prophecy = $this->prophesize(ModuleExtensionList::class);
     $extension_prophecy->getExtensionInfo('oe_translation')->willReturn(['version' => '8.x-1.6']);
     $time_prophecy = $this->prophesize(Time::class);
@@ -164,102 +169,90 @@ class XmlFormatterTest extends TranslationKernelTestBase {
       $time_prophecy->reveal()
     );
 
-    /** @var \Drupal\Core\Render\Markup $export */
     $export = $formatter->export($this->request);
-    file_put_contents('/var/www/html/test-source-file.xml', $export);
-
-    $expected = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_cdt') . '/tests/fixtures/cdt-source-file.xml');
-    $expected = str_replace('@request_id', $this->request->id(), $expected);
-    $expected = str_replace('@drupal_version', \Drupal::VERSION, $expected);
-    $this->assertEquals($expected, $export);
+    $this->assertEquals($this->xml, $export);
   }
 
   /**
-   * Test the HTML content formatter.
+   * Test the XML content formatter import.
    */
-  public function xtestHtmlContentImporter(): void {
-    /** @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $formatter */
-    $formatter = $this->container->get('oe_translation_epoetry.html_formatter');
-
-    $formatted_content = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-translated.html');
-
-    $actual_data = $formatter->import($formatted_content, $this->request);
-
-    $expected_data = [
-      1 => [
-        'title' => [
-          0 => [
-            'value' => [
+  public function testXmlContentImporter(): void {
+    $formatter = $this->container->get('oe_translation_cdt.xml_formatter');
+    assert($formatter instanceof ContentFormatterInterface);
+    $translation_data = $formatter->import($this->xml, $this->request);
+    $expected = [
+      'title' => [
+        [
+          'value' => [
+            '#text' => 'English title',
+            '#translate' => TRUE,
+            '#max_length' => 255,
+            '#parent_label' => [
+              0 => 'Title',
+            ],
+            '#translation' => [
               '#text' => 'English title',
-              '#translate' => TRUE,
-              '#max_length' => 255,
-              '#parent_label' => [
-                0 => 'Title',
-              ],
-              '#translation' => [
-                '#text' => 'French title',
-              ],
             ],
           ],
         ],
-        'ott_content_reference' => [
-          0 => [
-            'entity' => [
-              'title' => [
-                0 => [
-                  'value' => [
+      ],
+      'ott_content_reference' => [
+        [
+          'entity' => [
+            'title' => [
+              [
+                'value' => [
+                  '#text' => 'Referenced node',
+                  '#translate' => TRUE,
+                  '#max_length' => 255,
+                  '#parent_label' => [
+                    0 => 'Content reference',
+                    1 => 'Title',
+                  ],
+                  '#translation' => [
                     '#text' => 'Referenced node',
-                    '#translate' => TRUE,
-                    '#max_length' => 255,
-                    '#parent_label' => [
-                      0 => 'Content reference',
-                      1 => 'Title',
-                    ],
-                    '#translation' => [
-                      '#text' => 'Referenced node in French',
-                    ],
                   ],
                 ],
               ],
             ],
           ],
         ],
-        'translatable_text_field' => [
-          0 => [
-            'value' => [
+      ],
+      'translatable_text_field' => [
+        [
+          'value' => [
+            '#text' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
+            '#translate' => TRUE,
+            '#max_length' => 255,
+            '#format' => 'html',
+            '#parent_label' => [
+              0 => 'translatable_text_field',
+            ],
+            '#translation' => [
               '#text' => '<h1>This is a heading</h1><p>This is a paragraph</p>',
-              '#translate' => TRUE,
-              '#max_length' => 255,
-              '#format' => 'html',
-              '#parent_label' => [
-                0 => 'translatable_text_field',
-              ],
-              '#translation' => [
-                '#text' => '<h1>This is a FR heading</h1><p>This is a FR paragraph</p>',
-              ],
             ],
           ],
         ],
-        'translatable_text_field_plain' => [
-          0 => [
-            'value' => [
+      ],
+      'translatable_text_field_plain' => [
+        [
+          'value' => [
+            '#text' => 'plain text field value',
+            '#translate' => TRUE,
+            '#max_length' => 255,
+            '#format' => 'plain_text',
+            '#parent_label' => [
+              0 => 'translatable_text_field_plain',
+            ],
+            '#translation' => [
               '#text' => 'plain text field value',
-              '#translate' => TRUE,
-              '#max_length' => 255,
-              '#format' => 'plain_text',
-              '#parent_label' => [
-                0 => 'translatable_text_field_plain',
-              ],
-              '#translation' => [
-                '#text' => 'plain text FR field value',
-              ],
             ],
           ],
         ],
       ],
     ];
 
-    $this->assertEquals($expected_data, $actual_data);
+    $this->assertEquals($expected, $translation_data);
   }
 
 }
