@@ -5,12 +5,22 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_cdt\ContentFormatter;
 
 use Drupal\Component\Datetime\Time;
-use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\TranslationSourceHelper;
+use Drupal\oe_translation_cdt\Model\Transaction;
+use Drupal\oe_translation_cdt\Model\TransactionItem;
+use Drupal\oe_translation_cdt\Model\TransactionItemField;
+use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
 /**
  * XML formatter.
@@ -19,6 +29,11 @@ use Drupal\oe_translation\TranslationSourceHelper;
  * that meets the requirements of the CDT service.
  */
 class XmlFormatter implements ContentFormatterInterface {
+
+  /**
+   * The serializer.
+   */
+  protected Serializer $serializer;
 
   /**
    * PoetryHtmlFormatter constructor.
@@ -42,40 +57,53 @@ class XmlFormatter implements ContentFormatterInterface {
   /**
    * {@inheritdoc}
    */
-  public function export(TranslationRequestInterface $request): MarkupInterface {
+  public function export(TranslationRequestInterface $request): string {
     $fields = TranslationSourceHelper::filterTranslatable($request->getData());
-    $items = [];
+    $transaction_item_fields = [];
     $character_count = 0;
     foreach ($fields as $key => $field) {
-      $items[] = [
-        'index_type' => $request->getContentEntity()->getEntityTypeId(),
-        'instance_id' => $request->getContentEntity()->id(),
-        'res_name' => '][' . $key,
-        'res_type' => self::isHtml($field['#text']) ? 'html' : 'text',
-        'res_label' => implode(' / ', $field['#parent_label']),
-        'res_max_size' => $field['#max_length'] ?? NULL,
-        'content' => [
-          '#markup' => $field['#text'],
-        ],
-      ];
+      $entity = $request->getContentEntity();
+      $transaction_item_fields[] = (new TransactionItemField())
+        ->setIndexType((string) $entity?->getEntityTypeId())
+        ->setInstanceId((string) $entity?->id())
+        ->setResourceName('][' . $key)
+        ->setResourceType(self::isHtml($field['#text']) ? 'html' : 'text')
+        ->setResourceLabel(implode(' / ', $field['#parent_label']))
+        ->setResourceMaxSize($field['#max_length'] ?? NULL)
+        ->setContent($field['#text']);
       $character_count += mb_strlen(strip_tags($field['#text']));
     }
 
-    $elements = [
-      '#theme' => 'translation_request_xml_file',
-      '#drupal_version' => \Drupal::VERSION,
-      '#module_version' => $this->moduleExtensionList->getExtensionInfo('oe_translation')['version'],
-      '#producer_date' => $this->time->getCurrentTime(),
-      '#translations' => [
-        [
-          'source_reference' => $request->getContentEntity()->toUrl('canonical', ['absolute' => TRUE])->toString(),
-          'fields' => $items,
-        ],
-      ],
-      '#total_character_length' => $character_count,
-    ];
+    $entity_url = $request->getContentEntity()?->toUrl('canonical', ['absolute' => TRUE])->toString();
+    $transaction_item = (new TransactionItem())
+      ->setPreviewLink('NO PREVIEW LINK')
+      ->setSourceReference((string) $entity_url)
+      ->setTransactionItemFields($transaction_item_fields);
 
-    return $this->renderer->renderRoot($elements);
+    $transaction = (new Transaction())
+      ->setTransactionId((string) $request->id())
+      ->setTransactionCode('Drupal Translation Request')
+      ->setDrupalVersion(\Drupal::VERSION)
+      ->setModuleVersion($this->moduleExtensionList->getExtensionInfo('oe_translation')['version'])
+      ->setProducerDateTime(\DateTime::createFromFormat('U', (string) $this->time->getCurrentTime()))
+      ->setTotalCharacterLength($character_count)
+      ->setTransactionItems([$transaction_item]);
+
+    return $this->serializer()->serialize(
+      data: [
+        '@xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+        '@xsi:noNamespaceSchemaLocation' => '//static.cdt.europa.eu/webtranslations/schemas/Drupal-Translation-V8-2.xsd',
+        '#' => $transaction,
+      ],
+      format: XmlEncoder::FORMAT,
+      context: [
+        'xml_root_node_name' => 'Transaction',
+        'xml_version' => '1.0',
+        'xml_encoding' => 'UTF-8',
+        'xml_standalone' => 'yes',
+        'xml_format_output' => TRUE,
+      ]
+    );
   }
 
   /**
@@ -84,44 +112,60 @@ class XmlFormatter implements ContentFormatterInterface {
   public function import(string $file, TranslationRequestInterface $request): array {
     // Flatted the entire original request data so we have the original bits
     // as well to combine with the translation values.
-    $request_data = [$request->id() => $request->getData()];
-    $flattened_request_data = TranslationSourceHelper::flatten($request_data);
+    $flattened_request_data = TranslationSourceHelper::flatten($request->getData());
 
     // Start a fresh array of translation data so that we can only include
     // things that actually have translation values. This is to avoid
     // duplicating a lot of storage data.
     $translation_data = [];
 
-    $dom = new \DOMDocument();
-    $dom->loadHTML($file);
-    $xml = simplexml_import_dom($dom);
+    /** @var \Drupal\oe_translation_cdt\Model\Transaction $transaction */
+    $transaction = $this->serializer()->deserialize(
+      data: $file,
+      type: Transaction::class,
+      format: XmlEncoder::FORMAT,
+      context: [
+        'xml_root_node_name' => 'Transaction',
+      ]
+    );
+    $transaction_item = $transaction->getTransactionItems()[0] ?? NULL;
+    $fields = $transaction_item ? $transaction_item->getTransactionItemFields() : [];
 
-    if (!$xml) {
-      return [];
-    }
-
-    foreach ($xml->xpath("//div[@class='atom']") as $atom) {
-      $key = $this->decodeIdSafeBase64((string) $atom['id']);
-      $dom->loadXML($atom->asXML());
-      $node = $dom->getElementsByTagName('div')->item(0);
-
+    foreach ($fields as $field) {
+      $key = trim($field->getResourceName(), '[]');
       if (!isset($flattened_request_data[$key])) {
         continue;
       }
-
       $translation_data[$key] = $flattened_request_data[$key];
-      $translation_data[$key]['#translation'] = ['#text' => ''];
-      foreach ($node->childNodes as $child) {
-        if ($child->nodeType === XML_TEXT_NODE) {
-          $translation_data[$key]['#translation']['#text'] .= $child->nodeValue;
-        }
-        else {
-          $translation_data[$key]['#translation']['#text'] .= $dom->saveXml($child);
-        }
-      }
+      $translation_data[$key]['#translation'] = ['#text' => $field->getContent()];
     }
 
     return TranslationSourceHelper::unflatten($translation_data);
+  }
+
+  /**
+   * Creates and returns the serializer on-demand.
+   *
+   * @return \Symfony\Component\Serializer\Serializer
+   *   The serializer.
+   */
+  protected function serializer(): Serializer {
+    if (!isset($this->serializer)) {
+      $this->serializer = new Serializer(
+        normalizers: [
+          new ArrayDenormalizer(),
+          new DateTimeNormalizer(),
+          new ObjectNormalizer(
+            classMetadataFactory: new ClassMetadataFactory(new AttributeLoader()),
+            propertyTypeExtractor: new PhpDocExtractor(),
+          ),
+        ],
+        encoders: [
+          new XmlEncoder(),
+        ]
+      );
+    }
+    return $this->serializer;
   }
 
   /**
