@@ -1,23 +1,23 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Transaction xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="//static.cdt.europa.eu/webtranslations/schemas/Drupal-Translation-V8-2.xsd">
-<TransactionHeader xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <SenderDetails drupalVersion="@drupal_version" moduleVersion="8.x-1.6">
-    <ProducerDateTime>2024-03-20T11:55:29+11:00</ProducerDateTime>
-  </SenderDetails>
-</TransactionHeader>
-<TransactionIdentifier>@request_id</TransactionIdentifier>
-<TransactionCode>Drupal Translation Request</TransactionCode>
-<TransactionData>
-  <TranslationDetails>
-    <Translation>
-      <PreviewLink><![CDATA[NO PREVIEW LINK]]></PreviewLink>
-      <SourceReference><![CDATA[@node_link]]></SourceReference>
-      <StaticContent indexType="node" instanceId="1" resName="][title][0][value" resType="text" resMaxSize="255" resLabel="Title"><![CDATA[English title]]></StaticContent>
-      <StaticContent indexType="node" instanceId="1" resName="][ott_content_reference][0][entity][title][0][value" resType="text" resMaxSize="255" resLabel="Content reference / Title"><![CDATA[Referenced node]]></StaticContent>
-      <StaticContent indexType="node" instanceId="1" resName="][translatable_text_field][0][value" resType="html" resLabel="translatable_text_field"><![CDATA[<h1>This is a heading</h1><p>This is a paragraph</p>]]></StaticContent>
-      <StaticContent indexType="node" instanceId="1" resName="][translatable_text_field_plain" resType="text" resMaxSize="255" resLabel="translatable_text_field_plain"><![CDATA[plain text field value]]></StaticContent>
-    </Translation>
-    <TotalCharacterLength>86</TotalCharacterLength>
-  </TranslationDetails>
-</TransactionData>
+  <TransactionHeader>
+    <SenderDetails drupalVersion="@drupal_version" moduleVersion="8.x-1.6">
+      <ProducerDateTime>2024-03-20T11:55:29+00:00</ProducerDateTime>
+    </SenderDetails>
+  </TransactionHeader>
+  <TransactionIdentifier>@transaction_identifier</TransactionIdentifier>
+  <TransactionCode>Drupal Translation Request</TransactionCode>
+  <TransactionData>
+    <TranslationDetails>
+      <Translation>
+        <PreviewLink>NO PREVIEW LINK</PreviewLink>
+        <SourceReference>http://localhost/node/@node_id</SourceReference>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][title][0][value" resType="text" resMaxSize="255" resLabel="Title">English title</StaticContent>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][ott_content_reference][0][entity][title][0][value" resType="text" resMaxSize="255" resLabel="Content reference / Title">Referenced node</StaticContent>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][translatable_text_field][0][value" resType="html" resMaxSize="255" resLabel="translatable_text_field"><![CDATA[<h1>This is a heading</h1><p>This is a paragraph</p>]]></StaticContent>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][translatable_text_field_plain][0][value" resType="text" resMaxSize="255" resLabel="translatable_text_field_plain">plain text field value</StaticContent>
+      </Translation>
+      <TotalCharacterLength>86</TotalCharacterLength>
+    </TranslationDetails>
+  </TransactionData>
 </Transaction>
