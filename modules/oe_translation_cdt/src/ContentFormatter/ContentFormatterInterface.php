@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\ContentFormatter;
 
-use Drupal\Component\Render\MarkupInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 
 /**
@@ -18,21 +17,21 @@ interface ContentFormatterInterface {
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
    *   The request.
    *
-   * @return \Drupal\Component\Render\MarkupInterface
+   * @return string
    *   String with the file content.
    */
-  public function export(TranslationRequestInterface $request): MarkupInterface;
+  public function export(TranslationRequestInterface $request): string;
 
   /**
-   * Parses the translated file into the array.
+   * Parses the translated file.
    *
    * @param string $file
    *   A string to import.
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
    *   The request.
    *
-   * @return array
-   *   Translated data array.
+   * @return mixed[]
+   *   Translated data.
    */
   public function import(string $file, TranslationRequestInterface $request): array;
 
