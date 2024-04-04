@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use Drupal\Component\Datetime\Time;
-use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
@@ -150,6 +150,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     $this->xml = (string) file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_cdt') . '/tests/fixtures/cdt-source-file.xml');
     $this->xml = (string) str_replace('@transaction_identifier', (string) $this->request->id(), $this->xml);
     $this->xml = (string) str_replace('@drupal_version', \Drupal::VERSION, $this->xml);
+    $this->xml = (string) str_replace('@module_version', InstalledVersions::getPrettyVersion('openeuropa/oe_translation'), $this->xml);
     $this->xml = (string) str_replace('@node_id', (string) $this->request->getContentEntity()?->id(), $this->xml);
   }
 
@@ -157,15 +158,12 @@ class XmlFormatterTest extends TranslationKernelTestBase {
    * Test the XML content formatter export.
    */
   public function testXmlContentExporter(): void {
-    $extension_prophecy = $this->prophesize(ModuleExtensionList::class);
-    $extension_prophecy->getExtensionInfo('oe_translation')->willReturn(['version' => '8.x-1.6']);
     $time_prophecy = $this->prophesize(Time::class);
     $time_prophecy->getCurrentTime()->willReturn(1710935729);
 
     $formatter = new XmlFormatter(
       $this->container->get('renderer'),
       $this->container->get('entity_type.manager'),
-      $extension_prophecy->reveal(),
       $time_prophecy->reveal()
     );
 
