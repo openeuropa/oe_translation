@@ -24,6 +24,7 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'oe_translation',
     'oe_translation_cdt',
     'oe_translation_remote',
     'entity_test',
@@ -88,13 +89,16 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
     $request->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
     $request->updateTargetLanguageStatus('fr', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
     $request->setContentEntity($entity);
-    $data = \Drupal::service('oe_translation.translation_source_manager')->extractData($entity->getUntranslated());
+    $data = $this->container->get('oe_translation.translation_source_manager')->extractData($entity->getUntranslated());
     $request->setData($data);
 
     new Settings([
       'cdt.api_key' => 'test_api_key',
     ]);
-    $dto = TranslationRequestMapper::entityToDto($request);
+
+    $requestMapper = $this->container->get('oe_translation_cdt.translation_request_mapper');
+    assert($requestMapper instanceof TranslationRequestMapper);
+    $dto = $requestMapper->convertEntityToDto($request);
     $this->assertEquals($test_data['comments'], $dto->getComments());
     $this->assertEquals('Translation request #' . $request->id(), $dto->getTitle());
     $this->assertEquals($request->id(), $dto->getClientReference());
