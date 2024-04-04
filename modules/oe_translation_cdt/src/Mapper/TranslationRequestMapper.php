@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\Mapper;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\oe_translation\TranslationSourceHelper;
+use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use OpenEuropa\CdtClient\Model\Request\Callback;
 use OpenEuropa\CdtClient\Model\Request\File;
@@ -15,45 +17,53 @@ use OpenEuropa\CdtClient\Model\Request\Translation;
 use OpenEuropa\CdtClient\Model\Request\TranslationJob;
 
 /**
- * Maps the data between the entity and DTO.
- *
- * Converting the TranslationRequestCDT entity to the
- * Translation Request DTO defined by the cdt-client library.
+ * Maps the data between the TranslationRequestCDT entity and the DTO.
  */
-class TranslationRequestMapper {
+class TranslationRequestMapper implements DtoMapperInterface {
 
   protected const CHARACTERS_PER_PAGE = 750;
 
   protected const VOLUME_MULTIPLIER = 0.5;
 
   /**
+   * TranslationRequestMapper constructor.
+   *
+   * @param \Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface $contentFormatter
+   *   The content formatter.
+   */
+  public function __construct(
+    protected ContentFormatterInterface $contentFormatter
+  ) {}
+
+  /**
    * Converts Drupal TranslationRequest entity to CDT library DTO.
    *
-   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity
    *   The translation request entity.
    *
    * @return \OpenEuropa\CdtClient\Model\Request\Translation
    *   The translation request DTO.
    */
-  public static function entityToDto(TranslationRequestCdtInterface $translation_request): Translation {
+  public function convertEntityToDto(ContentEntityInterface $entity): Translation {
+    /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity */
     $translation = new Translation();
-    $translation->setComments($translation_request->getComments());
+    $translation->setComments($entity->getComments());
     $translation->setTitle(sprintf(
       'Translation request #%s',
-      $translation_request->id()
+      $entity->id()
     ));
-    $translation->setClientReference((string) $translation_request->id());
+    $translation->setClientReference((string) $entity->id());
     $translation->setService('Translation');
-    $translation->setPhoneNumber($translation_request->getPhoneNumber());
+    $translation->setPhoneNumber($entity->getPhoneNumber());
     $translation->setIsQuotationOnly(FALSE);
     $translation->setSendOptions('Send');
     $translation->setPurposeCode('WS');
-    $translation->setDepartmentCode($translation_request->getDepartment());
-    $translation->setContactUserNames($translation_request->getContactUsernames());
-    $translation->setDeliveryContactUsernames($translation_request->getDeliverTo());
-    $translation->setPriorityCode($translation_request->getPriority());
-    $translation->setCallbacks(self::createCallbacks());
-    $translation->setSourceDocuments([self::createSourceDocument($translation_request)]);
+    $translation->setDepartmentCode($entity->getDepartment());
+    $translation->setContactUserNames($entity->getContactUsernames());
+    $translation->setDeliveryContactUsernames($entity->getDeliverTo());
+    $translation->setPriorityCode($entity->getPriority());
+    $translation->setCallbacks($this->createCallbacks());
+    $translation->setSourceDocuments([$this->createSourceDocument($entity)]);
     return $translation;
   }
 
@@ -66,9 +76,9 @@ class TranslationRequestMapper {
    * @return \OpenEuropa\CdtClient\Model\Request\SourceDocument
    *   The source document DTO.
    */
-  protected static function createSourceDocument(TranslationRequestCdtInterface $translation_request): SourceDocument {
+  protected function createSourceDocument(TranslationRequestCdtInterface $translation_request): SourceDocument {
     $source_document = new SourceDocument();
-    $translation_jobs = self::createTranslationJobs($translation_request);
+    $translation_jobs = $this->createTranslationJobs($translation_request);
     $source_document->setTranslationJobs($translation_jobs);
     $source_languages = [
       LanguageCodeMapper::getCdtLanguageCode($translation_request->getSourceLanguageCode(), $translation_request),
@@ -77,7 +87,7 @@ class TranslationRequestMapper {
     $source_document->setIsPrivate(FALSE);
     $source_document->setOutputDocumentFormatCode('XM');
     $source_document->setConfidentialityCode($translation_request->getConfidentiality());
-    $source_document->setFile(self::createFile($translation_request));
+    $source_document->setFile($this->createFile($translation_request));
     return $source_document;
   }
 
@@ -90,14 +100,13 @@ class TranslationRequestMapper {
    * @return \OpenEuropa\CdtClient\Model\Request\File
    *   The file DTO.
    */
-  protected static function createFile(TranslationRequestCdtInterface $translation_request): File {
+  protected function createFile(TranslationRequestCdtInterface $translation_request): File {
     $file = new File();
     $file->setFileName(sprintf(
         'translation_job_%s_request.xml',
         $translation_request->id())
     );
-    $file->setContent('<xml>');
-    // @todo Content should be real.
+    $file->setContent($this->contentFormatter->export($translation_request));
     return $file;
   }
 
@@ -110,10 +119,10 @@ class TranslationRequestMapper {
    * @return \OpenEuropa\CdtClient\Model\Request\TranslationJob[]
    *   The translation job DTOs.
    */
-  protected static function createTranslationJobs(TranslationRequestCdtInterface $translation_request): array {
+  protected function createTranslationJobs(TranslationRequestCdtInterface $translation_request): array {
     $translation_jobs = [];
-    $character_count = self::countCharactersWithoutSpaces($translation_request);
-    $volume = self::countVolume($character_count);
+    $character_count = $this->countCharactersWithoutSpaces($translation_request);
+    $volume = $this->countVolume($character_count);
     foreach ($translation_request->getTargetLanguages() as $target_language) {
       $translation_job = new TranslationJob();
       $source_langcode = LanguageCodeMapper::getCdtLanguageCode($translation_request->getSourceLanguageCode(), $translation_request);
@@ -135,7 +144,7 @@ class TranslationRequestMapper {
    * @return int
    *   The character count.
    */
-  protected static function countCharactersWithoutSpaces(TranslationRequestCdtInterface $translation_request): int {
+  protected function countCharactersWithoutSpaces(TranslationRequestCdtInterface $translation_request): int {
     $data = TranslationSourceHelper::filterTranslatable($translation_request->getData());
     $character_count = 0;
     foreach ($data as $field) {
@@ -154,7 +163,7 @@ class TranslationRequestMapper {
    * @return float
    *   The volume.
    */
-  protected static function countVolume(int $character_count): float {
+  protected function countVolume(int $character_count): float {
     return ceil($character_count / self::CHARACTERS_PER_PAGE) * self::VOLUME_MULTIPLIER;
   }
 
@@ -164,7 +173,7 @@ class TranslationRequestMapper {
    * @return \OpenEuropa\CdtClient\Model\Request\Callback[]
    *   The callback DTOs.
    */
-  protected static function createCallbacks(): array {
+  protected function createCallbacks(): array {
     $job_status_url = Url::fromRoute(
       route_name: 'oe_translation_cdt.request_status_callback',
       options: ['absolute' => TRUE]
