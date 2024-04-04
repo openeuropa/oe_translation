@@ -36,14 +36,14 @@ class XmlFormatter implements ContentFormatterInterface {
   protected Serializer $serializer;
 
   /**
-   * PoetryHtmlFormatter constructor.
+   * XmlFormatter constructor.
    *
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
-   *   The module installer.
+   *   The module extension list.
    * @param \Drupal\Component\Datetime\Time $time
    *   The time service.
    */

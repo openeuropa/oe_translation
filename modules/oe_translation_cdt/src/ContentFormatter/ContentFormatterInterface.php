@@ -7,28 +7,28 @@ namespace Drupal\oe_translation_cdt\ContentFormatter;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 
 /**
- * Interface for converting the translation requests.
+ * Interface for converting the XML translation requests.
  */
 interface ContentFormatterInterface {
 
   /**
-   * Converts the translation request data into a file.
+   * Converts the translation request data into an XML file.
    *
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
-   *   The request.
+   *   The translation request entity.
    *
    * @return string
-   *   String with the file content.
+   *   String with the XML file content.
    */
   public function export(TranslationRequestInterface $request): string;
 
   /**
-   * Parses the translated file.
+   * Parses the translated XML file.
    *
    * @param string $file
-   *   A string to import.
+   *   The XML string to import.
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
-   *   The request.
+   *   The translation request entity.
    *
    * @return mixed[]
    *   Translated data.
