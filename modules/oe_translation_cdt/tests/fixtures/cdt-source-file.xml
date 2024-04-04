@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Transaction xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="//static.cdt.europa.eu/webtranslations/schemas/Drupal-Translation-V8-2.xsd">
   <TransactionHeader>
-    <SenderDetails drupalVersion="@drupal_version" moduleVersion="8.x-1.6">
+    <SenderDetails drupalVersion="@drupal_version" moduleVersion="@module_version">
       <ProducerDateTime>2024-03-20T11:55:29+00:00</ProducerDateTime>
     </SenderDetails>
   </TransactionHeader>
