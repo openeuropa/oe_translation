@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\ContentFormatter;
 
+use Composer\InstalledVersions;
 use Drupal\Component\Datetime\Time;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\TranslationSourceHelper;
@@ -42,15 +42,12 @@ class XmlFormatter implements ContentFormatterInterface {
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
-   *   The module extension list.
    * @param \Drupal\Component\Datetime\Time $time
    *   The time service.
    */
   public function __construct(
     protected RendererInterface $renderer,
     protected EntityTypeManagerInterface $entityTypeManager,
-    protected ModuleExtensionList $moduleExtensionList,
     protected Time $time
   ) {}
 
@@ -84,7 +81,7 @@ class XmlFormatter implements ContentFormatterInterface {
       ->setTransactionId((string) $request->id())
       ->setTransactionCode('Drupal Translation Request')
       ->setDrupalVersion(\Drupal::VERSION)
-      ->setModuleVersion($this->moduleExtensionList->getExtensionInfo('oe_translation')['version'])
+      ->setModuleVersion((string) InstalledVersions::getPrettyVersion('openeuropa/oe_translation'))
       ->setProducerDateTime(\DateTime::createFromFormat('U', (string) $this->time->getCurrentTime()))
       ->setTotalCharacterLength($character_count)
       ->setTransactionItems([$transaction_item]);
