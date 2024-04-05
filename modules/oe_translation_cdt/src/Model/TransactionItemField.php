@@ -87,11 +87,11 @@ class TransactionItemField {
   /**
    * Sets the instance ID.
    *
-   * @param string $instanceId
+   * @param string $instance_id
    *   The instance ID.
    */
-  public function setInstanceId(string $instanceId): self {
-    $this->instanceId = $instanceId;
+  public function setInstanceId(string $instance_id): self {
+    $this->instanceId = $instance_id;
     return $this;
   }
 
@@ -108,11 +108,11 @@ class TransactionItemField {
   /**
    * Sets the resource name.
    *
-   * @param string $resourceName
+   * @param string $resource_name
    *   The resource name.
    */
-  public function setResourceName(string $resourceName): self {
-    $this->resourceName = $resourceName;
+  public function setResourceName(string $resource_name): self {
+    $this->resourceName = $resource_name;
     return $this;
   }
 
@@ -129,11 +129,11 @@ class TransactionItemField {
   /**
    * Sets the resource type.
    *
-   * @param string $resourceType
+   * @param string $resource_type
    *   The resource type.
    */
-  public function setResourceType(string $resourceType): self {
-    $this->resourceType = $resourceType;
+  public function setResourceType(string $resource_type): self {
+    $this->resourceType = $resource_type;
     return $this;
   }
 
@@ -150,11 +150,11 @@ class TransactionItemField {
   /**
    * Sets the resource max size.
    *
-   * @param string $resourceMaxSize
+   * @param string $resource_max_size
    *   The resource max size.
    */
-  public function setResourceMaxSize(string $resourceMaxSize): self {
-    $this->resourceMaxSize = $resourceMaxSize;
+  public function setResourceMaxSize(string $resource_max_size): self {
+    $this->resourceMaxSize = $resource_max_size;
     return $this;
   }
 
@@ -171,11 +171,11 @@ class TransactionItemField {
   /**
    * Sets the resource label.
    *
-   * @param string $resourceLabel
+   * @param string $resource_label
    *   The resource label.
    */
-  public function setResourceLabel(string $resourceLabel): self {
-    $this->resourceLabel = $resourceLabel;
+  public function setResourceLabel(string $resource_label): self {
+    $this->resourceLabel = $resource_label;
     return $this;
   }
 
