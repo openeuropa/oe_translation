@@ -56,14 +56,14 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   /**
    * {@inheritdoc}
    */
-  public function getComments(): string {
+  public function getComments(): ?string {
     return $this->get('comments')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setComments(string $value): TranslationRequestCdtInterface {
+  public function setComments(?string $value): TranslationRequestCdtInterface {
     $this->set('comments', $value);
     return $this;
   }

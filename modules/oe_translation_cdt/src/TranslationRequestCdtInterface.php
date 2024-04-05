@@ -49,21 +49,21 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
   /**
    * Gets the comments.
    *
-   * @return string
+   * @return string|null
    *   The comments.
    */
-  public function getComments(): string;
+  public function getComments(): ?string;
 
   /**
    * Sets the comments.
    *
-   * @param string $value
+   * @param string|null $value
    *   The comments.
    *
    * @return TranslationRequestCdtInterface
    *   The current request.
    */
-  public function setComments(string $value): TranslationRequestCdtInterface;
+  public function setComments(?string $value): TranslationRequestCdtInterface;
 
   /**
    * Gets the confidentiality.
