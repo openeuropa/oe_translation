@@ -47,7 +47,7 @@ class TranslationRequestMapper implements DtoMapperInterface {
   public function convertEntityToDto(ContentEntityInterface $entity): Translation {
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity */
     $translation = new Translation();
-    $translation->setComments($entity->getComments());
+    $translation->setComments((string) $entity->getComments());
     $translation->setTitle(sprintf(
       'Translation request #%s',
       $entity->id()
