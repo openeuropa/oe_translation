@@ -44,11 +44,11 @@ class TransactionItem {
   /**
    * Sets the preview link.
    *
-   * @param string $previewLink
+   * @param string $preview_link
    *   The preview link.
    */
-  public function setPreviewLink(string $previewLink): self {
-    $this->previewLink = $previewLink;
+  public function setPreviewLink(string $preview_link): self {
+    $this->previewLink = $preview_link;
     return $this;
   }
 
@@ -65,11 +65,11 @@ class TransactionItem {
   /**
    * Sets the source reference.
    *
-   * @param string $sourceReference
+   * @param string $source_reference
    *   The source reference.
    */
-  public function setSourceReference(string $sourceReference): self {
-    $this->sourceReference = $sourceReference;
+  public function setSourceReference(string $source_reference): self {
+    $this->sourceReference = $source_reference;
     return $this;
   }
 
@@ -86,11 +86,11 @@ class TransactionItem {
   /**
    * Sets the transaction item fields.
    *
-   * @param TransactionItemField[] $transactionItemFields
+   * @param TransactionItemField[] $transaction_item_fields
    *   The transaction item fields.
    */
-  public function setTransactionItemFields(array $transactionItemFields): self {
-    $this->transactionItemFields = $transactionItemFields;
+  public function setTransactionItemFields(array $transaction_item_fields): self {
+    $this->transactionItemFields = $transaction_item_fields;
     return $this;
   }
 
