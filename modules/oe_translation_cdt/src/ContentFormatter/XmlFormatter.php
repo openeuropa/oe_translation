@@ -66,7 +66,7 @@ class XmlFormatter implements ContentFormatterInterface {
         ->setResourceName('][' . $key)
         ->setResourceType(self::isHtml($field['#text']) ? 'html' : 'text')
         ->setResourceLabel(implode(' / ', $field['#parent_label']))
-        ->setResourceMaxSize($field['#max_length'] ?? NULL)
+        ->setResourceMaxSize((string) ($field['#max_length'] ?? ''))
         ->setContent($field['#text']);
       $character_count += mb_strlen(strip_tags($field['#text']));
     }

@@ -39,7 +39,7 @@ class TransactionItemField {
   /**
    * The resource max size.
    */
-  protected ?int $resourceMaxSize;
+  protected string $resourceMaxSize;
 
   #[SerializedPath('[@resLabel]')]
   /**
@@ -140,20 +140,20 @@ class TransactionItemField {
   /**
    * Gets the resource max size.
    *
-   * @return int|null
+   * @return string
    *   The resource max size.
    */
-  public function getResourceMaxSize(): ?int {
+  public function getResourceMaxSize(): ?string {
     return $this->resourceMaxSize;
   }
 
   /**
    * Sets the resource max size.
    *
-   * @param int|null $resourceMaxSize
+   * @param string $resourceMaxSize
    *   The resource max size.
    */
-  public function setResourceMaxSize(?int $resourceMaxSize): self {
+  public function setResourceMaxSize(string $resourceMaxSize): self {
     $this->resourceMaxSize = $resourceMaxSize;
     return $this;
   }
