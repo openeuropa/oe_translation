@@ -1,0 +1,10 @@
+oe_translation_remote.remote_translation_provider.plugin.cdt:
+  type: mapping
+  label: Plugin configuration for the CDT plugin
+  mapping:
+    language_mapping:
+      type: sequence
+      label: The language mapping
+      sequence:
+        type: string
+        label: The language code
