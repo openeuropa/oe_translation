@@ -30,7 +30,7 @@ interface ContentFormatterInterface {
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
    *   The translation request entity.
    *
-   * @return mixed[]
+   * @return array
    *   Translated data.
    */
   public function import(string $file, TranslationRequestInterface $request): array;
