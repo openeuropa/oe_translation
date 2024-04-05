@@ -2,34 +2,85 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.oe_translation_request.cdt.cdt_id
     - field.field.oe_translation_request.cdt.comments
     - field.field.oe_translation_request.cdt.confidentiality
     - field.field.oe_translation_request.cdt.contact_usernames
     - field.field.oe_translation_request.cdt.correlation_id
     - field.field.oe_translation_request.cdt.deliver_to
     - field.field.oe_translation_request.cdt.department
-    - field.field.oe_translation_request.cdt.cdt_id
     - field.field.oe_translation_request.cdt.phone_number
     - field.field.oe_translation_request.cdt.priority
     - field.field.oe_translation_request.cdt.request_status
     - field.field.oe_translation_request.cdt.target_languages
     - field.field.oe_translation_request.cdt.translated_data
+    - field.field.oe_translation_request.cdt.translator_provider
     - oe_translation.oe_translation_request_type.cdt
 id: oe_translation_request.cdt.default
 targetEntityType: oe_translation_request
 bundle: cdt
 mode: default
-content: {  }
+content:
+  comments:
+    type: string_textarea
+    weight: 0
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  confidentiality:
+    type: string_textfield
+    weight: 4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  contact_usernames:
+    type: string_textfield
+    weight: 5
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  deliver_to:
+    type: string_textfield
+    weight: 6
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  department:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  phone_number:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  priority:
+    type: string_textfield
+    weight: 3
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
 hidden:
-  comments: true
-  confidentiality: true
-  contact_usernames: true
-  correlation_id: true
-  deliver_to: true
-  department: true
   cdt_id: true
-  phone_number: true
-  priority: true
+  correlation_id: true
   request_status: true
   target_languages: true
   translated_data: true
+  translator_provider: true
