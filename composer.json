@@ -39,10 +39,13 @@
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
         "symfony/property-access": "^6",
-        "symfony/property-info": "^6"
+        "symfony/property-info": "^6",
+        "symfony/serializer": "^6.4"
     },
     "_readme": [
-        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them."
+        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
+        "Requiring symfony serializer for the oe_translation_cdt module.",
+        "Locking entity_browser as 2.14 release is broken with https://www.drupal.org/project/entity_browser/issues/3461919."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
