@@ -150,7 +150,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     $this->xml = (string) file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_cdt') . '/tests/fixtures/cdt-source-file.xml');
     $this->xml = (string) str_replace('@transaction_identifier', (string) $this->request->id(), $this->xml);
     $this->xml = (string) str_replace('@drupal_version', \Drupal::VERSION, $this->xml);
-    $this->xml = (string) str_replace('@module_version', InstalledVersions::getPrettyVersion('openeuropa/oe_translation'), $this->xml);
+    $this->xml = (string) str_replace('@module_version', (string) InstalledVersions::getPrettyVersion('openeuropa/oe_translation'), $this->xml);
     $this->xml = (string) str_replace('@node_id', (string) $this->request->getContentEntity()?->id(), $this->xml);
   }
 
