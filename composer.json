@@ -40,11 +40,13 @@
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
         "symfony/property-access": "^6 || ^7",
-        "symfony/property-info": "^6 || ^7"
+        "symfony/property-info": "^6 || ^7",
+        "symfony/serializer": "^6 || ^7"
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
-        "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions."
+        "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions.",
+        "Requiring symfony serializer for the oe_translation_cdt module."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
