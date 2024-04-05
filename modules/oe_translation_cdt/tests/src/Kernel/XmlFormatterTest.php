@@ -9,7 +9,6 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
-use Drupal\oe_translation_cdt\ContentFormatter\XmlFormatter;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
@@ -160,13 +159,9 @@ class XmlFormatterTest extends TranslationKernelTestBase {
   public function testXmlContentExporter(): void {
     $time_prophecy = $this->prophesize(Time::class);
     $time_prophecy->getCurrentTime()->willReturn(1710935729);
+    $this->container->set('datetime.time', $time_prophecy->reveal());
 
-    $formatter = new XmlFormatter(
-      $this->container->get('renderer'),
-      $this->container->get('entity_type.manager'),
-      $time_prophecy->reveal()
-    );
-
+    $formatter = $this->container->get('oe_translation_cdt.xml_formatter');
     $export = $formatter->export($this->request);
     $this->assertEquals($this->xml, $export);
   }
