@@ -31,7 +31,7 @@
         "drupal/paragraphs": "^1.13",
         "drupal/typed_link": "^2.2.0",
         "drush/drush": "^12 || ^13",
-        "openeuropa/cdt-client": "dev-D8AGE-289",
+        "openeuropa/cdt-client": "1.x-dev",
         "ec-europa/toolkit": "^10.23",
         "openeuropa/code-review-drupal": "^1.0.0-alpha",
         "openeuropa/epoetry-client": "2.x-dev || 3.x-dev || 4.x-dev",
@@ -41,12 +41,14 @@
         "openeuropa/oe_multilingual": "^1.17",
         "symfony/property-access": "^6 || ^7",
         "symfony/property-info": "^6 || ^7",
-        "php-standard-library/php-standard-library": "^4.3"
+        "php-standard-library/php-standard-library": "^4.3",
+        "symfony/serializer": "^6 || ^7"
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
         "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions.",
-        "Added a replace azjezz/psl because it was replaced by php-standard-library/php-standard-library package and it was abadoned. Also ensuring php-standard-library/php-standard-library doesnt go over 4.3"
+        "Added a replace azjezz/psl because it was replaced by php-standard-library/php-standard-library package and it was abadoned. Also ensuring php-standard-library/php-standard-library doesnt go over 4.3",
+        "Requiring symfony serializer for the oe_translation_cdt module."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
