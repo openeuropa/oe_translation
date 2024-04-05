@@ -39,10 +39,12 @@
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
         "phpspec/prophecy-phpunit": "^2",
         "symfony/property-access": "^4 || ^5.4 || ^6",
-        "symfony/property-info": "^4 || ^5.4 || ^6"
+        "symfony/property-info": "^4 || ^5.4 || ^6",
+        "symfony/serializer": "^6.4"
     },
     "_readme": [
-        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them."
+        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
+        "Requiring symfony serializer for the oe_translation_cdt module."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
