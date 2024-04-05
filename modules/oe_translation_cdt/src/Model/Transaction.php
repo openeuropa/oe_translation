@@ -70,11 +70,11 @@ class Transaction {
   /**
    * Sets the Drupal version.
    *
-   * @param string $drupalVersion
+   * @param string $drupal_version
    *   The Drupal version.
    */
-  public function setDrupalVersion(string $drupalVersion): self {
-    $this->drupalVersion = $drupalVersion;
+  public function setDrupalVersion(string $drupal_version): self {
+    $this->drupalVersion = $drupal_version;
     return $this;
   }
 
@@ -91,11 +91,11 @@ class Transaction {
   /**
    * Sets the module version.
    *
-   * @param string $moduleVersion
+   * @param string $module_version
    *   The module version.
    */
-  public function setModuleVersion(string $moduleVersion): self {
-    $this->moduleVersion = $moduleVersion;
+  public function setModuleVersion(string $module_version): self {
+    $this->moduleVersion = $module_version;
     return $this;
   }
 
@@ -112,11 +112,11 @@ class Transaction {
   /**
    * Sets the producer datetime.
    *
-   * @param \DateTimeInterface $producerDateTime
+   * @param \DateTimeInterface $producer_date_time
    *   The producer datetime.
    */
-  public function setProducerDateTime(\DateTimeInterface $producerDateTime): self {
-    $this->producerDateTime = $producerDateTime;
+  public function setProducerDateTime(\DateTimeInterface $producer_date_time): self {
+    $this->producerDateTime = $producer_date_time;
     return $this;
   }
 
@@ -133,11 +133,11 @@ class Transaction {
   /**
    * Sets the transaction identifier.
    *
-   * @param string $transactionId
+   * @param string $transaction_id
    *   The transaction identifier.
    */
-  public function setTransactionId(string $transactionId): self {
-    $this->transactionId = $transactionId;
+  public function setTransactionId(string $transaction_id): self {
+    $this->transactionId = $transaction_id;
     return $this;
   }
 
@@ -154,11 +154,11 @@ class Transaction {
   /**
    * Sets the transaction code.
    *
-   * @param string $transactionCode
+   * @param string $transaction_code
    *   The transaction code.
    */
-  public function setTransactionCode(string $transactionCode): self {
-    $this->transactionCode = $transactionCode;
+  public function setTransactionCode(string $transaction_code): self {
+    $this->transactionCode = $transaction_code;
     return $this;
   }
 
@@ -175,11 +175,11 @@ class Transaction {
   /**
    * Sets the transaction items.
    *
-   * @param TransactionItem[] $transactionItems
+   * @param TransactionItem[] $transaction_items
    *   The transaction items.
    */
-  public function setTransactionItems(array $transactionItems): self {
-    $this->transactionItems = $transactionItems;
+  public function setTransactionItems(array $transaction_items): self {
+    $this->transactionItems = $transaction_items;
     return $this;
   }
 
@@ -196,11 +196,11 @@ class Transaction {
   /**
    * Sets the total character length.
    *
-   * @param int $totalCharacterLength
+   * @param int $total_character_length
    *   The total character length.
    */
-  public function setTotalCharacterLength(int $totalCharacterLength): self {
-    $this->totalCharacterLength = $totalCharacterLength;
+  public function setTotalCharacterLength(int $total_character_length): self {
+    $this->totalCharacterLength = $total_character_length;
     return $this;
   }
 
