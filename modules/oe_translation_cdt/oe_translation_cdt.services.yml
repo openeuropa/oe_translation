@@ -2,3 +2,7 @@ services:
   oe_translation_cdt.xml_formatter:
     class: Drupal\oe_translation_cdt\ContentFormatter\XmlFormatter
     arguments: ['@renderer', '@entity_type.manager', '@datetime.time']
+
+  oe_translation_cdt.translation_request_mapper:
+    class: Drupal\oe_translation_cdt\Mapper\TranslationRequestMapper
+    arguments: ['@oe_translation_cdt.xml_formatter']
