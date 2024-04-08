@@ -12,13 +12,14 @@ use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
-use Drupal\oe_translation_cdt\Api\CdtClient;
+use Drupal\oe_translation_cdt\Api\CdtApiAuthenticatorInterface;
 use Drupal\oe_translation_cdt\Event\CdtRequestEvent;
 use Drupal\oe_translation_cdt\Mapper\DtoMapperInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderBase;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+use OpenEuropa\CdtClient\ApiClient;
 use OpenEuropa\CdtClient\Exception\ValidationErrorsException;
 use OpenEuropa\CdtClient\Model\Response\ReferenceContact;
 use OpenEuropa\CdtClient\Model\Response\ReferenceItem;
@@ -57,8 +58,10 @@ class Cdt extends RemoteTranslationProviderBase {
    *   The messenger.
    * @param \Drupal\oe_translation_cdt\Mapper\DtoMapperInterface $dtoMapper
    *   The DTO mapper.
-   * @param \Drupal\oe_translation_cdt\Api\CdtClient $cdtClient
-   *   The CDT client.
+   * @param \OpenEuropa\CdtClient\ApiClient $apiClient
+   *   The CDT API client.
+   * @param \Drupal\oe_translation_cdt\Api\CdtApiAuthenticatorInterface $apiAuthenticator
+   *   The API authenticator.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
@@ -75,7 +78,8 @@ class Cdt extends RemoteTranslationProviderBase {
     TranslationSourceManagerInterface $translationSourceManager,
     MessengerInterface $messenger,
     protected DtoMapperInterface $dtoMapper,
-    protected CdtClient $cdtClient,
+    protected ApiClient $apiClient,
+    protected CdtApiAuthenticatorInterface $apiAuthenticator,
     protected StateInterface $state,
     protected EventDispatcherInterface $eventDispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
@@ -94,7 +98,8 @@ class Cdt extends RemoteTranslationProviderBase {
       $container->get('oe_translation.translation_source_manager'),
       $container->get('messenger'),
       $container->get('oe_translation_cdt.translation_request_mapper'),
-      $container->get('oe_translation_cdt.client'),
+      $container->get('oe_translation_cdt.api_client'),
+      $container->get('oe_translation_cdt.api_authenticator'),
       $container->get('state'),
       $container->get('event_dispatcher')
     );
@@ -166,7 +171,8 @@ class Cdt extends RemoteTranslationProviderBase {
     /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
     $form_display = $this->entityTypeManager->getStorage('entity_form_display')->load('oe_translation_request.cdt.default');
     $form_state->set('form_display', $form_display);
-    $reference_data_object = $this->cdtClient->client()->getReferenceData();
+    $this->apiAuthenticator->authenticate();
+    $reference_data_object = $this->apiClient->getReferenceData();
     $reference_data = [
       'department' => $reference_data_object->getDepartments(),
       'priority' => $reference_data_object->getPriorities(),
@@ -311,8 +317,9 @@ class Cdt extends RemoteTranslationProviderBase {
     $event = new CdtRequestEvent($dto, $request);
     $this->eventDispatcher->dispatch($event, CdtRequestEvent::NAME);
 
-    $this->cdtClient->client()->validateTranslationRequest($dto);
-    $correlation_id = $this->cdtClient->client()->sendTranslationRequest($dto);
+    $this->apiAuthenticator->authenticate();
+    $this->apiClient->validateTranslationRequest($dto);
+    $correlation_id = $this->apiClient->sendTranslationRequest($dto);
     $request->setCorrelationId($correlation_id);
     $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED);
     $request->save();
