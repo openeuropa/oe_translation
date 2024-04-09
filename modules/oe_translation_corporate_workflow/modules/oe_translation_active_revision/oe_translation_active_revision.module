@@ -128,6 +128,15 @@ function oe_translation_active_revision_form_content_moderation_entity_moderatio
       ->allRevisions()
       ->execute();
 
+    if (!$results) {
+      // If we didn't find any results it means we are in an incorrect state
+      // by which we had a published node, translated, without a major version.
+      // This could have happened due to incorrect migration. So in this case
+      // we bail out and don't create a mapping. One will be created at the
+      // next major version instead once the state gets cleared up.
+      return;
+    }
+
     $vid = key($results);
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->loadRevision($vid);
