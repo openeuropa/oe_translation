@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Drupal\Component\Datetime\Time;
 use Drupal\Core\State\StateInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\oe_translation_cdt\Api\CdtApiAuthenticator;
 use Drupal\oe_translation_cdt\Exception\CdtConnectionException;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use OpenEuropa\CdtClient\Contract\ApiClientInterface;
 use OpenEuropa\CdtClient\Model\Response\Token;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -16,14 +16,13 @@ use Prophecy\Prophecy\ObjectProphecy;
  *
  * @group batch1
  */
-class CdtApiAuthenticatorTest extends TranslationKernelTestBase {
+class CdtApiAuthenticatorTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
     'oe_translation_cdt',
-    'oe_translation_remote',
   ];
 
   /**
