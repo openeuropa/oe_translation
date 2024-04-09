@@ -7,7 +7,7 @@ namespace Drupal\oe_translation_cdt\Api;
 /**
  * The interface for CDT API client class.
  */
-interface ApiAuthenticatorInterface {
+interface CdtApiAuthenticatorInterface {
 
   /**
    * Authenticates the connection with the token.

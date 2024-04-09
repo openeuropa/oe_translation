@@ -1,7 +1,7 @@
 services:
   oe_translation_cdt.api_authenticator:
-    class: Drupal\oe_translation_cdt\Api\ApiAuthenticator
-    arguments: [ '@oe_translation_cdt.api_client', '@http_client', '@state', '@datetime.time' ]
+    class: Drupal\oe_translation_cdt\Api\CdtApiAuthenticator
+    arguments: ['@oe_translation_cdt.api_client', '@http_client', '@state', '@datetime.time']
 
   oe_translation_cdt.xml_formatter:
     class: Drupal\oe_translation_cdt\ContentFormatter\XmlFormatter

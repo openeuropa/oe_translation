@@ -8,13 +8,13 @@ use Drupal\Component\Datetime\Time;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation_cdt\Exception\CdtConnectionException;
 use GuzzleHttp\Client;
-use OpenEuropa\CdtClient\ApiClient;
+use OpenEuropa\CdtClient\Contract\ApiClientInterface;
 use OpenEuropa\CdtClient\Model\Response\Token;
 
 /**
  * Authenticates connection with CDT client.
  */
-class ApiAuthenticator implements ApiAuthenticatorInterface {
+class CdtApiAuthenticator implements CdtApiAuthenticatorInterface {
 
   /**
    * The authentication status.
@@ -22,9 +22,9 @@ class ApiAuthenticator implements ApiAuthenticatorInterface {
   protected bool $authenticated = FALSE;
 
   /**
-   * Constructs an ApiAuthenticator object.
+   * Constructs a CdtApiAuthenticator object.
    *
-   * @param \OpenEuropa\CdtClient\ApiClient $apiClient
+   * @param \OpenEuropa\CdtClient\Contract\ApiClientInterface $apiClient
    *   The CDT API client.
    * @param \GuzzleHttp\Client $httpClient
    *   The HTTP client.
@@ -34,7 +34,7 @@ class ApiAuthenticator implements ApiAuthenticatorInterface {
    *   The time service.
    */
   public function __construct(
-    protected readonly ApiClient $apiClient,
+    protected readonly ApiClientInterface $apiClient,
     protected readonly Client $httpClient,
     protected readonly StateInterface $state,
     protected readonly Time $time
