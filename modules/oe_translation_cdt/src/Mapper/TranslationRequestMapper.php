@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\Mapper;
 
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\oe_translation\TranslationSourceHelper;
@@ -19,7 +18,7 @@ use OpenEuropa\CdtClient\Model\Request\TranslationJob;
 /**
  * Maps the data between the TranslationRequestCDT entity and the DTO.
  */
-class TranslationRequestMapper implements DtoMapperInterface {
+class TranslationRequestMapper implements TranslationRequestMapperInterface {
 
   protected const CHARACTERS_PER_PAGE = 750;
 
@@ -36,15 +35,9 @@ class TranslationRequestMapper implements DtoMapperInterface {
   ) {}
 
   /**
-   * Converts Drupal TranslationRequest entity to CDT library DTO.
-   *
-   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity
-   *   The translation request entity.
-   *
-   * @return \OpenEuropa\CdtClient\Model\Request\Translation
-   *   The translation request DTO.
+   * {@inheritdoc}
    */
-  public function convertEntityToDto(ContentEntityInterface $entity): Translation {
+  public function convertEntityToDto(TranslationRequestCdtInterface $entity): Translation {
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity */
     $translation = new Translation();
     $translation->setComments((string) $entity->getComments());
