@@ -146,6 +146,8 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
       $this->assertEquals('test_api_key', $callbacks[$key]->getClientApiKey());
       $this->assertTrue(UrlHelper::isValid($callbacks[$key]->getCallbackBaseUrl()));
       $this->assertTrue(UrlHelper::isExternal($callbacks[$key]->getCallbackBaseUrl()));
+      $base_url = $this->container->get('router.request_context')->getCompleteBaseUrl();
+      $this->assertTrue(UrlHelper::externalIsLocal($callbacks[$key]->getCallbackBaseUrl(), $base_url));
       $this->assertEquals($callback_type, $callbacks[$key]->getCallbackType());
     }
   }
