@@ -14,12 +14,14 @@ use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_cdt\Api\CdtApiAuthenticatorInterface;
 use Drupal\oe_translation_cdt\Event\CdtRequestEvent;
+use Drupal\oe_translation_cdt\Exception\CdtConnectionException;
 use Drupal\oe_translation_cdt\Mapper\DtoMapperInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderBase;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\CdtClient\ApiClient;
+use OpenEuropa\CdtClient\Exception\InvalidStatusCodeException;
 use OpenEuropa\CdtClient\Exception\ValidationErrorsException;
 use OpenEuropa\CdtClient\Model\Response\ReferenceContact;
 use OpenEuropa\CdtClient\Model\Response\ReferenceItem;
@@ -157,6 +159,16 @@ class Cdt extends RemoteTranslationProviderBase {
    * {@inheritdoc}
    */
   public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
+    $this->apiAuthenticator->authenticate();
+    $reference_data_object = $this->apiClient->getReferenceData();
+    $reference_data = [
+      'department' => $reference_data_object->getDepartments(),
+      'priority' => $reference_data_object->getPriorities(),
+      'confidentiality' => $reference_data_object->getConfidentialities(),
+      'deliver_to' => $reference_data_object->getContacts(),
+      'contact_usernames' => $reference_data_object->getContacts(),
+    ];
+
     $languages = $this->languageManager->getLanguages();
     $event = new AvailableLanguagesAlterEvent($languages);
     $this->eventDispatcher->dispatch($event, AvailableLanguagesAlterEvent::NAME);
@@ -171,15 +183,6 @@ class Cdt extends RemoteTranslationProviderBase {
     /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
     $form_display = $this->entityTypeManager->getStorage('entity_form_display')->load('oe_translation_request.cdt.default');
     $form_state->set('form_display', $form_display);
-    $this->apiAuthenticator->authenticate();
-    $reference_data_object = $this->apiClient->getReferenceData();
-    $reference_data = [
-      'department' => $reference_data_object->getDepartments(),
-      'priority' => $reference_data_object->getPriorities(),
-      'confidentiality' => $reference_data_object->getConfidentialities(),
-      'deliver_to' => $reference_data_object->getContacts(),
-      'contact_usernames' => $reference_data_object->getContacts(),
-    ];
 
     foreach ($form_display->getComponents() as $name => $component) {
       /** @var \Drupal\Core\Field\WidgetInterface|null $widget */
@@ -193,6 +196,7 @@ class Cdt extends RemoteTranslationProviderBase {
       $form[$name] = $widget->form($items, $form, $form_state);
       $form[$name]['#access'] = $items->access('edit');
 
+      // Check reference inputs to selects.
       if (isset($reference_data[$name]) && $component['type'] === 'string_textfield') {
         $options = [];
         foreach ($reference_data[$name] as $reference_item) {
@@ -265,29 +269,27 @@ class Cdt extends RemoteTranslationProviderBase {
     try {
       $this->createAndSendRequestObject($request, $form, $form_state);
     }
-    catch (ValidationErrorsException $exception) {
-      $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
-      $error_list = [];
-      foreach ($exception->getValidationErrors()->getErrors() as $key => $errors) {
-        $error_list[] = $this->t('Field @field: @errors', [
-          '@field' => $key,
-          '@errors' => implode(', ', $errors),
-        ]);
-      }
-      $this->messenger->addError($this->t('There was a problem with validating the CDT request. Please verify the CDT connection.'));
-      $request->log(
-        "Validation error: @message\n@fields",
-        [
-          '@message' => $exception->getValidationErrors()->getMessage(),
-          '@fields' => implode("\n", $error_list),
-        ],
-        TranslationRequestLogInterface::ERROR
-      );
-    }
-    catch (\Throwable $exception) {
+    catch (ValidationErrorsException | InvalidStatusCodeException | CdtConnectionException $exception) {
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
       $this->messenger->addError($this->t('There was a problem sending the request to CDT.'));
-      $message = $exception->getMessage();
+
+      if ($exception instanceof ValidationErrorsException) {
+        $error_list = [];
+        foreach ($exception->getValidationErrors()->getErrors() as $key => $errors) {
+          $error_list[] = $this->t('Field @field: @errors', [
+            '@field' => $key,
+            '@errors' => implode(', ', $errors),
+          ]);
+        }
+        $message = sprintf(
+          "Validation error: %s\n%s",
+          $exception->getValidationErrors()->getMessage(),
+          implode("\n", $error_list)
+        );
+      }
+      else {
+        $message = $exception->getMessage();
+      }
 
       $request->log('@type: <strong>@message</strong>', [
         '@type' => get_class($exception),
@@ -309,6 +311,8 @@ class Cdt extends RemoteTranslationProviderBase {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \OpenEuropa\CdtClient\Exception\ValidationErrorsException
+   * @throws \OpenEuropa\CdtClient\Exception\InvalidStatusCodeException
+   * @throws \Drupal\oe_translation_cdt\Exception\CdtConnectionException
    */
   protected function createAndSendRequestObject(TranslationRequestCdtInterface $request, array $form, FormStateInterface $form_state): void {
 
@@ -319,9 +323,12 @@ class Cdt extends RemoteTranslationProviderBase {
 
     $this->apiAuthenticator->authenticate();
     $this->apiClient->validateTranslationRequest($dto);
+    $request->log('The translation request was successfully validated.');
     $correlation_id = $this->apiClient->sendTranslationRequest($dto);
+    $request->log('The translation request was successfully sent to CDT with correlation ID: @correlation_id.', [
+      '@correlation_id' => $correlation_id,
+    ]);
     $request->setCorrelationId($correlation_id);
-    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED);
     $request->save();
   }
 
