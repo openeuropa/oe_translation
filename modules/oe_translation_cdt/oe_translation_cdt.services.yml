@@ -1,6 +1,15 @@
 services:
-  oe_translation_cdt.api_authenticator:
-    class: Drupal\oe_translation_cdt\Api\CdtApiAuthenticator
+  oe_translation_cdt.api_client:
+    class: OpenEuropa\CdtClient\ApiClient
+    arguments:
+      - '@http_client'
+      - '@psr17.server_request_factory'
+      - '@psr17.stream_factory'
+      - '@oe_translation_cdt.psr17.uri_factory'
+      - '%cdt.client_configuration%'
+
+  oe_translation_cdt.api_wrapper:
+    class: Drupal\oe_translation_cdt\Api\CdtApiWrapper
     arguments: ['@oe_translation_cdt.api_client', '@http_client', '@state', '@datetime.time']
 
   oe_translation_cdt.xml_formatter:
