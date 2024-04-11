@@ -56,7 +56,7 @@ class CdtApiAuthenticator implements CdtApiAuthenticatorInterface {
       'allowed_classes' => [Token::class],
     ]);
 
-    if (!$state_token || $is_expired) {
+    if (!$state_token instanceof Token || $is_expired) {
       $this->requestNewToken();
       $this->authenticated = TRUE;
       return;
