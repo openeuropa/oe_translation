@@ -12,9 +12,9 @@ use OpenEuropa\CdtClient\Contract\ApiClientInterface;
 use OpenEuropa\CdtClient\Model\Response\Token;
 
 /**
- * Authenticates connection with CDT client.
+ * Provides the wrapper for CDT client.
  */
-class CdtApiAuthenticator implements CdtApiAuthenticatorInterface {
+class CdtApiWrapper implements CdtApiWrapperInterface {
 
   /**
    * The authentication status.
@@ -22,7 +22,7 @@ class CdtApiAuthenticator implements CdtApiAuthenticatorInterface {
   protected bool $authenticated = FALSE;
 
   /**
-   * Constructs a CdtApiAuthenticator object.
+   * Constructs a CdtApiWrapper object.
    *
    * @param \OpenEuropa\CdtClient\Contract\ApiClientInterface $apiClient
    *   The CDT API client.
@@ -43,7 +43,21 @@ class CdtApiAuthenticator implements CdtApiAuthenticatorInterface {
   /**
    * {@inheritdoc}
    */
-  public function authenticate(): void {
+  public function getClient(): ApiClientInterface {
+    $this->authenticate();
+    return $this->apiClient;
+  }
+
+  /**
+   * Authenticates the connection with the token.
+   *
+   * The token is stored in the state system, to avoid excessive API requests.
+   * The connection is checked and the token is refreshed if necessary.
+   *
+   * @throws \Drupal\oe_translation_cdt\Exception\CdtConnectionException
+   * @throws \OpenEuropa\CdtClient\Exception\InvalidStatusCodeException
+   */
+  protected function authenticate(): void {
     if ($this->authenticated) {
       return;
     }
