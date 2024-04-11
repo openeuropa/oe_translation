@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Drupal\Component\Datetime\Time;
 use Drupal\Core\State\StateInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\oe_translation_cdt\Api\CdtApiAuthenticator;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapper;
 use Drupal\oe_translation_cdt\Exception\CdtConnectionException;
 use OpenEuropa\CdtClient\Contract\ApiClientInterface;
 use OpenEuropa\CdtClient\Model\Response\Token;
@@ -16,7 +16,7 @@ use Prophecy\Prophecy\ObjectProphecy;
  *
  * @group batch1
  */
-class CdtApiAuthenticatorTest extends KernelTestBase {
+class CdtApiWrapperTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -36,9 +36,9 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
   private Token $token;
 
   /**
-   * The authenticator.
+   * The API wrapper.
    */
-  private CdtApiAuthenticator $authenticator;
+  private CdtApiWrapper $apiWrapper;
 
   /**
    * The state.
@@ -65,8 +65,8 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
       ->setToken($this->token)
       ->willReturn($this->apiProphecy->reveal());
 
-    $this->authenticator = $this->container->get('oe_translation_cdt.api_authenticator');
-    $this->authenticator->resetAuthentication();
+    $this->apiWrapper = $this->container->get('oe_translation_cdt.api_wrapper');
+    $this->apiWrapper->resetAuthentication();
     $this->state = $this->container->get('state');
   }
 
@@ -80,9 +80,10 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
     $this->apiProphecy->checkConnection()
       ->willReturn(TRUE)
       ->shouldBeCalledOnce();
-    $this->authenticator->authenticate();
-    $this->assertEquals($this->state->get('cdt.token'), serialize($this->token));
-    $this->assertEquals($this->state->get('cdt.token_expiry_date'), 300);
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
+    $this->assertEquals(serialize($this->token), $this->state->get('cdt.token'));
+    $this->assertEquals(300, $this->state->get('cdt.token_expiry_date'));
   }
 
   /**
@@ -95,7 +96,8 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
     $this->apiProphecy->checkConnection()
       ->willReturn(TRUE)
       ->shouldBeCalledOnce();
-    $this->authenticator->authenticate();
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
   }
 
   /**
@@ -110,7 +112,8 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
     $this->apiProphecy->checkConnection()
       ->willReturn(FALSE, TRUE)
       ->shouldBeCalledTimes(2);
-    $this->authenticator->authenticate();
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
   }
 
   /**
@@ -125,7 +128,8 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
     $this->apiProphecy->checkConnection()
       ->willReturn(TRUE)
       ->shouldBeCalledOnce();
-    $this->authenticator->authenticate();
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
   }
 
   /**
@@ -139,22 +143,24 @@ class CdtApiAuthenticatorTest extends KernelTestBase {
       ->willReturn(FALSE)
       ->shouldBeCalledOnce();
     $this->expectExceptionObject(new CdtConnectionException('The connection to the CDT API could not be established.'));
-    $this->authenticator->authenticate();
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
   }
 
   /**
    * Test multiple authentication attempts.
    */
   public function testMultipleAuthenticationAttempts(): void {
-    $this->authenticator->resetAuthentication();
     $this->apiProphecy->requestToken()
       ->shouldBeCalledOnce()
       ->willReturn($this->token);
     $this->apiProphecy->checkConnection()
       ->willReturn(TRUE)
       ->shouldBeCalledOnce();
-    $this->authenticator->authenticate();
-    $this->authenticator->authenticate();
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
+    $client = $this->apiWrapper->getClient();
+    assert($client instanceof ApiClientInterface);
   }
 
 }
