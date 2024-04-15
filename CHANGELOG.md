@@ -1,11 +1,21 @@
 # Changelog
 
+## [2.7.0](https://github.com/openeuropa/oe_translation/tree/2.7.0) (2024-04-15)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.6.0...2.7.0)
+
+**Merged pull requests:**
+
+- EWPP-4126: Account for incorrectly versioned nodes in active revision creation [\#296](https://github.com/openeuropa/oe_translation/pull/296) ([upchuk](https://github.com/upchuk))
+- EWPP-0000: Update submodules readme information. [\#208](https://github.com/openeuropa/oe_translation/pull/208) ([22Alexandra](https://github.com/22Alexandra))
+
 ## [2.6.0](https://github.com/openeuropa/oe_translation/tree/2.6.0) (2024-02-14)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.5.0...2.6.0)
 
 **Merged pull requests:**
 
+- Release-2.6.0: Update changelog. [\#295](https://github.com/openeuropa/oe_translation/pull/295) ([nagyad](https://github.com/nagyad))
 - EWPP-4077: Support D10.2 and drop D9 [\#294](https://github.com/openeuropa/oe_translation/pull/294) ([brummbar](https://github.com/brummbar))
 
 ## [2.5.0](https://github.com/openeuropa/oe_translation/tree/2.5.0) (2024-01-15)
