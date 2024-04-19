@@ -176,18 +176,335 @@ class MultivalueTranslationsTest extends TranslationTestBase {
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function testMultivalueFieldTranslationsApi(): void {
-    // Enable the multivalue translation on our fields.
-    $field_names = [
-      'field_textfield',
-      'field_address',
-      'field_description_list',
-      'field_link',
-      'field_link_description',
-      'field_timeline',
-      'field_typed_link',
+    $node = $this->createNodeWithMultivalueFields();
+    // Start to keep track of the translation IDs that were created for each
+    // of the values.
+    $translation_ids = [];
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $values = $node->get($field_name)->getValue();
+      foreach ($values as $value) {
+        $translation_ids[$field_name]['en'][$value['translation_id']] = $value;
+      }
+    }
+    $values = $node->get('field_paragraphs')->entity->get('field_textfield_paragraph')->getValue();
+    foreach ($values as $value) {
+      $translation_ids['field_textfield_paragraph']['en'][$value['translation_id']] = $value;
+    }
+
+    $translation = $node->getTranslation('fr');
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $values = $translation->get($field_name)->getValue();
+      foreach ($values as $value) {
+        $translation_ids[$field_name]['fr'][$value['translation_id']] = $value;
+      }
+    }
+    \Drupal::entityTypeManager()->getStorage('paragraph')->resetCache();
+    $values = $node->get('field_paragraphs')->entity->getTranslation('fr')->get('field_textfield_paragraph')->getValue();
+    foreach ($values as $value) {
+      $translation_ids['field_textfield_paragraph']['fr'][$value['translation_id']] = $value;
+    }
+
+    // Assert that the translation IDs are the same for both the EN and FR
+    // deltas.
+    foreach ($translation_ids as $field_name => $data) {
+      $this->assertEquals(array_keys($data['en']), array_keys($data['fr']));
+    }
+
+    // Reorder the values on all the fields.
+    $paragraph = $node->get('field_paragraphs')->entity;
+    $paragraph->setNewRevision();
+    $values = $paragraph->get('field_textfield_paragraph')->getValue();
+    $values = array_reverse($values);
+    $paragraph->set('field_textfield_paragraph', $values);
+    $paragraph->save();
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $values = $node->get($field_name)->getValue();
+      $values = array_reverse($values);
+      $node->set($field_name, $values);
+      $node->set('field_paragraphs', [
+        'target_id' => $paragraph->id(),
+        'target_revision_id' => $paragraph->getRevisionId(),
+      ]);
+      $node->setNewRevision();
+      $node->save();
+    }
+
+    $this->drupalGet($node->toUrl());
+
+    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
+    $new_translation_ids = $this->createTranslationIdMap($node, $this->getMultivalueFieldNames());
+
+    // Build an array of array keys to use for asserting the value matches.
+    $value_test_keys = [
+      'field_textfield' => 'value',
+      'field_address' => 'address_line1',
+      'field_description_list' => 'term',
+      'field_link' => 'uri',
+      'field_link_description' => 'uri',
+      'field_timeline' => 'label',
+      'field_typed_link' => 'uri',
     ];
 
+    // Assert that now that we have reordered each field, the deltas are no
+    // longer matching, but the translation IDs still are representative of
+    // the connection between the original value and the translation.
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      // First we assert the expectation that the EN delta 0's translation
+      // ID is now matching the delta 1's translation ID because the translation
+      // hasn't yet been updated to reflect the change in delta.
+      $this->assertNotNull($new_translation_ids[$field_name]['en'][0]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['en'][1]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['fr'][0]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['fr'][1]['translation_id']);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][0]['translation_id'], $new_translation_ids[$field_name]['fr'][1]['translation_id']);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][1]['translation_id'], $new_translation_ids[$field_name]['fr'][0]['translation_id']);
+
+      // Next, assert that the values are mapped by the translation IDs (just
+      // like above, with the deltas not matching).
+      $key = $value_test_keys[$field_name];
+      $this->assertEquals($new_translation_ids[$field_name]['en'][0][$key] . '/FR', $new_translation_ids[$field_name]['fr'][1][$key]);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][1][$key] . '/FR', $new_translation_ids[$field_name]['fr'][0][$key]);
+    }
+
+    // Translate the node again and assert that the translation values are
+    // correctly pre-filled, not based on the delta, but based on the matching
+    // translation IDs.
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $suffix = '';
+      $key = $value_test_keys[$field_name];
+      foreach ([0, 1] as $delta) {
+        $source = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[source]%s"]', $field_name, $delta, $key, $suffix))->getValue();
+        $translation = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[translation]%s"]', $field_name, $delta, $key, $suffix))->getValue();
+        $this->assertEquals($source . '/FR', $translation);
+      }
+    }
+
+    // Save the translation.
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
+
+    // Assert that now the deltas are in line with the values and the
+    // translation IDs.
+    $new_translation_ids = $this->createTranslationIdMap($node, $this->getMultivalueFieldNames());
+
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $this->assertNotNull($new_translation_ids[$field_name]['en'][0]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['en'][1]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['fr'][0]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['fr'][1]['translation_id']);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][0]['translation_id'], $new_translation_ids[$field_name]['fr'][0]['translation_id']);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][1]['translation_id'], $new_translation_ids[$field_name]['fr'][1]['translation_id']);
+      $key = $value_test_keys[$field_name];
+      $this->assertEquals($new_translation_ids[$field_name]['en'][0][$key] . '/FR', $new_translation_ids[$field_name]['fr'][0][$key]);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][1][$key] . '/FR', $new_translation_ids[$field_name]['fr'][1][$key]);
+    }
+
+    // Start a new translation and assert the values are pre-filled correctly
+    // still.
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $suffix = '';
+      $key = $value_test_keys[$field_name];
+      foreach ([0, 1] as $delta) {
+        $source = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[source]%s"]', $field_name, $delta, $key, $suffix))->getValue();
+        $translation = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[translation]%s"]', $field_name, $delta, $key, $suffix))->getValue();
+        $this->assertEquals($source . '/FR', $translation);
+      }
+    }
+
+    $new_translation_ids = $this->createTranslationIdMap($node, $this->getMultivalueFieldNames());
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $this->assertNotNull($new_translation_ids[$field_name]['en'][0]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['en'][1]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['fr'][0]['translation_id']);
+      $this->assertNotNull($new_translation_ids[$field_name]['fr'][1]['translation_id']);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][0]['translation_id'], $new_translation_ids[$field_name]['fr'][0]['translation_id']);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][1]['translation_id'], $new_translation_ids[$field_name]['fr'][1]['translation_id']);
+      $key = $value_test_keys[$field_name];
+      $this->assertEquals($new_translation_ids[$field_name]['en'][0][$key] . '/FR', $new_translation_ids[$field_name]['fr'][0][$key]);
+      $this->assertEquals($new_translation_ids[$field_name]['en'][1][$key] . '/FR', $new_translation_ids[$field_name]['fr'][1][$key]);
+    }
+  }
+
+  /**
+   * Tests the multivalue field delta removal.
+   *
+   * Tests that when in the original we remove one of the field deltas, this
+   * gets removed also when translating. Just as it does if it's a regular
+   * single value text field.
+   */
+  public function testMultivalueFieldValueRemoval(): void {
+    $node = $this->createNodeWithMultivalueFields();
+
+    // Remove the delta 0 on all the fields.
+    $paragraph = $node->get('field_paragraphs')->entity;
+    $paragraph->setNewRevision();
+    $values = $paragraph->get('field_textfield_paragraph')->getValue();
+    unset($values[0]);
+    $paragraph->set('field_textfield_paragraph', $values);
+    $paragraph->save();
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $values = $node->get($field_name)->getValue();
+      unset($values[0]);
+      $node->set($field_name, $values);
+    }
+    $node->set('field_paragraphs', [
+      'target_id' => $paragraph->id(),
+      'target_revision_id' => $paragraph->getRevisionId(),
+    ]);
+    $node->setNewRevision();
+    $node->save();
+
+    // Go and create a new translation and just save. Normally it should
+    // remove delta 0 for each field also in the translation.
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    $this->assertSession()->pageTextContains('Synchronising this translation will remove the value from the translation as well.');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
+
+    $all_values = $this->createTranslationIdMap($node, $this->getMultivalueFieldNames());
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $fr_values = $all_values[$field_name]['fr'];
+      $en_values = $all_values[$field_name]['en'];
+      // Assert we have a single value in both.
+      $this->assertCount(1, $en_values);
+      $this->assertCount(1, $fr_values);
+    }
+
+    $this->assertEquals('Value 2/FR', $all_values['field_textfield']['fr'][0]['value']);
+    $this->assertEquals('The street name 2/FR', $all_values['field_address']['fr'][0]['address_line1']);
+    $this->assertEquals('term two/FR', $all_values['field_description_list']['fr'][0]['term']);
+    $this->assertEquals('http://example.com/two/FR', $all_values['field_link']['fr'][0]['uri']);
+    $this->assertEquals('http://example.com/two/FR', $all_values['field_link_description']['fr'][0]['uri']);
+    $this->assertEquals('label two/FR', $all_values['field_timeline']['fr'][0]['label']);
+    $this->assertEquals('http://example.com/two/FR', $all_values['field_typed_link']['fr'][0]['uri']);
+    $this->assertEquals('Value 2/FR', $all_values['field_textfield_paragraph']['fr']['value']);
+
+    // Assert that all the translation_ids match.
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
+      $this->assertEquals($all_values[$field_name]['en'][0]['translation_id'], $all_values[$field_name]['fr'][0]['translation_id']);
+    }
+
+  }
+
+  /**
+   * Tests that we can update the configuration of fields that contain data.
+   */
+  public function testFieldConfigurationUpdate(): void {
+    $entity_field_manager = \Drupal::service('entity_field.manager');
+
+    $node = Node::create([
+      'type' => 'multivalue',
+      'title' => 'Translation node',
+      'field_textfield' => [
+        'Value 1',
+        'Value 2',
+      ],
+    ]);
+    $node->save();
+
+    $database = \Drupal::database();
+    $schema = $database->schema();
+    $tables = [];
+    $field_name = 'field_textfield';
+    foreach (['node__', 'node_revision__'] as $prefix) {
+      $tables[] = $prefix . $field_name;
+    }
+
+    // Assert the table doesn't yet have the column but there are values in the
+    // tables.
+    foreach ($tables as $table) {
+      $this->assertFalse($schema->fieldExists($table, $field_name . '_translation_id'));
+      $this->assertNotEmpty($database->select($table)->fields($table)->execute()->fetchAll());
+    }
+    $field_definitions = $entity_field_manager->getFieldStorageDefinitions('node');
+    $field_definition = $field_definitions[$field_name];
+    $this->assertFalse(in_array('translation_id', $field_definition->getPropertyNames()));
+
+    // Install the field column.
+    TranslationMultivalueColumnInstaller::installColumn('node.field_textfield');
+
+    // Assert that we have the column, the field definition update and the
+    // content is still in the field tables.
+    foreach ($tables as $table) {
+      $this->assertTrue($schema->fieldExists($table, $field_name . '_translation_id'));
+      $this->assertNotEmpty($database->select($table)->fields($table)->execute()->fetchAll());
+    }
+    $entity_field_manager->clearCachedFieldDefinitions();
+    $field_definitions = $entity_field_manager->getFieldStorageDefinitions('node');
+    $field_definition = $field_definitions[$field_name];
+    $this->assertTrue(in_array('translation_id', $field_definition->getPropertyNames()));
+    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
+    $this->assertEquals([
+      [
+        'value' => 'Value 1',
+        'translation_id' => NULL,
+      ],
+      [
+        'value' => 'Value 2',
+        'translation_id' => NULL,
+      ],
+    ], $node->get('field_textfield')->getValue());
+  }
+
+  /**
+   * Creates an array of the field values and their translation IDs.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   * @param array $field_names
+   *   The field names.
+   *
+   * @return array
+   *   The value map.
+   */
+  protected function createTranslationIdMap(NodeInterface $node, array $field_names): array {
+    $translation_ids = [];
     foreach ($field_names as $field_name) {
+      $values = $node->get($field_name)->getValue();
+      foreach ($values as $value) {
+        $translation_ids[$field_name]['en'][] = $value;
+      }
+    }
+    $values = $node->get('field_paragraphs')->entity->get('field_textfield_paragraph')->getValue();
+    foreach ($values as $value) {
+      $translation_ids['field_textfield_paragraph']['en'][] = $value;
+    }
+    $translation = $node->getTranslation('fr');
+    foreach ($field_names as $field_name) {
+      $values = $translation->get($field_name)->getValue();
+      foreach ($values as $value) {
+        $translation_ids[$field_name]['fr'][] = $value;
+      }
+    }
+    \Drupal::entityTypeManager()->getStorage('paragraph')->resetCache();
+    $values = $node->get('field_paragraphs')->entity->getTranslation('fr')->get('field_textfield_paragraph')->getValue();
+    foreach ($values as $value) {
+      $translation_ids['field_textfield_paragraph']['fr'] = $value;
+    }
+
+    return $translation_ids;
+  }
+
+  /**
+   * Creates a test node with 2 values for a bunch of multivalue fields.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The node.
+   */
+  protected function createNodeWithMultivalueFields(): NodeInterface {
+    // Enable the multivalue translation on our fields.
+    foreach ($this->getMultivalueFieldNames() as $field_name) {
       $storage = FieldStorageConfig::load('node.' . $field_name);
       $storage->setSetting('translation_multivalue', TRUE);
       $storage->save();
@@ -296,23 +613,8 @@ class MultivalueTranslationsTest extends TranslationTestBase {
     $node->save();
     $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
 
-    // Start to keep track of the translation IDs that were created for each
-    // of the values.
-    $translation_ids = [];
-    foreach ($field_names as $field_name) {
-      $values = $node->get($field_name)->getValue();
-      foreach ($values as $value) {
-        $translation_ids[$field_name]['en'][$value['translation_id']] = $value;
-      }
-    }
-    $values = $node->get('field_paragraphs')->entity->get('field_textfield_paragraph')->getValue();
-    foreach ($values as $value) {
-      $translation_ids['field_textfield_paragraph']['en'][$value['translation_id']] = $value;
-    }
-
-    $this->drupalGet($node->toUrl());
-
     // Translate the node.
+    $this->drupalGet($node->toUrl());
     $this->clickLink('Translate');
     $this->clickLink('Local translations');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
@@ -330,246 +632,22 @@ class MultivalueTranslationsTest extends TranslationTestBase {
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
     $this->assertTrue($node->hasTranslation('fr'));
+    return $node;
+  }
 
-    $translation = $node->getTranslation('fr');
-    foreach ($field_names as $field_name) {
-      $values = $translation->get($field_name)->getValue();
-      foreach ($values as $value) {
-        $translation_ids[$field_name]['fr'][$value['translation_id']] = $value;
-      }
-    }
-    \Drupal::entityTypeManager()->getStorage('paragraph')->resetCache();
-    $values = $node->get('field_paragraphs')->entity->getTranslation('fr')->get('field_textfield_paragraph')->getValue();
-    foreach ($values as $value) {
-      $translation_ids['field_textfield_paragraph']['fr'][$value['translation_id']] = $value;
-    }
-
-    // Assert that the translation IDs are the same for both the EN and FR
-    // deltas.
-    foreach ($translation_ids as $field_name => $data) {
-      $this->assertEquals(array_keys($data['en']), array_keys($data['fr']));
-    }
-
-    // Reorder the values on all the fields.
-    $paragraph = $node->get('field_paragraphs')->entity;
-    $paragraph->setNewRevision();
-    $values = $paragraph->get('field_textfield_paragraph')->getValue();
-    $values = array_reverse($values);
-    $paragraph->set('field_textfield_paragraph', $values);
-    $paragraph->save();
-    foreach ($field_names as $field_name) {
-      $values = $node->get($field_name)->getValue();
-      $values = array_reverse($values);
-      $node->set($field_name, $values);
-      $node->set('field_paragraphs', [
-        'target_id' => $paragraph->id(),
-        'target_revision_id' => $paragraph->getRevisionId(),
-      ]);
-      $node->setNewRevision();
-      $node->save();
-    }
-
-    $this->drupalGet($node->toUrl());
-
-    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
-    $new_translation_ids = $this->createTranslationIdMap($node, $field_names);
-
-    // Build an array of array keys to use for asserting the value matches.
-    $value_test_keys = [
-      'field_textfield' => 'value',
-      'field_address' => 'address_line1',
-      'field_description_list' => 'term',
-      'field_link' => 'uri',
-      'field_link_description' => 'uri',
-      'field_timeline' => 'label',
-      'field_typed_link' => 'uri',
+  /**
+   * Returns all the multivalue fields.
+   */
+  protected function getMultivalueFieldNames(): array {
+    return [
+      'field_textfield',
+      'field_address',
+      'field_description_list',
+      'field_link',
+      'field_link_description',
+      'field_timeline',
+      'field_typed_link',
     ];
-
-    // Assert that now that we have reordered each field, the deltas are no
-    // longer matching, but the translation IDs still are representative of
-    // the connection between the original value and the translation.
-    foreach ($field_names as $field_name) {
-      // First we assert the expectation that the EN delta 0's translation
-      // ID is now matching the delta 1's translation ID because the translation
-      // hasn't yet been updated to reflect the change in delta.
-      $this->assertNotNull($new_translation_ids[$field_name]['en'][0]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['en'][1]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['fr'][0]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['fr'][1]['translation_id']);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][0]['translation_id'], $new_translation_ids[$field_name]['fr'][1]['translation_id']);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][1]['translation_id'], $new_translation_ids[$field_name]['fr'][0]['translation_id']);
-
-      // Next, assert that the values are mapped by the translation IDs (just
-      // like above, with the deltas not matching).
-      $key = $value_test_keys[$field_name];
-      $this->assertEquals($new_translation_ids[$field_name]['en'][0][$key] . '/FR', $new_translation_ids[$field_name]['fr'][1][$key]);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][1][$key] . '/FR', $new_translation_ids[$field_name]['fr'][0][$key]);
-    }
-
-    // Translate the node again and assert that the translation values are
-    // correctly pre-filled, not based on the delta, but based on the matching
-    // translation IDs.
-    $this->drupalGet($node->toUrl());
-    $this->clickLink('Translate');
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
-    foreach ($field_names as $field_name) {
-      $suffix = '';
-      $key = $value_test_keys[$field_name];
-      foreach ([0, 1] as $delta) {
-        $source = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[source]%s"]', $field_name, $delta, $key, $suffix))->getValue();
-        $translation = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[translation]%s"]', $field_name, $delta, $key, $suffix))->getValue();
-        $this->assertEquals($source . '/FR', $translation);
-      }
-    }
-
-    // Save the translation.
-    $this->getSession()->getPage()->pressButton('Save and synchronise');
-    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
-
-    // Assert that now the deltas are in line with the values and the
-    // translation IDs.
-    $new_translation_ids = $this->createTranslationIdMap($node, $field_names);
-
-    foreach ($field_names as $field_name) {
-      $this->assertNotNull($new_translation_ids[$field_name]['en'][0]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['en'][1]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['fr'][0]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['fr'][1]['translation_id']);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][0]['translation_id'], $new_translation_ids[$field_name]['fr'][0]['translation_id']);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][1]['translation_id'], $new_translation_ids[$field_name]['fr'][1]['translation_id']);
-      $key = $value_test_keys[$field_name];
-      $this->assertEquals($new_translation_ids[$field_name]['en'][0][$key] . '/FR', $new_translation_ids[$field_name]['fr'][0][$key]);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][1][$key] . '/FR', $new_translation_ids[$field_name]['fr'][1][$key]);
-    }
-
-    // Start a new translation and assert the values are pre-filled correctly
-    // still.
-    $this->drupalGet($node->toUrl());
-    $this->clickLink('Translate');
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
-    foreach ($field_names as $field_name) {
-      $suffix = '';
-      $key = $value_test_keys[$field_name];
-      foreach ([0, 1] as $delta) {
-        $source = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[source]%s"]', $field_name, $delta, $key, $suffix))->getValue();
-        $translation = $this->getSession()->getPage()->find('xpath', sprintf('//table//td//textarea[@name="%s|%s|%s[translation]%s"]', $field_name, $delta, $key, $suffix))->getValue();
-        $this->assertEquals($source . '/FR', $translation);
-      }
-    }
-
-    $new_translation_ids = $this->createTranslationIdMap($node, $field_names);
-    foreach ($field_names as $field_name) {
-      $this->assertNotNull($new_translation_ids[$field_name]['en'][0]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['en'][1]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['fr'][0]['translation_id']);
-      $this->assertNotNull($new_translation_ids[$field_name]['fr'][1]['translation_id']);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][0]['translation_id'], $new_translation_ids[$field_name]['fr'][0]['translation_id']);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][1]['translation_id'], $new_translation_ids[$field_name]['fr'][1]['translation_id']);
-      $key = $value_test_keys[$field_name];
-      $this->assertEquals($new_translation_ids[$field_name]['en'][0][$key] . '/FR', $new_translation_ids[$field_name]['fr'][0][$key]);
-      $this->assertEquals($new_translation_ids[$field_name]['en'][1][$key] . '/FR', $new_translation_ids[$field_name]['fr'][1][$key]);
-    }
-  }
-
-  /**
-   * Tests that we can update the configuration of fields that contain data.
-   */
-  public function testFieldConfigurationUpdate(): void {
-    $entity_field_manager = \Drupal::service('entity_field.manager');
-
-    $node = Node::create([
-      'type' => 'multivalue',
-      'title' => 'Translation node',
-      'field_textfield' => [
-        'Value 1',
-        'Value 2',
-      ],
-    ]);
-    $node->save();
-
-    $database = \Drupal::database();
-    $schema = $database->schema();
-    $tables = [];
-    $field_name = 'field_textfield';
-    foreach (['node__', 'node_revision__'] as $prefix) {
-      $tables[] = $prefix . $field_name;
-    }
-
-    // Assert the table doesn't yet have the column but there are values in the
-    // tables.
-    foreach ($tables as $table) {
-      $this->assertFalse($schema->fieldExists($table, $field_name . '_translation_id'));
-      $this->assertNotEmpty($database->select($table)->fields($table)->execute()->fetchAll());
-    }
-    $field_definitions = $entity_field_manager->getFieldStorageDefinitions('node');
-    $field_definition = $field_definitions[$field_name];
-    $this->assertFalse(in_array('translation_id', $field_definition->getPropertyNames()));
-
-    // Install the field column.
-    TranslationMultivalueColumnInstaller::installColumn('node.field_textfield');
-
-    // Assert that we have the column, the field definition update and the
-    // content is still in the field tables.
-    foreach ($tables as $table) {
-      $this->assertTrue($schema->fieldExists($table, $field_name . '_translation_id'));
-      $this->assertNotEmpty($database->select($table)->fields($table)->execute()->fetchAll());
-    }
-    $entity_field_manager->clearCachedFieldDefinitions();
-    $field_definitions = $entity_field_manager->getFieldStorageDefinitions('node');
-    $field_definition = $field_definitions[$field_name];
-    $this->assertTrue(in_array('translation_id', $field_definition->getPropertyNames()));
-    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
-    $this->assertEquals([
-      [
-        'value' => 'Value 1',
-        'translation_id' => NULL,
-      ],
-      [
-        'value' => 'Value 2',
-        'translation_id' => NULL,
-      ],
-    ], $node->get('field_textfield')->getValue());
-  }
-
-  /**
-   * Creates an array of the field values and their translation IDs.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node.
-   * @param array $field_names
-   *   The field names.
-   *
-   * @return array
-   *   The value map.
-   */
-  protected function createTranslationIdMap(NodeInterface $node, array $field_names): array {
-    $translation_ids = [];
-    foreach ($field_names as $field_name) {
-      $values = $node->get($field_name)->getValue();
-      foreach ($values as $value) {
-        $translation_ids[$field_name]['en'][] = $value;
-      }
-    }
-    $values = $node->get('field_paragraphs')->entity->get('field_textfield_paragraph')->getValue();
-    foreach ($values as $value) {
-      $translation_ids['field_textfield_paragraph']['en'][] = $value;
-    }
-    $translation = $node->getTranslation('fr');
-    foreach ($field_names as $field_name) {
-      $values = $translation->get($field_name)->getValue();
-      foreach ($values as $value) {
-        $translation_ids[$field_name]['fr'][] = $value;
-      }
-    }
-    \Drupal::entityTypeManager()->getStorage('paragraph')->resetCache();
-    $values = $node->get('field_paragraphs')->entity->getTranslation('fr')->get('field_textfield_paragraph')->getValue();
-    foreach ($values as $value) {
-      $translation_ids['field_textfield_paragraph']['fr'] = $value;
-    }
-
-    return $translation_ids;
   }
 
 }
