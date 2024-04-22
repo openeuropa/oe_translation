@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\oe_translation_cdt;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
