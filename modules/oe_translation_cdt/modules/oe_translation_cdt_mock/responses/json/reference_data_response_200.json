@@ -1,0 +1,322 @@
+{
+  "departments": [
+    {
+      "code": "123",
+      "description": "External Translation Unit - Contracts Execution Department"
+    },
+    {
+      "code": "456",
+      "description": "Service Finance"
+    }
+  ],
+  "priorities": [
+    {
+      "code": "SL",
+      "description": "Slow"
+    },
+    {
+      "code": "NO",
+      "description": "Normal"
+    },
+    {
+      "code": "TU",
+      "description": "Urgent"
+    },
+    {
+      "code": "VU",
+      "description": "Very Urgent"
+    }
+  ],
+  "purposes": [
+    {
+      "code": "BF",
+      "description": "Budget / Financial text"
+    },
+    {
+      "code": "PC",
+      "description": "Podcasts"
+    },
+    {
+      "code": "CT",
+      "description": "Call for tenders"
+    },
+    {
+      "code": "LT",
+      "description": "Legal text"
+    },
+    {
+      "code": "MA",
+      "description": "Minutes / Agenda"
+    },
+    {
+      "code": "ME",
+      "description": "Medical / Scientific - Expert public"
+    },
+    {
+      "code": "MG",
+      "description": "Medical / Scientific - General public"
+    },
+    {
+      "code": "OT",
+      "description": "Other (please specify)"
+    },
+    {
+      "code": "PE",
+      "description": "Publication - Expert public"
+    },
+    {
+      "code": "PG",
+      "description": "Publication - General public"
+    },
+    {
+      "code": "RN",
+      "description": "Recruitment"
+    },
+    {
+      "code": "SP",
+      "description": "Speech / Press release / Newsletter"
+    },
+    {
+      "code": "TT",
+      "description": "Technical text"
+    },
+    {
+      "code": "WD",
+      "description": "Working document"
+    },
+    {
+      "code": "WS",
+      "description": "Website"
+    },
+    {
+      "code": "OD",
+      "description": "ODR outcome"
+    },
+    {
+      "code": "EV",
+      "description": "Events"
+    },
+    {
+      "code": "WB",
+      "description": "Webinars"
+    },
+    {
+      "code": "HP",
+      "description": "Hearings/Pleadings"
+    },
+    {
+      "code": "CA",
+      "description": "Management Board"
+    }
+  ],
+  "deliveryModes": [
+    {
+      "code": "No",
+      "description": "No"
+    },
+    {
+      "code": "YesMF",
+      "description": "Yes(Multiple Files)"
+    },
+    {
+      "code": "YesSF",
+      "description": "Yes(Single File)"
+    }
+  ],
+  "confidentialities": [
+    {
+      "code": "NO",
+      "description": "None"
+    },
+    {
+      "code": "SN",
+      "description": "Sensitive non-classified – with retention"
+    },
+    {
+      "code": "SR",
+      "description": "Sensitive non-classified – without retention"
+    },
+    {
+      "code": "SC",
+      "description": "Classified"
+    }
+  ],
+  "languages": [
+    "AR",
+    "AZ",
+    "BE",
+    "BG",
+    "BN",
+    "BS",
+    "CA",
+    "CS",
+    "CY",
+    "DA",
+    "DE",
+    "EL",
+    "EN",
+    "ES",
+    "ET",
+    "FA",
+    "FI",
+    "FR",
+    "GA",
+    "HE",
+    "HI",
+    "HR",
+    "HU",
+    "HY",
+    "ID",
+    "IS",
+    "IT",
+    "JP",
+    "KA",
+    "KL",
+    "KO",
+    "KY",
+    "LB",
+    "LT",
+    "LV",
+    "ME",
+    "MK",
+    "MN",
+    "MO",
+    "MT",
+    "NL",
+    "NB",
+    "PL",
+    "PR",
+    "PT",
+    "RM",
+    "RO",
+    "RU",
+    "SH",
+    "SK",
+    "SL",
+    "SQ",
+    "SR",
+    "SV",
+    "SW",
+    "TH",
+    "TR",
+    "UK",
+    "UZ",
+    "VI",
+    "ZH",
+    "EU",
+    "FO",
+    "GL",
+    "PS",
+    "SO",
+    "TI",
+    "UR",
+    "AF",
+    "TK",
+    "ST",
+    "AK",
+    "PH",
+    "BZ",
+    "MZ",
+    "FF",
+    "T0",
+    "SE",
+    "BM",
+    "MR",
+    "LO",
+    "LN",
+    "MG",
+    "NE",
+    "AB",
+    "PP",
+    "PA",
+    "MS",
+    "DY",
+    "TG"
+  ],
+  "statuses": [
+    {
+      "code": "DRAF",
+      "description": "Draft"
+    },
+    {
+      "code": "MTS",
+      "description": "Marked to Send"
+    },
+    {
+      "code": "UNDE",
+      "description": "Under Quotation"
+    },
+    {
+      "code": "PEND",
+      "description": "Quoted - Pending Approval"
+    },
+    {
+      "code": "INPR",
+      "description": "In Progress"
+    },
+    {
+      "code": "COMP",
+      "description": "Completed"
+    },
+    {
+      "code": "CANC",
+      "description": "Cancelled"
+    }
+  ],
+  "services": [
+    {
+      "code": "Editing",
+      "description": "Editing"
+    },
+    {
+      "code": "Terminology",
+      "description": "Terminology"
+    },
+    {
+      "code": "TermList",
+      "description": "Term List"
+    },
+    {
+      "code": "Translation",
+      "description": "Translation"
+    },
+    {
+      "code": "Subtitling",
+      "description": "Subtitling"
+    },
+    {
+      "code": "Transcription",
+      "description": "Transcription"
+    },
+    {
+      "code": "LightPostEditing",
+      "description": "Light post-editing"
+    }
+  ],
+  "sendOptions": [
+    {
+      "code": "MarkToSend",
+      "description": "Mark To send"
+    },
+    {
+      "code": "Send",
+      "description": "Send"
+    },
+    {
+      "code": "SendAsDraft",
+      "description": "Send as draft"
+    }
+  ],
+  "contacts": [
+    {
+      "email": "test@example.com",
+      "firstName": "DGTRAD - Ext. Transl. Unit ",
+      "lastName": "Contracts Execution Dept.",
+      "userName": "TESTUSER",
+      "countryCode": null,
+      "phoneCountryCode": null,
+      "phoneNumber": "+351234123123",
+      "countryName": ""
+    }
+  ]
+}
