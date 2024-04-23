@@ -1,0 +1,9 @@
+name: 'OpenEuropa Translation CDT mock'
+description: 'The module that mocks the CDT endpoint and callbacks.'
+package: OpenEuropa
+type: module
+core_version_requirement: ^10
+
+dependencies:
+  - http_request_mock:http_request_mock
+  - oe_translation:oe_translation
