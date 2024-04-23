@@ -24,6 +24,7 @@
         "drupal/description_list_field": "^1.0@alpha",
         "drupal/entity_browser": "^2.15",
         "drupal/entity_version": "^1.0-beta8",
+        "drupal/http_request_mock": "^1.0",
         "drupal/inline_entity_form": "^1.0-rc15 || ^3.0@RC",
         "drupal/link_description": "^1.0",
         "drupal/metatag": "^2.1",
