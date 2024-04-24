@@ -25,7 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class FileApi extends ServiceMockBase {
 
   /**
-   * Constructs a Token object.
+   * Constructs a FileApi object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -69,7 +69,8 @@ class FileApi extends ServiceMockBase {
    * {@inheritdoc}
    */
   protected function getEndpointUrl(): string {
-    // The endpoint address is determined by the Status API response.
+    // The file URL is not present in the static settings.
+    // It is defined by the Status API response.
     return 'https://example.com/api/files/:language/:id';
   }
 
@@ -81,19 +82,19 @@ class FileApi extends ServiceMockBase {
       return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
     }
 
-    // The file uses the same identifier as the mocked CDT request.
+    // The mocked file URL contains the translation request ID and the language.
     $parameters = $this->getRequestParameters($request);
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface|null $entity */
-    $entity = $this->entityTypeManager->getStorage('translation_request')->load($parameters[':id']);
+    $entity = $this->entityTypeManager->getStorage('oe_translation_request')->load($parameters['id']);
     if (!$entity) {
       return new Response(400, [], $this->getResponseFromFile('file_response_400.json'));
     }
 
     $data = TranslationSourceHelper::filterTranslatable($entity->getData());
-    foreach ($data as $key => $field) {
-      $data[$key] = sprintf(
+    foreach ($data as &$field) {
+      $field['#text'] = sprintf(
         '%s translation of %s',
-        $parameters[':language'],
+        $parameters['language'],
         $field['#text']
       );
     }
