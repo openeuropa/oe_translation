@@ -8,6 +8,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
+use Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
@@ -37,6 +38,7 @@ class TranslationProviderTest extends TranslationTestBase {
     'oe_translation_test',
     'oe_translation_remote',
     'oe_translation_cdt',
+    'oe_translation_cdt_mock',
   ];
 
   /**
@@ -93,6 +95,7 @@ class TranslationProviderTest extends TranslationTestBase {
     $storage = \Drupal::entityTypeManager()->getStorage('remote_translation_provider');
     $storage->resetCache();
     $translator = $storage->load('cdt_provider');
+    assert($translator instanceof RemoteTranslatorProviderInterface);
     $this->assertEquals('CDT provider', $translator->label());
     $this->assertEquals('cdt', $translator->getProviderPlugin());
     $default_language_mapping = [];
@@ -112,6 +115,7 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains('Saved the CDT provider edited Remote Translator Provider.');
     $translator = \Drupal::entityTypeManager()->getStorage('remote_translation_provider')->load('cdt_provider');
+    assert($translator instanceof RemoteTranslatorProviderInterface);
     $this->assertEquals([
       'language_mapping' => ['de' => 'TEST'] + $default_language_mapping,
     ], $translator->getProviderConfiguration() ?? []);
@@ -126,6 +130,7 @@ class TranslationProviderTest extends TranslationTestBase {
   public function testCdtSingleTranslationFlow(): void {
     // Set PT language mapping.
     $translator = RemoteTranslatorProvider::load('cdt');
+    assert($translator instanceof RemoteTranslatorProviderInterface);
     $configuration = $translator->getProviderConfiguration() ?? [];
     $configuration['language_mapping']['pt-pt'] = 'PT';
     $translator->setProviderConfiguration($configuration);
@@ -142,12 +147,12 @@ class TranslationProviderTest extends TranslationTestBase {
 
     // Select the translation settings.
     $this->getSession()->getPage()->fillField('Comments', 'Test Translation');
-    $this->getSession()->getPage()->fillField('Confidentiality', 'CONF_1');
-    $this->getSession()->getPage()->fillField('translator_configuration[cdt][contact_usernames][0][value]', 'CONT_1');
-    $this->getSession()->getPage()->fillField('translator_configuration[cdt][deliver_to][0][value]', 'CONT_2');
-    $this->getSession()->getPage()->fillField('Department', 'DEP_1');
-    $this->getSession()->getPage()->fillField('Phone number', '12345');
-    $this->getSession()->getPage()->fillField('Priority', 'PRIO_1');
+    $this->getSession()->getPage()->fillField('Confidentiality', 'NO');
+    $this->getSession()->getPage()->fillField('translator_configuration[cdt][contact_usernames][0][value]', 'TESTUSER');
+    $this->getSession()->getPage()->fillField('translator_configuration[cdt][deliver_to][0][value]', 'TESTUSER');
+    $this->getSession()->getPage()->fillField('Department', '123');
+    $this->getSession()->getPage()->fillField('Phone number', '123456');
+    $this->getSession()->getPage()->fillField('Priority', 'NO');
 
     // Assert the languages' validation.
     $this->getSession()->getPage()->pressButton('Save and send');
@@ -182,7 +187,7 @@ class TranslationProviderTest extends TranslationTestBase {
       ],
       2 => [
         'Info',
-        'The translation request was successfully sent to CDT with correlation ID: ' . $request->getCorrelationId(),
+        "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
         $this->user->label(),
       ],
     ];
