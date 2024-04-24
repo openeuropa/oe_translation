@@ -30,7 +30,15 @@ class TokenApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
+  protected function needsToken(): bool {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
+    $this->log('200: Returning the mocked authorization token.', $request);
     return new Response(200, [], $this->getResponseFromFile('token_response_200.json'));
   }
 
