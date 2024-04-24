@@ -13,18 +13,12 @@ use Psr\Http\Message\RequestInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Intercepts token request made to CDT.
- *
- * @ServiceMock(
- *   id = "oe_translation_cdt_token",
- *   label = @Translation("CDT mocked token responses for testing."),
- *   weight = -1,
- * )
+ * The base class for all CDT API mocks.
  */
 abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginInterface, ContainerFactoryPluginInterface {
 
   /**
-   * Constructs a Token object.
+   * Constructs a ServiceMockBase object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -80,7 +74,7 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
    */
   protected function hasToken(RequestInterface $request): bool {
     $header = $request->getHeader('Authorization');
-    return $header == 'Bearer TEST_TOKEN';
+    return ($header[0] ?? '') == 'Bearer TEST_TOKEN';
   }
 
   /**
@@ -94,11 +88,11 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
    */
   protected function getRequestParameters(RequestInterface $request): array {
     $url_parts = explode('/', $request->getUri()->getPath());
-    $endpoint_parts = explode('/', $this->getEndpointUrl());
+    $endpoint_parts = explode('/', (string) parse_url($this->getEndpointUrl(), PHP_URL_PATH));
     $parameters = [];
     foreach ($endpoint_parts as $key => $part) {
       if (str_starts_with($part, ':')) {
-        $parameters[$part] = $url_parts[$key] ?? NULL;
+        $parameters[ltrim($part, ':')] = $url_parts[$key] ?? NULL;
       }
     }
     return $parameters;
@@ -108,6 +102,7 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
    * {@inheritdoc}
    */
   public function applies(RequestInterface $request, array $options): bool {
+    // Replace all URL parameters with regex wildcards.
     $endpoint_pattern = preg_replace('/:\w+/', '[^/]*', $this->getEndpointUrl());
     return preg_match("|^$endpoint_pattern$|", (string) $request->getUri()) === 1;
   }

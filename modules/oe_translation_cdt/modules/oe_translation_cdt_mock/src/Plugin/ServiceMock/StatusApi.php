@@ -17,7 +17,7 @@ use Psr\Http\Message\ResponseInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_status_api",
  *   label = @Translation("CDT mocked status responses for testing."),
- *   weight = -1,
+ *   weight = 0,
  * )
  */
 class StatusApi extends ServiceMockBase {
@@ -41,13 +41,12 @@ class StatusApi extends ServiceMockBase {
     $parameters = $this->getRequestParameters($request);
     $response = json_decode($this->getResponseFromFile('status_response_200.json'), TRUE);
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface|null $entity */
-    $entity = $this->entityTypeManager->getStorage('translation_request')->load($parameters[':requestnumber']);
+    $entity = $this->entityTypeManager->getStorage('oe_translation_request')->load($parameters['requestnumber']);
     if (!$entity) {
       return new Response(400, [], $this->getResponseFromFile('status_response_400.json'));
     }
 
     // Change only the important parameters.
-    $response['requestIdentifier'] = $entity->getCdtId();
     $response['status'] = match($entity->getRequestStatus()) {
       TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => 'COMP',
       TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => 'CANC',
@@ -72,7 +71,7 @@ class StatusApi extends ServiceMockBase {
           'isPrivate' => FALSE,
           '_links' => [
             'files' => [
-              'href' => sprintf('https://example.com/api/files/%s/%s', $cdt_target_language, $entity->getCdtId()),
+              'href' => sprintf('https://example.com/api/files/%s/%s', $cdt_target_language, $entity->id()),
               'method' => 'GET',
             ],
           ],
