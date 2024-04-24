@@ -30,15 +30,12 @@ class RequestsApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    if (!$this->hasToken($request)) {
-      return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
-    }
-
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
     // Make the correlation ID equal to the translation request ID.
     // This way, we can identify it easily on the later stages.
     $request_json = json_decode($request->getBody()->getContents(), TRUE);
     $entity_id = $request_json['clientReference'];
+    $this->log('200: Accepting the request and returning the mocked entity ID.', $request);
     return new Response(200, [], $entity_id);
   }
 
