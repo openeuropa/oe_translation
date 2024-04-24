@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_cdt\Plugin\RemoteTranslationProvider;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
@@ -65,6 +66,8 @@ class Cdt extends RemoteTranslationProviderBase {
    *   The state.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory.
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
@@ -79,7 +82,8 @@ class Cdt extends RemoteTranslationProviderBase {
     protected TranslationRequestMapperInterface $dtoMapper,
     protected CdtApiWrapperInterface $apiWrapper,
     protected StateInterface $state,
-    protected EventDispatcherInterface $eventDispatcher) {
+    protected EventDispatcherInterface $eventDispatcher,
+    protected LoggerChannelFactoryInterface $loggerFactory) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
   }
 
@@ -98,7 +102,8 @@ class Cdt extends RemoteTranslationProviderBase {
       $container->get('oe_translation_cdt.translation_request_mapper'),
       $container->get('oe_translation_cdt.api_wrapper'),
       $container->get('state'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('logger.factory')
     );
   }
 
@@ -154,14 +159,24 @@ class Cdt extends RemoteTranslationProviderBase {
    * {@inheritdoc}
    */
   public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
-    $reference_data_object = $this->apiWrapper->getClient()->getReferenceData();
-    $reference_data = [
-      'department' => $reference_data_object->getDepartments(),
-      'priority' => $reference_data_object->getPriorities(),
-      'confidentiality' => $reference_data_object->getConfidentialities(),
-      'deliver_to' => $reference_data_object->getContacts(),
-      'contact_usernames' => $reference_data_object->getContacts(),
-    ];
+    try {
+      $reference_data_object = $this->apiWrapper->getClient()
+        ->getReferenceData();
+      $reference_data = [
+        'department' => $reference_data_object->getDepartments(),
+        'priority' => $reference_data_object->getPriorities(),
+        'confidentiality' => $reference_data_object->getConfidentialities(),
+        'deliver_to' => $reference_data_object->getContacts(),
+        'contact_usernames' => $reference_data_object->getContacts(),
+      ];
+    }
+    catch (InvalidStatusCodeException | CdtConnectionException $exception) {
+      $this->loggerFactory->get('oe_translation_cdt')->error($exception->getMessage());
+      $form['message'] = [
+        '#markup' => $this->t('There was a problem retrieving the reference data from CDT.'),
+      ];
+      return $form;
+    }
 
     $languages = $this->languageManager->getLanguages();
     $event = new AvailableLanguagesAlterEvent($languages);
@@ -262,6 +277,7 @@ class Cdt extends RemoteTranslationProviderBase {
     // Send it to CDT and update its status.
     try {
       $this->createAndSendRequestObject($request, $form, $form_state);
+      $this->messenger->addStatus($this->t('The translation request has been sent to CDT.'));
     }
     catch (ValidationErrorsException | InvalidStatusCodeException | CdtConnectionException $exception) {
       $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED);
