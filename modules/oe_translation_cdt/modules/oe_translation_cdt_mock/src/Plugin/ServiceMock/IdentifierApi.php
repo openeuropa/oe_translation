@@ -36,7 +36,7 @@ class IdentifierApi extends ServiceMockBase {
     }
 
     $parameters = $this->getRequestParameters($request);
-    return new Response(200, [], sprintf('%s/%s', date('Y'), $parameters[':correlationId']));
+    return new Response(200, [], sprintf('%s/%s', date('Y'), $parameters['correlationId']));
   }
 
 }
