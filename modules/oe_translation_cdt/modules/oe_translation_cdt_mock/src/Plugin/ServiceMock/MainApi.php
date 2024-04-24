@@ -30,10 +30,8 @@ class MainApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    if (!$this->hasToken($request)) {
-      return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
-    }
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
+    $this->log('200: Confirming that the connection works.', $request);
     return new Response(200, [], 'true');
   }
 
