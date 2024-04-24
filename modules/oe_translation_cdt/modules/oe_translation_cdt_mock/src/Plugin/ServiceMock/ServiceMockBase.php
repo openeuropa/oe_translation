@@ -6,10 +6,13 @@ namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\http_request_mock\ServiceMockPluginInterface;
+use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -30,13 +33,16 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
    *   The module extension list.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory.
    */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
     protected ModuleExtensionList $moduleExtensionList,
-    protected EntityTypeManagerInterface $entityTypeManager
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LoggerChannelFactoryInterface $loggerFactory
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -50,12 +56,13 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
       $plugin_id,
       $plugin_definition,
       $container->get('extension.list.module'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('logger.factory')
     );
   }
 
   /**
-   * Get the endpoint URL.
+   * Gets the endpoint URL.
    *
    * @return string
    *   The endpoint URL to match against the current request.
@@ -64,21 +71,30 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
   abstract protected function getEndpointUrl(): string;
 
   /**
-   * Check if bearer token is present.
+   * Gets the response from the endpoint.
    *
    * @param \Psr\Http\Message\RequestInterface $request
    *   The request.
    *
-   * @return bool
-   *   TRUE if the request has a valid token, FALSE otherwise.
+   * @return \Psr\Http\Message\ResponseInterface
+   *   The response.
    */
-  protected function hasToken(RequestInterface $request): bool {
-    $header = $request->getHeader('Authorization');
-    return ($header[0] ?? '') == 'Bearer TEST_TOKEN';
+  abstract protected function getEndpointResponse(RequestInterface $request): ResponseInterface;
+
+  /**
+   * Determines if the endpoint needs authorization.
+   *
+   * Override it to FALSE for public endpoints.
+   *
+   * @return bool
+   *   TRUE if the authorization token is required, FALSE otherwise.
+   */
+  protected function needsToken(): bool {
+    return TRUE;
   }
 
   /**
-   * Get the request parameters from the request path.
+   * Gets the request parameters from the request path.
    *
    * @param \Psr\Http\Message\RequestInterface $request
    *   The request.
@@ -99,6 +115,37 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
   }
 
   /**
+   * Logs a debug message.
+   *
+   * @param string $message
+   *   The message to log.
+   * @param \Psr\Http\Message\RequestInterface $request
+   *   The request.
+   */
+  protected function log(string $message, RequestInterface $request): void {
+    $request->getBody()->rewind();
+    $this->loggerFactory->get('oe_translation_cdt_mock')->debug(sprintf(
+      "%s <br><strong>Request URL:</strong> %s<br><strong>Request data:</strong> <pre>%s</pre>",
+      $message,
+      $request->getUri(),
+      $request->getBody()->getContents() ?: 'No data'
+    ));
+  }
+
+  /**
+   * Gets the response from a JSON file.
+   *
+   * @param string $filename
+   *   The filename.
+   *
+   * @return string
+   *   The response text.
+   */
+  public function getResponseFromFile(string $filename): string {
+    return (string) file_get_contents($this->moduleExtensionList->getPath('oe_translation_cdt_mock') . '/responses/json/' . $filename);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function applies(RequestInterface $request, array $options): bool {
@@ -108,16 +155,17 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
   }
 
   /**
-   * Gets the response from a file.
-   *
-   * @param string $filename
-   *   The filename.
-   *
-   * @return string
-   *   The response.
+   * {@inheritdoc}
    */
-  public function getResponseFromFile(string $filename): string {
-    return (string) file_get_contents($this->moduleExtensionList->getPath('oe_translation_cdt_mock') . '/responses/json/' . $filename);
+  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
+    if ($this->needsToken()) {
+      $header = $request->getHeader('Authorization');
+      if (($header[0] ?? '') !== 'Bearer TEST_TOKEN') {
+        $this->log('401: The authorization token is incorrect or does not exist.', $request);
+        return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
+      }
+    }
+    return $this->getEndpointResponse($request);
   }
 
 }
