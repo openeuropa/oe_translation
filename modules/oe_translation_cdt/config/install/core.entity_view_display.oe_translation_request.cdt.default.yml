@@ -23,21 +23,6 @@ targetEntityType: oe_translation_request
 bundle: cdt
 mode: default
 content:
-  cdt_id:
-    type: string
-    label: inline
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 8
-    region: content
-  comments:
-    type: basic_string
-    label: inline
-    settings: {  }
-    third_party_settings: {  }
-    weight: 1
-    region: content
   confidentiality:
     type: string
     label: inline
@@ -53,14 +38,6 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     weight: 6
-    region: content
-  correlation_id:
-    type: string
-    label: inline
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    weight: 9
     region: content
   deliver_to:
     type: string
@@ -102,6 +79,9 @@ content:
     weight: 0
     region: content
 hidden:
+  cdt_id: true
+  comments: true
+  correlation_id: true
   request_status: true
   translated_data: true
   translator_provider: true
