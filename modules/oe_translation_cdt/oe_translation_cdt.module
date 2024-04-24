@@ -7,6 +7,8 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 
 /**
@@ -15,5 +17,46 @@ use Drupal\oe_translation_cdt\TranslationRequestCdt;
 function oe_translation_cdt_entity_bundle_info_alter(array &$bundles): void {
   if (isset($bundles['oe_translation_request']['cdt'])) {
     $bundles['oe_translation_request']['cdt']['class'] = TranslationRequestCdt::class;
+  }
+}
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_view_alter().
+ */
+function oe_translation_cdt_oe_translation_request_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->bundle() !== 'cdt') {
+    return;
+  }
+
+  /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity */
+  if (!isset($build['meta'])) {
+    return;
+  }
+
+  $header = &$build['meta']['#header'];
+  $header['cdt_correlation_id'] = t('Correlation ID');
+  $header['cdt_permanent_id'] = t('Permanent ID');
+  $row = &$build['meta']['#rows'][0];
+
+  $row['cdt_correlation_id'] = $entity->getCorrelationId() ?? t('Not available');
+  $row['cdt_permanent_id'] = $entity->getCdtId() ?? t('Not available');
+
+  if ($entity->getComments()) {
+    $build['comment'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Comment to the provider'),
+    ];
+    $build['comment'][] = [
+      '#markup' => $entity->getComments(),
+    ];
+  }
+
+  $logs = _oe_translation_create_request_logs_tables($entity);
+  if ($logs) {
+    $build['logs'] = [
+      '#type' => 'details',
+      '#title' => t('Log messages (@count)', ['@count' => count($logs['#rows'])]),
+      0 => $logs,
+    ];
   }
 }
