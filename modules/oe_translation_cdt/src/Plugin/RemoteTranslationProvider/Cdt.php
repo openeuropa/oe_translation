@@ -331,7 +331,7 @@ class Cdt extends RemoteTranslationProviderBase {
 
     $this->apiWrapper->getClient()->validateTranslationRequest($dto);
     $request->log('The translation request was successfully validated.');
-    $correlation_id = $this->apiWrapper->getClient()->sendTranslationRequest($dto);
+    $correlation_id = $this->apiWrapper->getClient()->sendTranslationRequest($dto) ?: '';
     $request->log('The translation request was successfully sent to CDT with correlation ID: @correlation_id.', [
       '@correlation_id' => $correlation_id,
     ]);
