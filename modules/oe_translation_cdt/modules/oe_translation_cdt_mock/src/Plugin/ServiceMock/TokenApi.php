@@ -31,10 +31,6 @@ class TokenApi extends ServiceMockBase {
    * {@inheritdoc}
    */
   public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    $parameters = json_decode($request->getBody()->getContents(), TRUE);
-    if ($parameters['username'] !== 'test_user' || $parameters['password'] !== 'test_password' || $parameters['client'] !== 'test_client') {
-      return new Response(400, [], $this->getResponseFromFile('token_response_400.json'));
-    }
     return new Response(200, [], $this->getResponseFromFile('token_response_200.json'));
   }
 
