@@ -30,10 +30,8 @@ class ReferenceDataApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    if (!$this->hasToken($request)) {
-      return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
-    }
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
+    $this->log('200: Returning the mocked reference data.', $request);
     return new Response(200, [], $this->getResponseFromFile('reference_data_response_200.json'));
   }
 

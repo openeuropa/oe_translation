@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\TranslationSourceHelper;
 use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use GuzzleHttp\Psr7\Response;
@@ -37,6 +38,8 @@ class FileApi extends ServiceMockBase {
    *   The module extension list.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory.
    * @param \Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface $xmlFormatter
    *   The XML formatter.
    */
@@ -46,9 +49,10 @@ class FileApi extends ServiceMockBase {
     $plugin_definition,
     protected ModuleExtensionList $moduleExtensionList,
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected LoggerChannelFactoryInterface $loggerFactory,
     protected ContentFormatterInterface $xmlFormatter
   ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $moduleExtensionList, $entityTypeManager);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $moduleExtensionList, $entityTypeManager, $loggerFactory);
   }
 
   /**
@@ -61,6 +65,7 @@ class FileApi extends ServiceMockBase {
       $plugin_definition,
       $container->get('extension.list.module'),
       $container->get('entity_type.manager'),
+      $container->get('logger.factory'),
       $container->get('oe_translation_cdt.xml_formatter')
     );
   }
@@ -77,16 +82,13 @@ class FileApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    if (!$this->hasToken($request)) {
-      return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
-    }
-
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
     // The mocked file URL contains the translation request ID and the language.
     $parameters = $this->getRequestParameters($request);
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface|null $entity */
     $entity = $this->entityTypeManager->getStorage('oe_translation_request')->load($parameters['id']);
     if (!$entity) {
+      $this->log('400: Failed to get the mock file. The translation request does not exist.', $request);
       return new Response(400, [], $this->getResponseFromFile('file_response_400.json'));
     }
 
@@ -101,6 +103,7 @@ class FileApi extends ServiceMockBase {
     $entity->setData($data);
     $xml = $this->xmlFormatter->export($entity);
 
+    $this->log('200: Returning the mocked file.', $request);
     return new Response(200, [], $xml);
   }
 

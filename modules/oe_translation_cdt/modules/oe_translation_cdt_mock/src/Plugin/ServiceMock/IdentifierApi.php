@@ -30,12 +30,9 @@ class IdentifierApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    if (!$this->hasToken($request)) {
-      return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
-    }
-
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
     $parameters = $this->getRequestParameters($request);
+    $this->log('200: Returning the mocked permanent identifier.', $request);
     return new Response(200, [], sprintf('%s/%s', date('Y'), $parameters['correlationId']));
   }
 

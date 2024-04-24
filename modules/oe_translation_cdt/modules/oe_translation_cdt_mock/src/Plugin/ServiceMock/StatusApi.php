@@ -32,17 +32,14 @@ class StatusApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  public function getResponse(RequestInterface $request, array $options): ResponseInterface {
-    if (!$this->hasToken($request)) {
-      return new Response(401, [], $this->getResponseFromFile('general_response_401.json'));
-    }
-
+  public function getEndpointResponse(RequestInterface $request): ResponseInterface {
     // The entity uses the same identifier as the mocked CDT request.
     $parameters = $this->getRequestParameters($request);
     $response = json_decode($this->getResponseFromFile('status_response_200.json'), TRUE);
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface|null $entity */
     $entity = $this->entityTypeManager->getStorage('oe_translation_request')->load($parameters['requestnumber']);
     if (!$entity) {
+      $this->log('400: Failed to get the mock status. The translation request does not exist.', $request);
       return new Response(400, [], $this->getResponseFromFile('status_response_400.json'));
     }
 
@@ -79,6 +76,7 @@ class StatusApi extends ServiceMockBase {
       }
     }
 
+    $this->log('200: Getting the mocked status.', $request);
     return new Response(200, [], (string) json_encode($response));
   }
 
