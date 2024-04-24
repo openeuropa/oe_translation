@@ -12,15 +12,14 @@ use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
-use Drupal\oe_translation_cdt\Api\CdtApiAuthenticatorInterface;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Event\CdtRequestEvent;
 use Drupal\oe_translation_cdt\Exception\CdtConnectionException;
-use Drupal\oe_translation_cdt\Mapper\DtoMapperInterface;
+use Drupal\oe_translation_cdt\Mapper\TranslationRequestMapperInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\LanguageCheckboxesAwareTrait;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderBase;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use OpenEuropa\CdtClient\ApiClient;
 use OpenEuropa\CdtClient\Exception\InvalidStatusCodeException;
 use OpenEuropa\CdtClient\Exception\ValidationErrorsException;
 use OpenEuropa\CdtClient\Model\Response\ReferenceContact;
@@ -58,12 +57,10 @@ class Cdt extends RemoteTranslationProviderBase {
    *   The translation source manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
-   * @param \Drupal\oe_translation_cdt\Mapper\DtoMapperInterface $dtoMapper
+   * @param \Drupal\oe_translation_cdt\Mapper\TranslationRequestMapperInterface $dtoMapper
    *   The DTO mapper.
-   * @param \OpenEuropa\CdtClient\ApiClient $apiClient
-   *   The CDT API client.
-   * @param \Drupal\oe_translation_cdt\Api\CdtApiAuthenticatorInterface $apiAuthenticator
-   *   The API authenticator.
+   * @param \Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface $apiWrapper
+   *   The CDT API wrapper.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
@@ -79,9 +76,8 @@ class Cdt extends RemoteTranslationProviderBase {
     EntityTypeManagerInterface $entityTypeManager,
     TranslationSourceManagerInterface $translationSourceManager,
     MessengerInterface $messenger,
-    protected DtoMapperInterface $dtoMapper,
-    protected ApiClient $apiClient,
-    protected CdtApiAuthenticatorInterface $apiAuthenticator,
+    protected TranslationRequestMapperInterface $dtoMapper,
+    protected CdtApiWrapperInterface $apiWrapper,
     protected StateInterface $state,
     protected EventDispatcherInterface $eventDispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
@@ -100,8 +96,7 @@ class Cdt extends RemoteTranslationProviderBase {
       $container->get('oe_translation.translation_source_manager'),
       $container->get('messenger'),
       $container->get('oe_translation_cdt.translation_request_mapper'),
-      $container->get('oe_translation_cdt.api_client'),
-      $container->get('oe_translation_cdt.api_authenticator'),
+      $container->get('oe_translation_cdt.api_wrapper'),
       $container->get('state'),
       $container->get('event_dispatcher')
     );
@@ -159,8 +154,7 @@ class Cdt extends RemoteTranslationProviderBase {
    * {@inheritdoc}
    */
   public function newTranslationRequestForm(array &$form, FormStateInterface $form_state): array {
-    $this->apiAuthenticator->authenticate();
-    $reference_data_object = $this->apiClient->getReferenceData();
+    $reference_data_object = $this->apiWrapper->getClient()->getReferenceData();
     $reference_data = [
       'department' => $reference_data_object->getDepartments(),
       'priority' => $reference_data_object->getPriorities(),
@@ -315,16 +309,13 @@ class Cdt extends RemoteTranslationProviderBase {
    * @throws \Drupal\oe_translation_cdt\Exception\CdtConnectionException
    */
   protected function createAndSendRequestObject(TranslationRequestCdtInterface $request, array $form, FormStateInterface $form_state): void {
-
-    /** @var \OpenEuropa\CdtClient\Model\Request\Translation $dto */
     $dto = $this->dtoMapper->convertEntityToDto($request);
     $event = new CdtRequestEvent($dto, $request);
     $this->eventDispatcher->dispatch($event, CdtRequestEvent::NAME);
 
-    $this->apiAuthenticator->authenticate();
-    $this->apiClient->validateTranslationRequest($dto);
+    $this->apiWrapper->getClient()->validateTranslationRequest($dto);
     $request->log('The translation request was successfully validated.');
-    $correlation_id = $this->apiClient->sendTranslationRequest($dto);
+    $correlation_id = $this->apiWrapper->getClient()->sendTranslationRequest($dto);
     $request->log('The translation request was successfully sent to CDT with correlation ID: @correlation_id.', [
       '@correlation_id' => $correlation_id,
     ]);
