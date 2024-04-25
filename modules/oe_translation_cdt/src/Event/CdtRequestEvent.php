@@ -44,7 +44,7 @@ class CdtRequestEvent extends Event {
   }
 
   /**
-   * Returns the request object.
+   * Gets the request object.
    *
    * @return \OpenEuropa\CdtClient\Model\Request\Translation
    *   The request object.
@@ -54,7 +54,7 @@ class CdtRequestEvent extends Event {
   }
 
   /**
-   * Returns the translation request.
+   * Gets the translation request.
    *
    * @return \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
    *   The translation request.
