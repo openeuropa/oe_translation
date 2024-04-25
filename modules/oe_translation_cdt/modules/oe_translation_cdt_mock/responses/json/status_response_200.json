@@ -142,7 +142,7 @@
   "isQuotationOnly": false,
   "_links": {
     "self": {
-      "href": "https://b2becdt-a.cdt.europa.eu/generic-rest/requests/2024/000123",
+      "href": "https://example.com/requests/2024/000123",
       "method": "GET"
     }
   }
