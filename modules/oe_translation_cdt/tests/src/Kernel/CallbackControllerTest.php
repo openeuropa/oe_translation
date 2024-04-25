@@ -113,10 +113,11 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $translation_request_with_id = TranslationRequest::create([
       'bundle' => 'cdt',
       'cdt_id' => '2024/12345a',
-      'cdt_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     ]);
-    $translation_request_with_id->save();
     assert($translation_request_with_id instanceof TranslationRequestCdtInterface);
+    $translation_request_with_id->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
+    $translation_request_with_id->save();
     $response = $this->controller->requestStatus($request_with_id);
     $this->assertEquals(200, $response->getStatusCode(), 'The response code is not 200.');
     $translation_request_with_id = $this->reloadTranslationRequest($translation_request_with_id);
@@ -137,8 +138,10 @@ class CallbackControllerTest extends TranslationKernelTestBase {
       'cdt_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
       'correlation_id' => 'bbb',
     ]);
-    $translation_request_without_id->save();
     assert($translation_request_without_id instanceof TranslationRequestCdtInterface);
+    $translation_request_without_id->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
+    $translation_request_without_id->save();
+
     $response = $this->controller->requestStatus($request_without_id);
     $this->assertEquals(200, $response->getStatusCode(), 'The response code is not 200.');
     $translation_request_without_id = $this->reloadTranslationRequest($translation_request_without_id);
