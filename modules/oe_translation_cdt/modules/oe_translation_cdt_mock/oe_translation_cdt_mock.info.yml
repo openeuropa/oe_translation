@@ -6,4 +6,4 @@ core_version_requirement: ^10
 
 dependencies:
   - http_request_mock:http_request_mock
-  - oe_translation:oe_translation
+  - oe_translation_cde:oe_translation_cdt
