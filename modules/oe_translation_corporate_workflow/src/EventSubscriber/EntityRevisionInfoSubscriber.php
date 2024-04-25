@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\oe_translation\Event\EntityRevisionEvent;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -33,16 +34,26 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
   protected $moderationInformation;
 
   /**
+   * The translator providers service.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * EntityRevisionInfoSubscriber constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderationInformation
    *   The moderation information.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   The translator providers service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModerationInformationInterface $moderationInformation) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModerationInformationInterface $moderationInformation, TranslatorProvidersInterface $translatorProviders) {
     $this->entityTypeManager = $entityTypeManager;
     $this->moderationInformation = $moderationInformation;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -66,9 +77,9 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
 
     /** @var \Drupal\workflows\WorkflowInterface $workflow */
     $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
-    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow' || !$this->translatorProviders->hasTranslators($entity->getEntityType())) {
       // We only care about the entities moderated using the corporate
-      // workflow.
+      // workflow and which are using our translation system.
       return;
     }
 
@@ -121,7 +132,7 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     $has_forward_published = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
       ->condition($entity->getEntityType()->getKey('revision'), $vid, '>')
-      ->condition($entity->getEntityType()->getKey('status'), TRUE)
+      ->condition($entity->getEntityType()->getKey('published'), TRUE)
       ->accessCheck(FALSE)
       ->allRevisions()
       ->execute();

@@ -28,7 +28,7 @@ class TranslationModerationHandler extends ModerationHandler {
   protected $moderationInfo;
 
   /**
-   * NodeModerationHandler constructor.
+   * TranslationModerationHandler constructor.
    *
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderation_info
    *   The moderation information service.
