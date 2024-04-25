@@ -92,14 +92,18 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('Created the CDT provider Remote Translator Provider.');
 
     // Make sure the configuration is saved properly.
-    $storage = \Drupal::entityTypeManager()->getStorage('remote_translation_provider');
-    $storage->resetCache();
-    $translator = $storage->load('cdt_provider');
+    $provider_storage = $this->container
+      ->get('entity_type.manager')
+      ->getStorage('remote_translation_provider');
+    $provider_storage->resetCache();
+    $translator = $provider_storage->load('cdt_provider');
     assert($translator instanceof RemoteTranslatorProviderInterface);
+
     $this->assertEquals('CDT provider', $translator->label());
     $this->assertEquals('cdt', $translator->getProviderPlugin());
     $default_language_mapping = [];
-    foreach (\Drupal::languageManager()->getLanguages() as $language) {
+    $languages = $this->container->get('language_manager')->getLanguages();
+    foreach ($languages as $language) {
       $default_language_mapping[$language->getId()] = strtoupper($language->getId());
     }
     $this->assertEquals([
@@ -114,7 +118,7 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->getSession()->getPage()->fillField('German', 'TEST');
     $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains('Saved the CDT provider edited Remote Translator Provider.');
-    $translator = \Drupal::entityTypeManager()->getStorage('remote_translation_provider')->load('cdt_provider');
+    $translator = $provider_storage->load('cdt_provider');
     assert($translator instanceof RemoteTranslatorProviderInterface);
     $this->assertEquals([
       'language_mapping' => ['de' => 'TEST'] + $default_language_mapping,
@@ -165,9 +169,9 @@ class TranslationProviderTest extends TranslationTestBase {
 
     $this->assertSession()->pageTextContains('The translation request has been sent to CDT.');
 
-    // Assert that we got back a correct response and our request was correctly
-    // updated.
-    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    // Assert that we got back a correct response and our request was updated.
+    $provider_manager = $this->container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager');
+    $requests = $provider_manager->getExistingTranslationRequests($node, TRUE);
     $this->assertCount(1, $requests);
     $request = reset($requests);
     $this->assertInstanceOf(TranslationRequestCdtInterface::class, $request);
