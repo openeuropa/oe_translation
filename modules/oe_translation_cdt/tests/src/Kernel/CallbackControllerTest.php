@@ -61,11 +61,12 @@ class CallbackControllerTest extends TranslationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('oe_translation_request');
+    $this->installEntitySchema('oe_translation_request_log');
     $this->installConfig([
       'oe_translation_remote',
       'oe_translation_cdt',
     ]);
-    $this->controller = new CallbackController();
+    $this->controller = new CallbackController($this->container->get('oe_translation_cdt.translation_request_updater'));
     new Settings([
       'cdt.api_key' => '12345',
     ]);
@@ -135,7 +136,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_without_id->headers->set('apikey', '12345');
     $translation_request_without_id = TranslationRequest::create([
       'bundle' => 'cdt',
-      'cdt_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
       'correlation_id' => 'bbb',
     ]);
     assert($translation_request_without_id instanceof TranslationRequestCdtInterface);
