@@ -13,3 +13,27 @@ oe_translation_cdt.job_status_callback:
     _controller: '\Drupal\oe_translation_cdt\Controller\CallbackController::jobStatus'
   requirements:
     _permission: 'access content'
+
+oe_translation_cdt.get_permanent_id:
+  path: '/translation-request/cdt/get-permanent-id/{translation_request}'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\oe_translation_cdt\Controller\OperationController::getPermanentId'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request
+
+oe_translation_cdt.refresh_status:
+  path: '/translation-request/cdt/refresh-status/{translation_request}'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\oe_translation_cdt\Controller\OperationController::refreshStatus'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request
