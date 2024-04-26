@@ -24,3 +24,6 @@ services:
   oe_translation_cdt.translation_request_mapper:
     class: Drupal\oe_translation_cdt\Mapper\TranslationRequestMapper
     arguments: ['@oe_translation_cdt.xml_formatter']
+
+  oe_translation_cdt.translation_request_updater:
+    class: Drupal\oe_translation_cdt\TranslationRequestUpdater
