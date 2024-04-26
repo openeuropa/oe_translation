@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 
 /**
@@ -36,10 +37,43 @@ function oe_translation_cdt_oe_translation_request_view_alter(array &$build, Ent
   $header = &$build['meta']['#header'];
   $header['cdt_correlation_id'] = t('Correlation ID');
   $header['cdt_permanent_id'] = t('Permanent ID');
+  $header['cdt_operations'] = t('Operations');
   $row = &$build['meta']['#rows'][0];
 
   $row['cdt_correlation_id'] = $entity->getCorrelationId() ?? t('Not available');
   $row['cdt_permanent_id'] = $entity->getCdtId() ?? t('Not available');
+
+  $operations = [];
+  if (!$entity->getCdtId()) {
+    $operations['permanent_id'] = [
+      'title' => t('Get Permanent ID'),
+      'url' => Url::fromRoute('oe_translation_cdt.get_permanent_id', [
+        'translation_request' => $entity->id(),
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+  else {
+    $operations['status'] = [
+      'title' => t('Refresh status'),
+      'url' => Url::fromRoute('oe_translation_cdt.refresh_status', [
+        'translation_request' => $entity->id(),
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+  $row['cdt_operations'] = [
+    'data' => [
+      '#type' => 'operations',
+      '#links' => $operations,
+    ],
+  ];
 
   if ($entity->getComments()) {
     $build['comment'] = [
