@@ -6,7 +6,6 @@ namespace Drupal\oe_translation_cdt;
 
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_remote\RemoteTranslationRequestEntityTrait;
-use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
  * A CDT bundle class for oe_translation_request entities.
@@ -27,30 +26,6 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   public function setCdtId(string $value): TranslationRequestCdtInterface {
     $this->set('cdt_id', $value);
     return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRequestStatusFromCdt(string $cdt_status): TranslationRequestCdtInterface {
-    $target_status = match($cdt_status) {
-      'COMP' => TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
-      'CANC' => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
-      default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
-    };
-    $this->setRequestStatus($target_status);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updateTargetLanguageStatusFromCdt(string $langcode, string $cdt_status): void {
-    $target_status = match($cdt_status) {
-      'CMP' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
-      default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
-    };
-    $this->updateTargetLanguageStatus($langcode, $target_status);
   }
 
   /**
