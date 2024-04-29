@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_cdt;
 
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
+use OpenEuropa\CdtClient\Model\Response\ReferenceData;
 use OpenEuropa\CdtClient\Model\Response\Translation;
 
 /**
@@ -46,11 +47,13 @@ interface TranslationRequestUpdaterInterface {
    *   The translation request to update.
    * @param \OpenEuropa\CdtClient\Model\Response\Translation $translation_response
    *   The translation DTO.
+   * @param \OpenEuropa\CdtClient\Model\Response\ReferenceData $reference_data
+   *   The reference data DTO.
    *
    * @return bool
    *   TRUE if any changes were made, FALSE otherwise.
    */
-  public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response): bool;
+  public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response, ReferenceData $reference_data): bool;
 
   /**
    * Updates the permanent ID of the request.
