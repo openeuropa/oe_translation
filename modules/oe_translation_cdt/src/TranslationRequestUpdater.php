@@ -8,6 +8,7 @@ use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
+use OpenEuropa\CdtClient\Model\Response\ReferenceData;
 use OpenEuropa\CdtClient\Model\Response\Translation;
 
 /**
@@ -42,28 +43,56 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
   /**
    * {@inheritdoc}
    */
-  public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response): bool {
+  public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response, ReferenceData $reference_data): bool {
     $translated_languages = [];
     foreach ($translation_response->getTargetFiles() as $target_file) {
       $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode((string) $target_file->getTargetLanguage(), $translation_request);
       $translated_languages[] = $drupal_langcode;
     }
 
-    $comments = array_reduce($translation_response->getComments(), function ($carry, $item) {
+    $comments = trim(array_reduce($translation_response->getComments(), function ($carry, $item) {
       return $carry . $item->getComment() . "\n";
-    }, '');
-
-    // @todo use departent label
-    // @todo change contact
-    // @todo update mock service
-    return $this->updateFieldset($translation_request, [
+    }, ''), "\n");
+    $changes = [
       'request_status' => $this->convertStatusFromCdt($translation_response->getStatus()),
       'translated_languages' => $translated_languages,
-      'department' => $translation_response->getDepartment(),
       'priority' => $translation_response->getJobSummary()[0]->getPriorityCode(),
       'comments' => $comments,
       'phone_number' => $translation_response->getPhoneNumber(),
-    ], "Manually updated the status.");
+    ];
+
+    // Get the department code.
+    $departments = $reference_data->getDepartments();
+    $department_label = $translation_response->getDepartment();
+    foreach ($departments as $department) {
+      if ($department->getDescription() === $department_label) {
+        $changes['department'] = $department->getCode();
+        break;
+      }
+    }
+
+    // Build an array with contact mappings.
+    $contacts = $reference_data->getContacts();
+    $contacts_mapping = [];
+    foreach ($contacts as $contact) {
+      $contacts_mapping[$contact->getFirstName() . ' ' . $contact->getLastName()] = $contact->getUserName();
+    }
+
+    // Get the contact labels.
+    foreach ($translation_response->getContacts() as $contact) {
+      if (isset($contacts_mapping[$contact])) {
+        $changes['contact_usernames'][] = $contacts_mapping[$contact];
+      }
+    }
+
+    // Get the "deliver to" labels.
+    foreach ($translation_response->getDeliverToContacts() as $contact) {
+      if (isset($contacts_mapping[$contact])) {
+        $changes['deliver_to'][] = $contacts_mapping[$contact];
+      }
+    }
+
+    return $this->updateFieldset($translation_request, $changes, "Manually updated the status.");
   }
 
   /**
@@ -148,8 +177,8 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
         'message' => "Updated <strong >@{$field}_name</strong> field $from_text to <code>@{$field}_new_value</code>.",
         'variables' => [
           "@{$field}_name" => $field,
-          "@{$field}_old_value" => $old_value,
-          "@{$field}_new_value" => $value,
+          "@{$field}_old_value" => is_array($old_value) ? implode(', ', $old_value) : $old_value,
+          "@{$field}_new_value" => is_array($value) ? implode(', ', $value) : $value,
         ],
       ];
     }
