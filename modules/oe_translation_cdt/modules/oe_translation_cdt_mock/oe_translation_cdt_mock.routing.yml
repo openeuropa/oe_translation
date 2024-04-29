@@ -1,0 +1,13 @@
+oe_translation_cdt_mock.translate:
+  path: '/translation-request/cdt/mock/translate/{translation_request}/{langcode}'
+  defaults:
+    _title: 'Translate'
+    _controller: '\Drupal\oe_translation_cdt_mock\Controller\MockController::translate'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request
+      langcode:
+        type: string
