@@ -50,6 +50,36 @@ class StatusApi extends ServiceMockBase {
       TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED => 'INPR',
       default => 'UNDE',
     };
+    $response['priority'] = $entity->getPriority();
+    $response['comments'] = [];
+    if ($entity->getComments()) {
+      $response['comments'][] = [
+        'comment' => (string) $entity->getComments(),
+        'isHTML' => FALSE,
+        'from' => 'Client',
+      ];
+    }
+    $response['phone_number'] = $entity->getPhoneNumber();
+    $response['department'] = match($entity->getDepartment()) {
+      '123' => 'Department 1',
+      default => 'Department 2',
+    };
+
+    // Update the contact lists.
+    $response['contacts'] = [];
+    foreach ($entity->getContactUsernames() as $contact) {
+      $response['contacts'][] = match($contact) {
+        'TESTUSER1' => 'John Smith',
+        default => 'Jane Doe',
+      };
+    }
+    $response['deliverToContacts'] = [];
+    foreach ($entity->getContactUsernames() as $contact) {
+      $response['deliverToContacts'][] = match($contact) {
+        'TESTUSER1' => 'John Smith',
+        default => 'Jane Doe',
+      };
+    }
 
     // Add source language and translated files.
     $cdt_source_language = LanguageCodeMapper::getCdtLanguageCode($entity->getSourceLanguageCode(), $entity);
