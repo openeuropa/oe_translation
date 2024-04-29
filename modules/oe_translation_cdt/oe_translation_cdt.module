@@ -11,6 +11,7 @@ use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -93,4 +94,38 @@ function oe_translation_cdt_oe_translation_request_view_alter(array &$build, Ent
       0 => $logs,
     ];
   }
+}
+
+/**
+ * Implement template_preprocess_table__remote_language_list().
+ */
+function oe_translation_cdt_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestCdt::load($id);
+  if (!$request || $request->bundle() !== 'cdt') {
+    return;
+  }
+
+  foreach ($variables['rows'] as &$row) {
+    // Add the accepted deadline per individual language.
+    $langcode = (string) $row['attributes']['hreflang'];
+    $language = $request->getTargetLanguage($langcode);
+
+    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW || $request->getTranslatedData()) {
+      continue;
+    }
+
+    $row['cells']['operations']['content']['#links'][] = [
+      'title' => 'Fetch the translation',
+      'url' => Url::fromRoute('oe_translation_cdt.fetch_translation', [
+        'translation_request' => $id,
+        'langcode' => $langcode,
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+
 }
