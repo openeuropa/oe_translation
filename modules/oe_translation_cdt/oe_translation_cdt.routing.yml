@@ -37,3 +37,17 @@ oe_translation_cdt.refresh_status:
     parameters:
       translation_request:
         type: entity:oe_translation_request
+
+oe_translation_cdt.fetch_translation:
+  path: '/translation-request/cdt/fetch-translation/{translation_request}/{langcode}'
+  methods: [GET]
+  defaults:
+    _controller: '\Drupal\oe_translation_cdt\Controller\OperationController::fetchTranslation'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request
+      langcode:
+        type: string
