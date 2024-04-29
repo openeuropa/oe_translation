@@ -12,12 +12,12 @@
   "deliveryDate": "2024-03-30T14:41:34.7045082",
   "title": "Test translation",
   "service": "Translation",
-  "department": "External Translation Unit - Contracts Execution Department",
+  "department": "Department 1",
   "contacts": [
-    "DGTRAD - Ext. Transl. Unit  Contracts Execution Dept."
+    "John Smith"
   ],
   "deliverToContacts": [
-    "DGTRAD - Ext. Transl. Unit  Contracts Execution Dept."
+    "Jane Doe"
   ],
   "sourceDocuments": [
     {
