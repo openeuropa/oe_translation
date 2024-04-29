@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for OpenEuropa Translation CDT mock module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Url;
+use Drupal\oe_translation_cdt\TranslationRequestCdt;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+
+/**
+ * Implement template_preprocess_table__remote_language_list().
+ */
+function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestCdt::load($id);
+  if (!$request || $request->bundle() !== 'cdt') {
+    return;
+  }
+
+  foreach ($variables['rows'] as &$row) {
+    $langcode = (string) $row['attributes']['hreflang'];
+    $language = $request->getTargetLanguage($langcode);
+    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED) {
+      continue;
+    }
+
+    $row['cells']['operations']['content']['#links'][] = [
+      'title' => 'Translate (mock)',
+      'url' => Url::fromRoute('oe_translation_cdt_mock.translate', [
+        'translation_request' => $id,
+        'langcode' => $langcode,
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+
+  }
+}
