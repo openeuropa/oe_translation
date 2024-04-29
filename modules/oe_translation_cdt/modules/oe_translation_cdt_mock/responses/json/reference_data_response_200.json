@@ -2,11 +2,11 @@
   "departments": [
     {
       "code": "123",
-      "description": "External Translation Unit - Contracts Execution Department"
+      "description": "Department 1"
     },
     {
       "code": "456",
-      "description": "Service Finance"
+      "description": "Department 2"
     }
   ],
   "priorities": [
@@ -309,13 +309,23 @@
   ],
   "contacts": [
     {
-      "email": "test@example.com",
-      "firstName": "DGTRAD - Ext. Transl. Unit ",
-      "lastName": "Contracts Execution Dept.",
-      "userName": "TESTUSER",
+      "email": "test1@example.com",
+      "firstName": "John",
+      "lastName": "Smith",
+      "userName": "TESTUSER1",
       "countryCode": null,
       "phoneCountryCode": null,
-      "phoneNumber": "+351234123123",
+      "phoneNumber": "+351231231231",
+      "countryName": ""
+    },
+    {
+      "email": "test2@example.com",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "userName": "TESTUSER2",
+      "countryCode": null,
+      "phoneCountryCode": null,
+      "phoneNumber": "+354564564564",
       "countryName": ""
     }
   ]
