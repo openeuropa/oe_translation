@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_cdt\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
+use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -46,7 +47,8 @@ final class OperationController extends ControllerBase {
    */
   public function refreshStatus(TranslationRequestCdtInterface $translation_request, Request $request): RedirectResponse {
     $translation_response = $this->apiWrapper->getClient()->getRequestStatus((string) $translation_request->getCdtId());
-    if ($this->updater->updateFromTranslationResponse($translation_request, $translation_response)) {
+    $reference_data = $this->apiWrapper->getClient()->getReferenceData();
+    if ($this->updater->updateFromTranslationResponse($translation_request, $translation_response, $reference_data)) {
       $this->messenger()->addStatus($this->t('The request status has been updated.'));
     }
     else {
@@ -57,12 +59,30 @@ final class OperationController extends ControllerBase {
     if (!$destination) {
       throw new NotFoundHttpException();
     }
-
     return new RedirectResponse((string) $destination);
   }
 
   /**
-   * Get permanent ID.
+   * Fetches the translation.
+   */
+  public function fetchTranslation(TranslationRequestCdtInterface $translation_request, string $langcode, Request $request): RedirectResponse {
+    $translation_response = $this->apiWrapper->getClient()->getRequestStatus((string) $translation_request->getCdtId());
+    foreach ($translation_response->getJobSummary() as $job) {
+      if (LanguageCodeMapper::getDrupalLanguageCode($job->getTargetLanguage(), $translation_request) === $langcode) {
+        // @todo Fetch the translation when File API is ready.
+        // @todo Call setTranslatedData().
+      }
+    }
+
+    $destination = $request->query->get('destination');
+    if (!$destination) {
+      throw new NotFoundHttpException();
+    }
+    return new RedirectResponse((string) $destination);
+  }
+
+  /**
+   * Gets the permanent ID.
    */
   public function getPermanentId(TranslationRequestCdtInterface $translation_request, Request $request): RedirectResponse {
     $permanent_id = $this->apiWrapper->getClient()->getPermanentIdentifier($translation_request->getCorrelationId());
