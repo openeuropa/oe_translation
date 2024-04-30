@@ -7,9 +7,59 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
-use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_view_alter().
+ */
+function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->bundle() !== 'cdt') {
+    return;
+  }
+
+  /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity */
+  if (!isset($build['meta'])) {
+    return;
+  }
+  $row = &$build['meta']['#rows'][0];
+
+  $operations = [];
+  $statuses = [
+    'COMP' => 'Completed',
+    'INPR' => 'In progress',
+    'CANC' => 'Cancelled',
+    'PEND' => 'Pending approval',
+    'UNDE' => 'Under quotation',
+  ];
+  foreach ($statuses as $status => $label) {
+    $operations[$status] = [
+      'title' => "$label (mock)",
+      'url' => Url::fromRoute('oe_translation_cdt_mock.request_status', [
+        'translation_request' => $entity->id(),
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+          'status' => $status,
+        ],
+      ]),
+    ];
+  }
+
+  if (!isset($row['cdt_operations'])) {
+    $row['cdt_operations'] = [
+      'data' => [
+        '#type' => 'operations',
+        '#links' => $operations,
+      ],
+    ];
+  }
+  else {
+    $row['cdt_operations']['data']['#links'] += $operations;
+  }
+}
 
 /**
  * Implement template_preprocess_table__remote_language_list().
@@ -23,22 +73,28 @@ function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$
 
   foreach ($variables['rows'] as &$row) {
     $langcode = (string) $row['attributes']['hreflang'];
-    $language = $request->getTargetLanguage($langcode);
-    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED) {
-      continue;
-    }
 
-    $row['cells']['operations']['content']['#links'][] = [
-      'title' => 'Translate (mock)',
-      'url' => Url::fromRoute('oe_translation_cdt_mock.translate', [
-        'translation_request' => $id,
-        'langcode' => $langcode,
-      ], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')->toString(),
-        ],
-      ]),
+    $statuses = [
+      'CMP' => 'Completed',
+      'FLR' => 'Failed',
+      'INP' => 'In progress',
+      'CNC' => 'Cancelled',
+      'TCN' => 'To be cancelled',
     ];
+    foreach ($statuses as $status => $label) {
+      $row['cells']['operations']['content']['#links'][] = [
+        'title' => "$label (mock)",
+        'url' => Url::fromRoute('oe_translation_cdt_mock.job_status', [
+          'translation_request' => $id,
+          'langcode' => $langcode,
+        ], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')->toString(),
+            'status' => $status,
+          ],
+        ]),
+      ];
+    }
 
   }
 }
