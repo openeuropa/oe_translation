@@ -9,6 +9,7 @@ use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
+use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,7 +41,7 @@ final class MockController extends ControllerBase {
   }
 
   /**
-   * Translates a specific language.
+   * Mocks updating the translation job status.
    *
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request.
@@ -52,12 +53,36 @@ final class MockController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function translate(TranslationRequestCdtInterface $translation_request, string $langcode, Request $request): Response {
+  public function changeJobStatus(TranslationRequestCdtInterface $translation_request, string $langcode, Request $request): Response {
     $job_status = new JobStatus();
     $job_status->setTargetLanguageCode(LanguageCodeMapper::getCdtLanguageCode($langcode, $translation_request));
-    $job_status->setStatus('CMP');
+    $job_status->setStatus((string) $request->query->get('status'));
     $job_status->setRequestIdentifier((string) $translation_request->getCdtId());
     $this->updater->updateFromJobStatus($translation_request, $job_status);
+
+    $destination = $request->query->get('destination');
+    if (!$destination) {
+      throw new NotFoundHttpException();
+    }
+    return new RedirectResponse((string) $destination);
+  }
+
+  /**
+   * Mocks updating the translation request status.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
+   *   The translation request.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response.
+   */
+  public function changeRequestStatus(TranslationRequestCdtInterface $translation_request, Request $request): Response {
+    $request_status = new RequestStatus();
+    $request_status->setRequestIdentifier((string) $translation_request->getCdtId());
+    $request_status->setStatus((string) $request->query->get('status'));
+    $this->updater->updateFromRequestStatus($translation_request, $request_status);
 
     $destination = $request->query->get('destination');
     if (!$destination) {
