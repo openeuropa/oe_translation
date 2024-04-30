@@ -1,8 +1,8 @@
-oe_translation_cdt_mock.translate:
-  path: '/translation-request/cdt/mock/translate/{translation_request}/{langcode}'
+oe_translation_cdt_mock.job_status:
+  path: '/translation-request/cdt/mock/job_status/{translation_request}/{langcode}'
   defaults:
-    _title: 'Translate'
-    _controller: '\Drupal\oe_translation_cdt_mock\Controller\MockController::translate'
+    _title: 'Change job status'
+    _controller: '\Drupal\oe_translation_cdt_mock\Controller\MockController::changeJobStatus'
   requirements:
     _permission: 'access content'
   options:
@@ -11,3 +11,15 @@ oe_translation_cdt_mock.translate:
         type: entity:oe_translation_request
       langcode:
         type: string
+
+oe_translation_cdt_mock.request_status:
+  path: '/translation-request/cdt/mock/request_status/{translation_request}'
+  defaults:
+    _title: 'Change request status'
+    _controller: '\Drupal\oe_translation_cdt_mock\Controller\MockController::changeRequestStatus'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request
