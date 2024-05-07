@@ -1,0 +1,149 @@
+{
+  "requestIdentifier": "2024/000123",
+  "status": "COMP",
+  "sourceLanguages": [
+    "EN"
+  ],
+  "targetLanguages": [
+    "DE",
+    "ET"
+  ],
+  "creationDate": "2024-03-31T07:45:46.3595527",
+  "deliveryDate": "2024-03-30T14:41:34.7045082",
+  "title": "Test translation",
+  "service": "Translation",
+  "department": "External Translation Unit - Contracts Execution Department",
+  "contacts": [
+    "DGTRAD - Ext. Transl. Unit  Contracts Execution Dept."
+  ],
+  "deliverToContacts": [
+    "DGTRAD - Ext. Transl. Unit  Contracts Execution Dept."
+  ],
+  "sourceDocuments": [
+    {
+      "fileName": "translation_job_5_request.xml",
+      "isPrivate": false,
+      "_links": {
+        "files": {
+          "href": "https://example.com/generic-rest/v2/files/en-123",
+          "method": "GET"
+        }
+      }
+    }
+  ],
+  "referenceFiles": [],
+  "bilingualFiles": [],
+  "targetFiles": [
+    {
+      "sourceLanguage": "EN",
+      "targetLanguage": "DE",
+      "sourceDocument": "translation_job_5_request.xml",
+      "fileName": "translation_job_5_request_DE.xml",
+      "isPrivate": false,
+      "_links": {
+        "files": {
+          "href": "https://example.com/generic-rest/v2/files/de-123",
+          "method": "GET"
+        }
+      }
+    },
+    {
+      "sourceLanguage": "EN",
+      "targetLanguage": "ET",
+      "sourceDocument": "translation_job_5_request.xml",
+      "fileName": "translation_job_5_request_ET.xml",
+      "isPrivate": false,
+      "_links": {
+        "files": {
+          "href": "https://example.com/generic-rest/v2/files/et-123",
+          "method": "GET"
+        }
+      }
+    }
+  ],
+  "dates": [
+    {
+      "label": "Deadline",
+      "date": "2024-04-01T16:00:00+02:00",
+      "ecdtDateType": "Deadline",
+      "tooltip": null
+    },
+    {
+      "label": "Latest Deadline",
+      "date": "2024-04-01T16:00:00+02:00",
+      "ecdtDateType": "LatestDeadline",
+      "tooltip": null
+    },
+    {
+      "label": "Receipt date",
+      "date": "2024-04-31T09:45:46.197+02:00",
+      "ecdtDateType": "ReceiptDate",
+      "tooltip": "The receipt date depends on the date and time of request submission. Therefore, it is only displayed if the request is pre-approved."
+    }
+  ],
+  "comments": [
+    {
+      "comment": "This is a test.",
+      "isHTML": false,
+      "from": "Client"
+    }
+  ],
+  "pricing": {
+    "totalPrice": 756,
+    "jobSummary": [
+      {
+        "totalPrice": 378,
+        "surchargeConfidentiality": 0,
+        "surchargeComplexity": 0,
+        "surchargeNonEuLanguage": 0,
+        "surchargeWebUpload": 0,
+        "basePrice": 378,
+        "volume": 4991,
+        "sourceLanguage": "EN",
+        "targetLanguage": "DE",
+        "fileName": "translation_job_5_request.xml",
+        "priorityCode": "TU",
+        "serviceVolume": {
+          "volume": 3.5,
+          "unit": "page(s)",
+          "stringVolume": "3.5 page(s)"
+        },
+        "status": "CMP",
+        "isEstimatedPrice": false
+      },
+      {
+        "totalPrice": 378,
+        "surchargeConfidentiality": 0,
+        "surchargeComplexity": 0,
+        "surchargeNonEuLanguage": 0,
+        "surchargeWebUpload": 0,
+        "basePrice": 378,
+        "volume": 4991,
+        "sourceLanguage": "EN",
+        "targetLanguage": "ET",
+        "fileName": "translation_job_5_request.xml",
+        "priorityCode": "TU",
+        "serviceVolume": {
+          "volume": 3.5,
+          "unit": "page(s)",
+          "stringVolume": "3.5 page(s)"
+        },
+        "status": "CMP",
+        "isEstimatedPrice": false
+      }
+    ]
+  },
+  "isInProgress": false,
+  "clientReference": "5",
+  "deliveryModeCode": "No",
+  "departmentCode": "250771",
+  "phoneNumber": "0",
+  "purposeCode": "WS",
+  "isQuotationOnly": false,
+  "_links": {
+    "self": {
+      "href": "https://example.com/requests/2024/000123",
+      "method": "GET"
+    }
+  }
+}
