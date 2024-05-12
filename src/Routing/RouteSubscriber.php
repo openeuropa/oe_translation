@@ -48,21 +48,21 @@ class RouteSubscriber extends RouteSubscriberBase {
     $entity_types = $this->translationProviders->getDefinitions();
     foreach ($entity_types as $entity_type_id => $entity_type) {
       // Change the access requirements on the Drupal core routes.
-      if ($entity_type->hasLinkTemplate('drupal:content-translation-add')) {
+      if ($entity_type->hasLinkTemplate('drupal:content-translation-add') && $this->translationProviders->hasLocal($entity_type)) {
         $route_name = "entity.$entity_type_id.content_translation_add";
         $route = $collection->get($route_name);
         $route->setRequirement('_access_oe_translation', 'create');
         $collection->add($route_name, $route);
       }
 
-      if ($entity_type->hasLinkTemplate('drupal:content-translation-edit')) {
+      if ($entity_type->hasLinkTemplate('drupal:content-translation-edit') && $this->translationProviders->hasLocal($entity_type)) {
         $route_name = "entity.$entity_type_id.content_translation_edit";
         $route = $collection->get($route_name);
         $route->setRequirement('_access_oe_translation', 'update');
         $collection->add($route_name, $route);
       }
 
-      if ($entity_type->hasLinkTemplate('drupal:content-translation-delete')) {
+      if ($entity_type->hasLinkTemplate('drupal:content-translation-delete') && $this->translationProviders->hasLocal($entity_type)) {
         $route_name = "entity.$entity_type_id.content_translation_delete";
         $route = $collection->get($route_name);
         $route->setRequirement('_access_oe_translation', 'delete');

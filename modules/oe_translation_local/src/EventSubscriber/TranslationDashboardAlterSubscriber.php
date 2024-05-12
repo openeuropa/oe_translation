@@ -11,6 +11,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -36,16 +37,26 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected $languageManager;
 
   /**
+   * Translation providers.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * Creates a new TranslationDashboardAlterSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   Translation providers.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, TranslatorProvidersInterface $translatorProviders) {
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -62,6 +73,14 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function alterDashboard(ContentTranslationDashboardAlterEvent $event) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
+    $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
+    if (!$this->translatorProviders->hasLocal($current_entity->getEntityType())) {
+      // If the current entity doesn't have the local translations enabled,
+      // we don't need to do anything.
+      return;
+    }
+
     $build = $event->getBuild();
     $cache = CacheableMetadata::createFromRenderArray($build);
 
@@ -74,8 +93,6 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       '#template' => "<h3>{{ 'Started local translations' }}</h3>",
     ];
 
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
-    $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
     /** @var \Drupal\oe_translation\TranslationRequestStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('oe_translation_request');
 

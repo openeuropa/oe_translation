@@ -1,0 +1,13 @@
+name: OE Translation Menu Tink Test
+description: Test module for OE Translation
+core_version_requirement: ^10
+type: module
+package: Testing
+
+dependencies:
+  - oe_translation:oe_translation
+  - oe_translation:oe_translation_remote
+  - oe_translation:oe_translation_remote_test
+  - oe_multilingual_demo:oe_multilingual_demo
+  - drupal:link
+  - drupal:menu_link_content
