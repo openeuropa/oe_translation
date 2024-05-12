@@ -370,6 +370,8 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
 function oe_translation_corporate_workflow_entity_base_field_info(EntityTypeInterface $entity_type) {
   if ($entity_type->id() == 'node') {
     $fields = [];
+    // By default, this is added to nodes but it needs to be added manually for
+    // any other entity types that want to use the corporate workflow.
     $fields['translation_request'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('The originating translation request'))
       ->setDescription(t('The translation request where the translation came from'))
