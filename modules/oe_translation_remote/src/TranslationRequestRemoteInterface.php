@@ -118,6 +118,17 @@ interface TranslationRequestRemoteInterface extends TranslationRequestInterface 
   public function setTranslatedData(string $langcode, array $data): TranslationRequestRemoteInterface;
 
   /**
+   * Removes the data with the translated values for a given language.
+   *
+   * @param string $langcode
+   *   The langcode.
+   *
+   * @return TranslationRequestRemoteInterface
+   *   The current entity.
+   */
+  public function removeTranslatedData(string $langcode): TranslationRequestRemoteInterface;
+
+  /**
    * Returns all the translated data, keyed by langcode.
    *
    * @return array
