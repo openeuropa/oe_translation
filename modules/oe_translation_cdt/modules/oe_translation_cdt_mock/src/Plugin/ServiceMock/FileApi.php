@@ -93,6 +93,7 @@ class FileApi extends ServiceMockBase {
     }
 
     $data = TranslationSourceHelper::filterTranslatable($entity->getData());
+    $translated_entity = $entity->createDuplicate();
     foreach ($data as &$field) {
       $field['#text'] = sprintf(
         '%s translation of %s',
@@ -100,8 +101,8 @@ class FileApi extends ServiceMockBase {
         $field['#text']
       );
     }
-    $entity->setData($data);
-    $xml = $this->xmlFormatter->export($entity);
+    $translated_entity->setData($data);
+    $xml = $this->xmlFormatter->export($translated_entity);
 
     $this->log('200: Returning the mocked file.', $request);
     return new Response(200, [], $xml);
