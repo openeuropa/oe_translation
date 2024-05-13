@@ -67,7 +67,7 @@ function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build
 function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$variables) {
   $id = (string) $variables['attributes']['data-translation-request'];
   $request = TranslationRequestCdt::load($id);
-  if (!$request || $request->bundle() !== 'cdt') {
+  if (!$request || $request->bundle() !== 'cdt' || !$request->getCdtId()) {
     return;
   }
 
