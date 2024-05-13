@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_remote\RemoteTranslationRequestEntityTrait;
 
@@ -11,7 +13,11 @@ use Drupal\oe_translation_remote\RemoteTranslationRequestEntityTrait;
  * A CDT bundle class for oe_translation_request entities.
  */
 final class TranslationRequestCdt extends TranslationRequest implements TranslationRequestCdtInterface {
-  use RemoteTranslationRequestEntityTrait;
+
+  use StringTranslationTrait;
+  use RemoteTranslationRequestEntityTrait {
+    getLanguageStatusDescription as traitGetLanguageStatusDescription;
+  }
 
   /**
    * {@inheritdoc}
@@ -154,6 +160,21 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   public function setPriority(string $value): TranslationRequestCdtInterface {
     $this->set('priority', $value);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup {
+    switch ($status) {
+      case TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED:
+        return $this->t('The translation for this language has been cancelled by CDT. It cannot be reopened.');
+
+      case TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED:
+        return $this->t('The translation for this language has failed in CDT. It cannot be reopened.');
+    }
+
+    return $this->traitGetLanguageStatusDescription($status, $langcode);
   }
 
 }
