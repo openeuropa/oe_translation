@@ -11,6 +11,7 @@ use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
+use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
@@ -111,7 +112,7 @@ function oe_translation_cdt_preprocess_table__remote_language_list(array &$varia
     $langcode = (string) $row['attributes']['hreflang'];
     $language = $request->getTargetLanguage($langcode);
 
-    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW || $request->getTranslatedData()) {
+    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW) {
       continue;
     }
 
@@ -128,4 +129,69 @@ function oe_translation_cdt_preprocess_table__remote_language_list(array &$varia
     ];
   }
 
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function oe_translation_cdt_oe_translation_request_presave(TranslationRequestCdtInterface $request) {
+  if ($request->bundle() !== 'cdt') {
+    return;
+  }
+
+  $languages = $request->getTargetLanguages();
+
+  // Mark the request as Translated if all languages are either Cancelled,
+  // Failed or in Review/Acceptance.
+  $request_translated = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+      TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
+    ])) {
+      // It means at least one language is still not Cancelled or in Review.
+      $request_translated = FALSE;
+    }
+  }
+
+  if (!$request_translated && $request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED) {
+    // If the request has been marked as finished BUT one of the languages
+    // becomes in Review again, we need to mark the request back to Translated.
+    // This can happen if a translation is dispatched again from CDT once
+    // the request has already been finished. And we do this to give the user
+    // a chance to see it and review it.
+    foreach ($languages as $language_with_status) {
+      if ($language_with_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW) {
+        $request_translated = TRUE;
+        break;
+      }
+    }
+  }
+
+  if ($request_translated) {
+    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED);
+  }
+
+  // Mark the request as Finished if all languages are either Cancelled,
+  // Failed or Synchronised. This is because Cancelled and Failed languages
+  // cannot be continued anymore so they should allow the request to be
+  // Finished. We do this in a presave because the CDT notifications
+  // can come in any order so we have to check every time the request is saved.
+  $request_finished = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+      TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED,
+    ])) {
+      // It means at least one language is still not Cancelled, Failed or
+      // Synchronised.
+      $request_finished = FALSE;
+    }
+  }
+
+  if ($request_finished) {
+    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+  }
 }
