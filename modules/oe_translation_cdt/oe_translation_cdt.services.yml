@@ -5,7 +5,6 @@ services:
       - '@http_client'
       - '@psr17.server_request_factory'
       - '@psr17.stream_factory'
-      - '@oe_translation_cdt.psr17.uri_factory'
       - '%cdt.client_configuration%'
 
   oe_translation_cdt.api_wrapper:
@@ -15,11 +14,6 @@ services:
   oe_translation_cdt.xml_formatter:
     class: Drupal\oe_translation_cdt\ContentFormatter\XmlFormatter
     arguments: ['@renderer', '@entity_type.manager', '@datetime.time']
-
-  oe_translation_cdt.psr17.uri_factory:
-    class: GuzzleHttp\Psr7\HttpFactory
-    public: false
-  Psr\Http\Message\UriFactoryInterface: '@oe_translation_cdt.psr17.uri_factory'
 
   oe_translation_cdt.translation_request_mapper:
     class: Drupal\oe_translation_cdt\Mapper\TranslationRequestMapper
