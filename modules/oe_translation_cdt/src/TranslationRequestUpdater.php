@@ -22,7 +22,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
   public function updateFromRequestStatus(TranslationRequestCdtInterface $translation_request, RequestStatus $request_status): bool {
     return $this->updateFieldset($translation_request, [
       'cdt_id' => $request_status->getRequestIdentifier(),
-      'request_status' => $this->convertStatusFromCdt($request_status->getStatus()),
+      'request_status' => $this->convertRequestStatusFromCdt($request_status->getStatus()),
     ], "Received CDT callback, updating the request...");
   }
 
@@ -31,31 +31,27 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    */
   public function updateFromJobStatus(TranslationRequestCdtInterface $translation_request, JobStatus $job_status): bool {
     $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job_status->getTargetLanguageCode(), $translation_request);
-    if ($job_status->getStatus() === 'CMP') {
-      return $this->updateFieldset($translation_request, [
-        'translated_languages' => [$drupal_langcode],
-      ], "Received CDT callback, updating the job...");
-    }
-
-    return FALSE;
+    return $this->updateFieldset($translation_request, [
+      'languages' => [$drupal_langcode => $job_status->getStatus()],
+    ], "Received CDT callback, updating the job...");
   }
 
   /**
    * {@inheritdoc}
    */
   public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response, ReferenceData $reference_data): bool {
-    $translated_languages = [];
-    foreach ($translation_response->getTargetFiles() as $target_file) {
-      $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode((string) $target_file->getTargetLanguage(), $translation_request);
-      $translated_languages[] = $drupal_langcode;
+    $languages = [];
+    foreach ($translation_response->getJobSummary() as $job) {
+      $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job->getTargetLanguage(), $translation_request);
+      $languages[$drupal_langcode] = $job->getStatus();
     }
 
     $comments = trim(array_reduce($translation_response->getComments(), function ($carry, $item) {
       return $carry . $item->getComment() . "\n";
     }, ''), "\n");
     $changes = [
-      'request_status' => $this->convertStatusFromCdt($translation_response->getStatus()),
-      'translated_languages' => $translated_languages,
+      'request_status' => $this->convertRequestStatusFromCdt($translation_response->getStatus()),
+      'languages' => $languages,
       'priority' => $translation_response->getJobSummary()[0]->getPriorityCode(),
       'comments' => $comments,
       'phone_number' => $translation_response->getPhoneNumber(),
@@ -124,7 +120,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
     $cumulated_variables = [];
     foreach ($fields as $field => $value) {
       $message = match($field) {
-        'translated_languages' => $this->updateLanguagesStatus($translation_request, $value),
+        'languages' => $this->updateLanguagesStatus($translation_request, $value),
         default => $this->updateField($translation_request, $field, $value),
       };
       if ($message) {
@@ -169,7 +165,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
       throw new \InvalidArgumentException(sprintf('Field %s does not exist or does not support getters/setters.', $field));
     }
 
-    $old_value = $translation_request->$getter();
+    $old_value = $translation_request->$getter() ?? '';
     if ($old_value !== $value) {
       $translation_request->$setter($value);
       $from_text = $old_value ? "from <code>@{$field}_old_value</code>" : '';
@@ -192,24 +188,32 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request to update.
    * @param array $languages
-   *   Ann array of translated languages.
+   *   Ann array of languages and their statuses.
    *
    * @return array|null
    *   The log message if the languages were updated, NULL otherwise.
    */
   protected function updateLanguagesStatus(TranslationRequestCdtInterface $translation_request, array $languages): ?array {
     $updated_languages = [];
-    foreach ($languages as $langcode) {
+    foreach ($languages as $langcode => $cdt_status) {
       $old_status = $translation_request->getTargetLanguage($langcode)?->getStatus();
-      if ($old_status == TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED) {
-        $translation_request->updateTargetLanguageStatus($langcode, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW);
-        $updated_languages[] = $langcode;
+      $new_status = $this->convertLanguageStatusFromCdt($cdt_status);
+      if ($old_status != $new_status) {
+        if (in_array($new_status, [
+          TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,
+          TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+          TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+        ],)) {
+          $translation_request->removeTranslatedData($langcode);
+        }
+        $translation_request->updateTargetLanguageStatus($langcode, $new_status);
+        $updated_languages[] = sprintf('%s (%s => %s)', $langcode, $old_status, $new_status);
       }
     }
 
     if ($updated_languages) {
       return [
-        'message' => "The following languages are updated and ready for review: <strong>@languages</strong>.",
+        'message' => "The following languages are updated: <strong>@languages</strong>.",
         'variables' => [
           '@languages' => implode(', ', $updated_languages),
         ],
@@ -228,10 +232,28 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    * @return string
    *   The internal status.
    */
-  protected function convertStatusFromCdt(string $cdt_status): string {
+  protected function convertRequestStatusFromCdt(string $cdt_status): string {
     return match($cdt_status) {
       'COMP' => TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
       'CANC' => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
+      default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+    };
+  }
+
+  /**
+   * Converts the language status from CDT to the internal status.
+   *
+   * @param string|null $cdt_language_status
+   *   The CDT language status.
+   *
+   * @return string
+   *   The internal status.
+   */
+  protected function convertLanguageStatusFromCdt(?string $cdt_language_status): string {
+    return match($cdt_language_status) {
+      'FLR' => TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+      'CNC', 'TCN' => TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+      'CMP' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
       default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     };
   }
