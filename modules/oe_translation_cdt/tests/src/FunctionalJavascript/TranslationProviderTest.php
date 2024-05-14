@@ -168,13 +168,12 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->getSession()->getPage()->pressButton('Save and send');
 
     $this->assertSession()->pageTextContains('The translation request has been sent to CDT.');
+    $this->assertSession()->pageTextContains('No new translation request can be made because there is already an active translation request for this entity version.');
 
     // Assert that we got back a correct response and our request was updated.
     $provider_manager = $this->container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager');
     $requests = $provider_manager->getExistingTranslationRequests($node, TRUE);
-    $this->assertCount(1, $requests);
-    $request = reset($requests);
-    $this->assertInstanceOf(TranslationRequestCdtInterface::class, $request);
+    $request = end($requests);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
     $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
@@ -182,7 +181,61 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getRequestStatus());
     $this->assertEquals('cdt', $request->getTranslatorProvider()->id());
 
+    // Request the permanent ID.
+    $this->assertSession()->linkNotExists('Refresh status', 'The Refresh status link should not be available yet.');
+    $this->clickLink('Get Permanent ID');
+    $this->assertSession()->pageTextContains('The permanent ID has been updated.');
+    $request = $this->getUncachedTranslationRequest($request);
+    $cdt_id = $request->getCdtId();
+    $this->assertNotEmpty($cdt_id);
+
+    // Refresh the status, nothing should change.
+    $this->clickLink('Refresh status');
+    $this->assertSession()->pageTextContains('The request status did not change.');
+
+    // Mock the completion of the BG language. Index 0 belongs to the request.
+    $this->clickLink('Completed (mock)', 1);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['bg']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+
+    // Fetch the BG translation.
+    $this->clickLink('Fetch the translation');
+
+    // Accept the BG translation.
+    $this->clickLink('Review');
+    $this->assertSession()->pageTextContains('BG translation of');
+    $this->getSession()->getPage()->pressButton('Save and accept');
+    $this->assertSession()->pageTextContains('Accepted');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED, $request->getTargetLanguages()['bg']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+
+    // Synchronise the BG translation.
+    $this->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('Synchronised');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED, $request->getTargetLanguages()['bg']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+
+    // Finalize the PT translation.
+    $this->clickLink('Completed (mock)', 2);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
+    $this->clickLink('Fetch the translation');
+    $this->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+
     // Assert the log messages.
+    $this->drupalGet('translation-request/' . $request->id());
     $expected_logs = [
       1 => [
         'Info',
@@ -192,6 +245,36 @@ class TranslationProviderTest extends TranslationTestBase {
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
+        $this->user->label(),
+      ],
+      3 => [
+        'Info',
+        "Manually updated the permanent ID.Updated cdt_id field to $cdt_id.",
+        $this->user->label(),
+      ],
+      4 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: bg (Requested =&gt; Review).',
+        $this->user->label(),
+      ],
+      5 => [
+        'Info',
+        'The Bulgarian translation has been accepted.',
+        $this->user->label(),
+      ],
+      6 => [
+        'Info',
+        'The Bulgarian translation has been synchronised with the content.',
+        $this->user->label(),
+      ],
+      7 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: pt-pt (Requested =&gt; Review).',
+        $this->user->label(),
+      ],
+      8 => [
+        'Info',
+        'The Portuguese translation has been synchronised with the content.',
         $this->user->label(),
       ],
     ];
@@ -219,6 +302,26 @@ class TranslationProviderTest extends TranslationTestBase {
     }
 
     $this->assertEquals($logs, $actual);
+  }
+
+  /**
+   * Gets the latest translation request for a node.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $request
+   *   The translation request.
+   *
+   * @return \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
+   *   The reloaded translation request.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getUncachedTranslationRequest(TranslationRequestCdtInterface $request): TranslationRequestCdtInterface {
+    $controller = $this->entityTypeManager->getStorage($request->getEntityTypeId());
+    $controller->resetCache([$request->id()]);
+    $refreshed_request = $controller->load($request->id());
+    $this->assertInstanceOf(TranslationRequestCdtInterface::class, $refreshed_request);
+    return $refreshed_request;
   }
 
 }
