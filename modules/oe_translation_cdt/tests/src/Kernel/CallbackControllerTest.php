@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Drupal\Core\Site\Settings;
 use Drupal\oe_translation\Entity\TranslationRequest;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Controller\CallbackController;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -105,7 +106,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_with_id = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => '2024/12345a',
-        'Status' => 'COMP',
+        'Status' => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
         'Date' => '2024-02-28T12:03:03.6239422',
         'CorrelationId' => 'aaa',
       ])
@@ -128,7 +129,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_without_id = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => '2024/12345b',
-        'Status' => 'COMP',
+        'Status' => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
         'Date' => '2024-02-28T12:03:03.6239422',
         'CorrelationId' => 'bbb',
       ])
@@ -153,7 +154,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_404 = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => 'non_existing_cdt_id',
-        'Status' => 'COMP',
+        'Status' => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
         'Date' => '2024-02-28T12:03:03.6239422',
         'CorrelationId' => 'non_existing_correlation_id',
       ])
@@ -171,7 +172,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => '2024/12345a',
-        'Status' => 'CMP',
+        'Status' => CdtApiWrapperInterface::STATUS_JOB_COMPLETED,
         'SourceDocumentName' => 'text.xml',
         'SourceLanguageCode' => 'EN',
         'TargetLanguageCode' => 'ES',
