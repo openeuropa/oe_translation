@@ -48,7 +48,7 @@ final class OperationController extends ControllerBase {
   }
 
   /**
-   * Refresh the request status.
+   * Refreshes the request status.
    */
   public function refreshStatus(TranslationRequestCdtInterface $translation_request, Request $request): RedirectResponse {
     $translation_response = $this->apiWrapper->getClient()->getRequestStatus((string) $translation_request->getCdtId());
