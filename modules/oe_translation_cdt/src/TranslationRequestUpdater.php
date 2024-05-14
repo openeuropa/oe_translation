@@ -169,9 +169,9 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
     $old_value = $translation_request->$getter() ?? '';
     if ($old_value !== $value) {
       $translation_request->$setter($value);
-      $from_text = $old_value ? "from <code>@{$field}_old_value</code>" : '';
+      $from_text = $old_value ? " from <code>@{$field}_old_value</code> " : ' ';
       return [
-        'message' => "Updated <strong >@{$field}_name</strong> field $from_text to <code>@{$field}_new_value</code>.",
+        'message' => "Updated <strong>@{$field}_name</strong> field{$from_text}to <code>@{$field}_new_value</code>.",
         'variables' => [
           "@{$field}_name" => $field,
           "@{$field}_old_value" => is_array($old_value) ? implode(', ', $old_value) : $old_value,
