@@ -92,6 +92,9 @@ class FileApi extends ServiceMockBase {
       return new Response(400, [], $this->getResponseFromFile('file_response_400.json'));
     }
 
+    // Create a duplicate of the current entity and change the text.
+    // This way, we avoid modifying the original entity, and saving it
+    // accidentally in the database.
     $data = TranslationSourceHelper::filterTranslatable($entity->getData());
     $translated_entity = $entity->createDuplicate();
     foreach ($data as &$field) {
