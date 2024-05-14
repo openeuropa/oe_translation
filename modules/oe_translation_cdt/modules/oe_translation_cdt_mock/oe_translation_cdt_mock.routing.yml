@@ -4,7 +4,7 @@ oe_translation_cdt_mock.job_status:
     _title: 'Change job status'
     _controller: '\Drupal\oe_translation_cdt_mock\Controller\MockController::changeJobStatus'
   requirements:
-    _permission: 'access content'
+    _permission: 'translate any entity'
   options:
     parameters:
       translation_request:
@@ -18,7 +18,7 @@ oe_translation_cdt_mock.request_status:
     _title: 'Change request status'
     _controller: '\Drupal\oe_translation_cdt_mock\Controller\MockController::changeRequestStatus'
   requirements:
-    _permission: 'access content'
+    _permission: 'translate any entity'
   options:
     parameters:
       translation_request:
