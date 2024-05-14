@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
 use Drupal\Core\Site\Settings;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use GuzzleHttp\Psr7\Response;
@@ -45,10 +46,10 @@ class StatusApi extends ServiceMockBase {
 
     // Change only the important parameters.
     $response['status'] = match($entity->getRequestStatus()) {
-      TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => 'COMP',
-      TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => 'CANC',
-      TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED => 'INPR',
-      default => 'UNDE',
+      TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
+      TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => CdtApiWrapperInterface::STATUS_REQUEST_CANCELLED,
+      TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED => CdtApiWrapperInterface::STATUS_REQUEST_IN_PROGRESS,
+      default => CdtApiWrapperInterface::STATUS_REQUEST_PENDING_APPROVAL,
     };
     $response['priority'] = $entity->getPriority();
     $response['comments'] = [];
