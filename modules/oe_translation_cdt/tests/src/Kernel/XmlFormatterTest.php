@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
 use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -139,6 +140,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
         'status' => 'Requested',
       ],
       'translator_provider' => 'cdt',
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     ]);
 
     $this->request->setContentEntity($node);
