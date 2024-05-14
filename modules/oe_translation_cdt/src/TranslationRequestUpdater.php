@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt;
 
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
@@ -101,7 +102,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
   }
 
   /**
-   * Update a set of fields on the translation request.
+   * Updates a set of fields on the translation request.
    *
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request to update.
@@ -142,7 +143,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
   }
 
   /**
-   * Update a single field on the translation request.
+   * Updates a single field on the translation request.
    *
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request to update.
@@ -183,7 +184,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
   }
 
   /**
-   * Update the status of the languages.
+   * Updates the status of the languages.
    *
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request to update.
@@ -234,8 +235,8 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    */
   protected function convertRequestStatusFromCdt(string $cdt_status): string {
     return match($cdt_status) {
-      'COMP' => TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
-      'CANC' => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
+      CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED => TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
+      CdtApiWrapperInterface::STATUS_REQUEST_CANCELLED => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
       default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     };
   }
@@ -251,9 +252,9 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    */
   protected function convertLanguageStatusFromCdt(?string $cdt_language_status): string {
     return match($cdt_language_status) {
-      'FLR' => TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
-      'CNC', 'TCN' => TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
-      'CMP' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
+      CdtApiWrapperInterface::STATUS_JOB_FAILED => TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+      CdtApiWrapperInterface::STATUS_JOB_CANCELLED, CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+      CdtApiWrapperInterface::STATUS_JOB_COMPLETED => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
       default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     };
   }
