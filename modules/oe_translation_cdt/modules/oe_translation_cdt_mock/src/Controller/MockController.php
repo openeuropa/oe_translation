@@ -41,7 +41,7 @@ final class MockController extends ControllerBase {
   }
 
   /**
-   * Mocks updating the translation job status.
+   * Changes the translation job status by mocking.
    *
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request.
@@ -68,7 +68,7 @@ final class MockController extends ControllerBase {
   }
 
   /**
-   * Mocks updating the translation request status.
+   * Changes the translation request status by mocking.
    *
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request.
