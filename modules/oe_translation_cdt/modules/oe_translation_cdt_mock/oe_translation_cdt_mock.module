@@ -10,6 +10,7 @@ declare(strict_types=1);
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 
 /**
@@ -28,11 +29,11 @@ function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build
 
   $operations = [];
   $statuses = [
-    'COMP' => 'Completed',
-    'INPR' => 'In progress',
-    'CANC' => 'Cancelled',
-    'PEND' => 'Pending approval',
-    'UNDE' => 'Under quotation',
+    CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED => 'Completed',
+    CdtApiWrapperInterface::STATUS_REQUEST_IN_PROGRESS => 'In progress',
+    CdtApiWrapperInterface::STATUS_REQUEST_CANCELLED => 'Cancelled',
+    CdtApiWrapperInterface::STATUS_REQUEST_PENDING_APPROVAL => 'Pending approval',
+    CdtApiWrapperInterface::STATUS_REQUEST_UNDER_QUOTATION => 'Under quotation',
   ];
   foreach ($statuses as $status => $label) {
     $operations[$status] = [
@@ -62,7 +63,7 @@ function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build
 }
 
 /**
- * Implement template_preprocess_table__remote_language_list().
+ * Implements template_preprocess_table__remote_language_list().
  */
 function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$variables) {
   $id = (string) $variables['attributes']['data-translation-request'];
@@ -75,11 +76,11 @@ function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$
     $langcode = (string) $row['attributes']['hreflang'];
 
     $statuses = [
-      'CMP' => 'Completed',
-      'FLR' => 'Failed',
-      'INP' => 'In progress',
-      'CNC' => 'Cancelled',
-      'TCN' => 'To be cancelled',
+      CdtApiWrapperInterface::STATUS_JOB_COMPLETED => 'Completed',
+      CdtApiWrapperInterface::STATUS_JOB_FAILED => 'Failed',
+      CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS => 'In progress',
+      CdtApiWrapperInterface::STATUS_JOB_CANCELLED => 'Cancelled',
+      CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => 'To be cancelled',
     ];
     foreach ($statuses as $status => $label) {
       $row['cells']['operations']['content']['#links'][] = [
