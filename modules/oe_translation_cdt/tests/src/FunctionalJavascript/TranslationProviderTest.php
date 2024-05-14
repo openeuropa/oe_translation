@@ -152,8 +152,8 @@ class TranslationProviderTest extends TranslationTestBase {
     // Select the translation settings.
     $this->getSession()->getPage()->fillField('Comments', 'Test Translation');
     $this->getSession()->getPage()->fillField('Confidentiality', 'NO');
-    $this->getSession()->getPage()->fillField('translator_configuration[cdt][contact_usernames][0][value]', 'TESTUSER');
-    $this->getSession()->getPage()->fillField('translator_configuration[cdt][deliver_to][0][value]', 'TESTUSER');
+    $this->getSession()->getPage()->fillField('translator_configuration[cdt][contact_usernames][0][value]', 'TESTUSER1');
+    $this->getSession()->getPage()->fillField('translator_configuration[cdt][deliver_to][0][value]', 'TESTUSER1');
     $this->getSession()->getPage()->fillField('Department', '123');
     $this->getSession()->getPage()->fillField('Phone number', '123456');
     $this->getSession()->getPage()->fillField('Priority', 'NO');

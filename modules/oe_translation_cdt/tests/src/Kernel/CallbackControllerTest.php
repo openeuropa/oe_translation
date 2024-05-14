@@ -182,6 +182,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $translation_request = TranslationRequest::create([
       'bundle' => 'cdt',
       'cdt_id' => '2024/12345a',
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     ]);
     assert($translation_request instanceof TranslationRequestCdtInterface);
     $translation_request->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);

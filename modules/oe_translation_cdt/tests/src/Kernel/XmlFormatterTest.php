@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
 use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -139,6 +140,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
         'status' => 'Requested',
       ],
       'translator_provider' => 'cdt',
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     ]);
 
     $this->request->setContentEntity($node);
@@ -151,6 +153,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
     $this->xml = (string) str_replace('@drupal_version', \Drupal::VERSION, $this->xml);
     $this->xml = (string) str_replace('@module_version', (string) InstalledVersions::getPrettyVersion('openeuropa/oe_translation'), $this->xml);
     $this->xml = (string) str_replace('@node_id', (string) $this->request->getContentEntity()?->id(), $this->xml);
+    $this->xml = (string) str_replace('@source_reference', $this->request->getContentEntity()?->toUrl('canonical', ['absolute' => TRUE])->toString(), $this->xml);
   }
 
   /**
