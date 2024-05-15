@@ -137,7 +137,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
       'source_language_code' => $node->language()->getId(),
       'target_languages' => [
         'langcode' => 'fr',
-        'status' => 'Requested',
+        'status' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,
       ],
       'translator_provider' => 'cdt',
       'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
