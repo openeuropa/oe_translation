@@ -176,8 +176,8 @@ class TranslationProviderTest extends TranslationTestBase {
     $request = end($requests);
     $this->assertEquals('en', $request->getSourceLanguageCode());
     $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('pt-pt', 'Requested'), $target_languages['pt-pt']);
+    $this->assertEquals(new LanguageWithStatus('bg', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED), $target_languages['bg']);
+    $this->assertEquals(new LanguageWithStatus('pt-pt', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED), $target_languages['pt-pt']);
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getRequestStatus());
     $this->assertEquals('cdt', $request->getTranslatorProvider()->id());
 
