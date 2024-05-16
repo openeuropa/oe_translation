@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Drupal\Tests\oe_translation_cdt\Kernel;
+
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
