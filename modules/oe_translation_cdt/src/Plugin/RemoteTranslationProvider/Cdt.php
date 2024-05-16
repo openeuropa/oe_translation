@@ -83,7 +83,8 @@ class Cdt extends RemoteTranslationProviderBase {
     protected CdtApiWrapperInterface $apiWrapper,
     protected StateInterface $state,
     protected EventDispatcherInterface $eventDispatcher,
-    protected LoggerChannelFactoryInterface $loggerFactory) {
+    protected LoggerChannelFactoryInterface $loggerFactory,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
   }
 
