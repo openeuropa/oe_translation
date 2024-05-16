@@ -28,16 +28,16 @@ function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build
   $row = &$build['meta']['#rows'][0];
 
   $operations = [];
-  $statuses = [
+  $all_statuses = [
     CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED => 'Completed',
     CdtApiWrapperInterface::STATUS_REQUEST_IN_PROGRESS => 'In progress',
     CdtApiWrapperInterface::STATUS_REQUEST_CANCELLED => 'Cancelled',
     CdtApiWrapperInterface::STATUS_REQUEST_PENDING_APPROVAL => 'Pending approval',
     CdtApiWrapperInterface::STATUS_REQUEST_UNDER_QUOTATION => 'Under quotation',
   ];
-  foreach ($statuses as $status => $label) {
+  foreach ($all_statuses as $status => $label) {
     $operations[$status] = [
-      'title' => "$label (mock)",
+      'title' => sprintf('Update status to %s (mock)', $label),
       'url' => Url::fromRoute('oe_translation_cdt_mock.request_status', [
         'translation_request' => $entity->id(),
       ], [
@@ -72,19 +72,18 @@ function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$
     return;
   }
 
+  $all_statuses = [
+    CdtApiWrapperInterface::STATUS_JOB_COMPLETED => 'Completed',
+    CdtApiWrapperInterface::STATUS_JOB_FAILED => 'Failed',
+    CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS => 'In progress',
+    CdtApiWrapperInterface::STATUS_JOB_CANCELLED => 'Cancelled',
+    CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => 'To be cancelled',
+  ];
   foreach ($variables['rows'] as &$row) {
     $langcode = (string) $row['attributes']['hreflang'];
-
-    $statuses = [
-      CdtApiWrapperInterface::STATUS_JOB_COMPLETED => 'Completed',
-      CdtApiWrapperInterface::STATUS_JOB_FAILED => 'Failed',
-      CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS => 'In progress',
-      CdtApiWrapperInterface::STATUS_JOB_CANCELLED => 'Cancelled',
-      CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => 'To be cancelled',
-    ];
-    foreach ($statuses as $status => $label) {
+    foreach ($all_statuses as $status => $label) {
       $row['cells']['operations']['content']['#links'][] = [
-        'title' => "$label (mock)",
+        'title' => sprintf('Update status to %s (mock)', $label),
         'url' => Url::fromRoute('oe_translation_cdt_mock.job_status', [
           'translation_request' => $id,
           'langcode' => $langcode,
