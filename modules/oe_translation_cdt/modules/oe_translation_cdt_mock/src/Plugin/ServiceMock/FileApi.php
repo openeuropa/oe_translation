@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_file_api",
  *   label = @Translation("CDT mocked file responses for testing."),
- *   weight = -1,
+ *   weight = -2,
  * )
  */
 class FileApi extends ServiceMockBase {

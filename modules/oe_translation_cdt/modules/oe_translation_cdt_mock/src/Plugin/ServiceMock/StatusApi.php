@@ -19,7 +19,7 @@ use Psr\Http\Message\ResponseInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_status_api",
  *   label = @Translation("CDT mocked status responses for testing."),
- *   weight = 0,
+ *   weight = -1,
  * )
  */
 class StatusApi extends ServiceMockBase {
