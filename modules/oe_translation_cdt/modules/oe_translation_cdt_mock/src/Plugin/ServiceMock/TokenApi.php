@@ -15,7 +15,7 @@ use Psr\Http\Message\ResponseInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_token_api",
  *   label = @Translation("CDT mocked token responses for testing."),
- *   weight = -1,
+ *   weight = -2,
  * )
  */
 class TokenApi extends ServiceMockBase {
