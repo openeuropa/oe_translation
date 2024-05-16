@@ -15,7 +15,7 @@ use Psr\Http\Message\ResponseInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_reference_data_api",
  *   label = @Translation("CDT mocked reference data responses for testing."),
- *   weight = -1,
+ *   weight = -2,
  * )
  */
 class ReferenceDataApi extends ServiceMockBase {
