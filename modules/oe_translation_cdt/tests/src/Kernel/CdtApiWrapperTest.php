@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Drupal\Tests\oe_translation_cdt\Kernel;
+
 use Drupal\Component\Datetime\Time;
 use Drupal\Core\State\StateInterface;
 use Drupal\KernelTests\KernelTestBase;

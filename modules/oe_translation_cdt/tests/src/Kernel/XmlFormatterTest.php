@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Drupal\Tests\oe_translation_cdt\Kernel;
+
 use Composer\InstalledVersions;
 use Drupal\Component\Datetime\Time;
 use Drupal\field\Entity\FieldConfig;
