@@ -37,7 +37,7 @@ class CdtApiWrapper implements CdtApiWrapperInterface {
     protected readonly ApiClientInterface $apiClient,
     protected readonly Client $httpClient,
     protected readonly StateInterface $state,
-    protected readonly Time $time
+    protected readonly Time $time,
   ) {}
 
   /**
