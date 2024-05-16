@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Drupal\Tests\oe_translation_cdt\Kernel;
+
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Site\Settings;
@@ -168,7 +170,7 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
    * Tests required parameters.
    */
   public function testRequiredParameters(): void {
-    $this->expectException(TypeError::class);
+    $this->expectException(\TypeError::class);
     $test_data = self::COMMON_REQUEST_DATA;
     unset($test_data['department']);
     $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
