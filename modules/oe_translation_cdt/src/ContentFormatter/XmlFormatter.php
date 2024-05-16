@@ -48,7 +48,7 @@ class XmlFormatter implements ContentFormatterInterface {
   public function __construct(
     protected RendererInterface $renderer,
     protected EntityTypeManagerInterface $entityTypeManager,
-    protected Time $time
+    protected Time $time,
   ) {}
 
   /**
