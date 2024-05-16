@@ -194,7 +194,7 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('The request status did not change.');
 
     // Mock the completion of the BG language. Index 0 belongs to the request.
-    $this->clickLink('Completed (mock)', 1);
+    $this->clickLink('Update status to Completed (mock)', 1);
     $request = $this->getUncachedTranslationRequest($request);
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['bg']->getStatus());
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
@@ -223,7 +223,7 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
 
     // Finalize the PT translation.
-    $this->clickLink('Completed (mock)', 2);
+    $this->clickLink('Update status to Completed (mock)', 2);
     $request = $this->getUncachedTranslationRequest($request);
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['pt-pt']->getStatus());
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
