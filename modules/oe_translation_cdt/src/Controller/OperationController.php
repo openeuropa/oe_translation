@@ -33,7 +33,7 @@ final class OperationController extends ControllerBase {
   public function __construct(
     private readonly CdtApiWrapperInterface $apiWrapper,
     private readonly TranslationRequestUpdaterInterface $updater,
-    private readonly ContentFormatterInterface $xmlFormatter
+    private readonly ContentFormatterInterface $xmlFormatter,
   ) {}
 
   /**
