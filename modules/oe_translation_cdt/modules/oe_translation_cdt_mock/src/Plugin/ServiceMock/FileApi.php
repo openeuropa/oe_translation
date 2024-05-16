@@ -50,7 +50,7 @@ class FileApi extends ServiceMockBase {
     protected ModuleExtensionList $moduleExtensionList,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected LoggerChannelFactoryInterface $loggerFactory,
-    protected ContentFormatterInterface $xmlFormatter
+    protected ContentFormatterInterface $xmlFormatter,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $moduleExtensionList, $entityTypeManager, $loggerFactory);
   }

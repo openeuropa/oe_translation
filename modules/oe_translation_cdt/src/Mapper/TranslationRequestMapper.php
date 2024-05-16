@@ -31,7 +31,7 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
    *   The content formatter.
    */
   public function __construct(
-    protected ContentFormatterInterface $contentFormatter
+    protected ContentFormatterInterface $contentFormatter,
   ) {}
 
   /**

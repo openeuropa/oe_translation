@@ -42,7 +42,7 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
     $plugin_definition,
     protected ModuleExtensionList $moduleExtensionList,
     protected EntityTypeManagerInterface $entityTypeManager,
-    protected LoggerChannelFactoryInterface $loggerFactory
+    protected LoggerChannelFactoryInterface $loggerFactory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
