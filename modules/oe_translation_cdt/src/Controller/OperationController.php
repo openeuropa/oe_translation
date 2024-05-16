@@ -49,6 +49,16 @@ final class OperationController extends ControllerBase {
 
   /**
    * Refreshes the request status.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
+   *   The translation request.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   The redirect response.
+   *
+   * @throws \Drupal\oe_translation_cdt\Exception\CdtConnectionException
    */
   public function refreshStatus(TranslationRequestCdtInterface $translation_request, Request $request): RedirectResponse {
     $translation_response = $this->apiWrapper->getClient()->getRequestStatus((string) $translation_request->getCdtId());
@@ -69,6 +79,19 @@ final class OperationController extends ControllerBase {
 
   /**
    * Fetches the translation.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
+   *   The translation request.
+   * @param string $langcode
+   *   The language code.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   The redirect response.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\oe_translation_cdt\Exception\CdtConnectionException
    */
   public function fetchTranslation(TranslationRequestCdtInterface $translation_request, string $langcode, Request $request): RedirectResponse {
     $translation_response = $this->apiWrapper->getClient()->getRequestStatus((string) $translation_request->getCdtId());
@@ -91,6 +114,16 @@ final class OperationController extends ControllerBase {
 
   /**
    * Gets the permanent ID.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
+   *   The translation request.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   The redirect response.
+   *
+   * @throws \Drupal\oe_translation_cdt\Exception\CdtConnectionException
    */
   public function getPermanentId(TranslationRequestCdtInterface $translation_request, Request $request): RedirectResponse {
     $permanent_id = $this->apiWrapper->getClient()->getPermanentIdentifier($translation_request->getCorrelationId());
