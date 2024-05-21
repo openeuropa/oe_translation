@@ -36,7 +36,6 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, protected LanguageManagerInterface $languageManager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->languageManager = $languageManager;
   }
 
   /**
@@ -55,7 +54,7 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function query(): void {
-    // Leave empty to avoid a query on this field.
+    // Leave empty to avoid performing a query on this field.
   }
 
   /**
@@ -65,18 +64,11 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
     /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $request */
     $request = $this->getEntity($values);
     $target_languages = $request->getTargetLanguages();
-    $total = count($target_languages);
-    $grouped = [];
-    foreach ($target_languages as $language_with_status) {
-      $status = $language_with_status->getStatus();
-      $langcode = $language_with_status->getLangcode();
-      $grouped[$status][$langcode] = $this->languageManager->getLanguage($langcode)?->getName() ?? $langcode;
-    }
-
+    $total_count = count($target_languages);
+    $grouped = $this->groupLanguagesByStatus($target_languages);
     $this->sortGroupedStatuses($grouped);
 
-    $translated_count = $this->getCountOfTranslatedLanguages($grouped, $request);
-
+    // Prepare the items for the tooltip.
     $items = [];
     foreach ($grouped as $status => $languages) {
       $items[] = new FormattableMarkup('<strong>@status</strong>: @languages', [
@@ -85,11 +77,19 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
       ]);
     }
 
+    // Count the number of translated languages.
+    $translated_count = 0;
+    foreach ($target_languages as $language_with_status) {
+      if (isset($request->getTranslatedData()[$language_with_status->getLangcode()])) {
+        $translated_count++;
+      }
+    }
+
     $elements = [
       'tooltip' => [
         '#theme' => 'tooltip',
-        '#label' => new FormattableMarkup('@total / @synced', [
-          '@total' => $total,
+        '#label' => new FormattableMarkup('@synced / @total', [
+          '@total' => $total_count,
           '@synced' => $translated_count,
         ]),
         '#text' => [
@@ -98,70 +98,32 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
         ],
       ],
     ];
+
     return $this->getRenderer()->render($elements);
   }
 
   /**
-   * Counts the translated languages.
+   * Groups the target languages by status.
    *
-   * These include the ones in Review, the ones that have been locally
-   * accepted and the ones that have been synced.
+   * @param array $target_languages
+   *   The target languages.
    *
-   * @param array $grouped
-   *   The grouped languages by status.
-   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $request
-   *   The request.
-   *
-   * @return int
-   *   The count.
+   * @return array
+   *   The associative array of grouped languages.
    */
-  protected function getCountOfTranslatedLanguages(array $grouped, TranslationRequestCdtInterface $request): int {
-    $count = 0;
-    // Include the languages that are in Review.
-    if (isset($grouped[TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW])) {
-      $count += count($grouped[TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW]);
+  protected function groupLanguagesByStatus(array $target_languages): array {
+    $grouped = [];
+    foreach ($target_languages as $language_with_status) {
+      $status = $language_with_status->getStatus();
+      $langcode = $language_with_status->getLangcode();
+      $label = $this->languageManager->getLanguage($langcode) ? $this->languageManager->getLanguage($langcode)->getName() : $langcode;
+      $grouped[$status][$langcode] = $label;
     }
-
-    // Include the synced ones.
-    if (isset($grouped[TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED])) {
-      $count += count($grouped[TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED]);
-    }
-
-    // Include also the languages which have been accepted locally, but only
-    // if there is translation data.
-    if (!isset($grouped[TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED])) {
-      return $count;
-    }
-
-    foreach ($grouped[TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED] as $langcode => $name) {
-      if (!$this->hasLanguageArrived($request, $langcode)) {
-        continue;
-      }
-
-      $count++;
-    }
-
-    return $count;
+    return $grouped;
   }
 
   /**
-   * Checks whether a given translation has arrived from CDT.
-   *
-   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $request
-   *   The request.
-   * @param string $language
-   *   The language.
-   *
-   * @return bool
-   *   Whether a given translation has arrived from CDT.
-   */
-  protected function hasLanguageArrived(TranslationRequestCdtInterface $request, string $language): bool {
-    $data = $request->getTranslatedData();
-    return isset($data[$language]);
-  }
-
-  /**
-   * Sorts statuses based on a logical order.
+   * Sorts statuses based on a predefined order.
    *
    * @param array $grouped
    *   The grouped languages by status.
@@ -175,16 +137,7 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
       TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
     ];
 
-    uksort($grouped, function ($a, $b) use ($order) {
-      $a_key = array_search($a, $order);
-      $b_key = array_search($b, $order);
-
-      if ($a_key == $b_key) {
-        return 0;
-      }
-
-      return ($a_key < $b_key) ? -1 : 1;
-    });
+    uksort($grouped, fn($a, $b) => array_search($a, $order) <=> array_search($b, $order));
   }
 
 }
