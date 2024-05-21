@@ -6,7 +6,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\oe_translation_cdt\Access\AccessCheckInterface;
+use Drupal\oe_translation_cdt\Access\CdtDashboardAccessCheck;
 use Drupal\views\Plugin\views\access\AccessPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
@@ -33,10 +33,10 @@ class CdtDashboardAccess extends AccessPluginBase implements CacheableDependency
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\oe_translation_cdt\Access\AccessCheckInterface $dashboardAccessCheck
+   * @param \Drupal\oe_translation_cdt\Access\CdtDashboardAccessCheck $dashboardAccessCheck
    *   The access check service for the dashboard.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected AccessCheckInterface $dashboardAccessCheck) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected CdtDashboardAccessCheck $dashboardAccessCheck) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
