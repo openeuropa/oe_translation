@@ -6,12 +6,13 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
  * Checks access to the CDT dashboard.
  */
-class CdtDashboardAccessCheck implements AccessCheckInterface {
+class CdtDashboardAccessCheck implements AccessInterface {
 
   /**
    * Constructs a CdtDashboardAccessCheck object.
@@ -22,7 +23,16 @@ class CdtDashboardAccessCheck implements AccessCheckInterface {
   public function __construct(protected EntityTypeManagerInterface $entityTypeManager) {}
 
   /**
-   * {@inheritdoc}
+   * Checks the access.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The account to check access for.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function access(AccountInterface $account): AccessResultInterface {
     $cache = new CacheableMetadata();
