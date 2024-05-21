@@ -21,3 +21,9 @@ services:
 
   oe_translation_cdt.translation_request_updater:
     class: Drupal\oe_translation_cdt\TranslationRequestUpdater
+
+  oe_translation_cdt.dashboard_access_check:
+    class: Drupal\oe_translation_cdt\Access\CdtDashboardAccessCheck
+    arguments: [ '@entity_type.manager' ]
+    tags:
+      - { name: access_check, applies_to: _oe_translation_cdt_dashboard_access_check }

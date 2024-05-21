@@ -196,3 +196,18 @@ function oe_translation_cdt_oe_translation_request_presave(TranslationRequestRem
     $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
   }
 }
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function oe_translation_cdt_views_data_alter(&$data) {
+  $data['oe_translation_request__target_languages']['target_cdt_languages_with_tooltip'] = [
+    'title' => t('Target CDT languages with tooltip'),
+    'group' => t('Translation Request'),
+    'field' => [
+      'title' => t('Target CDT languages with tooltip'),
+      'help' => t('Shows the number of requested languages with a tooltip containing more information.'),
+      'id' => 'oe_translation_cdt_target_languages_with_tooltip',
+    ],
+  ];
+}
