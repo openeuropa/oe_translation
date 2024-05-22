@@ -10,9 +10,9 @@ use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Checks access to the CDT dashboard.
+ * Checks access to the CDT translations.
  */
-class CdtDashboardAccessCheck implements AccessInterface {
+class CdtAccessCheck implements AccessInterface {
 
   /**
    * Constructs a CdtDashboardAccessCheck object.
