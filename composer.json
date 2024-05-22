@@ -31,7 +31,7 @@
         "drupal/paragraphs": "^1.13",
         "drupal/typed_link": "^2.2.0",
         "drush/drush": "^12 || ^13",
-        "openeuropa/cdt-client": "dev-D8AGE-289",
+        "openeuropa/cdt-client": "1.x-dev",
         "ec-europa/toolkit": "^10.23",
         "openeuropa/code-review-drupal": "^1.0.0-alpha",
         "openeuropa/epoetry-client": "2.x-dev || 3.x-dev || 4.x-dev",
@@ -76,6 +76,7 @@
         "psr-4": {
             "Drupal\\Tests\\oe_translation\\": "./tests/src",
             "Drupal\\oe_translation_commands\\": "./toolkit/src/",
+            "Drupal\\Tests\\oe_translation_cdt\\": "./modules/oe_translation_cdt/tests/src",
             "Drupal\\Tests\\oe_translation_epoetry\\": "./modules/oe_translation_epoetry/tests/src",
             "Drupal\\Tests\\oe_translation_etrans\\": "./modules/oe_translation_etrans/tests/src",
             "Drupal\\Tests\\oe_translation_content_formatter\\": "./modules/oe_translation_content_formatter/tests/src",
