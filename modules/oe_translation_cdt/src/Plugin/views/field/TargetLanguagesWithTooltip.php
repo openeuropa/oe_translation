@@ -99,7 +99,7 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
       ],
     ];
 
-    return $this->getRenderer()->render($elements);
+    return $this->getRenderer()->renderPlain($elements);
   }
 
   /**
