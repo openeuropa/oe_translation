@@ -8,3 +8,11 @@ oe_translation_remote.remote_translation_provider.plugin.cdt:
       sequence:
         type: string
         label: The language code
+
+views.filter.oe_translation_cdt_target_languages_filter:
+  type: views.filter.in_operator
+  label: Target language filter
+
+views.field.oe_translation_cdt_target_languages_with_tooltip:
+  type: views_field
+  label: 'Target languages with tooltip'
