@@ -9,7 +9,6 @@ dependencies:
     - node
     - oe_translation
     - oe_translation_cdt
-    - oe_translation_epoetry
     - options
 id: cdt_translation_request_dashboard
 label: 'CDT translation request dashboard'
@@ -625,10 +624,7 @@ display:
             remember_roles:
               authenticated: authenticated
               anonymous: '0'
-              oe_author: '0'
               oe_translator: '0'
-              oe_reviewer: '0'
-              oe_validator: '0'
             reduce: false
           is_grouped: false
           group_info:
