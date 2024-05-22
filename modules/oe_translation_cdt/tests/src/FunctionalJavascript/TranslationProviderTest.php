@@ -244,6 +244,11 @@ class TranslationProviderTest extends TranslationTestBase {
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
+
+    // Check the translation dashboard.
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextContains($cdt_id);
+    $this->assertSession()->pageTextContains('Finished');
   }
 
   /**
