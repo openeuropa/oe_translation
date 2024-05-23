@@ -31,17 +31,17 @@ class CdtAccessTest extends TranslationKernelTestBase {
   ];
 
   /**
-   * The access checker.
+   * The access checker service.
    */
   protected CdtAccessCheck $accessCheck;
 
   /**
-   * The translator.
+   * The translator user.
    */
   protected AccountInterface $translator;
 
   /**
-   * The non-translator.
+   * The non-translator user.
    */
   protected AccountInterface $nonTranslator;
 
@@ -64,7 +64,7 @@ class CdtAccessTest extends TranslationKernelTestBase {
   }
 
   /**
-   * Test the permissions.
+   * Tests the access by permissions.
    */
   public function testPermissions(): void {
     $this->assertFalse($this->accessCheck->access($this->nonTranslator)
@@ -74,7 +74,7 @@ class CdtAccessTest extends TranslationKernelTestBase {
   }
 
   /**
-   * Test the plugin settings by disabling CDT.
+   * Tests the access by disabling the provider in plugin settings.
    */
   public function testPluginSettings(): void {
     $entity_type_manager = $this->container->get('entity_type.manager');

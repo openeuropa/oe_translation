@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\oe_translation_cdt\Access;
 
 use Drupal\Core\Access\AccessResult;
@@ -15,7 +17,7 @@ use Drupal\Core\Session\AccountInterface;
 class CdtAccessCheck implements AccessInterface {
 
   /**
-   * Constructs a CdtDashboardAccessCheck object.
+   * Constructs a CdtAccessCheck object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
