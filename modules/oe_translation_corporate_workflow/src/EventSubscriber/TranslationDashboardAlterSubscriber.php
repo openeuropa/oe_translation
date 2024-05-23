@@ -17,10 +17,13 @@ use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
+use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Subscribes to the translation dashboard alteration event.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
@@ -210,6 +213,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     }
 
     $latest_entity_version = $this->getEntityVersion($latest_entity);
+    $current_entity_started_languages = $this->getStartedLocalTranslationRequestLanguages($entity);
+    $latest_entity_started_languages = $this->getStartedLocalTranslationRequestLanguages($latest_entity);
 
     // Create an array of languages across both versions, with info related
     // to each.
@@ -232,6 +237,34 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
         'version' => $published_version,
         'operations' => $this->getTranslationOperations($translation, TRUE),
       ];
+
+      if (!isset($info['operations']['#links'])) {
+        $info['operations'] = [
+          '#type' => 'operations',
+          '#links' => [],
+        ];
+      }
+
+      // Add the operation to create a new local translation to the current
+      // entity.
+      if (!in_array($language->getId(), $current_entity_started_languages) && $language->getId() !== $entity->getUntranslated()->language()->getId()) {
+        $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+          'entity_type' => $entity->getEntityTypeId(),
+          'entity' => $entity->getRevisionId(),
+          'source' => $entity->getUntranslated()->language()->getId(),
+          'target' => $language->getId(),
+        ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
+
+        if ($url->access()) {
+          $link = [
+            'title' => $this->t('Add new local translation'),
+            'weight' => -100,
+            'url' => $url,
+          ];
+
+          $info['operations']['#links']['add'] = $link;
+        }
+      }
 
       $languages[$language->getId()][$published_version] = $info;
       if ($translation && $translation->isDefaultTranslation()) {
@@ -276,6 +309,36 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $row['hreflang'] = $langcode;
       if (isset($info['default_language'])) {
         $row['class'][] = 'color-success';
+      }
+
+      // Add the operation to create a new local translation to the latest
+      // version.
+      if (!in_array($langcode, $latest_entity_started_languages) && $langcode !== $entity->getUntranslated()->language()->getId()) {
+        $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+          'entity_type' => $entity->getEntityTypeId(),
+          'entity' => $latest_entity->getRevisionId(),
+          'source' => $latest_entity->getUntranslated()->language()->getId(),
+          'target' => $langcode,
+        ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
+
+        if ($url->access()) {
+          $link = [
+            'title' => $this->t('Add new local translation'),
+            'weight' => -100,
+            'url' => $url,
+          ];
+
+          if (is_string($row['data']['operations_validated'])) {
+            // It means it's empty and set to N/A.
+            $row['data']['operations_validated'] = [
+              'data' => [
+                '#type' => 'operations',
+                '#links' => [],
+              ],
+            ];
+          }
+          $row['data']['operations_validated']['data']['#links']['add'] = $link;
+        }
       }
 
       $rows[] = $row;
@@ -370,6 +433,34 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       '#type' => 'operations',
       '#links' => $links,
     ];
+  }
+
+  /**
+   * Gets the started local translation requests.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return array
+   *   The requests.
+   */
+  protected function getStartedLocalTranslationRequestLanguages(ContentEntityInterface $entity): array {
+    /** @var \Drupal\oe_translation\TranslationRequestStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage('oe_translation_request');
+
+    $languages = [];
+
+    /** @var \Drupal\oe_translation_local\TranslationRequestLocal[] $translation_requests */
+    $translation_requests = $storage->getTranslationRequestsForEntityRevision($entity, 'local');
+    $translation_requests = array_filter($translation_requests, function (TranslationRequestLocal $translation_request) {
+      return $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED;
+    });
+
+    foreach ($translation_requests as $request) {
+      $languages[] = $request->getTargetLanguageWithStatus()->getLangcode();
+    }
+
+    return $languages;
   }
 
 }

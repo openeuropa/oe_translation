@@ -1148,9 +1148,11 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $french_mapping_operations = $french_row->findAll('xpath', '//td[6]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
+      'Add new local translation' => TRUE,
     ], $french_published_operations);
     $this->assertOperationLinks([
       'View' => TRUE,
+      'Add new local translation' => TRUE,
       // We cannot delete the validated translation if we have a mapping.
       'Delete translation' => FALSE,
       'Add mapping' => FALSE,
