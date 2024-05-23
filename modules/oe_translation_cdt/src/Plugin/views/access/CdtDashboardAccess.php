@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\oe_translation_cdt\Plugin\views\access;
 
 use Drupal\Core\Cache\Cache;

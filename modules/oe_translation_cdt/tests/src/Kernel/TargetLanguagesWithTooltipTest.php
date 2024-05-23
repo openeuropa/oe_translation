@@ -51,7 +51,7 @@ class TargetLanguagesWithTooltipTest extends TranslationKernelTestBase {
   }
 
   /**
-   * Test the rendering of the field.
+   * Tests the rendering of the field.
    */
   public function testRender(): void {
     $request = TranslationRequestCdt::create([
