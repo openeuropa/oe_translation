@@ -11,6 +11,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeInterface;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 
@@ -20,9 +21,13 @@ use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEnt
  * @see oe_translation_corporate_workflow_form_content_moderation_entity_moderation_form_alter()
  */
 function oe_translation_active_revision_oe_translation_corporate_workflow_moderation_form_alter(array &$form, FormStateInterface $form_state) {
+  $entity = $form_state->get('entity');
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+
   unset($form['translation_options_wrapper']['translation_drop']);
 
-  $entity = $form_state->get('entity');
   $current_state = $entity->moderation_state->value;
   if ($current_state === 'validated') {
     // If the content is already validated and only needs to be published,
@@ -287,7 +292,7 @@ function oe_translation_active_revision_entity_delete(EntityInterface $entity) {
  * Implements hook_entity_presave().
  */
 function oe_translation_active_revision_entity_presave(EntityInterface $entity): void {
-  if (!$entity instanceof ContentEntityInterface) {
+  if (!$entity instanceof NodeInterface) {
     return;
   }
 
