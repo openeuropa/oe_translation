@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation Corporate Workflow Test module file.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function oe_translation_corporate_workflow_test_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type_id === 'link_list') {
+      // Make the link list translatable.
+      $translators = [
+        'local' => TRUE,
+      ];
+
+      $entity_type->set('oe_translation_translators', $translators);
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function oe_translation_corporate_workflow_test_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'link_list') {
+    $fields = [];
+    $fields['translation_request'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('The originating translation request'))
+      ->setDescription(t('The translation request where the translation came from'))
+      ->setSetting('target_type', 'oe_translation_request')
+      ->setRevisionable(TRUE)
+      ->setTranslatable(TRUE);
+
+    return $fields;
+  }
+}

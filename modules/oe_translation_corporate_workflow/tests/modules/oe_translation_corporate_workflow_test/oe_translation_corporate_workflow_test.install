@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * OpenEuropa Translation Corporate Workflow Test install file.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_install().
+ */
+function oe_translation_corporate_workflow_test_install($is_syncing): void {
+  // If we are installing from config, we bail out.
+  if ($is_syncing) {
+    return;
+  }
+
+  $corporate_workflow = \Drupal::entityTypeManager()->getStorage('workflow')->load('oe_corporate_workflow');
+  $corporate_workflow->getTypePlugin()->addEntityTypeAndBundle('link_list', 'dynamic');
+  $corporate_workflow->save();
+
+  // Install the entity version.
+  $default_values = [
+    'major' => 0,
+    'minor' => 1,
+    'patch' => 0,
+  ];
+  \Drupal::service('entity_version.entity_version_installer')->install('link_list', ['dynamic'], $default_values);
+
+  // We apply the entity version setting for the version field.
+  \Drupal::entityTypeManager()->getStorage('entity_version_settings')->create([
+    'target_entity_type_id' => 'link_list',
+    'target_bundle' => 'dynamic',
+    'target_field' => 'version',
+  ])->save();
+}

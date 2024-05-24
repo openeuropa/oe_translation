@@ -89,7 +89,13 @@
         "patches": {
             "drupal/address": {
                 "https://www.drupal.org/project/address/issues/3187662": "https://www.drupal.org/files/issues/2020-12-10/3187662-3.patch"
-            }
+            },
+            "openeuropa/oe_editorial": {
+                 "latest-master": "https://github.com/openeuropa/oe_editorial/compare/2.2.0...EWPP-4233.diff"
+             },
+            "openeuropa/oe_link_lists": {
+                 "latest-master": "https://github.com/openeuropa/oe_link_lists/compare/1.2.0...EWPP-4233.diff"
+             }
         }
     },
     "config": {

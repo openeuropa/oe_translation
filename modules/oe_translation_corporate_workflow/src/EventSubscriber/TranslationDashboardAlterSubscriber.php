@@ -395,9 +395,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       return [];
     }
 
-    if (!$default && !$translation instanceof NodeInterface) {
-      // We only support the operations for non default revisions for Node
-      // entities.
+    if (!$default && !$translation) {
       return [];
     }
 
@@ -413,13 +411,20 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $delete = $translation->toUrl('delete-form');
     if (!$default) {
-      $delete = Url::fromRoute('node.revision_delete_confirm', [
-        'node' => $translation->id(),
-        'node_revision' => $translation->getRevisionId(),
-      ], [
-        'language' => $translation->language(),
-        'query' => ['destination' => Url::fromRoute('<current>')->toString()],
-      ]);
+      if ($translation instanceof NodeInterface) {
+        // Nodes have a specific route for the revision delete.
+        $delete = Url::fromRoute('node.revision_delete_confirm', [
+          'node' => $translation->id(),
+          'node_revision' => $translation->getRevisionId(),
+        ], [
+          'language' => $translation->language(),
+          'query' => ['destination' => Url::fromRoute('<current>')->toString()],
+        ]);
+      }
+      else {
+        $delete = $translation->toUrl('revision-delete-form');
+        $delete->setOption('query', ['destination' => Url::fromRoute('<current>')->toString()]);
+      }
     }
     if ($delete->access() && !$translation->isDefaultTranslation()) {
       // We don't want to present a link to delete the original translation.
