@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_active_revision\LanguageRevisionMapping;
@@ -100,6 +101,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
     $entity = $this->entityTypeManager->getStorage($event->getEntityTypeId())->load($entity->id());
+    if (!$entity instanceof NodeInterface) {
+      // We only support nodes for the time being.
+      return;
+    }
 
     /** @var \Drupal\workflows\WorkflowInterface $workflow */
     $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
