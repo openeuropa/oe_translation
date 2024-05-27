@@ -73,10 +73,10 @@ class FileApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEndpointUrl(): string {
+  protected function getEndpointUrlPath(): string {
     // The file URL is not present in the static settings.
     // It is defined by the Status API response.
-    return 'https://example.com/api/files/:language/:id';
+    return '/v2/files/:language/:id';
   }
 
   /**
