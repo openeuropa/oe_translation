@@ -17,13 +17,7 @@ function oe_translation_cdt_requirements($phase) {
 
   if ($phase == 'runtime') {
     $cdt_environment_variables = [
-      'cdt.main_api_endpoint' => t('CDT Main API endpoint'),
-      'cdt.token_api_endpoint' => t('CDT Token API endpoint'),
-      'cdt.reference_data_api_endpoint' => t('CDT Reference Data API endpoint'),
-      'cdt.validate_api_endpoint' => t('CDT Validate API endpoint'),
-      'cdt.requests_api_endpoint' => t('CDT Requests API endpoint'),
-      'cdt.identifier_api_endpoint' => t('CDT Identifier API endpoint'),
-      'cdt.status_api_endpoint' => t('CDT Status API endpoint'),
+      'cdt.base_api_url' => t('Base API URL'),
       'cdt.username' => t('CDT Username'),
       'cdt.client' => t('CDT Client'),
       'cdt.password' => t('CDT Password'),
