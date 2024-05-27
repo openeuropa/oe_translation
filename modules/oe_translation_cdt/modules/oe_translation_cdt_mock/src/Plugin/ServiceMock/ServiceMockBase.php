@@ -9,6 +9,7 @@ use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Site\Settings;
 use Drupal\http_request_mock\ServiceMockPluginInterface;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -62,13 +63,13 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
   }
 
   /**
-   * Gets the endpoint URL.
+   * Gets the endpoint URL path.
    *
    * @return string
-   *   The endpoint URL to match against the current request.
+   *   The endpoint URL path to match against the current request.
    *   All parameters like ":id" will be considered as wildcards.
    */
-  abstract protected function getEndpointUrl(): string;
+  abstract protected function getEndpointUrlPath(): string;
 
   /**
    * Gets the response from the endpoint.
@@ -103,12 +104,14 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
    *   The request parameters in the associative array.
    */
   protected function getRequestParameters(RequestInterface $request): array {
-    $url_parts = explode('/', $request->getUri()->getPath());
-    $endpoint_parts = explode('/', (string) parse_url($this->getEndpointUrl(), PHP_URL_PATH));
+    $request_path = rtrim($request->getUri()->getPath(), '/');
+    $base_path = (string) parse_url(Settings::get('cdt.base_api_url'), PHP_URL_PATH);
+    $request_url_parts = explode('/', trim(str_replace($base_path, '', $request_path), '/'));
+    $endpoint_parts = explode('/', trim($this->getEndpointUrlPath(), '/'));
     $parameters = [];
     foreach ($endpoint_parts as $key => $part) {
       if (str_starts_with($part, ':')) {
-        $parameters[ltrim($part, ':')] = $url_parts[$key] ?? NULL;
+        $parameters[ltrim($part, ':')] = $request_url_parts[$key] ?? NULL;
       }
     }
     return $parameters;
@@ -149,9 +152,10 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
    * {@inheritdoc}
    */
   public function applies(RequestInterface $request, array $options): bool {
-    // Replace all URL parameters with regex wildcards.
-    $endpoint_pattern = preg_replace('/:\w+/', '[^/]*', $this->getEndpointUrl());
-    return preg_match("|^$endpoint_pattern$|", (string) $request->getUri()) === 1;
+    // Replace all path parameters with regex wildcards.
+    $path_pattern = preg_replace('/:\w+/', '[^/]*', $this->getEndpointUrlPath());
+    $url_pattern = rtrim(Settings::get('cdt.base_api_url'), '/') . $path_pattern;
+    return preg_match("|^$url_pattern$|", (string) $request->getUri()) === 1;
   }
 
   /**
