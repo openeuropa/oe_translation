@@ -28,13 +28,7 @@ class RequirementsTest extends TranslationKernelTestBase {
   public function testCdtRequirements(): void {
     // Test correct settings.
     $settings = [
-      'cdt.token_api_endpoint' => 'https://example.com/token',
-      'cdt.main_api_endpoint' => 'https://example.com/v2/CheckConnection',
-      'cdt.reference_data_api_endpoint' => 'https://example.com/v2/requests/businessReferenceData',
-      'cdt.validate_api_endpoint' => 'https://example.com/v2/requests/validate',
-      'cdt.requests_api_endpoint' => 'https://example.com/v2/requests',
-      'cdt.identifier_api_endpoint' => 'https://example.com/v2/requests/requestIdentifierByCorrelationId/:correlationId',
-      'cdt.status_api_endpoint' => 'https://example.com/v2/requests/:requestyear/:requestnumber',
+      'cdt.base_api_url' => 'https://example.com',
       'cdt.username' => 'test_username',
       'cdt.client' => 'test_client',
       'cdt.password' => 'test_password',
