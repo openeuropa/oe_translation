@@ -10,6 +10,7 @@ use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use GuzzleHttp\Psr7\Response;
+use OpenEuropa\CdtClient\Endpoint\StatusEndpoint;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -27,8 +28,8 @@ class StatusApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEndpointUrl(): string {
-    return Settings::get('cdt.status_api_endpoint');
+  protected function getEndpointUrlPath(): string {
+    return StatusEndpoint::ENDPOINT_URL_PATH;
   }
 
   /**
@@ -89,6 +90,7 @@ class StatusApi extends ServiceMockBase {
     $response['targetLanguages'] = [];
     $default_job_summary = $response['pricing']['jobSummary'][0];
     $response['pricing']['jobSummary'] = [];
+    $base_url = rtrim(Settings::get('cdt.base_api_url'), '/');
     foreach ($entity->getTargetLanguages() as $language) {
       $cdt_target_language = LanguageCodeMapper::getCdtLanguageCode($language->getLangcode(), $entity);
       $response['targetLanguages'][] = $cdt_target_language;
@@ -114,7 +116,7 @@ class StatusApi extends ServiceMockBase {
           'isPrivate' => FALSE,
           '_links' => [
             'files' => [
-              'href' => sprintf('https://example.com/api/files/%s/%s', $cdt_target_language, $entity->id()),
+              'href' => sprintf('%s/v2/files/%s/%s', $base_url, $cdt_target_language, $entity->id()),
               'method' => 'GET',
             ],
           ],

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
-use Drupal\Core\Site\Settings;
 use GuzzleHttp\Psr7\Response;
+use OpenEuropa\CdtClient\Endpoint\ReferenceDataEndpoint;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -23,8 +23,8 @@ class ReferenceDataApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEndpointUrl(): string {
-    return Settings::get('cdt.reference_data_api_endpoint');
+  protected function getEndpointUrlPath(): string {
+    return ReferenceDataEndpoint::ENDPOINT_URL_PATH;
   }
 
   /**
