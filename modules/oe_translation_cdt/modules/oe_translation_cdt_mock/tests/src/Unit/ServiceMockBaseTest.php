@@ -88,6 +88,21 @@ final class ServiceMockBaseTest extends UnitTestCase {
       'parameter4' => NULL,
       'PARAMETER5' => NULL,
     ], $pathParameters);
+
+    // Check what happens if the base url contains only host.
+    $settings = [
+      'cdt.base_api_url' => 'https://example.com',
+    ];
+    new Settings($settings);
+    $request2 = new Request('GET', 'https://example.com/method/a/b/c/d/e');
+    $pathParameters = self::getMethod('getRequestParameters')->invokeArgs($this->serviceMockStub, [$request2]);
+    self::assertEquals([
+      'parameter1' => 'a',
+      'parameter_2' => 'b',
+      'parameter-3' => 'c',
+      'parameter4' => 'd',
+      'PARAMETER5' => 'e',
+    ], $pathParameters);
   }
 
   /**
@@ -103,6 +118,15 @@ final class ServiceMockBaseTest extends UnitTestCase {
     self::assertFalse($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/1'), []));
     self::assertFalse($this->serviceMockStub->applies(new Request('GET', 'http://example.com/api/method/1/2'), []));
     self::assertFalse($this->serviceMockStub->applies(new Request('GET', '/method/1/2'), []));
+
+    // Check what happens if the base url contains only host.
+    $settings = [
+      'cdt.base_api_url' => 'https://example.com',
+    ];
+    new Settings($settings);
+    self::assertFalse($this->serviceMockStub->applies(new Request('GET', 'https://example.com/method/1'), []));
+    self::assertTrue($this->serviceMockStub->applies(new Request('GET', 'https://example.com/method/1/2'), []));
+    self::assertFalse($this->serviceMockStub->applies(new Request('GET', 'https://example.com/method/1/2/3'), []));
   }
 
 }
