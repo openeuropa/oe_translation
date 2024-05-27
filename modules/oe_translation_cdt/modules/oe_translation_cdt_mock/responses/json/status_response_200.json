@@ -25,7 +25,7 @@
       "isPrivate": false,
       "_links": {
         "files": {
-          "href": "https://example.com/generic-rest/v2/files/en-123",
+          "href": "https://example.com/api/v2/files/en-123",
           "method": "GET"
         }
       }
@@ -42,7 +42,7 @@
       "isPrivate": false,
       "_links": {
         "files": {
-          "href": "https://example.com/generic-rest/v2/files/de-123",
+          "href": "https://example.com/api/v2/files/de-123",
           "method": "GET"
         }
       }
@@ -55,7 +55,7 @@
       "isPrivate": false,
       "_links": {
         "files": {
-          "href": "https://example.com/generic-rest/v2/files/et-123",
+          "href": "https://example.com/api/v2/files/et-123",
           "method": "GET"
         }
       }

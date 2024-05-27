@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_cdt_mock\Unit;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\oe_translation_cdt_mock\Plugin\ServiceMock\ServiceMockBase;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Psr7\Request;
@@ -37,6 +38,11 @@ final class ServiceMockBaseTest extends UnitTestCase {
       $this->createMock(EntityTypeManagerInterface::class),
       $this->createMock(LoggerChannelFactoryInterface::class),
     ]);
+
+    $settings = [
+      'cdt.base_api_url' => 'https://example.com/api',
+    ];
+    new Settings($settings);
   }
 
   /**
@@ -61,8 +67,8 @@ final class ServiceMockBaseTest extends UnitTestCase {
    */
   public function testPathParameters(): void {
     $this->serviceMockStub->expects(self::any())
-      ->method('getEndpointUrl')
-      ->willReturn('https://example.com/api/method/:parameter1/:parameter_2/:parameter-3/::parameter4/:PARAMETER5');
+      ->method('getEndpointUrlPath')
+      ->willReturn('/method/:parameter1/:parameter_2/:parameter-3/::parameter4/:PARAMETER5');
     $request1 = new Request('GET', 'https://example.com/api/method/1/2/3/4/5');
     $pathParameters = self::getMethod('getRequestParameters')->invokeArgs($this->serviceMockStub, [$request1]);
     self::assertEquals([
@@ -89,8 +95,8 @@ final class ServiceMockBaseTest extends UnitTestCase {
    */
   public function testUrlMatching(): void {
     $this->serviceMockStub->expects(self::any())
-      ->method('getEndpointUrl')
-      ->willReturn('https://example.com/api/method/:parameter1/:parameter2');
+      ->method('getEndpointUrlPath')
+      ->willReturn('/method/:parameter1/:parameter2');
     self::assertTrue($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/1/2'), []));
     self::assertTrue($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/aa/bb'), []));
     self::assertFalse($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/1/2/3'), []));
