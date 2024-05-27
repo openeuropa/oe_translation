@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
-use Drupal\Core\Site\Settings;
 use GuzzleHttp\Psr7\Response;
+use OpenEuropa\CdtClient\Endpoint\TokenEndpoint;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -23,8 +23,8 @@ class TokenApi extends ServiceMockBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEndpointUrl(): string {
-    return Settings::get('cdt.token_api_endpoint');
+  protected function getEndpointUrlPath(): string {
+    return TokenEndpoint::ENDPOINT_URL_PATH;
   }
 
   /**
