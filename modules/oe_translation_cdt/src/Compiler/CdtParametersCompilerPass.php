@@ -18,17 +18,10 @@ class CdtParametersCompilerPass implements CompilerPassInterface {
    */
   public function process(ContainerBuilder $container): void {
     $container->setParameter('cdt.client_configuration', [
-      'mainApiEndpoint' => Settings::get('cdt.main_api_endpoint'),
-      'tokenApiEndpoint' => Settings::get('cdt.token_api_endpoint'),
-      'referenceDataApiEndpoint' => Settings::get('cdt.reference_data_api_endpoint'),
-      'validateApiEndpoint' => Settings::get('cdt.validate_api_endpoint'),
-      'requestsApiEndpoint' => Settings::get('cdt.requests_api_endpoint'),
-      'identifierApiEndpoint' => Settings::get('cdt.identifier_api_endpoint'),
-      'statusApiEndpoint' => Settings::get('cdt.status_api_endpoint'),
+      'apiBaseUrl' => Settings::get('cdt.base_api_url'),
       'username' => Settings::get('cdt.username'),
       'password' => Settings::get('cdt.password'),
       'client' => Settings::get('cdt.client'),
-      'api_key' => Settings::get('cdt.api_key'),
     ]);
   }
 
