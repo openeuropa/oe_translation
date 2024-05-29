@@ -134,10 +134,11 @@ function oe_translation_cdt_preprocess_table__remote_language_list(array &$varia
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */
-function oe_translation_cdt_oe_translation_request_presave(TranslationRequestCdtInterface $request) {
+function oe_translation_cdt_oe_translation_request_presave(TranslationRequestRemoteInterface $request) {
   if ($request->bundle() !== 'cdt') {
     return;
   }
+  assert($request instanceof TranslationRequestCdtInterface);
 
   $languages = $request->getTargetLanguages();
 
