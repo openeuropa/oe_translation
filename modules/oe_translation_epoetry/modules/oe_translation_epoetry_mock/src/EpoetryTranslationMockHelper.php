@@ -66,6 +66,10 @@ class EpoetryTranslationMockHelper {
     }
 
     $exported = \Drupal::service('oe_translation_epoetry.html_formatter')->export($request);
+    if (isset(static::$translationRequestErrors['wrong request id'])) {
+      // Mimic the wrong file being sent (for a different request).
+      $exported = str_replace('item-' . $request->id(), 'item-4534353453', (string) $exported);
+    }
 
     $values = [
       '#request_id' => $request->getRequestId(),

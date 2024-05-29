@@ -168,6 +168,19 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
 
     $formatted_content = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-translated.html');
 
+    // Assert we get an exception if we try to import the content of a wrong
+    // request.
+    $test_formatted_content = str_replace('@request_id', '265445', $formatted_content);
+    $exception = NULL;
+    try {
+      $formatter->import($test_formatted_content, $this->request);
+    }
+    catch (\Exception $exception) {
+    }
+    $this->assertEquals('The translation request file does not match the translation request.', $exception->getMessage());
+    $this->assertInstanceOf(\Exception::class, $exception);
+
+    $formatted_content = str_replace('@request_id', $this->request->id(), $formatted_content);
     $actual_data = $formatter->import($formatted_content, $this->request);
 
     $expected_data = [

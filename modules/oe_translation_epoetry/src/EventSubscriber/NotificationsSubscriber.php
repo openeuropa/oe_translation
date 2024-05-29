@@ -340,7 +340,16 @@ class NotificationsSubscriber implements EventSubscriberInterface {
 
     // Process the translated file.
     $file = $product->getFile();
-    $data = $this->contentFormatter->import($file, $translation_request);
+    try {
+      $data = $this->contentFormatter->import($file, $translation_request);
+    }
+    catch (\Exception $exception) {
+      $event->setErrorResponse($exception->getMessage());
+      $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
+      $this->logger->error('The ePoetry notification did not provide a valid translation. ' . $exception->getMessage() . ' Reference: <strong>@reference</strong>.', ['@reference' => $reference]);
+      return;
+    }
+
     if (!$data) {
       $event->setErrorResponse('Translation data is missing or is invalid.');
       $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
