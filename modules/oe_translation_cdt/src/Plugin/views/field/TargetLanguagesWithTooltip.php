@@ -86,20 +86,18 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
     }
 
     $elements = [
-      'tooltip' => [
-        '#theme' => 'tooltip',
-        '#label' => new FormattableMarkup('@synced / @total', [
-          '@total' => $total_count,
-          '@synced' => $translated_count,
-        ]),
-        '#text' => [
-          '#theme' => 'item_list',
-          '#items' => $items,
-        ],
+      '#theme' => 'tooltip',
+      '#label' => new FormattableMarkup('@synced / @total', [
+        '@total' => $total_count,
+        '@synced' => $translated_count,
+      ]),
+      '#text' => [
+        '#theme' => 'item_list',
+        '#items' => $items,
       ],
     ];
 
-    return $this->getRenderer()->renderPlain($elements);
+    return $this->getRenderer()->render($elements);
   }
 
   /**
