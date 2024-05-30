@@ -154,7 +154,7 @@ abstract class ServiceMockBase extends PluginBase implements ServiceMockPluginIn
   public function applies(RequestInterface $request, array $options): bool {
     // Replace all path parameters with regex wildcards.
     $path_pattern = preg_replace('/:\w+/', '[^/]*', $this->getEndpointUrlPath());
-    $url_pattern = rtrim(Settings::get('cdt.base_api_url'), '/') . $path_pattern;
+    $url_pattern = rtrim((string) Settings::get('cdt.base_api_url'), '/') . $path_pattern;
     return preg_match("|^$url_pattern$|", (string) $request->getUri()) === 1;
   }
 
