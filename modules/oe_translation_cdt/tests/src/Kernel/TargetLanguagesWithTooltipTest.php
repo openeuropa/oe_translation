@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
+use Drupal\Core\Render\RenderContext;
 use Drupal\oe_translation_cdt\Plugin\views\field\TargetLanguagesWithTooltip;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
@@ -63,7 +64,12 @@ class TargetLanguagesWithTooltipTest extends TranslationKernelTestBase {
     $request->updateTargetLanguageStatus('pl', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW);
 
     $row = new ResultRow(['_entity' => $request]);
-    $markup = $this->fieldPlugin->render($row);
+    $renderer = $this->container->get('renderer');
+    $context = new RenderContext();
+    $markup = $renderer->executeInRenderContext($context, function () use ($row) {
+      // Avoid early rendering exception by running this inside a context.
+      return $this->fieldPlugin->render($row);
+    });
     $plain_text = strip_tags((string) $markup);
 
     $this->assertStringContainsString('Requested: French', $plain_text);
