@@ -278,6 +278,7 @@ class TranslationProviderTest extends TranslationTestBase {
    * Tests the cancelled remote translation flow using CDT.
    */
   public function testCancelledTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
     $request = $this->createTestTranslation([
       'de' => 'German',
     ]);
@@ -298,22 +299,22 @@ class TranslationProviderTest extends TranslationTestBase {
       1 => [
         'Info',
         'The translation request was successfully validated.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       3 => [
         'Info',
         "Manually updated the permanent ID.Updated cdt_id field to {$request->getCdtId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       4 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: de (Requested =&gt; Cancelled).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -323,6 +324,7 @@ class TranslationProviderTest extends TranslationTestBase {
    * Tests the partially cancelled remote translation flow using CDT.
    */
   public function testPartiallyCancelledTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
     $request = $this->createTestTranslation([
       'fr' => 'French',
       'sk' => 'Slovak',
@@ -359,32 +361,32 @@ class TranslationProviderTest extends TranslationTestBase {
       1 => [
         'Info',
         'The translation request was successfully validated.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       3 => [
         'Info',
         "Manually updated the permanent ID.Updated cdt_id field to {$request->getCdtId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       4 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: fr (Requested =&gt; Cancelled).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       5 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: sk (Requested =&gt; Review).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       6 => [
         'Info',
         'The Slovak translation has been synchronised with the content.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
