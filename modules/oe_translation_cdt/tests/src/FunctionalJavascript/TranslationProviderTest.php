@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\FunctionalJavascript;
 
-use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
@@ -42,9 +41,19 @@ class TranslationProviderTest extends TranslationTestBase {
   ];
 
   /**
-   * The user running the tests.
+   * The remote translations manager.
    */
-  protected UserInterface $user;
+  protected UserInterface $remoteTranslationManager;
+
+  /**
+   * The translator user.
+   */
+  protected UserInterface $translatorUser;
+
+  /**
+   * The authenticated user.
+   */
+  protected UserInterface $authenticatedUser;
 
   /**
    * {@inheritdoc}
@@ -60,21 +69,20 @@ class TranslationProviderTest extends TranslationTestBase {
     $provider->setProviderConfiguration($configuration);
     $provider->save();
 
-    $this->user = $this->setUpTranslatorUser();
-    $this->drupalLogin($this->user);
+    $this->authenticatedUser = $this->drupalCreateUser();
+    $this->translatorUser = $this->setUpTranslatorUser();
+    $this->remoteTranslationManager = $this->drupalCreateUser([
+      'administer remote translators',
+      'access administration pages',
+      'access toolbar',
+    ]);
   }
 
   /**
    * Tests the CDT translation provider configuration form.
    */
   public function testCdtProviderConfiguration(): void {
-    $user = $this->drupalCreateUser([
-      'administer remote translators',
-      'access administration pages',
-      'access toolbar',
-    ]);
-    assert($user instanceof AccountInterface);
-    $this->drupalLogin($user);
+    $this->drupalLogin($this->remoteTranslationManager);
 
     $this->drupalGet('admin/structure/remote-translation-provider');
     $this->assertSession()->pageTextContains('Remote Translator Provider entities');
@@ -132,6 +140,8 @@ class TranslationProviderTest extends TranslationTestBase {
    * simplified and focusing more on the CDT specific aspects.
    */
   public function testCdtSingleTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
+
     // Set PT language mapping.
     $translator = RemoteTranslatorProvider::load('cdt');
     assert($translator instanceof RemoteTranslatorProviderInterface);
@@ -205,51 +215,70 @@ class TranslationProviderTest extends TranslationTestBase {
       1 => [
         'Info',
         'The translation request was successfully validated.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       3 => [
         'Info',
         "Manually updated the permanent ID.Updated cdt_id field to $cdt_id.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       4 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: bg (Requested =&gt; Review).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       5 => [
         'Info',
         'The Bulgarian translation has been accepted.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       6 => [
         'Info',
         'The Bulgarian translation has been synchronised with the content.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       7 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: pt-pt (Requested =&gt; Review).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       8 => [
         'Info',
         'The Portuguese translation has been synchronised with the content.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
+
+    // Check the translation dashboard.
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextNotContains('Access denied');
+    $this->assertSession()->pageTextContains($cdt_id);
+    $this->assertSession()->pageTextContains('Finished');
+
+    // Check the access to the translation pages.
+    $this->drupalLogin($this->authenticatedUser);
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+    $this->drupalGet($request->toUrl('canonical'));
+    $this->assertSession()->pageTextContains('Access denied');
+    $this->drupalLogout();
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+    $this->drupalGet($request->toUrl('canonical'));
+    $this->assertSession()->pageTextContains('Access denied');
   }
 
   /**
    * Tests the cancelled remote translation flow using CDT.
    */
   public function testCancelledTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
     $request = $this->createTestTranslation([
       'de' => 'German',
     ]);
@@ -270,22 +299,22 @@ class TranslationProviderTest extends TranslationTestBase {
       1 => [
         'Info',
         'The translation request was successfully validated.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       3 => [
         'Info',
         "Manually updated the permanent ID.Updated cdt_id field to {$request->getCdtId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       4 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: de (Requested =&gt; Cancelled).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -295,6 +324,7 @@ class TranslationProviderTest extends TranslationTestBase {
    * Tests the partially cancelled remote translation flow using CDT.
    */
   public function testPartiallyCancelledTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
     $request = $this->createTestTranslation([
       'fr' => 'French',
       'sk' => 'Slovak',
@@ -331,32 +361,32 @@ class TranslationProviderTest extends TranslationTestBase {
       1 => [
         'Info',
         'The translation request was successfully validated.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       3 => [
         'Info',
         "Manually updated the permanent ID.Updated cdt_id field to {$request->getCdtId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       4 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: fr (Requested =&gt; Cancelled).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       5 => [
         'Info',
         'Received CDT callback, updating the job...The following languages are updated: sk (Requested =&gt; Review).',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       6 => [
         'Info',
         'The Slovak translation has been synchronised with the content.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
