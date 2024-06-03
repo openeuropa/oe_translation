@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Drupal\Tests\oe_translation_cdt\Kernel;
+
 use Composer\InstalledVersions;
 use Drupal\Component\Datetime\Time;
 use Drupal\field\Entity\FieldConfig;
@@ -11,6 +13,7 @@ use Drupal\node\Entity\Node;
 use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
@@ -136,9 +139,10 @@ class XmlFormatterTest extends TranslationKernelTestBase {
       'source_language_code' => $node->language()->getId(),
       'target_languages' => [
         'langcode' => 'fr',
-        'status' => 'Requested',
+        'status' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,
       ],
       'translator_provider' => 'cdt',
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     ]);
 
     $this->request->setContentEntity($node);

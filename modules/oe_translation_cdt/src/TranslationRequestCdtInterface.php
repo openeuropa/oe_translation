@@ -9,6 +9,9 @@ use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
  */
 interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterface {
 
+  const STATUS_LANGUAGE_FAILED = 'Failed';
+  const STATUS_LANGUAGE_CANCELLED = 'Cancelled';
+
   /**
    * Gets the CDT ID.
    *
@@ -27,24 +30,6 @@ interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterfa
    *   The current request.
    */
   public function setCdtId(string $value): TranslationRequestCdtInterface;
-
-  /**
-   * Sets the request status based on CDT code.
-   *
-   * @param string $cdt_status
-   *   The CDT status code.
-   */
-  public function setRequestStatusFromCdt(string $cdt_status): TranslationRequestCdtInterface;
-
-  /**
-   * Updates the language status based on CDT code.
-   *
-   * @param string $langcode
-   *   The Drupal language code.
-   * @param string $cdt_status
-   *   The CDT status code.
-   */
-  public function updateTargetLanguageStatusFromCdt(string $langcode, string $cdt_status): void;
 
   /**
    * Gets the comments.

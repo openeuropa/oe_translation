@@ -6,9 +6,10 @@ namespace Drupal\oe_translation_cdt\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Site\Settings;
-use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
 use OpenEuropa\CdtClient\Serializer\CallbackSerializer;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -18,6 +19,25 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * Handles endpoints for CDT callbacks.
  */
 class CallbackController extends ControllerBase {
+
+  /**
+   * Constructs the controller.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface $updater
+   *   The translation request updater.
+   */
+  public function __construct(
+    private readonly TranslationRequestUpdaterInterface $updater,
+  ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): self {
+    return new static(
+      $container->get('oe_translation_cdt.translation_request_updater'),
+    );
+  }
 
   /**
    * Verifies if the API key matches the one from module settings.
@@ -53,19 +73,20 @@ class CallbackController extends ControllerBase {
    */
   private function loadTranslationRequest(string $cdt_id, ?string $correlation_id = NULL): ?TranslationRequestCdtInterface {
     $request_storage = $this->entityTypeManager()->getStorage('oe_translation_request');
-    $requests = $request_storage->loadByProperties([
+    $translation_requests = $request_storage->loadByProperties([
       'cdt_id' => $cdt_id,
     ]);
-    if (count($requests) === 0 && !is_null($correlation_id)) {
-      $requests = $request_storage->loadByProperties([
+    if (count($translation_requests) === 0 && !is_null($correlation_id)) {
+      $translation_requests = $request_storage->loadByProperties([
         'correlation_id' => $correlation_id,
       ]);
     }
 
-    if ($request = reset($requests)) {
+    if ($request = reset($translation_requests)) {
       assert($request instanceof TranslationRequestCdtInterface);
       return $request;
     }
+
     return NULL;
   }
 
@@ -80,7 +101,6 @@ class CallbackController extends ControllerBase {
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function requestStatus(Request $request): Response {
     if (!$this->isApiKeyValid($request)) {
@@ -91,11 +111,7 @@ class CallbackController extends ControllerBase {
     if (!$translation_request) {
       throw new NotFoundHttpException('Translation request not found');
     }
-    $translation_request->setRequestStatusFromCdt($request_status->getStatus());
-    if (!$translation_request->getCdtId()) {
-      $translation_request->setCdtId($request_status->getRequestIdentifier());
-    }
-    $translation_request->save();
+    $this->updater->updateFromRequestStatus($translation_request, $request_status);
 
     return new Response();
   }
@@ -111,7 +127,6 @@ class CallbackController extends ControllerBase {
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function jobStatus(Request $request): Response {
     if (!$this->isApiKeyValid($request)) {
@@ -122,9 +137,7 @@ class CallbackController extends ControllerBase {
     if (!$translation_request) {
       throw new NotFoundHttpException('Translation request not found');
     }
-    $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job_status->getTargetLanguageCode(), $translation_request);
-    $translation_request->updateTargetLanguageStatusFromCdt($drupal_langcode, $job_status->getStatus());
-    $translation_request->save();
+    $this->updater->updateFromJobStatus($translation_request, $job_status);
 
     return new Response();
   }

@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+namespace Drupal\Tests\oe_translation_cdt\Kernel;
+
 use Drupal\Core\Site\Settings;
 use Drupal\oe_translation\Entity\TranslationRequest;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Controller\CallbackController;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -61,11 +64,12 @@ class CallbackControllerTest extends TranslationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('oe_translation_request');
+    $this->installEntitySchema('oe_translation_request_log');
     $this->installConfig([
       'oe_translation_remote',
       'oe_translation_cdt',
     ]);
-    $this->controller = new CallbackController();
+    $this->controller = new CallbackController($this->container->get('oe_translation_cdt.translation_request_updater'));
     new Settings([
       'cdt.api_key' => '12345',
     ]);
@@ -104,7 +108,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_with_id = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => '2024/12345a',
-        'Status' => 'COMP',
+        'Status' => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
         'Date' => '2024-02-28T12:03:03.6239422',
         'CorrelationId' => 'aaa',
       ])
@@ -127,7 +131,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_without_id = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => '2024/12345b',
-        'Status' => 'COMP',
+        'Status' => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
         'Date' => '2024-02-28T12:03:03.6239422',
         'CorrelationId' => 'bbb',
       ])
@@ -135,7 +139,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_without_id->headers->set('apikey', '12345');
     $translation_request_without_id = TranslationRequest::create([
       'bundle' => 'cdt',
-      'cdt_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
       'correlation_id' => 'bbb',
     ]);
     assert($translation_request_without_id instanceof TranslationRequestCdtInterface);
@@ -152,7 +156,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request_404 = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => 'non_existing_cdt_id',
-        'Status' => 'COMP',
+        'Status' => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
         'Date' => '2024-02-28T12:03:03.6239422',
         'CorrelationId' => 'non_existing_correlation_id',
       ])
@@ -170,7 +174,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $request = new Request(
       [], [], [], [], [], [], (string) json_encode([
         'RequestIdentifier' => '2024/12345a',
-        'Status' => 'CMP',
+        'Status' => CdtApiWrapperInterface::STATUS_JOB_COMPLETED,
         'SourceDocumentName' => 'text.xml',
         'SourceLanguageCode' => 'EN',
         'TargetLanguageCode' => 'ES',
@@ -180,6 +184,7 @@ class CallbackControllerTest extends TranslationKernelTestBase {
     $translation_request = TranslationRequest::create([
       'bundle' => 'cdt',
       'cdt_id' => '2024/12345a',
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
     ]);
     assert($translation_request instanceof TranslationRequestCdtInterface);
     $translation_request->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);

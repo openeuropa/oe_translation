@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_remote\RemoteTranslationRequestEntityTrait;
-use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
  * A CDT bundle class for oe_translation_request entities.
  */
 final class TranslationRequestCdt extends TranslationRequest implements TranslationRequestCdtInterface {
-  use RemoteTranslationRequestEntityTrait;
+
+  use StringTranslationTrait;
+  use RemoteTranslationRequestEntityTrait {
+    getLanguageStatusDescription as traitGetLanguageStatusDescription;
+  }
 
   /**
    * {@inheritdoc}
@@ -27,30 +32,6 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   public function setCdtId(string $value): TranslationRequestCdtInterface {
     $this->set('cdt_id', $value);
     return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRequestStatusFromCdt(string $cdt_status): TranslationRequestCdtInterface {
-    $target_status = match($cdt_status) {
-      'COMP' => TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
-      'CANC' => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
-      default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
-    };
-    $this->setRequestStatus($target_status);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updateTargetLanguageStatusFromCdt(string $langcode, string $cdt_status): void {
-    $target_status = match($cdt_status) {
-      'CMP' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
-      default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
-    };
-    $this->updateTargetLanguageStatus($langcode, $target_status);
   }
 
   /**
@@ -179,6 +160,21 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
   public function setPriority(string $value): TranslationRequestCdtInterface {
     $this->set('priority', $value);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup {
+    switch ($status) {
+      case TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED:
+        return $this->t('The translation for this language has been cancelled by CDT. It cannot be reopened.');
+
+      case TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED:
+        return $this->t('The translation for this language has failed in CDT. It cannot be reopened.');
+    }
+
+    return $this->traitGetLanguageStatusDescription($status, $langcode);
   }
 
 }

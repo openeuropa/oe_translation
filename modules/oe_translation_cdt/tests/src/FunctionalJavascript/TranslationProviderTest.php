@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\FunctionalJavascript;
 
-use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
@@ -42,9 +41,19 @@ class TranslationProviderTest extends TranslationTestBase {
   ];
 
   /**
-   * The user running the tests.
+   * The remote translations manager.
    */
-  protected UserInterface $user;
+  protected UserInterface $remoteTranslationManager;
+
+  /**
+   * The translator user.
+   */
+  protected UserInterface $translatorUser;
+
+  /**
+   * The authenticated user.
+   */
+  protected UserInterface $authenticatedUser;
 
   /**
    * {@inheritdoc}
@@ -60,21 +69,20 @@ class TranslationProviderTest extends TranslationTestBase {
     $provider->setProviderConfiguration($configuration);
     $provider->save();
 
-    $this->user = $this->setUpTranslatorUser();
-    $this->drupalLogin($this->user);
+    $this->authenticatedUser = $this->drupalCreateUser();
+    $this->translatorUser = $this->setUpTranslatorUser();
+    $this->remoteTranslationManager = $this->drupalCreateUser([
+      'administer remote translators',
+      'access administration pages',
+      'access toolbar',
+    ]);
   }
 
   /**
    * Tests the CDT translation provider configuration form.
    */
   public function testCdtProviderConfiguration(): void {
-    $user = $this->drupalCreateUser([
-      'administer remote translators',
-      'access administration pages',
-      'access toolbar',
-    ]);
-    assert($user instanceof AccountInterface);
-    $this->drupalLogin($user);
+    $this->drupalLogin($this->remoteTranslationManager);
 
     $this->drupalGet('admin/structure/remote-translation-provider');
     $this->assertSession()->pageTextContains('Remote Translator Provider entities');
@@ -132,6 +140,8 @@ class TranslationProviderTest extends TranslationTestBase {
    * simplified and focusing more on the CDT specific aspects.
    */
   public function testCdtSingleTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
+
     // Set PT language mapping.
     $translator = RemoteTranslatorProvider::load('cdt');
     assert($translator instanceof RemoteTranslatorProviderInterface);
@@ -140,59 +150,243 @@ class TranslationProviderTest extends TranslationTestBase {
     $translator->setProviderConfiguration($configuration);
     $translator->save();
 
-    $node = $this->createBasicTestNode('oe_demo_translatable_page', "The translation's page");
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Remote translations');
+    $request = $this->createTestTranslation([
+      'bg' => 'Bulgarian',
+      'pt-pt' => 'Portuguese',
+    ]);
 
-    $select = $this->assertSession()->selectExists('Translator');
-    // The CDT translator is preselected because it's the only one.
-    $this->assertEquals('cdt', $select->find('css', 'option[selected]')->getValue());
-    $this->assertSession()->pageTextContains('New translation request using CDT');
+    // Request the permanent ID.
+    $this->assertSession()->linkNotExists('Refresh status', 'The Refresh status link should not be available yet.');
+    $this->clickLink('Get Permanent ID');
+    $this->assertSession()->pageTextContains('The permanent ID has been updated.');
+    $request = $this->getUncachedTranslationRequest($request);
+    $cdt_id = $request->getCdtId();
+    $this->assertNotEmpty($cdt_id, 'The CDT ID should be set.');
+    $this->assertEquals($cdt_id, sprintf('%s/%s', date('Y'), $request->getCorrelationId()));
 
-    // Select the translation settings.
-    $this->getSession()->getPage()->fillField('Comments', 'Test Translation');
-    $this->getSession()->getPage()->fillField('Confidentiality', 'NO');
-    $this->getSession()->getPage()->fillField('translator_configuration[cdt][contact_usernames][0][value]', 'TESTUSER');
-    $this->getSession()->getPage()->fillField('translator_configuration[cdt][deliver_to][0][value]', 'TESTUSER');
-    $this->getSession()->getPage()->fillField('Department', '123');
-    $this->getSession()->getPage()->fillField('Phone number', '123456');
-    $this->getSession()->getPage()->fillField('Priority', 'NO');
+    // Refresh the status, nothing should change.
+    $this->clickLink('Refresh status');
+    $this->assertSession()->pageTextContains('The request status did not change.');
 
-    // Assert the languages' validation.
-    $this->getSession()->getPage()->pressButton('Save and send');
-    $this->assertSession()->pageTextContains('Please select at least one language.');
+    // Mock the completion of the BG language. Index 0 belongs to the request.
+    $this->clickLink('Update status to Completed (mock)', 1);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['bg']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
 
-    // Select 2 languages.
-    $this->getSession()->getPage()->checkField('Bulgarian');
-    $this->getSession()->getPage()->checkField('Portuguese');
-    $this->getSession()->getPage()->pressButton('Save and send');
+    // Fetch the BG translation.
+    $this->clickLink('Fetch the translation');
 
-    $this->assertSession()->pageTextContains('The translation request has been sent to CDT.');
+    // Accept the BG translation.
+    $this->clickLink('Review');
+    $this->assertSession()->pageTextContains('BG translation of');
+    $this->getSession()->getPage()->pressButton('Save and accept');
+    $this->assertSession()->pageTextContains('Accepted');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED, $request->getTargetLanguages()['bg']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
 
-    // Assert that we got back a correct response and our request was updated.
-    $provider_manager = $this->container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager');
-    $requests = $provider_manager->getExistingTranslationRequests($node, TRUE);
-    $this->assertCount(1, $requests);
-    $request = reset($requests);
-    $this->assertInstanceOf(TranslationRequestCdtInterface::class, $request);
-    $this->assertEquals('en', $request->getSourceLanguageCode());
-    $target_languages = $request->getTargetLanguages();
-    $this->assertEquals(new LanguageWithStatus('bg', 'Requested'), $target_languages['bg']);
-    $this->assertEquals(new LanguageWithStatus('pt-pt', 'Requested'), $target_languages['pt-pt']);
-    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getRequestStatus());
-    $this->assertEquals('cdt', $request->getTranslatorProvider()->id());
+    // Synchronise the BG translation.
+    $this->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('Synchronised');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED, $request->getTargetLanguages()['bg']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+
+    // Finalize the PT translation.
+    $this->clickLink('Update status to Completed (mock)', 2);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
+    $this->clickLink('Fetch the translation');
+    $this->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED, $request->getTargetLanguages()['pt-pt']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
 
     // Assert the log messages.
+    $this->drupalGet('translation-request/' . $request->id());
     $expected_logs = [
       1 => [
         'Info',
         'The translation request was successfully validated.',
-        $this->user->label(),
+        $this->translatorUser->label(),
       ],
       2 => [
         'Info',
         "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
-        $this->user->label(),
+        $this->translatorUser->label(),
+      ],
+      3 => [
+        'Info',
+        "Manually updated the permanent ID.Updated cdt_id field to $cdt_id.",
+        $this->translatorUser->label(),
+      ],
+      4 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: bg (Requested =&gt; Review).',
+        $this->translatorUser->label(),
+      ],
+      5 => [
+        'Info',
+        'The Bulgarian translation has been accepted.',
+        $this->translatorUser->label(),
+      ],
+      6 => [
+        'Info',
+        'The Bulgarian translation has been synchronised with the content.',
+        $this->translatorUser->label(),
+      ],
+      7 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: pt-pt (Requested =&gt; Review).',
+        $this->translatorUser->label(),
+      ],
+      8 => [
+        'Info',
+        'The Portuguese translation has been synchronised with the content.',
+        $this->translatorUser->label(),
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
+
+    // Check the translation dashboard.
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextNotContains('Access denied');
+    $this->assertSession()->pageTextContains($cdt_id);
+    $this->assertSession()->pageTextContains('Finished');
+
+    // Check the access to the translation pages.
+    $this->drupalLogin($this->authenticatedUser);
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+    $this->drupalGet($request->toUrl('canonical'));
+    $this->assertSession()->pageTextContains('Access denied');
+    $this->drupalLogout();
+    $this->drupalGet('admin/content/cdt-translation-requests');
+    $this->assertSession()->pageTextContains('Access denied');
+    $this->drupalGet($request->toUrl('canonical'));
+    $this->assertSession()->pageTextContains('Access denied');
+  }
+
+  /**
+   * Tests the cancelled remote translation flow using CDT.
+   */
+  public function testCancelledTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
+    $request = $this->createTestTranslation([
+      'de' => 'German',
+    ]);
+
+    // Request the permanent ID.
+    $this->clickLink('Get Permanent ID');
+
+    // Mock the cancellation of the DE language. Index 0 belongs to the request.
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="de"]')->pressButton('List additional actions');
+    $this->clickLink('Update status to Cancelled (mock)', 1);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED, $request->getTargetLanguages()['de']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+
+    // Assert the log messages.
+    $this->drupalGet('translation-request/' . $request->id());
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The translation request was successfully validated.',
+        $this->translatorUser->label(),
+      ],
+      2 => [
+        'Info',
+        "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
+        $this->translatorUser->label(),
+      ],
+      3 => [
+        'Info',
+        "Manually updated the permanent ID.Updated cdt_id field to {$request->getCdtId()}.",
+        $this->translatorUser->label(),
+      ],
+      4 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: de (Requested =&gt; Cancelled).',
+        $this->translatorUser->label(),
+      ],
+    ];
+    $this->assertLogMessagesTable($expected_logs);
+  }
+
+  /**
+   * Tests the partially cancelled remote translation flow using CDT.
+   */
+  public function testPartiallyCancelledTranslationFlow(): void {
+    $this->drupalLogin($this->translatorUser);
+    $request = $this->createTestTranslation([
+      'fr' => 'French',
+      'sk' => 'Slovak',
+    ]);
+
+    // Request the permanent ID.
+    $this->clickLink('Get Permanent ID');
+
+    // Mock the cancellation of the FR language. Index 0 belongs to the request.
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"]')->pressButton('List additional actions');
+    $this->clickLink('Update status to Cancelled (mock)', 1);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED, $request->getTargetLanguages()['fr']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getTargetLanguages()['sk']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED, $request->getRequestStatus());
+
+    // Mock the acceptance of the SK language.
+    $this->clickLink('Update status to Completed (mock)', 2);
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED, $request->getTargetLanguages()['fr']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['sk']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
+    $this->clickLink('Fetch the translation');
+    $this->clickLink('Review');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $request = $this->getUncachedTranslationRequest($request);
+    $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED, $request->getTargetLanguages()['fr']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED, $request->getTargetLanguages()['sk']->getStatus());
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED, $request->getRequestStatus());
+
+    // Assert the log messages.
+    $this->drupalGet('translation-request/' . $request->id());
+    $expected_logs = [
+      1 => [
+        'Info',
+        'The translation request was successfully validated.',
+        $this->translatorUser->label(),
+      ],
+      2 => [
+        'Info',
+        "The translation request was successfully sent to CDT with correlation ID: {$request->getCorrelationId()}.",
+        $this->translatorUser->label(),
+      ],
+      3 => [
+        'Info',
+        "Manually updated the permanent ID.Updated cdt_id field to {$request->getCdtId()}.",
+        $this->translatorUser->label(),
+      ],
+      4 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: fr (Requested =&gt; Cancelled).',
+        $this->translatorUser->label(),
+      ],
+      5 => [
+        'Info',
+        'Received CDT callback, updating the job...The following languages are updated: sk (Requested =&gt; Review).',
+        $this->translatorUser->label(),
+      ],
+      6 => [
+        'Info',
+        'The Slovak translation has been synchronised with the content.',
+        $this->translatorUser->label(),
       ],
     ];
     $this->assertLogMessagesTable($expected_logs);
@@ -219,6 +413,81 @@ class TranslationProviderTest extends TranslationTestBase {
     }
 
     $this->assertEquals($logs, $actual);
+  }
+
+  /**
+   * Gets the latest translation request for a node.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $request
+   *   The translation request.
+   *
+   * @return \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
+   *   The reloaded translation request.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getUncachedTranslationRequest(TranslationRequestCdtInterface $request): TranslationRequestCdtInterface {
+    $controller = $this->entityTypeManager->getStorage($request->getEntityTypeId());
+    $controller->resetCache([$request->id()]);
+    $refreshed_request = $controller->load($request->id());
+    $this->assertInstanceOf(TranslationRequestCdtInterface::class, $refreshed_request);
+    return $refreshed_request;
+  }
+
+  /**
+   * Creates a test translation with specified languages.
+   *
+   * @param array $requested_languages
+   *   The requested languages keyed by the language code and the label.
+   *
+   * @return \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
+   *   The created translation request.
+   */
+  protected function createTestTranslation(array $requested_languages): TranslationRequestCdtInterface {
+    $node = $this->createBasicTestNode('oe_demo_translatable_page', "The translation's page");
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+
+    $select = $this->assertSession()->selectExists('Translator');
+    // The CDT translator is preselected because it's the only one.
+    $this->assertEquals('cdt', $select->find('css', 'option[selected]')->getValue());
+    $this->assertSession()->pageTextContains('New translation request using CDT');
+
+    // Select the translation settings.
+    $this->getSession()->getPage()->fillField('Comments', 'Test Translation');
+    $this->getSession()->getPage()->fillField('Confidentiality', 'NO');
+    $this->getSession()->getPage()->fillField('translator_configuration[cdt][contact_usernames][0][value]', 'TESTUSER1');
+    $this->getSession()->getPage()->fillField('translator_configuration[cdt][deliver_to][0][value]', 'TESTUSER1');
+    $this->getSession()->getPage()->fillField('Department', '123');
+    $this->getSession()->getPage()->fillField('Phone number', '123456');
+    $this->getSession()->getPage()->fillField('Priority', 'NO');
+
+    // Assert the languages' validation.
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('Please select at least one language.');
+
+    foreach ($requested_languages as $label) {
+      $this->getSession()->getPage()->checkField($label);
+    }
+    $this->getSession()->getPage()->pressButton('Save and send');
+
+    $this->assertSession()->pageTextContains('The translation request has been sent to CDT.');
+    $this->assertSession()->pageTextContains('No new translation request can be made because there is already an active translation request for this entity version.');
+
+    // Assert that we got back a correct response and our request was updated.
+    $provider_manager = $this->container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager');
+    $requests = $provider_manager->getExistingTranslationRequests($node, TRUE);
+    $request = end($requests);
+    $this->assertEquals('en', $request->getSourceLanguageCode());
+    $target_languages = $request->getTargetLanguages();
+    foreach ($requested_languages as $langcode => $label) {
+      $this->assertEquals(new LanguageWithStatus($langcode, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED), $target_languages[$langcode]);
+    }
+    $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED, $request->getRequestStatus());
+    $this->assertEquals('cdt', $request->getTranslatorProvider()->id());
+
+    return $request;
   }
 
 }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
 use Drupal\Core\Site\Settings;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
+use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -17,7 +19,7 @@ use Psr\Http\Message\ResponseInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_status_api",
  *   label = @Translation("CDT mocked status responses for testing."),
- *   weight = 0,
+ *   weight = -1,
  * )
  */
 class StatusApi extends ServiceMockBase {
@@ -45,20 +47,64 @@ class StatusApi extends ServiceMockBase {
 
     // Change only the important parameters.
     $response['status'] = match($entity->getRequestStatus()) {
-      TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => 'COMP',
-      TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => 'CANC',
-      TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED => 'INPR',
-      default => 'UNDE',
+      TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED,
+      TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED => CdtApiWrapperInterface::STATUS_REQUEST_CANCELLED,
+      TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED => CdtApiWrapperInterface::STATUS_REQUEST_IN_PROGRESS,
+      default => CdtApiWrapperInterface::STATUS_REQUEST_PENDING_APPROVAL,
+    };
+    $response['comments'] = [];
+    if ($entity->getComments()) {
+      $response['comments'][] = [
+        'comment' => (string) $entity->getComments(),
+        'isHTML' => FALSE,
+        'from' => 'Client',
+      ];
+    }
+    $response['phoneNumber'] = $entity->getPhoneNumber();
+    $response['department'] = match($entity->getDepartment()) {
+      '123' => 'Department 1',
+      default => 'Department 2',
     };
 
-    // Add source language and translated files.
+    // Update the contact lists.
+    $response['contacts'] = [];
+    foreach ($entity->getContactUsernames() as $contact) {
+      $response['contacts'][] = match($contact) {
+        'TESTUSER1' => 'John Smith',
+        default => 'Jane Doe',
+      };
+    }
+    $response['deliverToContacts'] = [];
+    foreach ($entity->getDeliverTo() as $contact) {
+      $response['deliverToContacts'][] = match($contact) {
+        'TESTUSER1' => 'John Smith',
+        default => 'Jane Doe',
+      };
+    }
+
+    // Add source language, jobs, and translated files.
     $cdt_source_language = LanguageCodeMapper::getCdtLanguageCode($entity->getSourceLanguageCode(), $entity);
     $response['sourceLanguage'] = $cdt_source_language;
     $response['targetFiles'] = [];
     $response['targetLanguages'] = [];
+    $default_job_summary = $response['pricing']['jobSummary'][0];
+    $response['pricing']['jobSummary'] = [];
     foreach ($entity->getTargetLanguages() as $language) {
       $cdt_target_language = LanguageCodeMapper::getCdtLanguageCode($language->getLangcode(), $entity);
       $response['targetLanguages'][] = $cdt_target_language;
+
+      $response['pricing']['jobSummary'][] = [
+        'targetLanguage' => $cdt_target_language,
+        'fileName' => 'translation_job_5_request.xml',
+        'priorityCode' => $entity->getPriority(),
+        'status' => match($language->getStatus()) {
+            TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED => CdtApiWrapperInterface::STATUS_JOB_FAILED,
+            TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED => CdtApiWrapperInterface::STATUS_JOB_CANCELLED,
+            TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED, TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED => CdtApiWrapperInterface::STATUS_JOB_COMPLETED,
+            default => CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS
+        },
+      ] + $default_job_summary;
+
       if ($language->getStatus() != TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED) {
         $response['targetFiles'][] = [
           'sourceLanguage' => $cdt_source_language,

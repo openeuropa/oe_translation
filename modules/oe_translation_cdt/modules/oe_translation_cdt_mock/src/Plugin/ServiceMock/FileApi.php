@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ServiceMock(
  *   id = "oe_translation_cdt_file_api",
  *   label = @Translation("CDT mocked file responses for testing."),
- *   weight = -1,
+ *   weight = -2,
  * )
  */
 class FileApi extends ServiceMockBase {
@@ -50,7 +50,7 @@ class FileApi extends ServiceMockBase {
     protected ModuleExtensionList $moduleExtensionList,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected LoggerChannelFactoryInterface $loggerFactory,
-    protected ContentFormatterInterface $xmlFormatter
+    protected ContentFormatterInterface $xmlFormatter,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $moduleExtensionList, $entityTypeManager, $loggerFactory);
   }
@@ -92,7 +92,11 @@ class FileApi extends ServiceMockBase {
       return new Response(400, [], $this->getResponseFromFile('file_response_400.json'));
     }
 
+    // Create a duplicate of the current entity and change the text.
+    // This way, we avoid modifying the original entity, and saving it
+    // accidentally in the database.
     $data = TranslationSourceHelper::filterTranslatable($entity->getData());
+    $translated_entity = $entity->createDuplicate();
     foreach ($data as &$field) {
       $field['#text'] = sprintf(
         '%s translation of %s',
@@ -100,8 +104,8 @@ class FileApi extends ServiceMockBase {
         $field['#text']
       );
     }
-    $entity->setData($data);
-    $xml = $this->xmlFormatter->export($entity);
+    $translated_entity->setData($data);
+    $xml = $this->xmlFormatter->export($translated_entity);
 
     $this->log('200: Returning the mocked file.', $request);
     return new Response(200, [], $xml);

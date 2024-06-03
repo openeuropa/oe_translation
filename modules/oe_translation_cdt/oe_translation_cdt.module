@@ -9,7 +9,10 @@ declare(strict_types=1);
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
+use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -36,10 +39,43 @@ function oe_translation_cdt_oe_translation_request_view_alter(array &$build, Ent
   $header = &$build['meta']['#header'];
   $header['cdt_correlation_id'] = t('Correlation ID');
   $header['cdt_permanent_id'] = t('Permanent ID');
+  $header['cdt_operations'] = t('Operations');
   $row = &$build['meta']['#rows'][0];
 
   $row['cdt_correlation_id'] = $entity->getCorrelationId() ?? t('Not available');
   $row['cdt_permanent_id'] = $entity->getCdtId() ?? t('Not available');
+
+  $operations = [];
+  if (!$entity->getCdtId()) {
+    $operations['permanent_id'] = [
+      'title' => t('Get Permanent ID'),
+      'url' => Url::fromRoute('oe_translation_cdt.get_permanent_id', [
+        'translation_request' => $entity->id(),
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+  else {
+    $operations['status'] = [
+      'title' => t('Refresh status'),
+      'url' => Url::fromRoute('oe_translation_cdt.refresh_status', [
+        'translation_request' => $entity->id(),
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+  $row['cdt_operations'] = [
+    'data' => [
+      '#type' => 'operations',
+      '#links' => $operations,
+    ],
+  ];
 
   if ($entity->getComments()) {
     $build['comment'] = [
@@ -59,4 +95,119 @@ function oe_translation_cdt_oe_translation_request_view_alter(array &$build, Ent
       0 => $logs,
     ];
   }
+}
+
+/**
+ * Implement template_preprocess_table__remote_language_list().
+ */
+function oe_translation_cdt_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestCdt::load($id);
+  if (!$request || $request->bundle() !== 'cdt') {
+    return;
+  }
+
+  foreach ($variables['rows'] as &$row) {
+    // Add the accepted deadline per individual language.
+    $langcode = (string) $row['attributes']['hreflang'];
+    $language = $request->getTargetLanguage($langcode);
+
+    if ($language->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW) {
+      continue;
+    }
+
+    $row['cells']['operations']['content']['#links'][] = [
+      'title' => 'Fetch the translation',
+      'url' => Url::fromRoute('oe_translation_cdt.fetch_translation', [
+        'translation_request' => $id,
+        'langcode' => $langcode,
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+        ],
+      ]),
+    ];
+  }
+
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function oe_translation_cdt_oe_translation_request_presave(TranslationRequestRemoteInterface $request) {
+  if ($request->bundle() !== 'cdt') {
+    return;
+  }
+  assert($request instanceof TranslationRequestCdtInterface);
+
+  $languages = $request->getTargetLanguages();
+
+  // Mark the request as Translated if all languages are either Cancelled,
+  // Failed or in Review/Acceptance.
+  $request_translated = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+      TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
+    ])) {
+      // It means at least one language is still not Cancelled or in Review.
+      $request_translated = FALSE;
+    }
+  }
+
+  if (!$request_translated && $request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED) {
+    // If the request has been marked as finished BUT one of the languages
+    // becomes in Review again, we need to mark the request back to Translated.
+    // This can happen if a translation is dispatched again from CDT once
+    // the request has already been finished. And we do this to give the user
+    // a chance to see it and review it.
+    foreach ($languages as $language_with_status) {
+      if ($language_with_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW) {
+        $request_translated = TRUE;
+        break;
+      }
+    }
+  }
+
+  if ($request_translated) {
+    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED);
+  }
+
+  // Mark the request as Finished if all languages are either Cancelled,
+  // Failed or Synchronised. This is because Cancelled and Failed languages
+  // cannot be continued anymore so they should allow the request to be
+  // Finished. We do this in a presave because the CDT notifications
+  // can come in any order so we have to check every time the request is saved.
+  $request_finished = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
+      TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
+      TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED,
+    ])) {
+      // It means at least one language is still not Cancelled, Failed or
+      // Synchronised.
+      $request_finished = FALSE;
+    }
+  }
+
+  if ($request_finished) {
+    $request->setRequestStatus(TranslationRequestRemoteInterface::STATUS_REQUEST_FINISHED);
+  }
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function oe_translation_cdt_views_data_alter(&$data) {
+  $data['oe_translation_request__target_languages']['target_cdt_languages_with_tooltip'] = [
+    'title' => t('Target CDT languages with tooltip'),
+    'group' => t('Translation Request'),
+    'field' => [
+      'title' => t('Target CDT languages with tooltip'),
+      'help' => t('Shows the number of requested languages with a tooltip containing more information.'),
+      'id' => 'oe_translation_cdt_target_languages_with_tooltip',
+    ],
+  ];
 }
