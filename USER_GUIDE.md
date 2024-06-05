@@ -214,14 +214,7 @@ Apart from the individual Node translations dashboard, you also have a dashboard
 
 Define the configuration of the module in the ENV variables. If the mocking module is enabled, the configuration does not matter and is always valid.
 ```
-CDT_TOKEN_API_ENDPOINT: "https://example.com/api/token"
-CDT_MAIN_API_ENDPOINT: "https://example.com/api/main"
-CDT_REFERENCE_DATA_API_ENDPOINT: "https://example.com/api/reference-data"
-CDT_VALIDATE_API_ENDPOINT: "https://example.com/api/validate"
-CDT_REQUESTS_API_ENDPOINT: "https://example.com/api/requests"
-CDT_IDENTIFIER_API_ENDPOINT: "https://example.com/api/identifier/:correlationId"
-CDT_STATUS_API_ENDPOINT: "https://example.com/api/status/:requestyear/:requestnumber"
-CDT_FILE_API_ENDPOINT: "https://example.com/api/files/:id"
+CDT_BASE_API_URL: "https://example.com/api"
 CDT_CLIENT: "test_client"
 CDT_USERNAME: "test_username"
 CDT_PASSWORD: "test_password"
