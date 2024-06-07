@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Controller;
 
+use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\content_translation\Controller\ContentTranslationController;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Controller for the content translation dashboard.
  */
-class ContentTranslationDashboardController extends ControllerBase {
+class ContentTranslationDashboardController extends ContentTranslationController {
 
   /**
    * The event dispatcher.
@@ -27,19 +30,34 @@ class ContentTranslationDashboardController extends ControllerBase {
   protected $eventDispatcher;
 
   /**
+   * The translator providers service.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * Constructs a new ContentTranslationDashboardController.
    *
+   * @param \Drupal\content_translation\ContentTranslationManagerInterface $manager
+   *   A content translation manager instance.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   The translator providers service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, LanguageManagerInterface $language_manager) {
+  public function __construct(ContentTranslationManagerInterface $manager, EntityFieldManagerInterface $entity_field_manager, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, LanguageManagerInterface $language_manager, TranslatorProvidersInterface $translatorProviders) {
+    parent::__construct($manager, $entity_field_manager);
     $this->entityTypeManager = $entity_type_manager;
     $this->eventDispatcher = $event_dispatcher;
     $this->languageManager = $language_manager;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -47,9 +65,12 @@ class ContentTranslationDashboardController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('content_translation.manager'),
+      $container->get('entity_field.manager'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
       $container->get('language_manager'),
+      $container->get('oe_translation.translator_providers')
     );
   }
 
@@ -64,7 +85,22 @@ class ContentTranslationDashboardController extends ControllerBase {
    * @return array
    *   The overview page.
    */
-  public function overview(RouteMatchInterface $route_match, string $entity_type_id = NULL): array {
+  public function overview(RouteMatchInterface $route_match, $entity_type_id = NULL): array {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $route_match->getParameter($entity_type_id);
+
+    if (!$this->translatorProviders->hasLocal($entity->getEntityType())) {
+      // If the current entity doesn't have local translations enabled (but
+      // uses the core system instead), we don't want to alter the list. We only
+      // allow others to alter the build.
+      $build = parent::overview($route_match, $entity_type_id);
+      $entity_type_id = $entity_type_id ?? '';
+      $event = new ContentTranslationDashboardAlterEvent($build, $route_match, $entity_type_id);
+      $this->eventDispatcher->dispatch($event, ContentTranslationDashboardAlterEvent::NAME);
+
+      return $event->getBuild();
+    }
+
     $build = [];
 
     $cache = new CacheableMetadata();
@@ -77,9 +113,6 @@ class ContentTranslationDashboardController extends ControllerBase {
       '#type' => 'inline_template',
       '#template' => "<h3>{{ 'Existing translations for the latest default revision'|t }}</h3>",
     ];
-
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $route_match->getParameter($entity_type_id);
 
     // By default, content translation loads the latest revision but we want
     // here to show the translations available on the latest default revision.

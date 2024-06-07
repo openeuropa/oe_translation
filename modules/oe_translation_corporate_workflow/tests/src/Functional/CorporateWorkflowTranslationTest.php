@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\oe_link_lists\Entity\LinkList;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
@@ -36,6 +37,7 @@ use Drupal\user\Entity\Role;
  * versions.
  *
  * @group batch1
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class CorporateWorkflowTranslationTest extends BrowserTestBase {
@@ -132,6 +134,12 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->drupalPlaceBlock('local_tasks_block');
 
     $this->user = $this->setUpTranslatorUser();
+    // Add the permission to manage link lists.
+    $role = Role::load('oe_translator');
+    $role->grantPermission('administer link_lists');
+    $role->grantPermission('access link list canonical page');
+    $role->grantPermission('view unpublished link list');
+    $role->save();
     $this->drupalLogin($this->user);
   }
 
@@ -625,274 +633,344 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    * @see oe_translation_corporate_workflow_entity_revision_create()
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+   * @SuppressWarnings(PHPMD.NPathComplexity)
    */
   public function testTranslationRevisionsCarryOver(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-
-    // Create a validated node directly and translate it.
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My node',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
-    $node = $this->moderateNode($node, 'validated');
-    $request = $this->createLocalTranslationRequest($node, 'fr');
-    $this->drupalGet($request->toUrl('local-translation'));
-    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');
-    $values = [
-      'Translation' => 'My node FR',
+    $title_fields = [
+      'node' => 'title',
+      'link_list' => 'administrative_title',
     ];
-    $this->submitForm($values, 'Save and synchronise');
+    foreach (['node', 'link_list'] as $entity_type) {
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      switch ($entity_type) {
 
-    $node = $node_storage->load($node->id());
-    // Publish the node and check that the translation is available in the
-    // published revision.
-    $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
+        case 'node':
+          $entity = $storage->create([
+            'type' => 'page',
+            'title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
+          $entity->save();
+          break;
 
-    $node_storage->resetCache();
-    /** @var \Drupal\node\NodeInterface[] $revisions */
-    $revisions = $node_storage->loadMultipleRevisions($revision_ids);
-    // Since we translated the node while it was validated, both revisions
-    // should contain the same translation.
-    foreach ($revisions as $revision) {
-      if ($revision->isPublished() || $revision->get('moderation_state')->value === 'validated') {
-        $this->assertTrue($revision->hasTranslation('fr'), 'The revision does not have a translation');
-        $this->assertEquals('My node FR', $revision->getTranslation('fr')->label(), 'The revision does not have a correct translation');
-      }
-    }
+        case 'link_list':
+          $entity = LinkList::create([
+            'bundle' => 'dynamic',
+            'administrative_title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
 
-    // Start a new draft from the latest published node and validate it.
-    $node->set('title', 'My node 2');
-    $node->set('moderation_state', 'draft');
-    $node->save();
-
-    $node = $this->moderateNode($node, 'validated');
-    $request = $this->createLocalTranslationRequest($node, 'fr');
-    $this->drupalGet($request->toUrl('local-translation'));
-
-    // The default translation value comes from the previous version
-    // translation.
-    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node FR');
-    $values = [
-      'Translation' => 'My node 2 FR',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
-
-    // Publish the node and check that the published versions have the correct
-    // translations. Since we have previously published revisions, we need to
-    // use the latest revision to transition to the published state.
-    $revision_id = $node_storage->getLatestRevisionId($node->id());
-    $node = $node_storage->loadRevision($revision_id);
-    $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
-
-    /** @var \Drupal\node\NodeInterface[] $revisions */
-    $revisions = $node_storage->loadMultipleRevisions($revision_ids);
-    foreach ($revisions as $revision) {
-      if ($revision->isPublished() && (int) $revision->get('version')->major === 1) {
-        $this->assertEquals('My node FR', $revision->getTranslation('fr')->label());
-        continue;
+          $configuration = [
+            'source' => [
+              'plugin' => 'test_example_source',
+              'plugin_configuration' => [
+                'entity_type' => 'node',
+                'bundle' => 'page',
+              ],
+            ],
+            'display' => [
+              'plugin' => 'title',
+            ],
+            'no_results_behaviour' => [
+              'plugin' => 'hide_list',
+              'plugin_configuration' => [],
+            ],
+            'size' => 1,
+            'more_link' => [],
+          ];
+          $entity->setConfiguration($configuration);
+          $entity->save();
+          break;
       }
 
-      if ($revision->isPublished() && (int) $revision->get('version')->major === 2) {
-        $this->assertEquals('My node 2 FR', $revision->getTranslation('fr')->label());
-        continue;
-      }
-    }
-
-    // Test that if the default revision of the content
-    // has less translations than the revision where we make a new revision
-    // from, the new revision will include all the translations from the
-    // previous revision not only the ones from the default revision.
-    // Start a new draft from the latest published node and validate it.
-    $node = $node_storage->load($node->id());
-    $node->set('title', 'My node 3');
-    $node->set('moderation_state', 'draft');
-    $node->save();
-
-    $node = $this->moderateNode($node, 'validated');
-    // Create some more translations.
-    foreach (['fr', 'it', 'ro'] as $langcode) {
-      $request = $this->createLocalTranslationRequest($node, $langcode);
+      $entity = $this->moderateEntity($entity, 'validated');
+      $request = $this->createLocalTranslationRequest($entity, 'fr');
       $this->drupalGet($request->toUrl('local-translation'));
-
       $values = [
-        'Translation' => "My node $langcode 3",
+        'Translation' => 'My editorial content FR',
       ];
       $this->submitForm($values, 'Save and synchronise');
-    }
 
-    // Publish the content and assert that the new published version has
-    // translations in 4 languages.
-    $revision_id = $node_storage->getLatestRevisionId($node->id());
-    $node = $node_storage->loadRevision($revision_id);
-    $node = $this->moderateNode($node, 'published');
-    foreach (['fr', 'it', 'ro'] as $langcode) {
-      $this->assertTrue($node->hasTranslation($langcode), 'Translation missing in ' . $langcode);
-    }
+      $entity = $storage->load($entity->id());
+      // Publish the node and check that the translation is available in the
+      // published revision.
+      $entity = $this->moderateEntity($entity, 'published');
+      $revision_ids = $this->getRevisionIds($entity);
 
-    // Test that translations carry over works also with embedded entities.
-    // These are entities such as paragraphs which are considered as composite,
-    // depend on the parent via the entity_reference_revisions
-    // entity_revision_parent_id_field.
-    /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
-    $paragraph = Paragraph::create([
-      'type' => 'workflow_paragraph',
-      'field_workflow_paragraph_text' => 'the paragraph text value',
-    ]);
-    $paragraph->save();
+      $storage->resetCache();
+      /** @var \Drupal\node\NodeInterface[] $revisions */
+      $revisions = $storage->loadMultipleRevisions($revision_ids);
+      // Since we translated the node while it was validated, both revisions
+      // should contain the same translation.
+      foreach ($revisions as $revision) {
+        if ($revision->isPublished() || $revision->get('moderation_state')->value === 'validated') {
+          $this->assertTrue($revision->hasTranslation('fr'), 'The revision does not have a translation');
+          $this->assertEquals('My editorial content FR', $revision->getTranslation('fr')->label(), 'The revision does not have a correct translation');
+        }
+      }
 
-    $node = Node::create([
-      'type' => 'oe_workflow_demo',
-      'title' => 'Node with a paragraph',
-      'field_workflow_paragraphs' => [
-        [
-          'target_id' => $paragraph->id(),
-          'target_revision_id' => $paragraph->getRevisionId(),
+      // Start a new draft from the latest published node and validate it.
+      $entity->set($title_fields[$entity_type], 'My editorial content 2');
+      $entity->set('moderation_state', 'draft');
+      $entity->save();
+
+      $entity = $this->moderateEntity($entity, 'validated');
+      $request = $this->createLocalTranslationRequest($entity, 'fr');
+      $this->drupalGet($request->toUrl('local-translation'));
+
+      // The default translation value comes from the previous version
+      // translation.
+      $values = [
+        'Translation' => 'My editorial content 2 FR',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
+
+      // Publish the node and check that the published versions have the correct
+      // translations. Since we have previously published revisions, we need to
+      // use the latest revision to transition to the published state.
+      $revision_id = $storage->getLatestRevisionId($entity->id());
+      $entity = $storage->loadRevision($revision_id);
+      $entity = $this->moderateEntity($entity, 'published');
+      $revision_ids = $this->getRevisionIds($entity);
+
+      /** @var \Drupal\node\NodeInterface[] $revisions */
+      $revisions = $storage->loadMultipleRevisions($revision_ids);
+      foreach ($revisions as $revision) {
+        if ($revision->isPublished() && (int) $revision->get('version')->major === 1) {
+          $this->assertEquals('My editorial content FR', $revision->getTranslation('fr')->label());
+          continue;
+        }
+
+        if ($revision->isPublished() && (int) $revision->get('version')->major === 2) {
+          $this->assertEquals('My editorial content 2 FR', $revision->getTranslation('fr')->label());
+          continue;
+        }
+      }
+
+      // Test that if the default revision of the content
+      // has less translations than the revision where we make a new revision
+      // from, the new revision will include all the translations from the
+      // previous revision not only the ones from the default revision.
+      // Start a new draft from the latest published node and validate it.
+      $entity = $storage->load($entity->id());
+      $entity->set($title_fields[$entity_type], 'My editorial content 3');
+      $entity->set('moderation_state', 'draft');
+      $entity->save();
+
+      $entity = $this->moderateEntity($entity, 'validated');
+      // Create some more translations.
+      foreach (['fr', 'it', 'ro'] as $langcode) {
+        $request = $this->createLocalTranslationRequest($entity, $langcode);
+        $this->drupalGet($request->toUrl('local-translation'));
+
+        $values = [
+          'Translation' => "My editorial content $langcode 3",
+        ];
+        $this->submitForm($values, 'Save and synchronise');
+      }
+
+      // Publish the content and assert that the new published version has
+      // translations in 4 languages.
+      $revision_id = $storage->getLatestRevisionId($entity->id());
+      $entity = $storage->loadRevision($revision_id);
+      $entity = $this->moderateEntity($entity, 'published');
+      foreach (['fr', 'it', 'ro'] as $langcode) {
+        $this->assertTrue($entity->hasTranslation($langcode), 'Translation missing in ' . $langcode);
+      }
+
+      if ($entity_type !== 'node') {
+        // The rest of the test is meant for nodes only with embedded entities.
+        continue;
+      }
+
+      // Test that translations carry over works also with embedded entities.
+      // These are entities such as paragraphs which are considered as
+      // composite, depend on the parent via the entity_reference_revisions
+      // entity_revision_parent_id_field.
+      /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
+      $paragraph = Paragraph::create([
+        'type' => 'workflow_paragraph',
+        'field_workflow_paragraph_text' => 'the paragraph text value',
+      ]);
+      $paragraph->save();
+
+      $node = Node::create([
+        'type' => 'oe_workflow_demo',
+        'title' => 'Node with a paragraph',
+        'field_workflow_paragraphs' => [
+          [
+            'target_id' => $paragraph->id(),
+            'target_revision_id' => $paragraph->getRevisionId(),
+          ],
         ],
-      ],
-    ]);
+      ]);
 
-    $node->save();
-    // Publish the node.
-    $node = $this->moderateNode($node, 'published');
+      $node->save();
+      // Publish the node.
+      $node = $this->moderateEntity($node, 'published');
 
-    // Add a translation to the published version.
-    $request = $this->createLocalTranslationRequest($node, 'fr');
-    $this->drupalGet($request->toUrl('local-translation'));
-    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'Node with a paragraph');
-    $this->assertSession()->elementContains('css', '#edit-field-workflow-paragraphs0entityfield-workflow-paragraph-text0value-translation', 'the paragraph text value');
-    $values = [
-      'title|0|value[translation]' => 'Node with a paragraph FR',
-      'field_workflow_paragraphs|0|entity|field_workflow_paragraph_text|0|value[translation]' => 'the paragraph text value FR',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
+      // Add a translation to the published version.
+      $request = $this->createLocalTranslationRequest($node, 'fr');
+      $this->drupalGet($request->toUrl('local-translation'));
+      $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'Node with a paragraph');
+      $this->assertSession()->elementContains('css', '#edit-field-workflow-paragraphs0entityfield-workflow-paragraph-text0value-translation', 'the paragraph text value');
+      $values = [
+        'title|0|value[translation]' => 'Node with a paragraph FR',
+        'field_workflow_paragraphs|0|entity|field_workflow_paragraph_text|0|value[translation]' => 'the paragraph text value FR',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
 
-    // Make a new draft and change the node and paragraph.
-    $user = $this->createUser([], NULL, TRUE);
-    $this->drupalLogin($user);
-    $this->drupalGet($node->toUrl());
-    $this->clickLink('New draft');
-    $this->getSession()->getPage()->fillField('title[0][value]', 'Node with a paragraph - updated');
-    $this->getSession()->getPage()->fillField('field_workflow_paragraphs[0][subform][field_workflow_paragraph_text][0][value]', 'the paragraph text value - updated');
-    $this->getSession()->getPage()->pressButton('Save (this translation)');
-    $this->assertSession()->pageTextContains('Node with a paragraph - updated has been updated.');
-    // Validate the node.
-    $this->getSession()->getPage()->selectFieldOption('Change to', 'Validated');
-    // Submitting the form will trigger a batch, so use the correct method to
-    // account for redirects.
-    $this->submitForm([], 'Apply');
-    $this->assertSession()->pageTextContains('The moderation state has been updated.');
-    // Update also the translation. We make sure we translate the validated
-    // version and not the published one.
-    $this->clickLink('Translate');
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a')->click();
-    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'Node with a paragraph FR');
-    $this->assertSession()->elementContains('css', '#edit-field-workflow-paragraphs0entityfield-workflow-paragraph-text0value-translation', 'the paragraph text value FR');
-    $values = [
-      'title|0|value[translation]' => 'Node with a paragraph FR 2',
-      'field_workflow_paragraphs|0|entity|field_workflow_paragraph_text|0|value[translation]' => 'the paragraph text value FR 2',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
-    // Go back to the node and publish it.
-    $this->drupalGet($node->toUrl());
-    $this->clickLink('View draft');
-    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
-    $this->getSession()->getPage()->pressButton('Apply');
-    $this->assertSession()->pageTextContains('The moderation state has been updated.');
-    $node_storage->resetCache();
-    $revision_id = $node_storage->getLatestRevisionId($node->id());
-    $revision = $node_storage->loadRevision($revision_id);
-    $node_translation = $revision->getTranslation('fr');
-    $this->assertEquals('Node with a paragraph - updated', $revision->label());
-    $this->assertEquals('Node with a paragraph FR 2', $node_translation->label());
-    $paragraph = $revision->get('field_workflow_paragraphs')->entity;
-    $paragraph_translation = $paragraph->getTranslation('fr');
-    $this->assertEquals('the paragraph text value - updated', $paragraph->get('field_workflow_paragraph_text')->value);
-    $this->assertEquals('the paragraph text value FR 2', $paragraph_translation->get('field_workflow_paragraph_text')->value);
+      // Make a new draft and change the node and paragraph.
+      $user = $this->createUser([], NULL, TRUE);
+      $this->drupalLogin($user);
+      $this->drupalGet($node->toUrl());
+      $this->clickLink('New draft');
+      $this->getSession()->getPage()->fillField('title[0][value]', 'Node with a paragraph - updated');
+      $this->getSession()->getPage()->fillField('field_workflow_paragraphs[0][subform][field_workflow_paragraph_text][0][value]', 'the paragraph text value - updated');
+      $this->getSession()->getPage()->pressButton('Save (this translation)');
+      $this->assertSession()->pageTextContains('Node with a paragraph - updated has been updated.');
+      // Validate the node.
+      $this->getSession()->getPage()->selectFieldOption('Change to', 'Validated');
+      // Submitting the form will trigger a batch, so use the correct method to
+      // account for redirects.
+      $this->submitForm([], 'Apply');
+      $this->assertSession()->pageTextContains('The moderation state has been updated.');
+      // Update also the translation. We make sure we translate the validated
+      // version and not the published one.
+      $this->clickLink('Translate');
+      $this->clickLink('Local translations');
+      $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a')->click();
+      $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'Node with a paragraph FR');
+      $this->assertSession()->elementContains('css', '#edit-field-workflow-paragraphs0entityfield-workflow-paragraph-text0value-translation', 'the paragraph text value FR');
+      $values = [
+        'title|0|value[translation]' => 'Node with a paragraph FR 2',
+        'field_workflow_paragraphs|0|entity|field_workflow_paragraph_text|0|value[translation]' => 'the paragraph text value FR 2',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
+      // Go back to the node and publish it.
+      $this->drupalGet($node->toUrl());
+      $this->clickLink('View draft');
+      $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+      $this->getSession()->getPage()->pressButton('Apply');
+      $this->assertSession()->pageTextContains('The moderation state has been updated.');
+      $storage->resetCache();
+      $revision_id = $storage->getLatestRevisionId($node->id());
+      $revision = $storage->loadRevision($revision_id);
+      $node_translation = $revision->getTranslation('fr');
+      $this->assertEquals('Node with a paragraph - updated', $revision->label());
+      $this->assertEquals('Node with a paragraph FR 2', $node_translation->label());
+      $paragraph = $revision->get('field_workflow_paragraphs')->entity;
+      $paragraph_translation = $paragraph->getTranslation('fr');
+      $this->assertEquals('the paragraph text value - updated', $paragraph->get('field_workflow_paragraph_text')->value);
+      $this->assertEquals('the paragraph text value FR 2', $paragraph_translation->get('field_workflow_paragraph_text')->value);
+    }
   }
 
   /**
    * Tests that moderation state translations are kept in sync with original.
    */
   public function testModerationStateSync(): void {
-    // Create a validated node and add a translation.
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
+    foreach (['node', 'link_list'] as $entity_type) {
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      switch ($entity_type) {
 
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My node',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
-    $node = $this->moderateNode($node, 'validated');
-    $request = $this->createLocalTranslationRequest($node, 'fr');
-    $this->drupalGet($request->toUrl('local-translation'));
-    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');
-    $values = [
-      'Translation' => 'My node FR',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
+        case 'node':
+          $entity = $storage->create([
+            'type' => 'page',
+            'title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
+          $entity->save();
+          break;
 
-    // Assert that the node has two translations and the moderation state entity
-    // also has two translations.
-    $node_storage->resetCache();
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->load($node->id());
-    $this->assertCount(2, $node->getTranslationLanguages());
-    $moderation_state = ContentModerationState::loadFromModeratedEntity($node);
-    $this->assertCount(2, $moderation_state->getTranslationLanguages());
+        case 'link_list':
+          $entity = LinkList::create([
+            'bundle' => 'dynamic',
+            'administrative_title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
 
-    // Assert that both the node and moderation state translations are
-    // "validated".
-    $assert_translation_state = function (ContentEntityInterface $entity, $state) {
-      foreach ($entity->getTranslationLanguages() as $language) {
-        $translation = $entity->getTranslation($language->getId());
-        $this->assertEquals($state, $translation->get('moderation_state')->value, sprintf('The %s language has the %s state', $language->getName(), $state));
+          $configuration = [
+            'source' => [
+              'plugin' => 'test_example_source',
+              'plugin_configuration' => [
+                'entity_type' => 'node',
+                'bundle' => 'page',
+              ],
+            ],
+            'display' => [
+              'plugin' => 'title',
+            ],
+            'no_results_behaviour' => [
+              'plugin' => 'hide_list',
+              'plugin_configuration' => [],
+            ],
+            'size' => 1,
+            'more_link' => [],
+          ];
+          $entity->setConfiguration($configuration);
+          $entity->save();
+          break;
       }
-    };
-    $assert_translation_state($node, 'validated');
-    $assert_translation_state($moderation_state, 'validated');
 
-    // "Break" the system by deleting the moderation state entity translation.
-    $moderation_state->removeTranslation('fr');
-    ContentModerationState::updateOrCreateFromEntity($moderation_state);
+      $entity = $this->moderateEntity($entity, 'validated');
+      $request = $this->createLocalTranslationRequest($entity, 'fr');
+      $this->drupalGet($request->toUrl('local-translation'));
+      $values = [
+        'Translation' => 'My editorial content FR',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
 
-    // Now only the original will be validated, and the translation of the node
-    // becomes "draft" because it no longer is translated. This situation
-    // should not really occur, but if it does, it can break new translations
-    // which when being saved onto the node, cause the moderation state of
-    // the original to be set to draft instead of keeping it on validated.
-    $node_storage->resetCache();
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->load($node->id());
-    $this->assertEquals('validated', $node->get('moderation_state')->value);
-    $this->assertEquals('draft', $node->getTranslation('fr')->get('moderation_state')->value);
+      // Assert that the node has two translations and the moderation state
+      // entity also has two translations.
+      $storage->resetCache();
+      $entity = $storage->load($entity->id());
+      $this->assertCount(2, $entity->getTranslationLanguages());
+      $moderation_state = ContentModerationState::loadFromModeratedEntity($entity);
+      $this->assertCount(2, $moderation_state->getTranslationLanguages());
 
-    // Create a new translation.
-    $request = $this->createLocalTranslationRequest($node, 'fr');
-    $this->drupalGet($request->toUrl('local-translation'));
-    $this->assertSession()->elementContains('css', '#edit-title0value-translation', 'My node');
-    $values = [
-      'Translation' => 'My node FR 2',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
+      // Assert that both the node and moderation state translations are
+      // "validated".
+      $assert_translation_state = function (ContentEntityInterface $entity, $state) {
+        foreach ($entity->getTranslationLanguages() as $language) {
+          $translation = $entity->getTranslation($language->getId());
+          $this->assertEquals($state, $translation->get('moderation_state')->value, sprintf('The %s language has the %s state', $language->getName(), $state));
+        }
+      };
+      $assert_translation_state($entity, 'validated');
+      $assert_translation_state($moderation_state, 'validated');
 
-    // Assert the node is still in validated state and the content moderation
-    // state entity got its translation back.
-    $node_storage->resetCache();
-    $node = $node_storage->load($node->id());
-    $assert_translation_state($node, 'validated');
-    $moderation_state = ContentModerationState::loadFromModeratedEntity($node);
-    $this->assertCount(2, $moderation_state->getTranslationLanguages());
-    $assert_translation_state($moderation_state, 'validated');
+      // "Break" the system by deleting the moderation state entity translation.
+      $moderation_state->removeTranslation('fr');
+      ContentModerationState::updateOrCreateFromEntity($moderation_state);
+
+      // Now only the original will be validated, and the translation of the
+      // node becomes "draft" because it no longer is translated. This situation
+      // should not really occur, but if it does, it can break new translations
+      // which when being saved onto the node, cause the moderation state of
+      // the original to be set to draft instead of keeping it on validated.
+      $storage->resetCache();
+      $entity = $storage->load($entity->id());
+      $this->assertEquals('validated', $entity->get('moderation_state')->value);
+      $this->assertEquals('draft', $entity->getTranslation('fr')->get('moderation_state')->value);
+
+      // Create a new translation.
+      $request = $this->createLocalTranslationRequest($entity, 'fr');
+      $this->drupalGet($request->toUrl('local-translation'));
+      $values = [
+        'Translation' => 'My editorial content FR 2',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
+
+      // Assert the node is still in validated state and the content moderation
+      // state entity got its translation back.
+      $storage->resetCache();
+      $entity = $storage->load($entity->id());
+      $assert_translation_state($entity, 'validated');
+      $moderation_state = ContentModerationState::loadFromModeratedEntity($entity);
+      $this->assertCount(2, $moderation_state->getTranslationLanguages());
+      $assert_translation_state($moderation_state, 'validated');
+    }
   }
 
   /**
@@ -904,69 +982,103 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    * is no longer the default revision, it doesn't become the default revision.
    */
   public function testDefaultRevisionFlagIsKept(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
+    foreach (['node', 'link_list'] as $entity_type) {
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      switch ($entity_type) {
 
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My node',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
-    $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
-    $this->assertCount(5, $revision_ids);
+        case 'node':
+          $entity = $storage->create([
+            'type' => 'page',
+            'title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
+          $entity->save();
+          break;
 
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
-    // Save the translation request as draft.
-    $this->submitForm([], 'Save as draft');
-    $node_storage->resetCache();
+        case 'link_list':
+          $entity = LinkList::create([
+            'bundle' => 'dynamic',
+            'administrative_title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
 
-    // Unpublish the node.
-    $node->set('moderation_state', 'archived');
-    $node->setNewRevision(TRUE);
-    $node->save();
-    $revision_ids = $node_storage->revisionIds($node);
-    // Assert we have one extra revision and the default revision is the
-    // Archived one and not the Published one.
-    $this->assertCount(6, $revision_ids);
-    $node = $node_storage->load($node->id());
-    $this->assertEquals('archived', $node->get('moderation_state')->value);
-    $this->assertTrue($node->isDefaultRevision());
-    array_pop($revision_ids);
-    $published_revision_id = array_pop($revision_ids);
-    $published = $node_storage->loadRevision($published_revision_id);
-    $this->assertEquals('published', $published->get('moderation_state')->value);
-    $this->assertFalse($published->isDefaultRevision());
+          $configuration = [
+            'source' => [
+              'plugin' => 'test_example_source',
+              'plugin_configuration' => [
+                'entity_type' => 'node',
+                'bundle' => 'page',
+              ],
+            ],
+            'display' => [
+              'plugin' => 'title',
+            ],
+            'no_results_behaviour' => [
+              'plugin' => 'hide_list',
+              'plugin_configuration' => [],
+            ],
+            'size' => 1,
+            'more_link' => [],
+          ];
+          $entity->setConfiguration($configuration);
+          $entity->save();
+          break;
+      }
 
-    // Synchronise the translation.
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Edit draft translation');
-    $values = [
-      'Translation' => 'My node FR',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
-    $node_storage->resetCache();
+      $entity = $this->moderateEntity($entity, 'published');
+      $revision_ids = $this->getRevisionIds($entity);
+      $this->assertCount(5, $revision_ids);
 
-    // Assert we don't have extra revisions created, nor is the default
-    // revision published.
-    $revision_ids = $node_storage->revisionIds($node);
-    $this->assertCount(6, $revision_ids);
-    $node = $node_storage->load($node->id());
-    $this->assertEquals('archived', $node->get('moderation_state')->value);
-    $this->assertTrue($node->isDefaultRevision());
-    $this->assertCount(1, $node->getTranslationLanguages());
-    // The published revision is still not default but has the translation on
-    // it.
-    array_pop($revision_ids);
-    $published_revision_id = array_pop($revision_ids);
-    $published = $node_storage->loadRevision($published_revision_id);
-    $this->assertEquals('published', $published->get('moderation_state')->value);
-    $this->assertFalse($published->isDefaultRevision());
-    $this->assertCount(2, $published->getTranslationLanguages());
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->clickLink('Local translations');
+      $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+      // Save the translation request as draft.
+      $this->submitForm([], 'Save as draft');
+      $storage->resetCache();
+
+      // Unpublish the node.
+      $entity->set('moderation_state', 'archived');
+      $entity->setNewRevision(TRUE);
+      $entity->save();
+      $revision_ids = $this->getRevisionIds($entity);
+      // Assert we have one extra revision and the default revision is the
+      // Archived one and not the Published one.
+      $this->assertCount(6, $revision_ids);
+      $entity = $storage->load($entity->id());
+      $this->assertEquals('archived', $entity->get('moderation_state')->value);
+      $this->assertTrue($entity->isDefaultRevision());
+      array_pop($revision_ids);
+      $published_revision_id = array_pop($revision_ids);
+      $published = $storage->loadRevision($published_revision_id);
+      $this->assertEquals('published', $published->get('moderation_state')->value);
+      $this->assertFalse($published->isDefaultRevision());
+
+      // Synchronise the translation.
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->clickLink('Edit draft translation');
+      $values = [
+        'Translation' => 'My editorial content FR',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
+      $storage->resetCache();
+
+      // Assert we don't have extra revisions created, nor is the default
+      // revision published.
+      $revision_ids = $this->getRevisionIds($entity);
+      $this->assertCount(6, $revision_ids);
+      $entity = $storage->load($entity->id());
+      $this->assertEquals('archived', $entity->get('moderation_state')->value);
+      $this->assertTrue($entity->isDefaultRevision());
+      $this->assertCount(1, $entity->getTranslationLanguages());
+      // The published revision is still not default but has the translation on
+      // it.
+      array_pop($revision_ids);
+      $published_revision_id = array_pop($revision_ids);
+      $published = $storage->loadRevision($published_revision_id);
+      $this->assertEquals('published', $published->get('moderation_state')->value);
+      $this->assertFalse($published->isDefaultRevision());
+      $this->assertCount(2, $published->getTranslationLanguages());
+    }
   }
 
   /**
@@ -1020,95 +1132,134 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    * Tests that we can delete a revision translation individually.
    */
   public function testTranslationRevisionDelete() {
+    $title_fields = [
+      'node' => 'title',
+      'link_list' => 'administrative_title',
+    ];
+
     $role = Role::load('oe_translator');
     $role->grantPermission('delete any page content');
     $role->grantPermission('delete content translations');
     $role->grantPermission('delete all revisions');
     $role->save();
 
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
+    foreach (['node', 'link_list'] as $entity_type) {
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      switch ($entity_type) {
 
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My node',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
-    $node = $this->moderateNode($node, 'published');
+        case 'node':
+          $entity = $storage->create([
+            'type' => 'page',
+            'title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
+          $entity->save();
+          break;
 
-    // Translate to FR in version 1.0.0.
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
-    $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My node in French (version 1.0.0)');
-    $values = [
-      'Translation' => 'My node FR',
-    ];
-    $this->submitForm($values, 'Save and synchronise');
+        case 'link_list':
+          $entity = LinkList::create([
+            'bundle' => 'dynamic',
+            'administrative_title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
 
-    // Create a new draft and validate it.
-    $node = $node_storage->load($node->id());
-    $node->set('title', 'My node 2');
-    $node->set('moderation_state', 'draft');
-    $node->save();
-    $node = $this->moderateNode($node, 'validated');
+          $configuration = [
+            'source' => [
+              'plugin' => 'test_example_source',
+              'plugin_configuration' => [
+                'entity_type' => 'node',
+                'bundle' => 'page',
+              ],
+            ],
+            'display' => [
+              'plugin' => 'title',
+            ],
+            'no_results_behaviour' => [
+              'plugin' => 'hide_list',
+              'plugin_configuration' => [],
+            ],
+            'size' => 1,
+            'more_link' => [],
+          ];
+          $entity->setConfiguration($configuration);
+          $entity->save();
+          break;
+      }
 
-    // Go to the dashboard and assert our table now has columns indicating
-    // translation info for each version.
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertExtendedDashboardExistingTranslations([
-      'en' => [
-        'published_title' => 'My node',
-        'validated_title' => 'My node 2',
-      ],
-      'fr' => [
-        'published_title' => 'Version 1.0.0',
-        'validated_title' => 'Version 1.0.0 (carried over to the current version)',
-      ],
-    ], ['1.0.0 / published', '2.0.0 / validated']);
+      $entity = $this->moderateEntity($entity, 'published');
 
-    // Count all the node revisions and their translations to establish a
-    // baseline.
-    $revision_ids = $node_storage->getQuery()->allRevisions()->accessCheck(FALSE)->execute();
-    $revisions = $node_storage->loadMultipleRevisions(array_keys($revision_ids));
-    $this->assertCount(9, $revisions);
-    $non_translated_revision_ids = [1, 2, 3, 4];
-    $translated_revision_ids = [5, 6, 7, 8, 9];
-    foreach ($non_translated_revision_ids as $id) {
-      $revision = $node_storage->loadRevision($id);
-      $this->assertFalse($revision->hasTranslation('fr'));
+      // Translate to FR in version 1.0.0.
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->clickLink('Local translations');
+      $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+      $this->assertSession()->elementTextEquals('css', 'h1', 'Translate My editorial content in French (version 1.0.0)');
+      $values = [
+        'Translation' => 'My editorial content FR',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
+
+      // Create a new draft and validate it.
+      $entity = $storage->load($entity->id());
+      $entity->set($title_fields[$entity_type], 'My editorial content 2');
+      $entity->set('moderation_state', 'draft');
+      $entity->save();
+      $entity = $this->moderateEntity($entity, 'validated');
+
+      // Go to the dashboard and assert our table now has columns indicating
+      // translation info for each version.
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->assertExtendedDashboardExistingTranslations([
+        'en' => [
+          'published_title' => 'My editorial content',
+          'validated_title' => 'My editorial content 2',
+        ],
+        'fr' => [
+          'published_title' => 'Version 1.0.0',
+          'validated_title' => 'Version 1.0.0 (carried over to the current version)',
+        ],
+      ], ['1.0.0 / published', '2.0.0 / validated']);
+
+      // Count all the node revisions and their translations to establish a
+      // baseline.
+      $revision_ids = $storage->getQuery()->allRevisions()->accessCheck(FALSE)->execute();
+      $revisions = $storage->loadMultipleRevisions(array_keys($revision_ids));
+      $this->assertCount(9, $revisions);
+      $non_translated_revision_ids = [1, 2, 3, 4];
+      $translated_revision_ids = [5, 6, 7, 8, 9];
+      foreach ($non_translated_revision_ids as $id) {
+        $revision = $storage->loadRevision($id);
+        $this->assertFalse($revision->hasTranslation('fr'));
+      }
+      foreach ($translated_revision_ids as $id) {
+        $revision = $storage->loadRevision($id);
+        $this->assertTrue($revision->hasTranslation('fr'));
+      }
+
+      // Delete the validated FR translation.
+      $this->getSession()->getPage()->find('xpath', '//table[@class="existing-translations-table"]//tr[@hreflang="fr"]//td[5]')->clickLink('Delete');
+      $this->assertSession()->pageTextContains('Are you sure you want to delete the French translation of the revision');
+      $this->getSession()->getPage()->pressButton('Delete');
+      $this->assertSession()->pageTextContains(sprintf('Revision translation in French from %s of My editorial content FR has been deleted.', \Drupal::service('date.formatter')->format($storage->loadRevision(9)->getRevisionCreationTime())));
+      $this->assertSession()->addressEquals('/' . $entity_type . '/' . $entity->id() . '/translations');
+      // The last revision no longer has a translation and there are the same
+      // number of revisions in the system.
+      $non_translated_revision_ids = [1, 2, 3, 4, 9];
+      $translated_revision_ids = [5, 6, 7, 8];
+      foreach ($non_translated_revision_ids as $id) {
+        $revision = $storage->loadRevision($id);
+        $this->assertFalse($revision->hasTranslation('fr'));
+      }
+      foreach ($translated_revision_ids as $id) {
+        $revision = $storage->loadRevision($id);
+        $this->assertTrue($revision->hasTranslation('fr'));
+      }
+      $revisions = $storage->loadMultipleRevisions(array_keys($revision_ids));
+      $this->assertCount(9, $revisions);
     }
-    foreach ($translated_revision_ids as $id) {
-      $revision = $node_storage->loadRevision($id);
-      $this->assertTrue($revision->hasTranslation('fr'));
-    }
-
-    // Delete the validated FR translation.
-    $this->getSession()->getPage()->find('xpath', '//table[@class="existing-translations-table"]//tr[@hreflang="fr"]//td[5]')->clickLink('Delete');
-    $this->assertSession()->pageTextContains('Are you sure you want to delete the French translation of the revision');
-    $this->getSession()->getPage()->pressButton('Delete');
-    $this->assertSession()->pageTextContains(sprintf('Revision translation in French from %s of My node FR has been deleted.', \Drupal::service('date.formatter')->format($node_storage->loadRevision(9)->getRevisionCreationTime())));
-    $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
-    // The last revision no longer has a translation and there are the same
-    // number of revisions in the system.
-    $non_translated_revision_ids = [1, 2, 3, 4, 9];
-    $translated_revision_ids = [5, 6, 7, 8];
-    foreach ($non_translated_revision_ids as $id) {
-      $revision = $node_storage->loadRevision($id);
-      $this->assertFalse($revision->hasTranslation('fr'));
-    }
-    foreach ($translated_revision_ids as $id) {
-      $revision = $node_storage->loadRevision($id);
-      $this->assertTrue($revision->hasTranslation('fr'));
-    }
-    $revisions = $node_storage->loadMultipleRevisions(array_keys($revision_ids));
-    $this->assertCount(9, $revisions);
   }
 
   /**
-   * Test that we don't get a validation.
+   * Test that we don't get a validation error by the  EntityChangedConstraint.
    */
   public function testEntityChangedConstraint() {
     // Log in so that validation doesn't fail due to lack of access to move
@@ -1116,60 +1267,103 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $user = $this->createUser([], NULL, TRUE);
     $this->drupalLogin($user);
 
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-    // Create a translated node.
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My node',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
-    $node = $this->moderateNode($node, 'published');
-
-    // Translate to FR in version 1.0.0.
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
-    $values = [
-      'Translation' => 'My node FR',
+    $title_fields = [
+      'node' => 'title',
+      'link_list' => 'administrative_title',
     ];
-    $this->submitForm($values, 'Save and synchronise');
 
-    // Create a new version and start a translation, saving it as draft.
-    $node = $node_storage->load($node->id());
-    $node->set('title', 'My node 2');
-    $node->set('moderation_state', 'draft');
-    $node->save();
-    $node = $this->moderateNode($node, 'published');
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Local translations');
-    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
-    $values = [
-      'Translation' => 'My node FR 2',
-    ];
-    $this->submitForm($values, 'Save as draft');
+    foreach (['node', 'link_list'] as $entity_type) {
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      switch ($entity_type) {
 
-    // Start a draft on the node.
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->load($node->id());
-    $node->set('title', 'My node 3');
-    $node->set('moderation_state', 'draft');
-    $node->save();
+        case 'node':
+          $entity = $storage->create([
+            'type' => 'page',
+            'title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
+          $entity->save();
+          break;
 
-    // Sync the started translation.
-    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->clickLink('Edit draft translation');
-    $this->submitForm($values, 'Save and synchronise');
+        case 'link_list':
+          $entity = LinkList::create([
+            'bundle' => 'dynamic',
+            'administrative_title' => 'My editorial content',
+            'moderation_state' => 'draft',
+          ]);
 
-    // Try to make a change to the draft node and assert there is no violation.
-    $node_storage->resetCache();
-    $node = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
-    $node->set('title', 'My node 4');
-    $node->set('moderation_state', 'draft');
-    $violations = $node->validate();
-    $this->assertEquals(0, $violations->count());
+          $configuration = [
+            'source' => [
+              'plugin' => 'test_example_source',
+              'plugin_configuration' => [
+                'entity_type' => 'node',
+                'bundle' => 'page',
+              ],
+            ],
+            'display' => [
+              'plugin' => 'title',
+            ],
+            'no_results_behaviour' => [
+              'plugin' => 'hide_list',
+              'plugin_configuration' => [],
+            ],
+            'size' => 1,
+            'more_link' => [],
+          ];
+          $entity->setConfiguration($configuration);
+          $entity->save();
+          break;
+      }
+
+      /** @var \Drupal\node\NodeStorageInterface $node_storage */
+      $storage = $this->entityTypeManager->getStorage($entity_type);
+      $entity = $this->moderateEntity($entity, 'published');
+
+      // Translate to FR in version 1.0.0.
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->clickLink('Local translations');
+      $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+      $values = [
+        'Translation' => 'My editorial content FR',
+      ];
+      $this->submitForm($values, 'Save and synchronise');
+
+      // Create a new version and start a translation, saving it as draft.
+      $entity = $storage->load($entity->id());
+      $entity->set($title_fields[$entity_type], 'My editorial content 2');
+      $entity->set('moderation_state', 'draft');
+      $entity->save();
+      $entity = $this->moderateEntity($entity, 'published');
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->clickLink('Local translations');
+      $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+      $values = [
+        'Translation' => 'My editorial content FR 2',
+      ];
+      $this->submitForm($values, 'Save as draft');
+
+      // Start a draft on the entity.
+      /** @var \Drupal\node\NodeInterface $entity */
+      $entity = $storage->load($entity->id());
+      $entity->set($title_fields[$entity_type], 'My editorial content 3');
+      $entity->set('moderation_state', 'draft');
+      $entity->save();
+
+      // Sync the started translation.
+      $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
+      $this->clickLink('Edit draft translation');
+      $this->submitForm($values, 'Save and synchronise');
+
+      // Try to make a change to the draft node and assert there is no
+      // violation.
+      $storage->resetCache();
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+      $entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
+      $entity->set($title_fields[$entity_type], 'My editorial content 4');
+      $entity->set('moderation_state', 'draft');
+      $violations = $entity->validate();
+      $this->assertEquals(0, $violations->count());
+    }
   }
 
   /**
@@ -1278,6 +1472,30 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       $this->assertEquals('/build/admin/oe_translation/translate-local/node/' . $current_node->getRevisionId() . '/en/' . $langcode . '?destination=/build/node/' . $current_node->id() . '/translations', $current_entity_link->getAttribute('href'));
       $this->assertEquals('/build/admin/oe_translation/translate-local/node/' . $latest_node->getRevisionId() . '/en/' . $langcode . '?destination=/build/node/' . $latest_node->id() . '/translations', $latest_version_link->getAttribute('href'));
     }
+  }
+
+  /**
+   * Gets the entity revision IDs.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return array
+   *   The revision IDs.
+   */
+  protected function getRevisionIds(ContentEntityInterface $entity): array {
+    $id_field = \Drupal::entityTypeManager()
+      ->getDefinition($entity->getEntityTypeId())
+      ->getKey('id');
+    $results = \Drupal::entityTypeManager()
+      ->getStorage($entity->getEntityTypeId())
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->allRevisions()
+      ->condition($id_field, $entity->id())
+      ->execute();
+
+    return array_keys($results);
   }
 
 }

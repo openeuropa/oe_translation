@@ -114,8 +114,8 @@ function oe_translation_entity_access(EntityInterface $entity, $operation, Accou
   }
 
   // We do not want translations to be manually edited if they are supported
-  // by our translation system.
-  if (!$entity->isDefaultTranslation()) {
+  // by our translation system and the local translation is disabled.
+  if (!$entity->isDefaultTranslation() && $translator_providers->hasLocal($entity->getEntityType())) {
     return AccessResult::forbidden()->addCacheableDependency($entity);
   }
 

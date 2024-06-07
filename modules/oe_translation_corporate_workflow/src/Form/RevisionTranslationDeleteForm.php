@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow\Form;
 
+use Drupal\Core\Entity\Form\RevisionDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\node\Form\NodeRevisionDeleteForm;
 
 /**
- * Handles the deletion of node revisions.
+ * Handles the deletion of entity revisions.
  *
  * This class only "kicks in" if we are attempting to delete a revision
  * translation. Otherwise, it defers back to the parent.
@@ -17,15 +17,15 @@ use Drupal\node\Form\NodeRevisionDeleteForm;
  * of that revision gets cleared without making any other change to the node
  * or the revision.
  *
- * For other entity types, it's handled in RevisionTranslationDeleteForm.
+ * For nodes, it's handled in NodeRevisionTranslationDeleteForm.
  */
-class NodeRevisionTranslationDeleteForm extends NodeRevisionDeleteForm {
+class RevisionTranslationDeleteForm extends RevisionDeleteForm {
 
   /**
    * {@inheritdoc}
    */
   public function getQuestion() {
-    if ($this->revision->isDefaultTranslation()) {
+    if (!$this->applies()) {
       return parent::getQuestion();
     }
 
@@ -39,7 +39,7 @@ class NodeRevisionTranslationDeleteForm extends NodeRevisionDeleteForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    if ($this->revision->isDefaultTranslation()) {
+    if (!$this->applies()) {
       parent::submitForm($form, $form_state);
       return;
     }
@@ -62,13 +62,31 @@ class NodeRevisionTranslationDeleteForm extends NodeRevisionDeleteForm {
       '%title' => $this->revision->label(),
     ]));
 
-    $form_state->setRedirect(
-      'entity.node.revision',
-      [
-        'node' => $this->revision->id(),
-        'node_revision' => $this->revision->getRevisionId(),
-      ]
-    );
+    $url = $untranslated_revision->toUrl('revision');
+    $form_state->setRedirectUrl($url);
+  }
+
+  /**
+   * Checks if the logic of this form override should apply to the revision.
+   *
+   * We only apply if it's using the corporate workflow and it's trying to
+   * delete a specific translation.
+   *
+   * @return bool
+   *   Whether it applies.
+   */
+  protected function applies() {
+    /** @var \Drupal\workflows\WorkflowInterface $workflow */
+    $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($this->revision);
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+      return FALSE;
+    }
+
+    if ($this->revision->isDefaultTranslation()) {
+      return FALSE;
+    }
+
+    return TRUE;
   }
 
 }
