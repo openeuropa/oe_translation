@@ -1,11 +1,20 @@
 # Changelog
 
-## [2.7.0](https://github.com/openeuropa/oe_translation/tree/2.7.0) (2024-04-15)
+## [2.8.0](https://github.com/openeuropa/oe_translation/tree/2.8.0) (2024-06-10)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.7.0...2.8.0)
+
+**Merged pull requests:**
+
+- EWPP-3399: Dashboard links for new local translations. [\#292](https://github.com/openeuropa/oe_translation/pull/292) ([upchuk](https://github.com/upchuk))
+
+## [2.7.0](https://github.com/openeuropa/oe_translation/tree/2.7.0) (2024-04-16)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.6.0...2.7.0)
 
 **Merged pull requests:**
 
+- Release-2.7.0: Update changelog. [\#303](https://github.com/openeuropa/oe_translation/pull/303) ([nagyad](https://github.com/nagyad))
 - EWPP-4126: Account for incorrectly versioned nodes in active revision creation [\#296](https://github.com/openeuropa/oe_translation/pull/296) ([upchuk](https://github.com/upchuk))
 - EWPP-0000: Update submodules readme information. [\#208](https://github.com/openeuropa/oe_translation/pull/208) ([22Alexandra](https://github.com/22Alexandra))
 
