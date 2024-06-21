@@ -102,6 +102,74 @@ class MultivalueTranslationsTest extends TranslationTestBase {
   }
 
   /**
+   * Tests a case in which nodes were translated before this feature.
+   *
+   * @see LocalTranslationRequestForm::processTranslationData()
+   */
+  public function testLegacyMultivalueFieldTranslations(): void {
+    // Mark a field as multivalue.
+    $storage = FieldStorageConfig::load('node.field_textfield');
+    $storage->setSetting('translation_multivalue', TRUE);
+    $storage->save();
+
+    $node = Node::create([
+      'type' => 'multivalue',
+      'title' => 'Translation node',
+      'field_textfield' => [
+        'Value 1',
+        'Value 2',
+      ],
+    ]);
+
+    $node->save();
+    $translation = $node->addTranslation('fr', [
+      'title' => 'Translation node FR',
+      'field_textfield' => [
+        'Value 1 FR',
+        'Value 2 FR',
+      ],
+    ] + $node->toArray());
+    $translation->save();
+    // Clear the field tables of the translation ID to mimic the fact that they
+    // were created before this feature.
+    \Drupal::database()->update('node__field_textfield')
+      ->fields([
+        'field_textfield_translation_id' => NULL,
+      ])->execute();
+    \Drupal::database()->update('node_revision__field_textfield')
+      ->fields([
+        'field_textfield_translation_id' => NULL,
+      ])->execute();
+
+    $node = $this->drupalGetNodeByTitle('Translation node', TRUE);
+    $translation = $node->getTranslation('fr');
+    $this->assertNull($node->get('field_textfield')->get(0)->translation_id);
+    $this->assertNull($node->get('field_textfield')->get(1)->translation_id);
+    $this->assertNull($translation->get('field_textfield')->get(0)->translation_id);
+    $this->assertNull($translation->get('field_textfield')->get(1)->translation_id);
+
+    // Now make a change to the node and assert that the source values had
+    // their translation IDs set, but not yet the translations.
+    $node->set('title', 'Translation node update');
+    $node->save();
+    $node = $this->drupalGetNodeByTitle('Translation node update', TRUE);
+    $translation = $node->getTranslation('fr');
+    $this->assertNotNull($node->get('field_textfield')->get(0)->translation_id);
+    $this->assertNotNull($node->get('field_textfield')->get(1)->translation_id);
+    $this->assertNull($translation->get('field_textfield')->get(0)->translation_id);
+    $this->assertNull($translation->get('field_textfield')->get(1)->translation_id);
+
+    // Go translate the node and assert that the existing FR values are
+    // pre-filled.
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    $this->assertSession()->fieldValueEquals('field_textfield|0|value[translation]', 'Value 1 FR');
+    $this->assertSession()->fieldValueEquals('field_textfield|1|value[translation]', 'Value 2 FR');
+  }
+
+  /**
    * Tests the translation of multivalue fields using the API.
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
