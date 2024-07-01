@@ -5,7 +5,7 @@ services:
       - '@http_client'
       - '@psr17.server_request_factory'
       - '@psr17.stream_factory'
-      - '%cdt.client_configuration%'
+      - { client: '%cdt.client%', username: '%cdt.username%', password: '%cdt.password%', apiBaseUrl: '%cdt.base_api_url%' }
 
   oe_translation_cdt.api_wrapper:
     class: Drupal\oe_translation_cdt\Api\CdtApiWrapper
