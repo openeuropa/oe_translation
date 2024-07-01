@@ -17,12 +17,13 @@ class CdtParametersCompilerPass implements CompilerPassInterface {
    * {@inheritdoc}
    */
   public function process(ContainerBuilder $container): void {
-    $container->setParameter('cdt.client_configuration', [
-      'apiBaseUrl' => Settings::get('cdt.base_api_url'),
-      'username' => Settings::get('cdt.username'),
-      'password' => Settings::get('cdt.password'),
-      'client' => Settings::get('cdt.client'),
-    ]);
+    // The container parameters can't be added as a single array.
+    // Array values don't support the "%" character, that may
+    // appear in the password or in the URL.
+    $container->setParameter('cdt.base_api_url', Settings::get('cdt.base_api_url'));
+    $container->setParameter('cdt.username', Settings::get('cdt.username'));
+    $container->setParameter('cdt.password', Settings::get('cdt.password'));
+    $container->setParameter('cdt.client', Settings::get('cdt.client'));
   }
 
 }
