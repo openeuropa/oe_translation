@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
- * Registers the cdt.client_configuration container parameter.
+ * Registers the container parameters used by the CDT.
  */
 class CdtParametersCompilerPass implements CompilerPassInterface {
 
@@ -20,6 +20,7 @@ class CdtParametersCompilerPass implements CompilerPassInterface {
     // The container parameters can't be added as a single array.
     // Array values don't support the "%" character, that may
     // appear in the password or in the URL.
+    // @see https://www.drupal.org/project/drupal/issues/3458344
     $container->setParameter('cdt.base_api_url', Settings::get('cdt.base_api_url'));
     $container->setParameter('cdt.username', Settings::get('cdt.username'));
     $container->setParameter('cdt.password', Settings::get('cdt.password'));
