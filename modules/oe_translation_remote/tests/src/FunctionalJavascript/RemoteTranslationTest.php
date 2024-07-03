@@ -365,6 +365,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $role->revokePermission('accept translation request');
     $role->save();
     $this->getSession()->reload();
+    $this->refreshVariables();
 
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
@@ -372,6 +373,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $role->revokePermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
+    $this->refreshVariables();
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonNotExists('Save and synchronise');
 
@@ -380,6 +382,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $role->grantPermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
+    $this->refreshVariables();
 
     // Assert we have all the fields there with the dummy translations.
     $fields = [];

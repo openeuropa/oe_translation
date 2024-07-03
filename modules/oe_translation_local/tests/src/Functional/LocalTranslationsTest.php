@@ -196,6 +196,8 @@ class LocalTranslationsTest extends TranslationTestBase {
     $role->revokePermission('accept translation request');
     $role->save();
     $this->getSession()->reload();
+    $this->refreshVariables();
+
     $this->assertSession()->buttonExists('Save as draft');
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
@@ -203,6 +205,8 @@ class LocalTranslationsTest extends TranslationTestBase {
     $role->revokePermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
+    $this->refreshVariables();
+
     $this->assertSession()->buttonExists('Save as draft');
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonNotExists('Save and synchronise');
@@ -212,6 +216,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $role->grantPermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
+    $this->refreshVariables();
 
     // Translate each of the fields.
     foreach ($this->fields as $key => $data) {
