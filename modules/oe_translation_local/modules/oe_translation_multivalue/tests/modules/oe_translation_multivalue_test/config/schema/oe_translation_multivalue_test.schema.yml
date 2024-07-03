@@ -1,0 +1,7 @@
+field.storage_settings.link:
+  type: mapping
+  label: 'Link storage settings'
+  mapping:
+    translation_multivalue:
+      type: boolean
+      label: 'Translation multivalue'
