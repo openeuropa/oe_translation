@@ -139,9 +139,9 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
       'Manually updated the status.' .
       'Updated request_status field from Requested to Translated.' .
       'The following languages are updated: fr (Requested =&gt; Review).' .
-      'Updated priority field from PRIO1 to PRIO2.' .
       'Updated comments field to TEST.' .
       'Updated phone_number field from 999999999 to 123456789.' .
+      'Updated priority field from PRIO1 to PRIO2.' .
       'Updated department field from DEP1 to DEP2.' .
       'Updated contact_usernames field to TEST2.' .
       'Updated deliver_to field to TEST1, TEST2.',
