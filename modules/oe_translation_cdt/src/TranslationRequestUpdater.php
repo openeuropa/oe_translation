@@ -41,22 +41,23 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    * {@inheritdoc}
    */
   public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response, ReferenceData $reference_data): bool {
-    $languages = [];
-    foreach ($translation_response->getJobSummary() as $job) {
-      $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job->getTargetLanguage(), $translation_request);
-      $languages[$drupal_langcode] = $job->getStatus();
-    }
-
     $comments = trim(array_reduce($translation_response->getComments(), function ($carry, $item) {
       return $carry . $item->getComment() . "\n";
     }, ''), "\n");
+
     $changes = [
       'request_status' => $this->convertRequestStatusFromCdt($translation_response->getStatus()),
-      'languages' => $languages,
-      'priority' => $translation_response->getJobSummary()[0]->getPriorityCode(),
+      'languages' => [],
       'comments' => $comments,
       'phone_number' => $translation_response->getPhoneNumber(),
     ];
+
+    // Get the job summary data, if available. All jobs have the same priority.
+    foreach ($translation_response->getJobSummary() as $job) {
+      $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job->getTargetLanguage(), $translation_request);
+      $changes['languages'][$drupal_langcode] = $job->getStatus();
+      $changes['priority'] = $job->getPriorityCode();
+    }
 
     // Get the department code.
     $departments = $reference_data->getDepartments();
