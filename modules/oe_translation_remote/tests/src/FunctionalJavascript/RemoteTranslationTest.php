@@ -369,6 +369,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
     // Do the same for the sync permission.
+    \Drupal::service('cache_tags.invalidator')->resetChecksums();
     $role->revokePermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
@@ -376,6 +377,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->buttonNotExists('Save and synchronise');
 
     // Add back the permissions.
+    \Drupal::service('cache_tags.invalidator')->resetChecksums();
     $role->grantPermission('accept translation request');
     $role->grantPermission('sync translation request');
     $role->save();

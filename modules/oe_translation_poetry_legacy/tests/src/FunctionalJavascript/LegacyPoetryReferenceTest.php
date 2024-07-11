@@ -64,7 +64,6 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
       'poetry_request_id' => 'WEB/2022/2000/0/0/TRA',
     ])->save();
 
-    $this->drupalLogout();
     $this->drupalGet('admin/content/legacy-poetry-references');
     // Anonymous users do not have access to the view.
     $this->assertSession()->pageTextContains('Access denied');
