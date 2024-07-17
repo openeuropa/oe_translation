@@ -152,18 +152,19 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     $this->assertCount(1, $request->getLogMessages(), 'No new log messages should be added.');
 
     // Update single value.
-    $translation_response->setContacts(['Jane Doe']);
+    $translation_response->setContacts(['John Smith']);
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
-    $this->assertEquals(['TEST2'], $request->getContactUsernames());
+    $this->assertEquals(['TEST1'], $request->getContactUsernames());
     $this->assertTranslationRequestLog($request, [
       '*',
-      'Updated contact_usernames field to TEST2.',
+      'Manually updated the status.' .
+      'Updated contact_usernames field from TEST2 to TEST1.',
     ]);
 
     // Ignore optional language status and request priority.
     $translation_response->setJobSummary([]);
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
-    $this->assertCount(1, $request->getLogMessages(), 'No new log messages should be added.');
+    $this->assertCount(2, $request->getLogMessages(), 'No new log messages should be added.');
 
     // Update language status.
     $translation_response->setJobSummary([
@@ -177,6 +178,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     $this->assertTranslationRequestLog($request, [
       '*',
       '*',
+      'Manually updated the status.' .
       'The following languages are updated: fr (Review =&gt; Failed).',
     ]);
   }
@@ -226,6 +228,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    *   The expected log messages. There may be wildcards "*" inside.
    */
   protected function assertTranslationRequestLog(TranslationRequestCdtInterface $request, array $logs): void {
+    $this->assertSameSize($logs, $request->getLogMessages(), 'The log size doesn\'t match.');
     foreach ($request->getLogMessages() as $index => $log) {
       if ($logs[$index] !== '*') {
         $this->assertEquals($logs[$index], strip_tags($log->getMessage()->__toString()));
