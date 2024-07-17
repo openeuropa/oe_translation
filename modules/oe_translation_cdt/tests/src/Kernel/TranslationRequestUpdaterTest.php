@@ -160,6 +160,11 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
       'Updated contact_usernames field to TEST2.',
     ]);
 
+    // Ignore optional language status and request priority.
+    $translation_response->setJobSummary([]);
+    $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
+    $this->assertCount(1, $request->getLogMessages(), 'No new log messages should be added.');
+
     // Update language status.
     $translation_response->setJobSummary([
       (new JobSummary())
