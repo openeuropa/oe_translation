@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
-use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
+use Drupal\Tests\oe_translation_cdt\CdtTranslationTestTrait;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
 use OpenEuropa\CdtClient\Model\Response\Comment;
@@ -28,6 +28,8 @@ use OpenEuropa\CdtClient\Model\Response\Translation;
  * @group batch1
  */
 class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
+
+  use CdtTranslationTestTrait;
 
   /**
    * {@inheritdoc}
@@ -59,18 +61,18 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating from the request status callback.
    */
   public function testUpdateFromRequestStatus(): void {
-    $request = $this->createTranslationRequest();
+    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
     $request_status = (new RequestStatus())
       ->setStatus(CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED)
-      ->setCorrelationId('123')
-      ->setRequestIdentifier('123/2024')
+      ->setCorrelationId('12345')
+      ->setRequestIdentifier('12345/2024')
       ->setDate(new \DateTime());
 
     $this->updater->updateFromRequestStatus($request, $request_status);
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
-    $this->assertEquals('123/2024', $request->getCdtId());
+    $this->assertEquals('12345/2024', $request->getCdtId());
     $this->assertTranslationRequestLog($request, [
-      'Received CDT callback, updating the request...Updated cdt_id field to 123/2024.Updated request_status field from Requested to Translated.',
+      'Received CDT callback, updating the request...Updated cdt_id field to 12345/2024.Updated request_status field from Requested to Translated.',
     ]);
   }
 
@@ -78,10 +80,10 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating from the job status callback.
    */
   public function testUpdateFromJobStatus(): void {
-    $request = $this->createTranslationRequest();
+    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
     $valid_job_status = (new JobStatus())
       ->setStatus(CdtApiWrapperInterface::STATUS_JOB_COMPLETED)
-      ->setRequestIdentifier('123/2024')
+      ->setRequestIdentifier('12345/2024')
       ->setSourceLanguageCode('EN')
       ->setTargetLanguageCode('FR')
       ->setSourceDocumentName('source.xml');
@@ -98,7 +100,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating from the full translation status.
    */
   public function testUpdateFromTranslationResponse(): void {
-    $request = $this->createTranslationRequest();
+    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
     $user1 = (new ReferenceContact())
       ->setFirstName('John')
       ->setLastName('Smith')
@@ -113,7 +115,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     $translation_response = (new Translation())
       ->setStatus(CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED)
       ->setRequestIdentifier('123/2024')
-      ->setComments([(new Comment())->setComment('TEST')])
+      ->setComments([(new Comment())->setComment('COMMENT2')])
       ->setContacts(['Jane Doe'])
       ->setDeliverToContacts(['John Smith', 'Jane Doe'])
       ->setPhoneNumber('123456789')
@@ -129,7 +131,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED, $request->getRequestStatus());
     $this->assertEquals(TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, $request->getTargetLanguages()['fr']->getStatus());
-    $this->assertEquals('TEST', $request->getComments());
+    $this->assertEquals('COMMENT2', $request->getComments());
     $this->assertEquals(['TEST2'], $request->getContactUsernames());
     $this->assertEquals(['TEST1', 'TEST2'], $request->getDeliverTo());
     $this->assertEquals('123456789', $request->getPhoneNumber());
@@ -139,12 +141,12 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
       'Manually updated the status.' .
       'Updated request_status field from Requested to Translated.' .
       'The following languages are updated: fr (Requested =&gt; Review).' .
-      'Updated comments field to TEST.' .
+      'Updated comments field from COMMENT1 to COMMENT2.' .
       'Updated phone_number field from 999999999 to 123456789.' .
       'Updated priority field from PRIO1 to PRIO2.' .
       'Updated department field from DEP1 to DEP2.' .
-      'Updated contact_usernames field to TEST2.' .
-      'Updated deliver_to field to TEST1, TEST2.',
+      'Updated contact_usernames field from TEST1 to TEST2.' .
+      'Updated deliver_to field from TEST2 to TEST1, TEST2.',
     ]);
 
     // Try the second update with the same data.
@@ -187,36 +189,9 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating the CDT ID only.
    */
   public function testUpdatePermanentId(): void {
-    $request = $this->createTranslationRequest();
+    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
     $this->updater->updatePermanentId($request, '123/2024');
     $this->assertEquals('123/2024', $request->getCdtId());
-  }
-
-  /**
-   * Creates a CDT translation request.
-   *
-   * @return \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
-   *   The translation request.
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   */
-  protected function createTranslationRequest(): TranslationRequestCdtInterface {
-    $request = TranslationRequestCdt::create([
-      'bundle' => 'cdt',
-      'source_language_code' => 'en',
-      'target_languages' => [
-        'langcode' => 'fr',
-        'status' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,
-      ],
-      'translator_provider' => 'cdt',
-      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
-      'priority' => 'PRIO1',
-      'phone_number' => '999999999',
-      'department' => 'DEP1',
-    ]);
-
-    $request->save();
-    return $request;
   }
 
   /**
