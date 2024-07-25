@@ -9,7 +9,7 @@ use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
-use Drupal\Tests\oe_translation_cdt\CdtTranslationTestTrait;
+use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
 use OpenEuropa\CdtClient\Model\Response\Comment;
@@ -61,7 +61,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating from the request status callback.
    */
   public function testUpdateFromRequestStatus(): void {
-    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
+    $request = $this->createTranslationRequest(self::getCommonTranslationRequestData(), ['fr']);
     $request_status = (new RequestStatus())
       ->setStatus(CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED)
       ->setCorrelationId('12345')
@@ -80,7 +80,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating from the job status callback.
    */
   public function testUpdateFromJobStatus(): void {
-    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
+    $request = $this->createTranslationRequest(self::getCommonTranslationRequestData(), ['fr']);
     $valid_job_status = (new JobStatus())
       ->setStatus(CdtApiWrapperInterface::STATUS_JOB_COMPLETED)
       ->setRequestIdentifier('12345/2024')
@@ -100,7 +100,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating from the full translation status.
    */
   public function testUpdateFromTranslationResponse(): void {
-    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
+    $request = $this->createTranslationRequest(self::getCommonTranslationRequestData(), ['fr']);
     $user1 = (new ReferenceContact())
       ->setFirstName('John')
       ->setLastName('Smith')
@@ -189,7 +189,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
    * Tests updating the CDT ID only.
    */
   public function testUpdatePermanentId(): void {
-    $request = $this->createTranslationRequest($this->getCommonTranslationRequestData(), NULL, ['fr']);
+    $request = $this->createTranslationRequest(self::getCommonTranslationRequestData(), ['fr']);
     $this->updater->updatePermanentId($request, '123/2024');
     $this->assertEquals('123/2024', $request->getCdtId());
   }
