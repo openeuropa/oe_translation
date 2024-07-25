@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\oe_translation_cdt;
+namespace Drupal\Tests\oe_translation_cdt\Traits;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\oe_translation\Entity\TranslationRequest;
@@ -20,7 +20,7 @@ trait CdtTranslationTestTrait {
    * @return array
    *   The common parameters of CDT translation request.
    */
-  private function getCommonTranslationRequestData() {
+  private static function getCommonTranslationRequestData(): array {
     return [
       'bundle' => 'cdt',
       'translator_provider' => 'cdt',
@@ -46,21 +46,21 @@ trait CdtTranslationTestTrait {
    *
    * @param array $data
    *   The data to create the translation request.
-   * @param \Drupal\Core\Entity\ContentEntityInterface|null $entity
-   *   The content entity to attach to the translation request.
    * @param array $languages
    *   The target languages.
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $entity
+   *   The content entity to attach to the translation request.
    *
    * @return \Drupal\oe_translation_cdt\TranslationRequestCdtInterface
    *   The translation request.
    */
-  private function createTranslationRequest(array $data, ?ContentEntityInterface $entity, array $languages): TranslationRequestCdtInterface {
+  private function createTranslationRequest(array $data, array $languages, ?ContentEntityInterface $entity = NULL): TranslationRequestCdtInterface {
     $request = TranslationRequest::create($data);
     assert($request instanceof TranslationRequestCdtInterface);
     foreach ($languages as $language) {
       $request->updateTargetLanguageStatus($language, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
     }
-    if ($entity instanceof ContentEntityInterface) {
+    if ($entity) {
       $request->setContentEntity($entity);
       $entity_data = $this->container->get('oe_translation.translation_source_manager')->extractData($entity->getUntranslated());
       $request->setData($entity_data);

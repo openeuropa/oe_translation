@@ -12,7 +12,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\oe_translation_cdt\Mapper\TranslationRequestMapper;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
-use Drupal\Tests\oe_translation_cdt\CdtTranslationTestTrait;
+use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 
 /**
  * Tests the TranslationRequestMapper class.
@@ -86,8 +86,8 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
    * Tests the mapping with all parameters.
    */
   public function testDtoMapper(): void {
-    $test_data = $this->getCommonTranslationRequestData();
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es', 'fr']);
+    $test_data = self::getCommonTranslationRequestData();
+    $request = $this->createTranslationRequest($test_data, ['es', 'fr'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
 
     $this->assertEquals($test_data['comments'], $dto->getComments());
@@ -139,9 +139,9 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
    * Tests optional parameters.
    */
   public function testOptionalParameters(): void {
-    $test_data = $this->getCommonTranslationRequestData();
+    $test_data = self::getCommonTranslationRequestData();
     unset($test_data['comments']);
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
 
     $this->assertEquals('', $dto->getComments());
@@ -152,9 +152,9 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
    */
   public function testRequiredParameters(): void {
     $this->expectException(\TypeError::class);
-    $test_data = $this->getCommonTranslationRequestData();
+    $test_data = self::getCommonTranslationRequestData();
     unset($test_data['department']);
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $this->requestMapper->convertEntityToDto($request);
   }
 
@@ -162,11 +162,11 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
    * Tests the volume calculation.
    */
   public function testVolumeCount(): void {
-    $test_data = $this->getCommonTranslationRequestData();
+    $test_data = self::getCommonTranslationRequestData();
 
     // Check simple text.
     $this->entity->set('field_longtext', 'test');
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
     $job = $dto->getSourceDocuments()[0]->getTranslationJobs()[0];
     $this->assertEquals(0.5, $job->getVolume());
@@ -179,7 +179,7 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
       str_repeat(' ', 750),
       str_repeat(' ', 750)
     ));
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
     $job = $dto->getSourceDocuments()[0]->getTranslationJobs()[0];
     $this->assertEquals(0.5, $job->getVolume());
@@ -187,7 +187,7 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
     // Check short text with a lot of HTML tags.
     $this->entity->set('name', 'test' . str_repeat('<br>', 50));
     $this->entity->set('field_longtext', 'test' . str_repeat('<br>', 750));
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
     $job = $dto->getSourceDocuments()[0]->getTranslationJobs()[0];
     $this->assertEquals(0.5, $job->getVolume());
@@ -195,14 +195,14 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
     // Check two-page text.
     $this->entity->set('name', str_repeat('x', 100));
     $this->entity->set('field_longtext', str_repeat('x', 1400));
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
     $job = $dto->getSourceDocuments()[0]->getTranslationJobs()[0];
     $this->assertEquals(1, $job->getVolume());
 
     // Check three-page text.
     $this->entity->set('field_longtext', str_repeat('x', 1600));
-    $request = $this->createTranslationRequest($test_data, $this->entity, ['es']);
+    $request = $this->createTranslationRequest($test_data, ['es'], $this->entity);
     $dto = $this->requestMapper->convertEntityToDto($request);
     $job = $dto->getSourceDocuments()[0]->getTranslationJobs()[0];
     $this->assertEquals(1.5, $job->getVolume());
