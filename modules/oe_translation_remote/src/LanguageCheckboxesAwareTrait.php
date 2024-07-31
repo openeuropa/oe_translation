@@ -40,12 +40,44 @@ trait LanguageCheckboxesAwareTrait {
       '#title' => '<strong>' . t('Select all') . '</strong>',
       '#attributes' => ['class' => ['js-checkbox-all']],
     ];
-    foreach ($languages as $language) {
-      $form['languages'][$language->getId()] = [
-        '#type' => 'checkbox',
-        '#title' => $language->getName(),
-        '#attributes' => ['class' => ['js-checkbox-language']],
+
+    $label_map = [
+      'eu' => $this->t('EU Languages'),
+      'non_eu' => $this->t('Non-EU Languages'),
+    ];
+
+    $grouped_languages = $this->getGroupedLanguages($languages);
+    foreach ($grouped_languages as $category => $category_languages) {
+      $form['languages'][$category]["{$category}_heading"] = [
+        '#markup' => '<h2>' . $label_map[$category] . '</h2>',
       ];
+
+      $form['languages'][$category] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['languages-wrapper']],
+      ];
+
+      $form['languages'][$category]['all'] = [
+        '#type' => 'checkbox',
+        '#title' => '<strong>' . t('Select all @category', ['@category' => $label_map[$category]]) . '</strong>',
+        '#attributes' => ['class' => ["js-checkbox-$category-all"]],
+      ];
+
+      $form['languages'][$category]['languages'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['languages']],
+      ];
+      foreach ($category_languages as $language) {
+        $form['languages'][$category]['languages'][$language->getId()] = [
+          '#type' => 'checkbox',
+          '#title' => $language->getName(),
+          '#attributes' => [
+            'class' => [
+              "js-checkbox-$category-language",
+            ],
+          ],
+        ];
+      }
     }
 
     $form['#attached']['library'][] = 'oe_translation_remote/language_checkboxes';
@@ -79,6 +111,35 @@ trait LanguageCheckboxesAwareTrait {
     }
 
     return $languages;
+  }
+
+  /**
+   * Returns all the languages available for configuration.
+   *
+   * The languages are grouped by the category they belong to. For example,
+   * "eu" or "non_eu".
+   *
+   * @return array
+   *   The languages.
+   */
+  protected function getGroupedLanguages(array $languages): array {
+    /** @var \Drupal\language\ConfigurableLanguageInterface[] $languages */
+    $languages = $this->entityTypeManager->getStorage('configurable_language')->loadMultiple(array_keys($languages));
+    $grouped = [
+      'eu' => [],
+      'non_eu' => [],
+    ];
+    foreach ($languages as $code => $language) {
+      $category = $language->getThirdPartySetting('oe_multilingual', 'category');
+      if (!$category || !isset($grouped[$category])) {
+        continue;
+      }
+      $grouped[$category][$code] = $language;
+    }
+
+    return array_filter($grouped, function ($languages) {
+      return !empty($languages);
+    });
   }
 
 }
