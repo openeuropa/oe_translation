@@ -223,6 +223,9 @@ trait TranslationsTestTrait {
     $role = Role::load('oe_translator');
     $role->grantPermission('administer menu');
     $role->grantPermission('edit any page content');
+    $role->grantPermission('translate editable entities');
+    $role->grantPermission('create content translations');
+    $role->grantPermission('update content translations');
     $role->save();
     $user = $this->drupalCreateUser();
     $user->addRole($role->id());

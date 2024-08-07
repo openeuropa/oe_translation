@@ -6,7 +6,7 @@ services:
       - { name: event_subscriber }
   oe_translation_corporate_workflow.entity_source_subscriber:
     class: Drupal\oe_translation_corporate_workflow\EventSubscriber\EntityRevisionInfoSubscriber
-    arguments: ['@entity_type.manager', '@content_moderation.moderation_information']
+    arguments: ['@entity_type.manager', '@content_moderation.moderation_information', '@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
   oe_translation_corporate_workflow.event_subscriber.local_translation_overivew_alter:

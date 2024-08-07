@@ -54,13 +54,20 @@ class TranslationGenericTest extends TranslationTestBase {
    * Tests the access to the Drupal core translation page.
    */
   public function testTranslationAccess(): void {
-    // Check that the route for creating a menu link translation is accessible.
+    \Drupal::service('module_installer')->install(['oe_translation_menu_link_test']);
+    // Check that the route for creating a menu link translation is accessible
+    // even if remote translation is enabled for it (but not local).
     $menu_link_content = MenuLinkContent::create([
       'menu_name' => 'main',
       'link' => ['uri' => 'http://example.com'],
       'title' => 'Link test',
     ]);
     $menu_link_content->save();
+
+    $this->drupalGet($menu_link_content->toUrl('drupal:content-translation-overview'));
+    $this->assertSession()->pageTextContains('There are no ongoing remote translation requests');
+    $this->assertSession()->linkExists('Remote translations');
+    $this->assertSession()->linkExists('Add');
 
     // Menu links should be translatable using the regular core way.
     $url = $menu_link_content->toUrl('drupal:content-translation-add');
@@ -82,6 +89,19 @@ class TranslationGenericTest extends TranslationTestBase {
     $url->setRouteParameter('target', 'bg');
     $this->drupalGet($url);
     $this->assertSession()->statusCodeEquals(403);
+
+    // Create a translation to both and assert we can only edit the one of the
+    // menu link content.
+    $node_translation = $node->addTranslation('fr', ['title' => 'My node FR']);
+    $node_translation->save();
+    $menu_link_content_translation = $menu_link_content->addTranslation('fr', ['title' => 'Link test FR']);
+    $menu_link_content_translation->save();
+
+    $this->drupalGet($node_translation->toUrl('edit-form'));
+    $this->assertSession()->statusCodeEquals(403);
+    $this->drupalGet($menu_link_content_translation->toUrl('edit-form'));
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('Link test FR [French translation]');
   }
 
   /**

@@ -8,13 +8,14 @@
 declare(strict_types=1);
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\TranslationStatusInterface;
-use Drupal\node\NodeInterface;
+use Drupal\oe_translation_corporate_workflow\Form\RevisionTranslationDeleteForm;
 
 /**
  * Implements hook_theme().
@@ -30,7 +31,11 @@ function oe_translation_corporate_workflow_theme($existing, $type, $theme, $path
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */
-function oe_translation_corporate_workflow_node_presave(EntityInterface $entity): void {
+function oe_translation_corporate_workflow_entity_presave(EntityInterface $entity): void {
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+
   /** @var \Drupal\workflows\WorkflowInterface $workflow */
   $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
   if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
@@ -38,7 +43,16 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
     return;
   }
 
-  // Drop the translations if we are saving a validated revision if the node
+  /** @var \Drupal\oe_translation\TranslatorProvidersInterface $translator_providers */
+  $translator_providers = \Drupal::service('oe_translation.translator_providers');
+  if (!$translator_providers->hasTranslators($entity->getEntityType())) {
+    // We only care about entities translated using our system.
+    return;
+  }
+
+  oe_translation_corporate_workflow_prevent_translation_delete_revisions($entity);
+
+  // Drop the translations if we are saving a validated revision if the entity
   // was marked for it.
   if (isset($entity->translation_drop) && $entity->translation_drop === TRUE && $entity->moderation_state->value === 'validated') {
     foreach ($entity->getTranslationLanguages(FALSE) as $langcode => $language) {
@@ -51,12 +65,18 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
   // translations. Later, we will introduce the "un-synced" translations by
   // which we will keep the translations unpublished even if the source language
   // is published.
+  if (!$entity->getEntityType()->hasKey('published')) {
+    return;
+  }
+
+  $status_field = $entity->getEntityType()->getKey('published');
+
   if (!$entity->isDefaultTranslation()) {
     // If we are saving a translation entity directly, look at the source
     // translation for the correct status.
     $source = $entity->getUntranslated();
-    if ($source->get('status')->value !== $entity->get('status')->value) {
-      $entity->set('status', $source->get('status')->value);
+    if ($source->get($status_field)->value !== $entity->get($status_field)->value) {
+      $entity->set($status_field, $source->get($status_field)->value);
     }
 
     // We need to do the same for the moderation state.
@@ -74,16 +94,16 @@ function oe_translation_corporate_workflow_node_presave(EntityInterface $entity)
   $languages = $entity->getTranslationLanguages(FALSE);
   foreach ($languages as $language) {
     $translation = $entity->getTranslation($language->getId());
-    if ($translation->get('status')->value !== $entity->get('status')->value) {
-      $translation->set('status', $entity->get('status')->value);
+    if ($translation->get($status_field)->value !== $entity->get($status_field)->value) {
+      $translation->set($status_field, $entity->get($status_field)->value);
     }
   }
 }
 
 /**
- * Implements hook_ENTITY_TYPE_view_alter() for the Node entity.
+ * Implements hook_ENTITY_TYPE_view_alter().
  */
-function oe_translation_corporate_workflow_node_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+function oe_translation_corporate_workflow_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
   /** @var \Drupal\workflows\WorkflowInterface $workflow */
   $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
   if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
@@ -103,7 +123,7 @@ function oe_translation_corporate_workflow_node_view_alter(array &$build, Entity
 }
 
 /**
- * Implements hook_entity_revision_create() for the Node entity.
+ * Implements hook_entity_revision_create().
  *
  * This hook replicates to an extent a chunk of the responsibility of
  * ContentEntityStorageBase::createRevision().
@@ -131,9 +151,12 @@ function oe_translation_corporate_workflow_entity_revision_create(ContentEntityI
     return;
   }
 
-  // We only support nodes and entities that can be embedded into nodes that
-  // are using the entity reference revision parent-child relation.
-  if (!$entity instanceof NodeInterface && !$entity->getEntityType()->get('entity_revision_parent_id_field')) {
+  /** @var \Drupal\workflows\WorkflowInterface $workflow */
+  $workflow = \Drupal::service('content_moderation.moderation_information')->getWorkflowForEntity($entity);
+  if ((!$workflow || $workflow->id() !== 'oe_corporate_workflow') && !$entity->getEntityType()->get('entity_revision_parent_id_field')) {
+    // We only support corporate workflow entities and entities that can be
+    // embedded into other entities using the entity reference revision
+    // parent-child relation.
     return;
   }
 
@@ -227,13 +250,13 @@ function oe_translation_corporate_workflow_form_content_moderation_entity_modera
         ],
       ],
     ],
+    // If the content is already validated and only needs to be published,
+    // we don't show it.
+    '#access' => $current_state !== 'validated',
   ];
   $form['translation_options_wrapper']['translation_drop'] = [
     '#type' => 'checkbox',
     '#title' => t('Do not carry over the translations'),
-    // If the content is already validated and only needs to be published,
-    // we don't show it.
-    '#access' => $current_state !== 'validated',
   ];
 
   $form['#theme'] = 'entity_moderation_form__oe_translation_corporate_workflow';
@@ -290,21 +313,16 @@ function oe_translation_corporate_workflow_content_moderation_state_presave(Enti
 }
 
 /**
- * Implements hook_entity_presave().
+ * Prevents new revisions when we delete a translation from an entity.
  *
  * Whenever we delete a translation that is made using our
  * translators, we do not make a new revision of the entity. Since translations
  * are added to the same revision where they were initiated, for the same
  * reason their removal should not impact the number of entity revisions.
+ *
+ * This is called from oe_translation_corporate_workflow_entity_presave().
  */
-function oe_translation_corporate_workflow_entity_presave(EntityInterface $entity) {
-  /** @var \Drupal\oe_translation\TranslatorProvidersInterface $translator_providers */
-  $translator_providers = \Drupal::service('oe_translation.translator_providers');
-  if (!$translator_providers->hasTranslators($entity->getEntityType())) {
-    // We only care about entities translated using our system.
-    return;
-  }
-
+function oe_translation_corporate_workflow_prevent_translation_delete_revisions(ContentEntityInterface $entity) {
   if (isset($entity->translation_drop) && $entity->translation_drop === TRUE) {
     // If the translations are being dropped by the editorial carry-over logic,
     // we do not want to prevent the creation of new revisions because the use
@@ -370,6 +388,8 @@ function oe_translation_corporate_workflow_oe_translation_request_view_alter(arr
 function oe_translation_corporate_workflow_entity_base_field_info(EntityTypeInterface $entity_type) {
   if ($entity_type->id() == 'node') {
     $fields = [];
+    // By default, this is added to nodes but it needs to be added manually for
+    // any other entity types that want to use the corporate workflow.
     $fields['translation_request'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('The originating translation request'))
       ->setDescription(t('The translation request where the translation came from'))
@@ -388,11 +408,28 @@ function oe_translation_corporate_workflow_entity_base_field_info(EntityTypeInte
  * Implements hook_entity_type_alter().
  */
 function oe_translation_corporate_workflow_entity_type_alter(array &$entity_types) {
-  // Swap out the default EntityChanged constraint with a custom one with
-  // different logic for corporate workflow translated entities.
-  $constraints = $entity_types['node']->getConstraints();
-  unset($constraints['EntityChanged']);
-  $constraints['CorporateWorkflowEntityChanged'] = NULL;
-  $entity_types['node']->setConstraints($constraints);
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if (!$entity_type instanceof ContentEntityTypeInterface) {
+      continue;
+    }
 
+    // Swap out the revision delete form class.
+    if ($entity_type->getFormClass('revision-delete')) {
+      // This changes for most entity types, except for nodes which is a route
+      // _form class changed in the route subscriber.
+      $entity_type->setFormClass('revision-delete', RevisionTranslationDeleteForm::class);
+    }
+
+    // Swap out the default EntityChanged constraint with a custom one with
+    // different logic for corporate workflow translated entities. We can do
+    // this for all entity types because the override will only apply to the
+    // corporate workflow ones.
+    $constraints = $entity_type->getConstraints();
+    if (array_key_exists('EntityChanged', $constraints)) {
+      unset($constraints['EntityChanged']);
+      $constraints['CorporateWorkflowEntityChanged'] = NULL;
+      $entity_type->setConstraints($constraints);
+    }
+  }
 }
