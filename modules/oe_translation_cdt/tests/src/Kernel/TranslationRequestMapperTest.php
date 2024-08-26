@@ -99,12 +99,12 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
     $this->assertEquals('Send', $dto->getSendOptions());
     $this->assertEquals('WS', $dto->getPurposeCode());
     $this->assertEquals($test_data['department'], $dto->getDepartmentCode());
-    $this->assertEquals($test_data['contact_usernames'], $dto->getContactUserNames());
-    $this->assertEquals($test_data['deliver_to'], $dto->getDeliveryContactUsernames());
+    $this->assertEquals($test_data['contact_usernames'], (array) $dto->getContactUserNames());
+    $this->assertEquals($test_data['deliver_to'], (array) $dto->getDeliveryContactUsernames());
     $this->assertEquals($test_data['priority'], $dto->getPriorityCode());
 
     $source_document = $dto->getSourceDocuments()[0];
-    $this->assertEquals(['EN'], $source_document->getSourceLanguages());
+    $this->assertEquals(['EN'], (array) $source_document->getSourceLanguages());
     $this->assertFalse($source_document->isPrivate());
     $this->assertEquals('XM', $source_document->getOutputDocumentFormatCode());
     $this->assertEquals($test_data['confidentiality'], $source_document->getConfidentialityCode());
