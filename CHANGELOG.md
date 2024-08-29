@@ -1,11 +1,23 @@
 # Changelog
 
-## [2.8.0](https://github.com/openeuropa/oe_translation/tree/2.8.0) (2024-06-10)
+## [2.9.0](https://github.com/openeuropa/oe_translation/tree/2.9.0) (2024-08-29)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.8.0...2.9.0)
+
+**Merged pull requests:**
+
+- EWPP-4411: Checking for existence of delta before setting translation\_id. [\#326](https://github.com/openeuropa/oe_translation/pull/326) ([upchuk](https://github.com/upchuk))
+- OEL-3047: Update to Drupal 10.3 [\#321](https://github.com/openeuropa/oe_translation/pull/321) ([AaronGilMartinez](https://github.com/AaronGilMartinez))
+- EWPP-4442: Account for missing translation ID on the translated value. [\#319](https://github.com/openeuropa/oe_translation/pull/319) ([upchuk](https://github.com/upchuk))
+- Epic EWPP-4413: Generic remote and local translation and corporate workflow. [\#315](https://github.com/openeuropa/oe_translation/pull/315) ([upchuk](https://github.com/upchuk))
+
+## [2.8.0](https://github.com/openeuropa/oe_translation/tree/2.8.0) (2024-06-11)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.7.0...2.8.0)
 
 **Merged pull requests:**
 
+- Prepare release 2.8.0. [\#316](https://github.com/openeuropa/oe_translation/pull/316) ([imanoleguskiza](https://github.com/imanoleguskiza))
 - EWPP-3399: Dashboard links for new local translations. [\#292](https://github.com/openeuropa/oe_translation/pull/292) ([upchuk](https://github.com/upchuk))
 
 ## [2.7.0](https://github.com/openeuropa/oe_translation/tree/2.7.0) (2024-04-16)
