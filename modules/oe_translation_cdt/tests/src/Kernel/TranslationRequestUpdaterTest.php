@@ -13,11 +13,16 @@ use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
 use OpenEuropa\CdtClient\Model\Response\Comment;
+use OpenEuropa\CdtClient\Model\Response\CommentCollection;
 use OpenEuropa\CdtClient\Model\Response\JobSummary;
+use OpenEuropa\CdtClient\Model\Response\JobSummaryCollection;
 use OpenEuropa\CdtClient\Model\Response\ReferenceContact;
+use OpenEuropa\CdtClient\Model\Response\ReferenceContactCollection;
 use OpenEuropa\CdtClient\Model\Response\ReferenceData;
 use OpenEuropa\CdtClient\Model\Response\ReferenceItem;
+use OpenEuropa\CdtClient\Model\Response\ReferenceItemCollection;
 use OpenEuropa\CdtClient\Model\Response\Translation;
+use OpenEuropa\CdtClient\Model\StringCollection;
 
 /**
  * Tests the CDT translation request updater.
@@ -110,22 +115,24 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
       ->setLastName('Doe')
       ->setUserName('TEST2');
     $reference_data = (new ReferenceData())
-      ->setContacts([$user1, $user2])
-      ->setDepartments([(new ReferenceItem())->setCode('DEP2')->setDescription('Department 2')]);
+      ->setContacts(new ReferenceContactCollection([$user1, $user2]))
+      ->setDepartments(new ReferenceItemCollection([
+        (new ReferenceItem())->setCode('DEP2')->setDescription('Department 2'),
+      ]));
     $translation_response = (new Translation())
       ->setStatus(CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED)
       ->setRequestIdentifier('123/2024')
-      ->setComments([(new Comment())->setComment('COMMENT2')])
-      ->setContacts(['Jane Doe'])
-      ->setDeliverToContacts(['John Smith', 'Jane Doe'])
+      ->setComments(new CommentCollection([(new Comment())->setComment('COMMENT2')]))
+      ->setContacts(new StringCollection(['Jane Doe']))
+      ->setDeliverToContacts(new StringCollection(['John Smith', 'Jane Doe']))
       ->setPhoneNumber('123456789')
       ->setDepartment('Department 2')
-      ->setJobSummary([
+      ->setJobSummary(new JobSummaryCollection([
         (new JobSummary())
           ->setTargetLanguage('FR')
           ->setStatus(CdtApiWrapperInterface::STATUS_JOB_COMPLETED)
           ->setPriorityCode('PRIO2'),
-      ]);
+      ]));
 
     // Do the update of the translation request.
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
@@ -154,7 +161,7 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     $this->assertCount(1, $request->getLogMessages(), 'No new log messages should be added.');
 
     // Update single value.
-    $translation_response->setContacts(['John Smith']);
+    $translation_response->setContacts(new StringCollection(['John Smith']));
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
     $this->assertEquals(['TEST1'], $request->getContactUsernames());
     $this->assertTranslationRequestLog($request, [
@@ -164,17 +171,17 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     ]);
 
     // Ignore optional language status and request priority.
-    $translation_response->setJobSummary([]);
+    $translation_response->setJobSummary(new JobSummaryCollection([]));
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
     $this->assertCount(2, $request->getLogMessages(), 'No new log messages should be added.');
 
     // Update language status.
-    $translation_response->setJobSummary([
+    $translation_response->setJobSummary(new JobSummaryCollection([
       (new JobSummary())
         ->setTargetLanguage('FR')
         ->setStatus(CdtApiWrapperInterface::STATUS_JOB_FAILED)
         ->setPriorityCode('PRIO2'),
-    ]);
+    ]));
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
     $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED, $request->getTargetLanguages()['fr']->getStatus());
     $this->assertTranslationRequestLog($request, [

@@ -10,10 +10,14 @@ use Drupal\oe_translation\TranslationSourceHelper;
 use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use OpenEuropa\CdtClient\Model\Request\Callback;
+use OpenEuropa\CdtClient\Model\Request\CallbackCollection;
 use OpenEuropa\CdtClient\Model\Request\File;
 use OpenEuropa\CdtClient\Model\Request\SourceDocument;
+use OpenEuropa\CdtClient\Model\Request\SourceDocumentCollection;
 use OpenEuropa\CdtClient\Model\Request\Translation;
 use OpenEuropa\CdtClient\Model\Request\TranslationJob;
+use OpenEuropa\CdtClient\Model\Request\TranslationJobCollection;
+use OpenEuropa\CdtClient\Model\StringCollection;
 
 /**
  * Maps the data between the TranslationRequestCDT entity and the DTO.
@@ -52,11 +56,11 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
     $translation->setSendOptions('Send');
     $translation->setPurposeCode('WS');
     $translation->setDepartmentCode($entity->getDepartment());
-    $translation->setContactUserNames($entity->getContactUsernames());
-    $translation->setDeliveryContactUsernames($entity->getDeliverTo());
+    $translation->setContactUserNames(new StringCollection($entity->getContactUsernames()));
+    $translation->setDeliveryContactUsernames(new StringCollection($entity->getDeliverTo()));
     $translation->setPriorityCode($entity->getPriority());
     $translation->setCallbacks($this->createCallbacks());
-    $translation->setSourceDocuments([$this->createSourceDocument($entity)]);
+    $translation->setSourceDocuments(new SourceDocumentCollection([$this->createSourceDocument($entity)]));
     return $translation;
   }
 
@@ -76,7 +80,7 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
     $source_languages = [
       LanguageCodeMapper::getCdtLanguageCode($translation_request->getSourceLanguageCode(), $translation_request),
     ];
-    $source_document->setSourceLanguages($source_languages);
+    $source_document->setSourceLanguages(new StringCollection($source_languages));
     $source_document->setIsPrivate(FALSE);
     $source_document->setOutputDocumentFormatCode('XM');
     $source_document->setConfidentialityCode($translation_request->getConfidentiality());
@@ -109,11 +113,11 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
    * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
    *   The translation request entity.
    *
-   * @return \OpenEuropa\CdtClient\Model\Request\TranslationJob[]
-   *   The translation job DTOs.
+   * @return \OpenEuropa\CdtClient\Model\Request\TranslationJobCollection
+   *   The translation job DTO collection.
    */
-  protected function createTranslationJobs(TranslationRequestCdtInterface $translation_request): array {
-    $translation_jobs = [];
+  protected function createTranslationJobs(TranslationRequestCdtInterface $translation_request): TranslationJobCollection {
+    $translation_jobs = new TranslationJobCollection([]);
     $character_count = $this->countCharactersWithoutSpaces($translation_request);
     $volume = $this->countVolume($character_count);
     foreach ($translation_request->getTargetLanguages() as $target_language) {
@@ -163,10 +167,10 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
   /**
    * Creates the Callback DTOs.
    *
-   * @return \OpenEuropa\CdtClient\Model\Request\Callback[]
-   *   The callback DTOs.
+   * @return \OpenEuropa\CdtClient\Model\Request\CallbackCollection
+   *   The callback DTO collection.
    */
-  protected function createCallbacks(): array {
+  protected function createCallbacks(): CallbackCollection {
     $job_status_url = Url::fromRoute(
       route_name: 'oe_translation_cdt.request_status_callback',
       options: ['absolute' => TRUE]
@@ -176,7 +180,7 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
       options: ['absolute' => TRUE]
     );
 
-    return [
+    return new CallbackCollection([
       (new Callback())
         ->setCallbackType('JOB_STATUS')
         ->setCallbackBaseUrl($job_status_url->toString())
@@ -185,7 +189,7 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
         ->setCallbackType('REQUEST_STATUS')
         ->setCallbackBaseUrl($request_status_url->toString())
         ->setClientApiKey(Settings::get('cdt.api_key')),
-    ];
+    ]);
   }
 
 }
