@@ -23,8 +23,11 @@ trait MultivalueFieldProcessorTrait {
       $field_item = $field_data[$delta];
       foreach (Element::children($field_item) as $property) {
         $property_data = $field_item[$property];
-        if ($property === 'translation_id') {
-          // Keep the translation ID in sync whenever we sync the translation.
+        if ($property === 'translation_id' && $field->offsetExists($delta)) {
+          // Keep the translation ID in sync whenever we sync the translation,
+          // if that offset exists (in rare cases it can be missing, for example
+          // when one of the deltas doesn't have anythin translatable about
+          // it while others do).
           $field->offsetGet($delta)->set($property, $property_data['#text']);
         }
       }
