@@ -41,7 +41,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    * {@inheritdoc}
    */
   public function updateFromTranslationResponse(TranslationRequestCdtInterface $translation_request, Translation $translation_response, ReferenceData $reference_data): bool {
-    $comments = trim(array_reduce($translation_response->getComments(), function ($carry, $item) {
+    $comments = trim(array_reduce((array) $translation_response->getComments(), function ($carry, $item) {
       return $carry . $item->getComment() . "\n";
     }, ''), "\n");
 
