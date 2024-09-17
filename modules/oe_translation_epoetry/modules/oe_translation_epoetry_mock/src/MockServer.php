@@ -8,6 +8,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\State\StateInterface;
+use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossierResponse;
@@ -209,25 +210,31 @@ class MockServer implements ContainerInjectionInterface {
     $request_details_in = $linguistic_request_in->getRequestDetails();
     $dossier_in = $reference_in->getDossier();
 
-    // Get from state the previous request versions so that we mimic how ePoetry
-    // keeps track and increments the versions.
-    $system_request_versions = $this->state->get('oe_translation_epoetry_mock.request_versions', []);
-    $id = implode('/', [
-      $dossier_in->getRequesterCode(),
-      $dossier_in->getYear(),
-      $dossier_in->getNumber(),
-      $reference_in->getPart(),
-      $reference_in->getProductType(),
-    ]);
-    $last_entity_version = $system_request_versions[$id] ?? 0;
-    $new_entity_version = $last_entity_version + 1;
-    $system_request_versions[$id] = $new_entity_version;
-    $this->state->set('oe_translation_epoetry_mock.request_versions', $system_request_versions);
+    // Find the latest translation request so we can determine the version.
+    $ids = $this->entityTypeManager->getStorage('oe_translation_request')->getQuery()
+      ->condition('bundle', 'epoetry')
+      ->condition('request_id.code', $dossier_in->getRequesterCode())
+      ->condition('request_id.year', $dossier_in->getYear())
+      ->condition('request_id.number', $dossier_in->getNumber())
+      ->condition('request_id.part', $reference_in->getPart())
+      ->sort('request_id.version', 'DESC')
+      ->accessCheck(FALSE)
+      ->range(0, 1)
+      ->execute();
+
+    $new_version = 0;
+    if ($ids) {
+      $id = reset($ids);
+      /** @var \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $request */
+      $request = $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
+      $request_id = $request->getRequestId();
+      $new_version = (int) $request_id['version'] + 1;
+    }
 
     $reference_out = (new RequestReferenceOut())
       ->setDossier($reference_in->getDossier())
       ->setPart($reference_in->getPart())
-      ->setVersion($new_entity_version)
+      ->setVersion($new_version)
       ->setProductType('TRA');
 
     $request_details_out = $this->toRequestDetailsOut($request_details_in, $version_request->getApplicationName());
@@ -329,9 +336,9 @@ class MockServer implements ContainerInjectionInterface {
     /** @var \OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier $request_in */
     $request_in = $serializer->deserialize($xml_request->Body->addNewPartToDossier->asXml(), AddNewPartToDossier::class, 'xml');
 
+    $dossiers = RequestFactory::getEpoetryDossiers();
     $number = $request_in->getDossier()->getNumber();
-    $last_part_for_number = $this->state->get('oe_translation_epoetry_mock.last_part_for_number', []);
-    $last_part = $last_part_for_number[$number] ?? 0;
+    $last_part = $dossiers[$number]['part'] ?? 0;
     $new_part = $last_part + 1;
 
     $dossier = (new DossierReference())
@@ -355,9 +362,6 @@ class MockServer implements ContainerInjectionInterface {
 
     $response = new AddNewPartToDossierResponse();
     $response->setReturn($linguistic_request);
-
-    $last_part_for_number[$number] = $new_part;
-    $this->state->set('oe_translation_epoetry_mock.last_part_for_number', $last_part_for_number);
 
     return $response;
   }
