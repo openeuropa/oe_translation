@@ -57,6 +57,11 @@ commands:
         $settings["epoetry.ticket_validation.callback_url"] = getenv('EPOETRY_TICKET_VALIDATION_CALLBACK_URL');
         $settings["epoetry.ticket_validation.on"] = getenv('EPOETRY_TICKET_VALIDATION_ON');
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
+        $settings["cdt.base_api_url"] = getenv('CDT_BASE_API_URL');
+        $settings["cdt.username"] = getenv('CDT_USERNAME');
+        $settings["cdt.password"] = getenv('CDT_PASSWORD');
+        $settings["cdt.client"] = getenv('CDT_CLIENT');
+        $settings["cdt.api_key"] = getenv('CDT_API_KEY');
     # Generate settings.testing.php, it will be used when running functional tests.
     - { task: "process-php", type: "write", config: "drupal.settings", source: "${drupal.root}/sites/default/default.settings.php", destination: "${drupal.root}/sites/default/settings.testing.php", override: true }
     - task: "append"
@@ -73,5 +78,10 @@ commands:
         $settings["epoetry.ticket_validation.callback_url"] = getenv('EPOETRY_TICKET_VALIDATION_CALLBACK_URL');
         $settings["epoetry.ticket_validation.on"] = getenv('EPOETRY_TICKET_VALIDATION_ON');
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
+        $settings["cdt.base_api_url"] = getenv('CDT_BASE_API_URL');
+        $settings["cdt.username"] = getenv('CDT_USERNAME');
+        $settings["cdt.password"] = getenv('CDT_PASSWORD');
+        $settings["cdt.client"] = getenv('CDT_CLIENT');
+        $settings["cdt.api_key"] = getenv('CDT_API_KEY');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }

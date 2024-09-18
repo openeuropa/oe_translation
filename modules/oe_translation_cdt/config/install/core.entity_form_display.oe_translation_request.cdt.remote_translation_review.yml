@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.oe_translation_request.remote_translation_review
+    - field.field.oe_translation_request.cdt.cdt_id
+    - field.field.oe_translation_request.cdt.comments
+    - field.field.oe_translation_request.cdt.confidentiality
+    - field.field.oe_translation_request.cdt.contact_usernames
+    - field.field.oe_translation_request.cdt.correlation_id
+    - field.field.oe_translation_request.cdt.deliver_to
+    - field.field.oe_translation_request.cdt.department
+    - field.field.oe_translation_request.cdt.phone_number
+    - field.field.oe_translation_request.cdt.priority
+    - field.field.oe_translation_request.cdt.request_status
+    - field.field.oe_translation_request.cdt.target_languages
+    - field.field.oe_translation_request.cdt.translated_data
+    - field.field.oe_translation_request.cdt.translator_provider
+    - oe_translation.oe_translation_request_type.cdt
+id: oe_translation_request.cdt.remote_translation_review
+targetEntityType: oe_translation_request
+bundle: cdt
+mode: remote_translation_review
+content: {  }
+hidden:
+  cdt_id: true
+  comments: true
+  confidentiality: true
+  contact_usernames: true
+  correlation_id: true
+  deliver_to: true
+  department: true
+  phone_number: true
+  priority: true
+  request_status: true
+  target_languages: true
+  translated_data: true
+  translator_provider: true

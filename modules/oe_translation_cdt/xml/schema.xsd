@@ -1,0 +1,61 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:element name="Transaction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="TransactionHeader">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="SenderDetails">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:dateTime" name="ProducerDateTime"/>
+                  </xs:sequence>
+                  <xs:attribute type="xs:string" name="drupalVersion"/>
+                  <xs:attribute type="xs:string" name="tmgmtVersion"/>
+                  <xs:attribute type="xs:string" name="moduleVersion"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:string" name="TransactionIdentifier"/>
+        <xs:element type="xs:string" name="TransactionCode"/>
+        <xs:element name="TransactionData">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="TranslationDetails">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Translation" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:string" name="PreviewLink"/>
+                          <xs:element type="xs:string" name="SourceReference"/>
+                          <xs:element name="StaticContent" maxOccurs="unbounded" minOccurs="0">
+                            <xs:complexType>
+                              <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                  <xs:attribute type="xs:string" name="indexType" use="required"/>
+                                  <xs:attribute type="xs:string" name="instanceId" use="required"/>
+                                  <xs:attribute type="xs:string" name="resName" use="required"/>
+                                  <xs:attribute type="xs:string" name="resType" use="required"/>
+                                  <xs:attribute type="xs:string" name="resMaxSize"/>
+                                  <xs:attribute type="xs:string" name="resLabel" use="required"/>
+                                </xs:extension>
+                              </xs:simpleContent>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element type="xs:int" name="TotalCharacterLength"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

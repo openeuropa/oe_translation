@@ -1,0 +1,100 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for OpenEuropa Translation CDT mock module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
+use Drupal\oe_translation_cdt\TranslationRequestCdt;
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_view_alter().
+ */
+function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->bundle() !== 'cdt') {
+    return;
+  }
+
+  /** @var \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $entity */
+  if (!isset($build['meta'])) {
+    return;
+  }
+  $row = &$build['meta']['#rows'][0];
+
+  $operations = [];
+  $all_statuses = [
+    CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED => 'Completed',
+    CdtApiWrapperInterface::STATUS_REQUEST_IN_PROGRESS => 'In progress',
+    CdtApiWrapperInterface::STATUS_REQUEST_CANCELLED => 'Cancelled',
+    CdtApiWrapperInterface::STATUS_REQUEST_PENDING_APPROVAL => 'Pending approval',
+    CdtApiWrapperInterface::STATUS_REQUEST_UNDER_QUOTATION => 'Under quotation',
+  ];
+  foreach ($all_statuses as $status => $label) {
+    $operations[$status] = [
+      'title' => sprintf('Update status to %s (mock)', $label),
+      'url' => Url::fromRoute('oe_translation_cdt_mock.request_status', [
+        'translation_request' => $entity->id(),
+      ], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')->toString(),
+          'status' => $status,
+        ],
+      ]),
+    ];
+  }
+
+  if (!isset($row['cdt_operations'])) {
+    $row['cdt_operations'] = [
+      'data' => [
+        '#type' => 'operations',
+        '#links' => $operations,
+      ],
+    ];
+  }
+  else {
+    $row['cdt_operations']['data']['#links'] += $operations;
+  }
+}
+
+/**
+ * Implements template_preprocess_table__remote_language_list().
+ */
+function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$variables) {
+  $id = (string) $variables['attributes']['data-translation-request'];
+  $request = TranslationRequestCdt::load($id);
+  if (!$request || $request->bundle() !== 'cdt' || !$request->getCdtId()) {
+    return;
+  }
+
+  $all_statuses = [
+    CdtApiWrapperInterface::STATUS_JOB_COMPLETED => 'Completed',
+    CdtApiWrapperInterface::STATUS_JOB_FAILED => 'Failed',
+    CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS => 'In progress',
+    CdtApiWrapperInterface::STATUS_JOB_CANCELLED => 'Cancelled',
+    CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => 'To be cancelled',
+  ];
+  foreach ($variables['rows'] as &$row) {
+    $langcode = (string) $row['attributes']['hreflang'];
+    foreach ($all_statuses as $status => $label) {
+      $row['cells']['operations']['content']['#links'][] = [
+        'title' => sprintf('Update status to %s (mock)', $label),
+        'url' => Url::fromRoute('oe_translation_cdt_mock.job_status', [
+          'translation_request' => $id,
+          'langcode' => $langcode,
+        ], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')->toString(),
+            'status' => $status,
+          ],
+        ]),
+      ];
+    }
+
+  }
+}

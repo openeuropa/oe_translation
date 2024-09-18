@@ -1,0 +1,87 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.oe_translation_request.cdt.cdt_id
+    - field.field.oe_translation_request.cdt.comments
+    - field.field.oe_translation_request.cdt.confidentiality
+    - field.field.oe_translation_request.cdt.contact_usernames
+    - field.field.oe_translation_request.cdt.correlation_id
+    - field.field.oe_translation_request.cdt.deliver_to
+    - field.field.oe_translation_request.cdt.department
+    - field.field.oe_translation_request.cdt.phone_number
+    - field.field.oe_translation_request.cdt.priority
+    - field.field.oe_translation_request.cdt.request_status
+    - field.field.oe_translation_request.cdt.target_languages
+    - field.field.oe_translation_request.cdt.translated_data
+    - field.field.oe_translation_request.cdt.translator_provider
+    - oe_translation.oe_translation_request_type.cdt
+  module:
+    - oe_translation_remote
+id: oe_translation_request.cdt.default
+targetEntityType: oe_translation_request
+bundle: cdt
+mode: default
+content:
+  confidentiality:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  contact_usernames:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  deliver_to:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  department:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  phone_number:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  priority:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  target_languages:
+    type: oe_translation_remote_language_list
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  cdt_id: true
+  comments: true
+  correlation_id: true
+  request_status: true
+  translated_data: true
+  translator_provider: true
