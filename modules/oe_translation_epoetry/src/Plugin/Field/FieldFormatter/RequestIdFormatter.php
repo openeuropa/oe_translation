@@ -35,7 +35,7 @@ class RequestIdFormatter extends FormatterBase {
       }
 
       $element[$delta] = [
-        '#markup' => RequestIdItem::toReference($values),
+        '#markup' => RequestIdItem::toDgtFormattedReference($values),
       ];
     }
 
