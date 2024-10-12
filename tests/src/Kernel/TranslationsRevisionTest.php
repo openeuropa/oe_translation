@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\oe_translation\TranslationModerationHandler;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\oe_translation\TranslationModerationHandler;
 
 /**
  * Tests that whenever a new translation is saved, no revision is created.

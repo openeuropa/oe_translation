@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_active_revision_link_lists\FunctionalJavascript;
 
-use Drupal\oe_link_lists\Entity\LinkList;
 use Drupal\Tests\oe_translation_active_revision\FunctionalJavascript\ActiveRevisionTestBase;
+use Drupal\oe_link_lists\Entity\LinkList;
 use Drupal\user\Entity\Role;
 
 /**

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\oe_link_lists\Entity\LinkList;
 use Drupal\Tests\oe_editorial\Traits\BatchTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\oe_link_lists\Entity\LinkList;
 use Drupal\user\Entity\Role;
 
 /**

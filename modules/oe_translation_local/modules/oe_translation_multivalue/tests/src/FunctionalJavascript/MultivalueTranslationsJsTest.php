@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_multivalue\FunctionalJavascript;
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Tests the multivalue translations.

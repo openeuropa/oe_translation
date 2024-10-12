@@ -65,7 +65,7 @@ class NewVersionCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, TranslationRequestEpoetryInterface $translation_request = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?TranslationRequestEpoetryInterface $translation_request = NULL) {
     if (!$translation_request) {
       throw new NotFoundHttpException();
     }

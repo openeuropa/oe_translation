@@ -55,7 +55,7 @@ class TranslationRouteAccess implements AccessInterface {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access.
    */
-  public function access(Route $route, RouteMatchInterface $route_match, AccountInterface $account, string $source = NULL, string $target = NULL, string $language = NULL, string $entity_type_id = NULL): AccessResultInterface {
+  public function access(Route $route, RouteMatchInterface $route_match, AccountInterface $account, ?string $source = NULL, ?string $target = NULL, ?string $language = NULL, ?string $entity_type_id = NULL): AccessResultInterface {
     $operation = $route->getRequirement('_access_oe_translation');
 
     // Drupal core translation should not be used if this access checker is

@@ -2,11 +2,11 @@
 
 namespace Drupal\oe_translation;
 
-use Drupal\content_moderation\Entity\Handler\ModerationHandler;
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\content_moderation\Entity\Handler\ModerationHandler;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

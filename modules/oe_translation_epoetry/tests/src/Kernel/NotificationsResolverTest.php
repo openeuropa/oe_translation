@@ -6,8 +6,8 @@ namespace Drupal\Tests\oe_translation_epoetry\Kernel;
 
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
-use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
+use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 
 /**
  * Tests the ePoetry notification callback resolver.

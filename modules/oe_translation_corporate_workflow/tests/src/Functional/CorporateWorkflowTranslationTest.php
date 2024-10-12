@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_corporate_workflow\Functional;
 
 use Behat\Mink\Element\NodeElement;
-use Drupal\content_moderation\Entity\ContentModerationState;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
+use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\content_moderation\Entity\ContentModerationState;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
@@ -18,9 +21,6 @@ use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Drupal\paragraphs\Entity\Paragraph;
-use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\user\Entity\Role;
 
 /**
