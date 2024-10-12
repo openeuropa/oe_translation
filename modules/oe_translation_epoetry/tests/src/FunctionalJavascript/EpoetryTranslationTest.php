@@ -2511,7 +2511,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->getSession()->getPage()->pressButton('Reset');
 
-    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT-' . date('Y') . '-02000(00)-0-TRA');
+    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT/' . date('Y') . '/2000/0/0/TRA');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->assertSession()->linkNotExistsExact('Second node');
