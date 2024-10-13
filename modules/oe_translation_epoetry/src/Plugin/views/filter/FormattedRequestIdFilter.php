@@ -50,6 +50,19 @@ class FormattedRequestIdFilter extends StringFilter {
     $expression = implode(", '/', ", $columns);
     $expression = "CONCAT($expression)";
 
+    // Process the value into a simple concatenation of all the column data
+    // so that we can run a simple sql expression.
+    $value = preg_replace_callback('/\d+/', function ($matches) {
+      // Remove leading zeros using ltrim.
+      $trimmed = ltrim($matches[0], '0');
+
+      // Ensure at least one digit is present
+      // (i.e., replace an empty string with '0').
+      return $trimmed === '' ? '0' : $trimmed;
+    }, $this->value);
+    $value = str_replace('-', '/', $value);
+    $this->value = str_replace(['(', ')'], ['/', ''], $value);
+
     $info = $this->operators();
     if (!empty($info[$this->operator]['method'])) {
       $this->{$info[$this->operator]['method']}($expression);
