@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow\Form;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -12,6 +11,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_remote\Form\RemoteTranslationNewForm as RemoteTranslationNewFormOriginal;

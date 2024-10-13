@@ -6,6 +6,10 @@ namespace Drupal\Tests\oe_translation_epoetry\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
+use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\LanguageWithStatus;
@@ -16,10 +20,6 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
-use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
-use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 
 /**
  * Tests the remote translations via ePoetry.

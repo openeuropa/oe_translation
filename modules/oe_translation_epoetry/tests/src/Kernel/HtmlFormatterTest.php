@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_epoetry\Kernel;
 
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
  * Tests the ePoetry HTML content formatter.

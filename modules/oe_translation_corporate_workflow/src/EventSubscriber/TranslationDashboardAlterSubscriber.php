@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -12,6 +11,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
@@ -390,7 +390,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    * @return array
    *   The operations links.
    */
-  protected function getTranslationOperations(ContentEntityInterface $translation = NULL, bool $default): array {
+  protected function getTranslationOperations(?ContentEntityInterface $translation = NULL, bool $default = TRUE): array {
     if (!$translation) {
       return [];
     }

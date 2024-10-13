@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_corporate_workflow_epoetry\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
-use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
-use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
 
 /**
  * Tests the ePoetry translations with corporate workflow.

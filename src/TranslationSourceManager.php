@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
@@ -16,6 +15,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Render\Element;
+use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\TranslationSourceEvent;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\TranslationSourceFieldProcessorInterface;

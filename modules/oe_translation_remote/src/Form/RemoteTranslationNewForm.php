@@ -116,7 +116,7 @@ class RemoteTranslationNewForm extends FormBase {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  public function buildForm(array $form, FormStateInterface $form_state, RouteMatchInterface $route_match = NULL, $entity_type_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?RouteMatchInterface $route_match = NULL, $entity_type_id = NULL) {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $route_match->getParameter($entity_type_id);
     $form['#entity'] = $entity;

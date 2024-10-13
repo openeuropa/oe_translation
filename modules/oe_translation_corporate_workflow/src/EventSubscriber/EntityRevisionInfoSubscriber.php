@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\oe_translation\Event\EntityRevisionEvent;
 use Drupal\oe_translation\TranslatorProvidersInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

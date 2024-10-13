@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Base class for Kernel tests that test translation functionality.

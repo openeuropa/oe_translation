@@ -71,7 +71,7 @@ class TranslationAccessEvent extends Event {
    * @param \Drupal\Core\Language\LanguageInterface|null $target
    *   The target language.
    */
-  public function __construct(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, LanguageInterface $source = NULL, LanguageInterface $target = NULL) {
+  public function __construct(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, ?LanguageInterface $source = NULL, ?LanguageInterface $target = NULL) {
     $this->entity = $entity;
     $this->account = $account;
     $this->source = $source;

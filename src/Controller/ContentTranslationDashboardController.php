@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Controller;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
-use Drupal\content_translation\Controller\ContentTranslationController;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\content_translation\Controller\ContentTranslationController;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation\TranslatorProvidersInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -214,7 +214,7 @@ class ContentTranslationDashboardController extends ContentTranslationController
    * @return array
    *   The operations.
    */
-  protected function getTranslationOperationLinks(ContentEntityInterface $translation = NULL): array {
+  protected function getTranslationOperationLinks(?ContentEntityInterface $translation = NULL): array {
     if (!$translation) {
       // It means we don't yet have a translation.
       return [];

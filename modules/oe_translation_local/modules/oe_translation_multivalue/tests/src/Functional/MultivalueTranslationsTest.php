@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_multivalue\Functional;
 
+use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\oe_translation_multivalue\TranslationMultivalueColumnInstaller;
 use Drupal\paragraphs\Entity\Paragraph;
-use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
 
 /**
  * Tests the multivalue translations.

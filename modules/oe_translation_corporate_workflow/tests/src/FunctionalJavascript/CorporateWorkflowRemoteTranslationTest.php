@@ -6,10 +6,10 @@ namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
-use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
+use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 
 /**
  * Tests the remote translation revision capability.

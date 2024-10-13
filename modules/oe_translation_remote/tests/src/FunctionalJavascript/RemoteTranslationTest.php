@@ -6,13 +6,13 @@ namespace Drupal\Tests\oe_translation_remote\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Config\FileStorage;
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 use Drupal\oe_translation_remote_test\TranslationRequestTestRemote;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
-use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\user\Entity\Role;
 
 /**

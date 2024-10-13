@@ -132,6 +132,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $rows[] = [
         'data' => $row,
         'data-revision-id' => $entity->getRevisionId(),
+        'data-translation-request-id' => $translation_request->id(),
         'class' => $translation_request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED ? ['color-error'] : [],
       ];
     }

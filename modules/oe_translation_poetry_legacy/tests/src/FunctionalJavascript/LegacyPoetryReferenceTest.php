@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_poetry_legacy\FunctionalJavascript;
 
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_poetry_legacy\Entity\LegacyPoetryReference;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 
 /**
  * Tests the Legacy Poetry reference entity.
