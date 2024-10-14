@@ -66,20 +66,20 @@ class MultivalueTranslationsJsTest extends TranslationTestBase {
     // Textfield.
     $this->getSession()->getPage()->fillField('field_textfield[0][value]', 'Value 1');
     $this->getSession()->getPage()->pressButton('field_textfield_add_more');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->waitForField('field_textfield[1][value]');
     $this->getSession()->getPage()->fillField('field_textfield[1][value]', 'Value 2');
     // Address.
     $this->getSession()->getPage()->selectFieldOption('field_address[0][address][country_code]', 'BE');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->waitForField('field_address[0][address][given_name]');
     $this->getSession()->getPage()->fillField('field_address[0][address][given_name]', 'First name 1');
     $this->getSession()->getPage()->fillField('field_address[0][address][family_name]', 'Last name 1');
     $this->getSession()->getPage()->fillField('field_address[0][address][address_line1]', 'Street 1');
     $this->getSession()->getPage()->fillField('field_address[0][address][postal_code]', '1000');
     $this->getSession()->getPage()->fillField('field_address[0][address][locality]', 'Brussels');
     $this->getSession()->getPage()->pressButton('field_address_add_more');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->waitForField('field_address[1][address][country_code]');
     $this->getSession()->getPage()->selectFieldOption('field_address[1][address][country_code]', 'BE');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->waitForField('field_address[1][address][given_name]');
     $this->getSession()->getPage()->fillField('field_address[1][address][given_name]', 'First name 2');
     $this->getSession()->getPage()->fillField('field_address[1][address][family_name]', 'Last name 2');
     $this->getSession()->getPage()->fillField('field_address[1][address][address_line1]', 'Street 2');
@@ -165,6 +165,42 @@ class MultivalueTranslationsJsTest extends TranslationTestBase {
     $this->assertEquals('Value 1/FR', $translation->get('field_textfield')->getValue()[1]['value']);
     $this->assertEquals('Street 2/FR', $translation->get('field_address')->getValue()[0]['address_line1']);
     $this->assertEquals('Street 1/FR', $translation->get('field_address')->getValue()[1]['address_line1']);
+  }
+
+  /**
+   * Tests the field configuration form to turn on the translation multivalue.
+   */
+  public function testMultivalueFieldConfigForm(): void {
+    \Drupal::service('module_installer')->install(['field_ui']);
+    $user = $this->createUser([], NULL, TRUE);
+    $this->drupalLogin($user);
+    $this->drupalGet('/admin/structure/types/manage/multivalue/fields/add-field');
+
+    // @todo Remove when support for 10.2.x is dropped.
+    if (version_compare(\Drupal::VERSION, '10.3', '<')) {
+      $this->getSession()->getPage()->fillField('Label', 'Test');
+      $this->assertSession()->waitForElement('css', '.machine-name-label');
+      $this->getSession()->getPage()->find('css', '#edit-plain-text input')->click();
+      $this->assertSession()->waitForElement('css', 'input#string');
+      $this->getSession()->getPage()->find('css', 'input#string')->click();
+      $this->getSession()->getPage()->pressButton('Continue');
+    }
+    else {
+      $this->getSession()->getPage()->find('css', '#edit-plain-text')->click();
+      $this->getSession()->getPage()->pressButton('Continue');
+      $this->getSession()->getPage()->fillField('Label', 'Test');
+      $this->assertSession()->waitForElement('css', '.machine-name-label');
+      $this->getSession()->getPage()->find('css', '#string')->click();
+      $this->getSession()->getPage()->pressButton('Continue');
+    }
+
+    $this->getSession()->getPage()->selectFieldOption('Allowed number of values', '-1');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->checkField('Translation multivalue');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->getPage()->pressButton('Save settings');
+    $field = FieldStorageConfig::load('node.field_test');
+    $this->assertTrue($field->getSetting('translation_multivalue'));
   }
 
 }

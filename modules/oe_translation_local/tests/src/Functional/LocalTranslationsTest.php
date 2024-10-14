@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_local\Functional;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Url;
 use Drupal\Tests\oe_translation\Functional\TranslationTestBase;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\node\NodeInterface;
@@ -28,6 +29,9 @@ class LocalTranslationsTest extends TranslationTestBase {
     'entity_reference_revisions',
     'menu_link_content',
     'views',
+    // Add this module to increase coverage of features working correctly even
+    // with this enabled.
+    'oe_translation_multivalue',
   ];
 
   /**
@@ -137,6 +141,11 @@ class LocalTranslationsTest extends TranslationTestBase {
         ],
       ])
       ->save();
+
+    // Mark multivalue fields as using translation_multivalue.
+    $storage = FieldStorageConfig::load('node.ott_demo_link_field');
+    $storage->setSetting('translation_multivalue', TRUE);
+    $storage->save();
   }
 
   /**
