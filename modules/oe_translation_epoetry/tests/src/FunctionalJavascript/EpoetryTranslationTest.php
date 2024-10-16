@@ -1622,6 +1622,18 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertStringContainsString('The ePoetry notification did not provide a valid translation. Reference:', $log['message']);
     $log = $logs[4];
     $this->assertStringContainsString('<success>false</success><message>Translation data is missing or is invalid.</message>', $log['context']['response']);
+
+    // Translate the request with the file of a different request.
+    $request = TranslationRequest::load($request->id());
+    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    unset(EpoetryTranslationMockHelper::$translationRequestErrors['missing translation']);
+    EpoetryTranslationMockHelper::$translationRequestErrors['wrong request id'] = TRUE;
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $log = $logs[3];
+    $this->assertStringContainsString('The ePoetry notification did not provide a valid translation. The translation request file does not match the translation request. Reference:', $log['message']);
+    $log = $logs[4];
+    $this->assertStringContainsString('<success>false</success><message>The translation request file does not match the translation request.</message>', $log['context']['response']);
   }
 
   /**

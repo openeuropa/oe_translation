@@ -91,6 +91,16 @@ class HtmlFormatter implements ContentFormatterInterface {
       return [];
     }
 
+    $assets = $xml->xpath("//div[@class='asset']");
+    if (!$assets) {
+      return [];
+    }
+
+    $asset_id = (string) $assets[0]->attributes()['id'];
+    if ($asset_id !== 'item-' . $request->id()) {
+      throw new \Exception('The translation request file does not match the translation request.');
+    }
+
     foreach ($xml->xpath("//div[@class='atom']") as $atom) {
       $key = $this->decodeIdSafeBase64((string) $atom['id']);
       $dom->loadXML($atom->asXML());
