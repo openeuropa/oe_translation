@@ -12,6 +12,7 @@ use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
 use Drupal\oe_translation_epoetry\Event\EpoetryNotificationRequestUpdateEvent;
+use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\RequestIdItem;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -604,15 +605,15 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    */
   protected function formatRequestReference(RequestReference $reference): string {
     $values = [
-      $reference->getRequesterCode(),
-      $reference->getYear(),
-      $reference->getNumber(),
-      $reference->getVersion(),
-      $reference->getPart(),
-      $reference->getProductType(),
+      'code' => $reference->getRequesterCode(),
+      'year' => $reference->getYear(),
+      'number' => $reference->getNumber(),
+      'version' => $reference->getVersion(),
+      'part' => $reference->getPart(),
+      'service' => $reference->getProductType(),
     ];
 
-    return implode('/', $values);
+    return RequestIdItem::toDgtFormattedReference($values);
   }
 
   /**

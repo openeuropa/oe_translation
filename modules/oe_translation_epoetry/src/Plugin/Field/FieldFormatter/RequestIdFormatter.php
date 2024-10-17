@@ -31,11 +31,11 @@ class RequestIdFormatter extends FormatterBase {
     foreach ($items as $delta => $item) {
       $values = [];
       foreach ($columns as $column) {
-        $values[] = $item->{$column};
+        $values[$column] = $item->{$column};
       }
 
       $element[$delta] = [
-        '#markup' => RequestIdItem::toReference($values),
+        '#markup' => RequestIdItem::toDgtFormattedReference($values),
       ];
     }
 

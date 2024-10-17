@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldType;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
@@ -129,6 +130,27 @@ class RequestIdItem extends FieldItemBase {
    */
   public static function toReference(array $values): string {
     return implode('/', $values);
+  }
+
+  /**
+   * Builds a DGT specific format of the reference.
+   *
+   * @param array $values
+   *   The values in this field.
+   *
+   * @return string
+   *   The reference string.
+   */
+  public static function toDgtFormattedReference(array $values): string {
+    // Append leading zeroes to the number.
+    return (string) new FormattableMarkup('@code-@year-@number(@version)-@part-@service', [
+      '@code' => $values['code'],
+      '@year' => $values['year'],
+      '@number' => sprintf("%05d", $values['number']),
+      '@version' => sprintf("%02d", $values['version']),
+      '@part' => $values['part'],
+      '@service' => $values['service'],
+    ]);
   }
 
   /**
