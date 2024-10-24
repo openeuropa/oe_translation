@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\Mapper;
 
+use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\oe_translation\TranslationSourceHelper;
@@ -171,13 +173,21 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
    *   The callback DTO collection.
    */
   protected function createCallbacks(): CallbackCollection {
+    // Set the LANGUAGE_NOT_SPECIFIED to avoid the language suffix in the URL.
+    // @see \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl::processOutbound()
     $job_status_url = Url::fromRoute(
       route_name: 'oe_translation_cdt.request_status_callback',
-      options: ['absolute' => TRUE]
+      options: [
+        'absolute' => TRUE,
+        'language' => new Language(['id' => LanguageInterface::LANGCODE_NOT_SPECIFIED]),
+      ],
     );
     $request_status_url = Url::fromRoute(
       route_name: 'oe_translation_cdt.job_status_callback',
-      options: ['absolute' => TRUE]
+      options: [
+        'absolute' => TRUE,
+        'language' => new Language(['id' => LanguageInterface::LANGCODE_NOT_SPECIFIED]),
+      ]
     );
 
     return new CallbackCollection([
