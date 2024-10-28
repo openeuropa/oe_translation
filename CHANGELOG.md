@@ -1,11 +1,23 @@
 # Changelog
 
+## [2.10.0](https://github.com/openeuropa/oe_translation/tree/2.10.0) (2024-10-28)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.9.0...2.10.0)
+
+**Merged pull requests:**
+
+- EWPP-4794: Add translation request id to translation dashboard. [\#328](https://github.com/openeuropa/oe_translation/pull/328) ([intelektron](https://github.com/intelektron))
+- EWPP-3783: Logging incorrect incoming epoetry request translation files. [\#313](https://github.com/openeuropa/oe_translation/pull/313) ([upchuk](https://github.com/upchuk))
+- EWPP-4243: Fixing multivalue translation removals. [\#304](https://github.com/openeuropa/oe_translation/pull/304) ([upchuk](https://github.com/upchuk))
+- EWPP-3904: Do not prevent auto-accept and auto-sync if epoetry resends the translation. [\#293](https://github.com/openeuropa/oe_translation/pull/293) ([upchuk](https://github.com/upchuk))
+
 ## [2.9.0](https://github.com/openeuropa/oe_translation/tree/2.9.0) (2024-08-29)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.8.0...2.9.0)
 
 **Merged pull requests:**
 
+- Release-2.9.0: Update changelog. [\#327](https://github.com/openeuropa/oe_translation/pull/327) ([nagyad](https://github.com/nagyad))
 - EWPP-4411: Checking for existence of delta before setting translation\_id. [\#326](https://github.com/openeuropa/oe_translation/pull/326) ([upchuk](https://github.com/upchuk))
 - OEL-3047: Update to Drupal 10.3 [\#321](https://github.com/openeuropa/oe_translation/pull/321) ([AaronGilMartinez](https://github.com/AaronGilMartinez))
 - EWPP-4442: Account for missing translation ID on the translated value. [\#319](https://github.com/openeuropa/oe_translation/pull/319) ([upchuk](https://github.com/upchuk))
