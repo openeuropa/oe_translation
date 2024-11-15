@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * OE Translation CDT Mock install file.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_install().
+ */
+function oe_translation_cdt_mock_install($is_syncing) {
+  \Drupal::state()->delete('cdt.token');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function oe_translation_cdt_mock_uninstall($is_syncing) {
+  \Drupal::state()->delete('cdt.token');
+}
