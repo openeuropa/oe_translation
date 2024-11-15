@@ -175,14 +175,14 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
   protected function createCallbacks(): CallbackCollection {
     // Set the LANGUAGE_NOT_SPECIFIED to avoid the language suffix in the URL.
     // @see \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl::processOutbound()
-    $job_status_url = Url::fromRoute(
+    $request_status_url = Url::fromRoute(
       route_name: 'oe_translation_cdt.request_status_callback',
       options: [
         'absolute' => TRUE,
         'language' => new Language(['id' => LanguageInterface::LANGCODE_NOT_SPECIFIED]),
       ],
     );
-    $request_status_url = Url::fromRoute(
+    $job_status_url = Url::fromRoute(
       route_name: 'oe_translation_cdt.job_status_callback',
       options: [
         'absolute' => TRUE,
