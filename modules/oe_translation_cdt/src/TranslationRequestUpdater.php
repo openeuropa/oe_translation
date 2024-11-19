@@ -117,7 +117,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function updateFieldset(TranslationRequestCdtInterface $translation_request, array $fields, string $global_message = NULL): bool {
+  protected function updateFieldset(TranslationRequestCdtInterface $translation_request, array $fields, ?string $global_message = NULL): bool {
     $cumulated_changes = [];
     $cumulated_variables = [];
     foreach ($fields as $field => $value) {
