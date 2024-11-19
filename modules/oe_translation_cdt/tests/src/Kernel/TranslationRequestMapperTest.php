@@ -124,14 +124,21 @@ class TranslationRequestMapperTest extends TranslationKernelTestBase {
       $file->getFileName()
     );
 
+    $expected_callback_types = [
+      'JOB_STATUS' => '/translation-request/cdt/job-status',
+      'REQUEST_STATUS' => '/translation-request/cdt/request-status',
+    ];
     $callbacks = $dto->getCallbacks();
-    foreach (['JOB_STATUS', 'REQUEST_STATUS'] as $key => $callback_type) {
-      $this->assertEquals('test_api_key', $callbacks[$key]->getClientApiKey());
-      $this->assertTrue(UrlHelper::isValid($callbacks[$key]->getCallbackBaseUrl()));
-      $this->assertTrue(UrlHelper::isExternal($callbacks[$key]->getCallbackBaseUrl()));
+    $this->assertCount(2, $callbacks, 'Two callbacks are expected.');
+    foreach ($callbacks as $callback_dto) {
+      $callback_type = $callback_dto->getCallbackType();
+      $this->assertArrayHasKey($callback_type, $expected_callback_types, 'Unrecognized callback type.');
+      $this->assertEquals('test_api_key', $callback_dto->getClientApiKey(), 'The callback API key doesn\'t match.');
+      $this->assertTrue(UrlHelper::isValid($callback_dto->getCallbackBaseUrl()));
+      $this->assertTrue(UrlHelper::isExternal($callback_dto->getCallbackBaseUrl()));
       $base_url = $this->container->get('router.request_context')->getCompleteBaseUrl();
       $this->assertTrue(UrlHelper::externalIsLocal($callbacks[$key]->getCallbackBaseUrl(), $base_url));
-      $this->assertEquals($callback_type, $callbacks[$key]->getCallbackType());
+      $this->assertStringEndsWith($expected_callback_types[$callback_type], $callback_dto->getCallbackBaseUrl());
     }
   }
 
