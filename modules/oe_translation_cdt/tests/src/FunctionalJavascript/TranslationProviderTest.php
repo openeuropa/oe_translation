@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\FunctionalJavascript;
 
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
-use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\user\UserInterface;
 
 /**
