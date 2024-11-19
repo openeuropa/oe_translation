@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Drupal\Core\Render\RenderContext;
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\oe_translation_cdt\Plugin\views\field\TargetLanguagesWithTooltip;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\views\ResultRow;
 
 /**
