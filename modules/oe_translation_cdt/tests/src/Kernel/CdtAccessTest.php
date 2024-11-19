@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Drupal\Core\Session\AccountInterface;
-use Drupal\oe_translation_cdt\Access\CdtAccessCheck;
-use Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\oe_translation_cdt\Access\CdtAccessCheck;
+use Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface;
 
 /**
  * Tests the access handler of CDT.
