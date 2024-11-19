@@ -8,8 +8,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\oe_translation_cdt_mock\Plugin\ServiceMock\ServiceMockBase;
 use Drupal\Tests\UnitTestCase;
+use Drupal\oe_translation_cdt_mock\Plugin\ServiceMock\ServiceMockBase;
 use GuzzleHttp\Psr7\Request;
 
 /**

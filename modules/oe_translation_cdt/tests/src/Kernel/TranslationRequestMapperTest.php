@@ -7,12 +7,12 @@ namespace Drupal\Tests\oe_translation_cdt\Kernel;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
+use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\oe_translation_cdt\Mapper\TranslationRequestMapper;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
-use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 
 /**
  * Tests the TranslationRequestMapper class.
