@@ -6,8 +6,8 @@ namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Site\Settings;
-use Drupal\oe_translation_cdt\Compiler\CdtParametersCompilerPass;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
+use Drupal\oe_translation_cdt\Compiler\CdtParametersCompilerPass;
 
 /**
  * Tests the compiler pass that sets CDT configuration.
