@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Drupal\Core\Site\Settings;
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Controller\CallbackController;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
