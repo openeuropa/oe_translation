@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
+use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
-use Drupal\Tests\oe_translation_cdt\Traits\CdtTranslationTestTrait;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
 use OpenEuropa\CdtClient\Model\Response\Comment;
