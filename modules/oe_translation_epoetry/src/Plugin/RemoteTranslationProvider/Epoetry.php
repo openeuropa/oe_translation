@@ -106,6 +106,7 @@ class Epoetry extends RemoteTranslationProviderBase {
     return [
       'contacts' => [],
       'auto_accept' => FALSE,
+      'auto_sync' => FALSE,
       'title_prefix' => '',
       'site_id' => '',
       'language_mapping' => [],
@@ -165,8 +166,15 @@ class Epoetry extends RemoteTranslationProviderBase {
     $form['auto_accept'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Auto-accept translations'),
-      '#description' => $this->t('If checked, all ePoetry translation requests will be auto-accepted and you cannot control this anymore at the individual request level.'),
+      '#description' => $this->t('If checked, all ePoetry translation requests will be auto-accepted. You can control this at the individual request level.'),
       '#default_value' => $this->configuration['auto_accept'],
+    ];
+
+    $form['auto_sync'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Auto-sync translations'),
+      '#description' => $this->t('If checked, all ePoetry translation requests will be automatically synchronised. You can control this at the individual request level.'),
+      '#default_value' => $this->configuration['auto_sync'],
     ];
 
     $form['language_mapping'] = [
@@ -231,6 +239,7 @@ class Epoetry extends RemoteTranslationProviderBase {
 
     $this->configuration['contacts'] = $contacts;
     $this->configuration['auto_accept'] = (bool) $form_state->getValue('auto_accept');
+    $this->configuration['auto_sync'] = (bool) $form_state->getValue('auto_sync');
     $this->configuration['title_prefix'] = $form_state->getValue('title_prefix');
     $this->configuration['site_id'] = $form_state->getValue('site_id');
     $this->configuration['language_mapping'] = $form_state->getValue('language_mapping');
@@ -304,10 +313,28 @@ class Epoetry extends RemoteTranslationProviderBase {
       $form[$name]['#access'] = $items->access('edit');
     }
 
-    // Disable the auto-accept feature if it's disabled at the plugin level.
-    $form['auto_accept']['#disabled'] = $this->configuration['auto_accept'];
-    if ($form['auto_accept']['#disabled']) {
-      $form['auto_accept']['widget']['value']['#description'] .= '<strong>' . $this->t('. The auto-accept feature is enabled at site level. All requests will be auto-accepted.') . '</strong>';
+    // Enable the auto-accept feature if it's enabled at the plugin level.
+    if ($this->configuration['auto_accept']) {
+      // Add a message to the checkboxes, so editors know the option is
+      // enabled at the plugin level.
+      $form['auto_accept']['widget']['value']['#description'] .= '<strong>' . $this->t('. The auto-accept feature is enabled at site level.') . '</strong>';
+      $form['auto_accept']['widget']['value']['#default_value'] = TRUE;
+    }
+
+    // Enable the auto-sync feature if it's enabled at the plugin level.
+    if ($this->configuration['auto_sync']) {
+      // Add a message to the checkboxes, so editors know the option is
+      // enabled at the plugin level.
+      $form['auto_sync']['widget']['value']['#description'] .= '<strong>' . $this->t('. The auto-sync feature is enabled at site level.') . '</strong>';
+      $form['auto_sync']['widget']['value']['#default_value'] = TRUE;
+      // Enable the auto-accept feature if auto-sync is enabled at the plugin
+      // level but the auto-sync is not.
+      if (!$this->configuration['auto_accept']) {
+        // Add a message to the checkboxes, so editors know why the option is
+        // enabled.
+        $form['auto_accept']['widget']['value']['#description'] .= '<strong>' . $this->t('. The auto-sync feature is enabled at site level so the translations are automatically accepted before being automatically synchronised.') . '</strong>';
+        $form['auto_accept']['widget']['value']['#default_value'] = TRUE;
+      }
     }
 
     // Ensure the deadline is in the future.

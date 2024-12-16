@@ -363,12 +363,6 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     // Check if we need to auto-accept and/or auto-sync the request.
     $auto_accept = $translation_request->isAutoAccept();
     $auto_sync = $translation_request->isAutoSync();
-    // Check the provider configuration because we may have global settings for
-    // the auto-accept feature.
-    $provider_configuration = $translation_request->getTranslatorProvider()->getProviderConfiguration();
-    if ((bool) $provider_configuration['auto_accept'] === TRUE) {
-      $auto_accept = TRUE;
-    }
 
     $status = $auto_accept ? TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED : TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW;
     $translation_request->updateTargetLanguageStatus($langcode, $status);

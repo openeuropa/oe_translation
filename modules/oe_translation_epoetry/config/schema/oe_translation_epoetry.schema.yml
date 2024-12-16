@@ -22,6 +22,9 @@ oe_translation_remote.remote_translation_provider.plugin.epoetry:
     auto_accept:
       type: boolean
       label: Auto-accept translations
+    auto_sync:
+      type: boolean
+      label: Auto-sync translations
     title_prefix:
       type: string
       label: Title prefix
