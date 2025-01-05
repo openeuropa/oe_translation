@@ -530,6 +530,30 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('pt-pt'));
     $this->assertEquals("The translation's page - PT", $node->getTranslation('pt-pt')->label());
+
+    // Translate another node made in a different language and assert the
+    // source language is correctly sent to DGT.
+    $node = $this->createBasicTestNode('oe_demo_translatable_page', "FR page");
+    $node->set('langcode', 'fr');
+    $node->save();
+    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '08/18/2035');
+    // Fill in contacts.
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+    $this->getSession()->executeScript('window.scrollTo(0,300);');
+    $this->getSession()->getPage()->checkField('Bulgarian');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+
+    // Assert that the XML request we built is correct.
+    $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
+    $this->assertCount(2, $requests);
+    $xml = $requests[1];
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:addNewPartToDossier><dossier><requesterCode>DIGIT</requesterCode><number>1001</number><year>' . date('Y') . '</year></dossier><requestDetails><title>A title prefix: A site ID - FR page</title><internalReference>Translation request 2</internalReference><requestedDeadline>2035-08-18T23:59:00+02:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Page URL: http://web:8080/build/fr/fr-page</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>FR-page.html</fileName><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJGUiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5GUiBwYWdlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>FR</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2035-08-18T23:59:00+02:00" trackChanges="false"><language>BG</language></product></products></requestDetails><applicationName>digit</applicationName></ns1:addNewPartToDossier></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
   }
 
   /**
