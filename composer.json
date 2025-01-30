@@ -30,7 +30,7 @@
         "drupal/typed_link": "^2.0",
         "drush/drush": "^12 || ^13",
         "openeuropa/code-review": "^2.0",
-        "openeuropa/epoetry-client": "dev-EWPP-5163-requests",
+        "openeuropa/epoetry-client": "1.x-dev || 2.x-dev || dev-EWPP-5163-requests as 3.x-dev",
         "openeuropa/oe_content": "^4.0",
         "openeuropa/oe_editorial": "^2.0",
         "openeuropa/oe_link_lists": "^1.1",
