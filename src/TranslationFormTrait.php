@@ -98,7 +98,7 @@ trait TranslationFormTrait {
       else {
         // Otherwise, we fish it out from the source values of the
         // existing translation data.
-        $translation_value = $existing_translation_data[$key]['#text'] ?? NULL;
+        $translation_value = $existing_translation_data[$key]['#text'] ?? $data[$key]['#text'];
       }
 
       $element[$target_key]['translation'] = [
