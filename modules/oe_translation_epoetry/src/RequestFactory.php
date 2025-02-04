@@ -310,7 +310,7 @@ class RequestFactory extends RequestClientFactory {
     $request_details->setContacts($contacts);
 
     $linguistic_sections = (new LinguisticSections())
-      ->addLinguisticSection(new LinguisticSectionOut('EN'));
+      ->addLinguisticSection(new LinguisticSectionOut(EpoetryLanguageMapper::getEpoetryLanguageCode($request->getSourceLanguageCode(), $request)));
 
     $content = $this->formatter->export($request);
     $original_document = (new OriginalDocumentIn())
