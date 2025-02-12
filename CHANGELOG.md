@@ -1,10 +1,19 @@
 # Change Log
 
+## [2.12.0](https://github.com/openeuropa/oe_translation/tree/2.12.0) (2025-02-12)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.11.0...2.12.0)
+
+**Merged pull requests:**
+
+- EWPP-5074: Defaulting to the source value if not having a translation. [\#336](https://github.com/openeuropa/oe_translation/pull/336) ([upchuk](https://github.com/upchuk))
+- EWPP-5042: Fixing source language in ePoetry requests. [\#335](https://github.com/openeuropa/oe_translation/pull/335) ([upchuk](https://github.com/upchuk))
+
 ## [2.11.0](https://github.com/openeuropa/oe_translation/tree/2.11.0) (2024-12-16)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.10.0...2.11.0)
 
 **Merged pull requests:**
 
+- Release 2.11.0 changelog. [\#334](https://github.com/openeuropa/oe_translation/pull/334) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-4928: Allow editors to globally set auto-sync for requests. [\#333](https://github.com/openeuropa/oe_translation/pull/333) ([22Alexandra](https://github.com/22Alexandra))
 - D8AGE-871: Fix the callback URLs in the translation request. [\#332](https://github.com/openeuropa/oe_translation/pull/332) ([intelektron](https://github.com/intelektron))
 - EWPP-4826: A more DGT specific formatting of the ePoetry reference. [\#329](https://github.com/openeuropa/oe_translation/pull/329) ([upchuk](https://github.com/upchuk))
