@@ -252,7 +252,9 @@ class ActiveRevision extends ContentEntityBase implements ActiveRevisionInterfac
           return $mapping;
         }
 
-        $revision = \Drupal::entityTypeManager()->getStorage($values['entity_type'])->loadRevision($values['entity_revision_id']);
+        /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+        $storage = \Drupal::entityTypeManager()->getStorage($values['entity_type']);
+        $revision = $storage->loadRevision($values['entity_revision_id']);
         if (!$revision instanceof ContentEntityInterface) {
           // In case the revision was deleted, we map to null.
           $mapping = new LanguageRevisionMapping($langcode, NULL);

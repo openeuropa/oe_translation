@@ -123,6 +123,7 @@ abstract class MappingFormBase extends FormBase {
     }
     $options = [];
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
 
     $latest_revision = $storage->loadRevision($storage->getLatestRevisionId($entity_id));

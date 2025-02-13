@@ -25,6 +25,13 @@ use Drupal\Core\TypedData\DataDefinition;
 class LanguageWithDateItem extends FieldItemBase {
 
   /**
+   * The computed date.
+   *
+   * @var \Drupal\datetime\DateTimeComputed
+   */
+  protected $date;
+
+  /**
    * {@inheritdoc}
    */
   public static function defaultStorageSettings() {

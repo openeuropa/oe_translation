@@ -1,0 +1,6 @@
+includes:
+  - ./vendor/openeuropa/code-review-drupal/dist/phpstan.drupal.neon
+parameters:
+  excludePaths:
+  # Exclude the following file from analysis as RawDrupalContext is not present.
+    - tests/src/Traits/TranslationsTestTrait.php

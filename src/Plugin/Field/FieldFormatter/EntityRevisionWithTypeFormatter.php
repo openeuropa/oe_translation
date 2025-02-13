@@ -141,6 +141,7 @@ class EntityRevisionWithTypeFormatter extends FormatterBase implements Container
       ]),
     ];
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($item->entity_type);
     $entity = $storage->loadRevision($item->entity_revision_id);
     if (!$entity instanceof EntityInterface) {

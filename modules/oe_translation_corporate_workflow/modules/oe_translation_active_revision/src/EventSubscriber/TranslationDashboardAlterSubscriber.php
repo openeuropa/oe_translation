@@ -132,6 +132,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    */
   protected function alterExistingTranslationsTable(array &$build, ContentEntityInterface $entity): void {
     $cache = CacheableMetadata::createFromRenderArray($build);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
 
     if ($entity->get('moderation_state')->value !== 'published') {

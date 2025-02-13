@@ -1315,7 +1315,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
           break;
       }
 
-      /** @var \Drupal\node\NodeStorageInterface $node_storage */
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
       $storage = $this->entityTypeManager->getStorage($entity_type);
       $entity = $this->moderateEntity($entity, 'published');
 

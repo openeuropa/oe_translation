@@ -75,6 +75,7 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
       return AccessResult::allowed()->addCacheableDependency($entity);
     }
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value === 'validated' && $latest_entity->hasTranslation($langcode)) {
@@ -98,6 +99,7 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
         ]);
     }
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $entity = $storage->load($entity_id);
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);
@@ -152,6 +154,7 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    */
   public function getCancelUrl() {
     // We rely on the destination query parameter.
+    // @phpstan-ignore return.missing
   }
 
 }

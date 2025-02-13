@@ -98,6 +98,7 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
     }
 
     if ($entity->isDefaultRevision() && !$entity->isLatestRevision()) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
       $latest_revision = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
       $version = $this->getEntityVersion($entity);
@@ -197,7 +198,9 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
     $results = $this->queryRevisionsInSameMajorAndMinor($entity);
     if (count($results) === 2) {
       $revision_id = key($results);
-      $validated = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($revision_id);
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+      $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+      $validated = $storage->loadRevision($revision_id);
       $requests = parent::getExistingTranslationRequests($validated);
     }
 
@@ -266,6 +269,7 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
    */
   protected function getRequestEntityRevision(ContentEntityInterface $entity): ContentEntityInterface {
     if ($entity->isDefaultRevision() && !$entity->isLatestRevision()) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
       $latest_revision = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
 

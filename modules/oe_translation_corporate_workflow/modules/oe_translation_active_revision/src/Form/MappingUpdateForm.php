@@ -66,6 +66,7 @@ class MappingUpdateForm extends MappingFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?ActiveRevisionInterface $active_revision = NULL, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL) {
     $language = $this->languageManager->getLanguage($langcode);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $entity = $storage->load($entity_id);
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);

@@ -179,9 +179,7 @@ function oe_translation_corporate_workflow_entity_revision_create(ContentEntityI
   $skipped_field_names = array_merge($skipped_field_names, array_values($entity_type->getRevisionMetadataKeys()));
   $skipped_field_names = array_flip($skipped_field_names);
 
-  if (!isset($keep_untranslatable_fields)) {
-    $keep_untranslatable_fields = $entity->isDefaultTranslation() && $entity->isDefaultTranslationAffectedOnly();
-  }
+  $keep_untranslatable_fields = $entity->isDefaultTranslation() && $entity->isDefaultTranslationAffectedOnly();
 
   // We use the entity to get the translation languages because it may contain
   // additional translations that need to be added. The storage handler, on the
@@ -302,6 +300,7 @@ function oe_translation_corporate_workflow_content_moderation_state_presave(Enti
   // to mirror the fact that we create content entity revision translations
   // based on the last revision (not the last default one), we need to ensure
   // we clear translations from the content moderation state entity as well.
+  /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
   $storage = \Drupal::entityTypeManager()->getStorage($entity->get('content_entity_type_id')->value);
   /** @var \Drupal\Core\Entity\ContentEntityInterface $moderated_entity */
   $moderated_entity = $storage->loadRevision($entity->get('content_entity_revision_id')->value);
