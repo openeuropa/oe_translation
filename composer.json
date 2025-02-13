@@ -30,15 +30,15 @@
         "drupal/typed_link": "2.1.1",
         "drush/drush": "^12",
         "openeuropa/code-review": "^2.0",
-        "openeuropa/epoetry-client": "1.x-dev || 2.x-dev",
+        "openeuropa/epoetry-client": "2.x-dev || 3.x-dev",
         "openeuropa/oe_content": "^3.0.0-beta2",
         "openeuropa/oe_editorial": "^2.0",
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
         "phpspec/prophecy-phpunit": "^2",
-        "symfony/property-access": "^4 || ^5.4 || ^6",
-        "symfony/property-info": "^4 || ^5.4 || ^6"
+        "symfony/property-access": "^6",
+        "symfony/property-info": "^6"
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
