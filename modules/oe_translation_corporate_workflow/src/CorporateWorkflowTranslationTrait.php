@@ -12,6 +12,13 @@ use Drupal\Core\Entity\ContentEntityInterface;
 trait CorporateWorkflowTranslationTrait {
 
   /**
+   * Static cache for the value of the field name representing the version.
+   *
+   * @var array
+   */
+  protected $versionFieldStaticCache = [];
+
+  /**
    * Returns the human readable name of the entity version.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -21,12 +28,26 @@ trait CorporateWorkflowTranslationTrait {
    *   The version.
    */
   protected function getEntityVersion(ContentEntityInterface $entity): string {
-    $entity_version_storage = $this->entityTypeManager->getStorage('entity_version_settings');
-    $version_field_setting = $entity_version_storage->load($entity->getEntityTypeId() . '.' . $entity->bundle());
-    if (!$version_field_setting) {
+    $cid = $entity->getEntityTypeId() . '.' . $entity->bundle();
+    if (isset($this->versionFieldStaticCache[$cid])) {
+      $version_field = $this->versionFieldStaticCache[$cid];
+    }
+    else {
+      $entity_version_storage = $this->entityTypeManager->getStorage('entity_version_settings');
+      $version_field_setting = $entity_version_storage->load($entity->getEntityTypeId() . '.' . $entity->bundle());
+      if (!$version_field_setting) {
+        return '';
+      }
+
+      $version_field = $version_field_setting->getTargetField();
+    }
+
+    if (!$version_field) {
       return '';
     }
-    $version_field = $version_field_setting->getTargetField();
+
+    $this->versionFieldStaticCache[$cid] = $version_field;
+
     $version = $entity->get($version_field)->getValue();
     $version = reset($version);
     return implode('.', $version);

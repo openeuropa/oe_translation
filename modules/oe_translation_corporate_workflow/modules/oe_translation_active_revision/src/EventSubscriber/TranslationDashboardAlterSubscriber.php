@@ -412,12 +412,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
         'entity_id' => $entity->id(),
       ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
 
-      if ($add_mapping->access()) {
-        $links['update_mapping'] = [
-          'title' => $this->t('Add mapping'),
-          'url' => $add_mapping,
-        ];
-      }
+      $links['update_mapping'] = [
+        'title' => $this->t('Add mapping'),
+        'url' => $add_mapping,
+      ];
 
       if ($map_to_null->access()) {
         $links['map_to_null'] = [
@@ -451,38 +449,30 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     // a mapping to some other version or to remove the mapping.
     if ($mapping->isMappedToNull()) {
       // Add mapping.
-      if ($update_mapping->access()) {
-        $links['update_mapping'] = [
-          'title' => $this->t('Map to version'),
-          'url' => $update_mapping,
-        ];
-      }
+      $links['update_mapping'] = [
+        'title' => $this->t('Map to version'),
+        'url' => $update_mapping,
+      ];
 
-      if ($remove_mapping->access()) {
-        $links['remove_mapping'] = [
-          'title' => $this->t('Remove mapping'),
-          'url' => $remove_mapping,
-        ];
-      }
+      $links['remove_mapping'] = [
+        'title' => $this->t('Remove mapping'),
+        'url' => $remove_mapping,
+      ];
     }
 
     // The case in which we have a mapping to a version, we have the option to
     // change the version or to remove this mapping.
     if ($mapping->isMapped() && $mapping->getEntity()) {
-      if ($remove_mapping->access()) {
-        $links['remove_mapping'] = [
-          'title' => $this->t('Remove mapping'),
-          'url' => $remove_mapping,
-        ];
-      }
+      $links['remove_mapping'] = [
+        'title' => $this->t('Remove mapping'),
+        'url' => $remove_mapping,
+      ];
 
       // Update mapping.
-      if ($update_mapping->access()) {
-        $links['update_mapping'] = [
-          'title' => $this->t('Update mapping'),
-          'url' => $update_mapping,
-        ];
-      }
+      $links['update_mapping'] = [
+        'title' => $this->t('Update mapping'),
+        'url' => $update_mapping,
+      ];
 
       if ($map_to_null->access()) {
         $links['map_to_null'] = [
@@ -495,12 +485,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     // The case in which we don't yet have any mapping for a language but we do
     // have an active revision entity, we can add a new mapping.
     if (!$mapping->isMapped()) {
-      if ($update_mapping->access()) {
-        $links['update_mapping'] = [
-          'title' => $this->t('Add mapping'),
-          'url' => $update_mapping,
-        ];
-      }
+      $links['update_mapping'] = [
+        'title' => $this->t('Add mapping'),
+        'url' => $update_mapping,
+      ];
 
       if ($map_to_null->access()) {
         $links['map_to_null'] = [
