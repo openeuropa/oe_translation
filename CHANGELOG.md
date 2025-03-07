@@ -1,10 +1,18 @@
 # Change Log
 
+## [2.13.0](https://github.com/openeuropa/oe_translation/tree/2.13.0) (2025-03-07)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.12.0...2.13.0)
+
+**Merged pull requests:**
+
+- EWPP-5278: Various performance improvements of the active version calculations [\#340](https://github.com/openeuropa/oe_translation/pull/340) ([upchuk](https://github.com/upchuk))
+
 ## [2.12.0](https://github.com/openeuropa/oe_translation/tree/2.12.0) (2025-02-12)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.11.0...2.12.0)
 
 **Merged pull requests:**
 
+- Release-2.12.0: Update changelog. [\#338](https://github.com/openeuropa/oe_translation/pull/338) ([nagyad](https://github.com/nagyad))
 - EWPP-5074: Defaulting to the source value if not having a translation. [\#336](https://github.com/openeuropa/oe_translation/pull/336) ([upchuk](https://github.com/upchuk))
 - EWPP-5042: Fixing source language in ePoetry requests. [\#335](https://github.com/openeuropa/oe_translation/pull/335) ([upchuk](https://github.com/upchuk))
 
