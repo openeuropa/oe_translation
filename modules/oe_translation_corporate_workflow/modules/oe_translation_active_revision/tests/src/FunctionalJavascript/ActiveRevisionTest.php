@@ -733,7 +733,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'Remove mapping' => TRUE,
       // The update mapping op is missing because we only have 1 previous major
       // version it can map to, and it's already mapped to it.
-      'Update mapping' => FALSE,
+      // @todo , however, we enable it due to performance issues in calculating
+      // this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
 
@@ -814,15 +816,18 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'scope' => 0,
     ], $language_values[0]);
     $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
+    $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
       'Delete translation' => FALSE,
       'Add mapping' => FALSE,
       'Map to version' => FALSE,
       'Remove mapping' => TRUE,
-     // The update mapping op is missing because we only have 1 previous major
-     // version it can map to, and it's already mapped to it.
-      'Update mapping' => FALSE,
+      // The update mapping op is missing because we only have 1 previous major
+      // version it can map to, and it's already mapped to it.
+      // @todo , however, we enable it due to performance issues in calculating
+      // this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
 
@@ -879,7 +884,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'Add mapping' => FALSE,
       'Map to version' => FALSE,
       'Remove mapping' => TRUE,
-      'Update mapping' => FALSE,
+      // @todo , normally, the update op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
 
@@ -902,7 +909,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'Add mapping' => FALSE,
       'Map to version' => FALSE,
       'Remove mapping' => TRUE,
-      'Update mapping' => FALSE,
+      // @todo , normally, the update op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
     // For the new language created in the latest version, we can only hide it.
@@ -911,7 +920,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertOperationLinks([
       'View' => TRUE,
       'Delete translation' => TRUE,
-      'Add mapping' => FALSE,
+      // @todo , normally, the add op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Add mapping' => TRUE,
       'Map to version' => FALSE,
       'Remove mapping' => FALSE,
       'Update mapping' => FALSE,
@@ -953,7 +964,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'View' => TRUE,
       'Delete translation' => FALSE,
       'Add mapping' => FALSE,
-      'Map to version' => FALSE,
+      // @todo , normally, the map op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Map to version' => TRUE,
       'Remove mapping' => TRUE,
       'Update mapping' => FALSE,
       'Map to "hidden" (hide translation)' => FALSE,
@@ -1046,7 +1059,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       // For IT, we cannot update the mapping because version 1 doesn't have
       // a translation in IT and version 3 is the current version. And it's
       // already mapped to version 2.
-      'Update mapping' => FALSE,
+      // @todo , however, we enable it due to
+      // performance issues in calculating this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $italian_operations);
 
@@ -1495,6 +1510,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     // Map the IT to hidden.
     // There is only one operation for the IT row so we don't have a dropdown
     // to open.
+    $italian_row->find('xpath', '//td[6]')->pressButton('List additional actions');
     $italian_row->find('xpath', '//td[6]')->clickLink('Map to "hidden" (hide translation)');
     $this->assertSession()->pageTextContains('Are you sure you want to map this translation to "hidden"?');
     $this->assertSession()->pageTextContains('Please be aware that mapping to "hidden" will be relevant to the new Validated major version as there is no translation to hide in the Published version.');
