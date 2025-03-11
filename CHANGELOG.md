@@ -1,10 +1,18 @@
 # Change Log
 
+## [2.14.0](https://github.com/openeuropa/oe_translation/tree/2.14.0) (2025-03-11)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.13.0...2.14.0)
+
+**Merged pull requests:**
+
+- EWPP-5161: Use ePoetry 3.x and update to php8.3. [\#339](https://github.com/openeuropa/oe_translation/pull/339) ([nagyad](https://github.com/nagyad))
+
 ## [2.13.0](https://github.com/openeuropa/oe_translation/tree/2.13.0) (2025-03-07)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.12.0...2.13.0)
 
 **Merged pull requests:**
 
+- Release-2.13.0: Update changelog. [\#341](https://github.com/openeuropa/oe_translation/pull/341) ([nagyad](https://github.com/nagyad))
 - EWPP-5278: Various performance improvements of the active version calculations [\#340](https://github.com/openeuropa/oe_translation/pull/340) ([upchuk](https://github.com/upchuk))
 
 ## [2.12.0](https://github.com/openeuropa/oe_translation/tree/2.12.0) (2025-02-12)
