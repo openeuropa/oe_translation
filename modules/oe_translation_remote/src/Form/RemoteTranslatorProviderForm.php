@@ -217,6 +217,8 @@ class RemoteTranslatorProviderForm extends EntityForm {
           ]));
     }
     $form_state->setRedirectUrl($translator->toUrl('collection'));
+
+    return $status;
   }
 
 }

@@ -136,6 +136,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    *   The current entity.
    */
   protected function alterTranslationTable(array &$table, ContentEntityInterface $entity): void {
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     $header = [];
     foreach ($table['#header'] as $key => $col) {
@@ -183,6 +184,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected function alterExistingTranslationsTable(array &$build, ContentEntityInterface $entity): void {
     $build['existing_translations']['title']['#template'] = "<h3>{{ 'Existing synchronised translations'|t }}</h3>";
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     if ($entity->get('moderation_state')->value !== 'published') {
       // If we don't yet have a published version, we bail out as we don't

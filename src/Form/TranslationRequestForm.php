@@ -29,6 +29,8 @@ class TranslationRequestForm extends ContentEntityForm {
     }
 
     $form_state->setRedirect('entity.oe_translation_request.canonical', ['oe_translation_request' => $entity->id()]);
+
+    return $result;
   }
 
   /**

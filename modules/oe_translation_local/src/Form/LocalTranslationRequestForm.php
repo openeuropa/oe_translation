@@ -259,10 +259,12 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
     $translation_request = $this->entity;
 
-    $translation_request->save();
+    $result = $translation_request->save();
     $this->messenger()->addStatus($this->t('The translation has been saved.'));
 
     $this->addRedirect($form_state);
+
+    return $result;
   }
 
   /**

@@ -210,6 +210,8 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
       case TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED:
         return t('The translation request has been executed by ePoetry. This means they have dispatched the translations for all the languages.');
     }
+
+    return t('Unknown status');
   }
 
   /**

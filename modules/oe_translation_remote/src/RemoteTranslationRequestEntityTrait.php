@@ -157,6 +157,8 @@ trait RemoteTranslationRequestEntityTrait {
       case TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED:
         return t('The request has failed. You should mark it as "@value" in order to retry a new request.', ['@value' => TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED]);
     }
+
+    return t('Unknown status');
   }
 
   /**
@@ -176,6 +178,8 @@ trait RemoteTranslationRequestEntityTrait {
       case TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED:
         return t('The translation for this language has been synchronised.');
     }
+
+    return t('Unknown status');
   }
 
 }

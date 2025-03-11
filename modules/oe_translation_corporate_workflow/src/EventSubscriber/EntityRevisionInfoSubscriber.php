@@ -93,10 +93,12 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     $original_major = $original_version->get('major')->getValue();
     $original_minor = $original_version->get('minor')->getValue();
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     // Load the latest revision of the same entity that has the same major and
     // minor version. This is in case the entity is published since it was
     // validated to ensure we save the translation onto that version.
-    $results = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->getQuery()
+    $results = $storage->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
       ->condition('version.major', $original_major)
       ->condition('version.minor', $original_minor)
@@ -107,7 +109,7 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     end($results);
     $vid = key($results);
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($vid);
+    $entity = $storage->loadRevision($vid);
 
     // We create the empty translation on the entity so that we ensure if we
     // need to set the entity to not be the default revision (see below), it

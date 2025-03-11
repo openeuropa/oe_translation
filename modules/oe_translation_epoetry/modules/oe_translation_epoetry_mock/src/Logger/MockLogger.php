@@ -14,7 +14,7 @@ class MockLogger extends MockLoggerBase {
   /**
    * {@inheritdoc}
    */
-  public function log($level, $message, array $context = []) {
+  public function log($level, $message, array $context = []): void {
     $this->doLog($level, $message, $context);
   }
 

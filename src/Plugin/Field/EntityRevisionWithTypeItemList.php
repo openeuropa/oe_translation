@@ -23,6 +23,7 @@ class EntityRevisionWithTypeItemList extends FieldItemList implements EntityRevi
 
     $entities = [];
     foreach ($this->list as $delta => $item) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
       $storage = $entity_type_manager->getStorage($item->entity_type);
       $entity_type = $entity_type_manager->getDefinition($item->entity_type);
       if (!$entity_type->isRevisionable()) {

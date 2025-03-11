@@ -57,6 +57,7 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, ?ActiveRevisionInterface $active_revision = NULL, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL) {
     $form = parent::buildForm($form, $form_state);
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $entity = $storage->load($entity_id);
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);
@@ -130,6 +131,7 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
    */
   public function getCancelUrl() {
     // We rely on the destination query parameter.
+    // @phpstan-ignore return.missing
   }
 
 }
