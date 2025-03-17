@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_active_revision\FunctionalJavascript;
 
+use Drupal\content_moderation\Entity\ContentModerationState;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Entity\ActiveRevision;
@@ -1898,12 +1899,30 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
     ], $language_values[0]);
 
+    // "Break" the system by deleting the moderation state entity translation.
+    $validated_revision = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $moderation_state = ContentModerationState::loadFromModeratedEntity($validated_revision);
+    $moderation_state->removeTranslation('fr');
+    ContentModerationState::updateOrCreateFromEntity($moderation_state);
+    // Now only the original will be validated, and the translation of the
+    // node becomes "draft" because it no longer is translated. This situation
+    // should not really occur, but if it does, it can break new translations
+    // which when being saved onto the node, cause the moderation state of
+    // the original to be set to draft instead of keeping it on validated.
+    // With this we assert that even in this scenario, things still work and
+    // the active version gets updated.
+    $node_storage->resetCache();
+    $validated_revision = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $this->assertEquals('validated', $validated_revision->get('moderation_state')->value);
+    $this->assertEquals('draft', $validated_revision->getTranslation('fr')->get('moderation_state')->value);
+
     // Create a new translation of version 3 in FR (which is the validated
     // version).
     $this->drupalGet('/node/' . $node->id() . '/translations/local');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] td[data-version="3.0.0"] a')->click();
     $this->getSession()->getPage()->fillField('title|0|value[translation]', 'My FR version 3 node');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
+
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
