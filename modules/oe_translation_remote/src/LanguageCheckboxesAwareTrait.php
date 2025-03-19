@@ -48,7 +48,7 @@ trait LanguageCheckboxesAwareTrait {
       ];
     }
 
-    $form['#attached']['library'][] = 'oe_translation_remote/language_checkboxes';
+    $form['languages']['#attached']['library'][] = 'oe_translation_remote/language_checkboxes';
   }
 
   /**
