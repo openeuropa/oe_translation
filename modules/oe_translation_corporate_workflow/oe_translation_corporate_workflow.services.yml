@@ -24,3 +24,8 @@ services:
     arguments: ['@oe_translation.translator_providers']
     tags:
       - { name: event_subscriber }
+  oe_translation_corporate_workflow.translation_source_subscriber:
+    class: Drupal\oe_translation_corporate_workflow\EventSubscriber\TranslationSourceEventSubscriber
+    arguments: ['@content_moderation.moderation_information']
+    tags:
+      - { name: event_subscriber }
