@@ -1,10 +1,19 @@
 # Change Log
 
+## [2.14.1](https://github.com/openeuropa/oe_translation/tree/2.14.1) (2025-03-26)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.14.0...2.14.1)
+
+**Merged pull requests:**
+
+- EWPP-5136: Ensuring the moderation state is in sync with the original. [\#344](https://github.com/openeuropa/oe_translation/pull/344) ([upchuk](https://github.com/upchuk))
+- EWPP-5266: Attach language checkboxes library to the form element instead of the form itself. [\#343](https://github.com/openeuropa/oe_translation/pull/343) ([nagyad](https://github.com/nagyad))
+
 ## [2.14.0](https://github.com/openeuropa/oe_translation/tree/2.14.0) (2025-03-11)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.13.0...2.14.0)
 
 **Merged pull requests:**
 
+- Release-2.14.0: Update changelog. [\#342](https://github.com/openeuropa/oe_translation/pull/342) ([nagyad](https://github.com/nagyad))
 - EWPP-5161: Use ePoetry 3.x and update to php8.3. [\#339](https://github.com/openeuropa/oe_translation/pull/339) ([nagyad](https://github.com/nagyad))
 
 ## [2.13.0](https://github.com/openeuropa/oe_translation/tree/2.13.0) (2025-03-07)
