@@ -30,7 +30,7 @@
         "drupal/paragraphs": "^1.13",
         "drupal/typed_link": "^2.2.0",
         "drush/drush": "^12",
-        "openeuropa/cdt-client": "1.x-dev",
+        "openeuropa/cdt-client": "dev-D8AGE-1066",
         "openeuropa/code-review-drupal": "^1.0.0-alpha",
         "openeuropa/epoetry-client": "2.x-dev || 3.x-dev",
         "openeuropa/oe_content": "^3.0.0-beta2",
