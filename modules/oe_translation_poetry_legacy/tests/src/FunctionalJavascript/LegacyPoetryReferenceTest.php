@@ -10,6 +10,7 @@ use Drupal\node\Entity\Node;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_poetry_legacy\Entity\LegacyPoetryReference;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the Legacy Poetry reference entity.
@@ -150,6 +151,9 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
     $provider->save();
 
     $user = $this->setUpTranslatorUser();
+    $role = Role::load('oe_translator');
+    $role->grantPermission('request epoetry translation');
+    $role->save();
     $this->drupalLogin($user);
 
     // Create a node and a legacy ID for it.

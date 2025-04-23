@@ -20,6 +20,7 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the remote translations via ePoetry.
@@ -75,6 +76,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $provider->save();
 
     $this->user = $this->setUpTranslatorUser();
+    $role = Role::load('oe_translator');
+    $role->grantPermission('request epoetry translation');
+    $role->save();
     $this->drupalLogin($this->user);
   }
 

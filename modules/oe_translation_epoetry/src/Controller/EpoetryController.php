@@ -232,7 +232,7 @@ class EpoetryController extends ControllerBase {
     $cache->addCacheContexts(['user.permissions']);
     $cache->addCacheableDependency($translation_request);
 
-    if (!$account->hasPermission('translate any entity')) {
+    if (!$account->hasPermission('translate any entity') || !$account->hasPermission('request epoetry translation')) {
       return AccessResult::forbidden()->addCacheableDependency($cache);
     }
 

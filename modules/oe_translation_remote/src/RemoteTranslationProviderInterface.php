@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_remote;
 
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Interface for remote_translation_provider plugins.
@@ -69,5 +71,13 @@ interface RemoteTranslationProviderInterface extends PluginFormInterface {
    *   The current state of the form.
    */
   public function validateRequest(array &$form, FormStateInterface $form_state): void;
+
+  /**
+   * Determines if the user has access to make a new request.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access.
+   */
+  public function createAccess(?AccountInterface $account = NULL): AccessResultInterface;
 
 }
