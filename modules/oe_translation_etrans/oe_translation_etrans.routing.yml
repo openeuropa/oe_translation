@@ -1,0 +1,37 @@
+oe_translation_etrans.delivery_callback:
+  path: '/oe-translation/etrans/delivery'
+  defaults:
+    _controller: \Drupal\oe_translation_etrans\Controller\EtransController::delivery
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+oe_translation_etrans.success_callback:
+  path: '/oe-translation/etrans/success'
+  defaults:
+    _controller: \Drupal\oe_translation_etrans\Controller\EtransController::success
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+oe_translation_etrans.error_callback:
+  path: '/oe-translation/etrans/error'
+  defaults:
+    _controller: \Drupal\oe_translation_etrans\Controller\EtransController::error
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE
+
+oe_translation_etrans.failed_to_finished:
+  path: '/translation-request/etrans/failed-to-finish/{translation_request}'
+  defaults:
+    _controller: Drupal\oe_translation_etrans\Controller\EtransController::finishFailedRequest
+  requirements:
+    _custom_access: Drupal\oe_translation_etrans\Controller\EtransController::finishFailedRequestAccess
+  options:
+    parameters:
+      translation_request:
+        type: entity:oe_translation_request

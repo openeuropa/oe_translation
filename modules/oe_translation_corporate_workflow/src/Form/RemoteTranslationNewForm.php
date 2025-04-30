@@ -316,6 +316,10 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
     ];
     $requests = $this->providerManager->getExistingTranslationRequests($entity, TRUE, $statuses);
+    $requests = array_filter($requests, function (TranslationRequestRemoteInterface $request) {
+      // Filter out the non-enabled translators.
+      return $request->getTranslatorProvider()->isEnabled();
+    });
     if (!$requests) {
       return $access;
     }

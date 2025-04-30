@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.etrans_access_token
+    - oe_translation.oe_translation_request_type.etrans
+id: oe_translation_request.etrans.etrans_access_token
+field_name: etrans_access_token
+entity_type: oe_translation_request
+bundle: etrans
+label: 'Etrans token'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -1,8 +1,9 @@
 services:
   oe_translation_epoetry.request_factory:
     class: Drupal\oe_translation_epoetry\RequestFactory
-    arguments: ['@event_dispatcher', '@logger.factory', '@http_client_factory', '@oe_translation_epoetry.html_formatter', '@oe_translation_epoetry.client_certificate_authentication']
-  oe_translation_epoetry.html_formatter:
+    arguments: ['@event_dispatcher', '@logger.factory', '@http_client_factory', '@oe_translation_content_formatter.html_formatter', '@oe_translation_epoetry.client_certificate_authentication']
+  # @deprecated in favor of oe_translation_content_formatter.html_formatter
+  oe_translation_content_formatter.html_formatter:
     class: Drupal\oe_translation_epoetry\ContentFormatter\HtmlFormatter
     arguments: ['@renderer', '@entity_type.manager']
   oe_translation_epoetry.new_version_request_handler:
@@ -10,7 +11,7 @@ services:
     arguments: ['@entity_type.manager']
   oe_translation_epoetry.notifications_subscriber:
     class: Drupal\oe_translation_epoetry\EventSubscriber\NotificationsSubscriber
-    arguments: ['@entity_type.manager', '@oe_translation_epoetry.html_formatter', '@language_manager', '@logger.factory', '@oe_translation_remote.translation_synchroniser', '@event_dispatcher', '@lock']
+    arguments: ['@entity_type.manager', '@oe_translation_content_formatter.html_formatter', '@language_manager', '@logger.factory', '@oe_translation_remote.translation_synchroniser', '@event_dispatcher', '@lock']
     tags:
       - { name: event_subscriber }
   oe_translation_epoetry.event_subscriber.operations_provider:

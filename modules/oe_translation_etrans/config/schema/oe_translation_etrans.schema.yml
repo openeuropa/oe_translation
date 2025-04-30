@@ -1,0 +1,13 @@
+oe_translation_remote.remote_translation_provider.plugin.etrans:
+  type: mapping
+  label: Plugin configuration for the Etrans plugin
+  mapping:
+    language_mapping:
+      type: sequence
+      label: The language mapping
+      sequence:
+        type: string
+        label: The language code
+    domain:
+      type: string
+      label: Domain

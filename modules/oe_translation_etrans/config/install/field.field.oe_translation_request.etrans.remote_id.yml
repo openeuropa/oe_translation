@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.oe_translation_request.remote_id
+    - oe_translation.oe_translation_request_type.etrans
+id: oe_translation_request.etrans.remote_id
+field_name: remote_id
+entity_type: oe_translation_request
+bundle: etrans
+label: 'Remote ID'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

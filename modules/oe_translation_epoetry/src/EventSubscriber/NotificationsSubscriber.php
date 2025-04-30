@@ -9,8 +9,8 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
-use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
-use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
+use Drupal\oe_translation\LanguageMapper;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\Event\EpoetryNotificationRequestUpdateEvent;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\RequestIdItem;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -55,7 +55,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   /**
    * The content formatter.
    *
-   * @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface
+   * @var \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface
    */
   protected $contentFormatter;
 
@@ -99,7 +99,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $contentFormatter
+   * @param \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $contentFormatter
    *   The content formatter.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
@@ -256,7 +256,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $language = $product->getProductReference()->getLanguage();
-    $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
+    $langcode = LanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
     $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
@@ -322,7 +322,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $language = $product->getProductReference()->getLanguage();
-    $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
+    $langcode = LanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
     $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();

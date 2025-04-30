@@ -25,6 +25,9 @@ services:
       EPOETRY_TICKET_VALIDATION_JOB_ACCOUNT: ""
       EPOETRY_TICKET_VALIDATION_CALLBACK_URL: ""
       EPOETRY_TICKET_VALIDATION_ON: ""
+      ETRANS_SERVICE_URL: ""
+      ETRANS_APPLICATION_NAME: ""
+      ETRANS_PASSWORD: ""
   mysql:
     image: percona/percona-server:8.0
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3 --skip-log-bin --innodb-flush-log-at-trx-commit=2 --innodb-read-io-threads=16 --innodb-write-io-threads=16

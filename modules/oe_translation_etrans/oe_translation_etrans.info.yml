@@ -1,0 +1,10 @@
+name: OpenEuropa Translation eTrans
+description: Integrates with the DGT etrans
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^10 || ^11
+
+dependencies:
+  - oe_translation:oe_translation_remote
+  - oe_translation:oe_translation_content_formatter

@@ -7,7 +7,8 @@ namespace Drupal\oe_translation_epoetry;
 use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
+use Drupal\oe_translation\LanguageMapper;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Http\Adapter\Guzzle7\Client;
 use OpenEuropa\EPoetry\Authentication\AuthenticationInterface;
 use OpenEuropa\EPoetry\Request\Type\AddNewPartToDossier;
@@ -42,7 +43,7 @@ class RequestFactory extends RequestClientFactory {
   /**
    * The content formatter.
    *
-   * @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface
+   * @var \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface
    */
   protected $formatter;
 
@@ -310,7 +311,7 @@ class RequestFactory extends RequestClientFactory {
     $request_details->setContacts($contacts);
 
     $linguistic_sections = (new LinguisticSections())
-      ->addLinguisticSection(new LinguisticSectionOut(EpoetryLanguageMapper::getEpoetryLanguageCode($request->getSourceLanguageCode(), $request)));
+      ->addLinguisticSection(new LinguisticSectionOut(LanguageMapper::getMappedLanguageCode($request->getSourceLanguageCode(), $request)));
 
     $content = $this->formatter->export($request);
     $original_document = (new OriginalDocumentIn())
@@ -333,7 +334,7 @@ class RequestFactory extends RequestClientFactory {
     $products = new Products();
     foreach ($request->getTargetLanguages() as $language_with_status) {
       $productRequestIn = (new ProductRequestIn())
-        ->setLanguage(EpoetryLanguageMapper::getEpoetryLanguageCode($language_with_status->getLangcode(), $request),)
+        ->setLanguage(LanguageMapper::getMappedLanguageCode($language_with_status->getLangcode(), $request),)
         ->setRequestedDeadline($deadline)
         ->setTrackChanges(FALSE);
       $products->addProduct($productRequestIn);

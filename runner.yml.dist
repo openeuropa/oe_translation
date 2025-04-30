@@ -59,6 +59,10 @@ commands:
         $settings["epoetry.ticket_validation.callback_url"] = getenv('EPOETRY_TICKET_VALIDATION_CALLBACK_URL');
         $settings["epoetry.ticket_validation.on"] = getenv('EPOETRY_TICKET_VALIDATION_ON');
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
+
+        $settings["etrans.service_url"] = getenv('ETRANS_SERVICE_URL');
+        $settings["etrans.application_name"] = getenv('ETRANS_APPLICATION_NAME');
+        $settings["etrans.password"] = getenv('ETRANS_PASSWORD');
     # Generate settings.testing.php, it will be used when running functional tests.
     - { task: "process-php", type: "write", config: "drupal.settings", source: "${drupal.root}/sites/default/default.settings.php", destination: "${drupal.root}/sites/default/settings.testing.php", override: true }
     - task: "append"
@@ -75,6 +79,10 @@ commands:
         $settings["epoetry.ticket_validation.callback_url"] = getenv('EPOETRY_TICKET_VALIDATION_CALLBACK_URL');
         $settings["epoetry.ticket_validation.on"] = getenv('EPOETRY_TICKET_VALIDATION_ON');
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
+
+        $settings["etrans.service_url"] = getenv('ETRANS_SERVICE_URL');
+        $settings["etrans.application_name"] = getenv('ETRANS_APPLICATION_NAME');
+        $settings["etrans.password"] = getenv('ETRANS_PASSWORD');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }
   setup:phpunit9:
