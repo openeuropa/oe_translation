@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_remote\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -13,6 +15,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_remote\RemoteTranslationProviderInterface;
@@ -165,5 +168,13 @@ abstract class RemoteTranslationProviderBase extends PluginBase implements Remot
    * {@inheritdoc}
    */
   public function validateRequest(array &$form, FormStateInterface $form_state): void {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createAccess(?AccountInterface $account = NULL): AccessResultInterface {
+    // By default, they are allowed.
+    return AccessResult::allowed();
+  }
 
 }

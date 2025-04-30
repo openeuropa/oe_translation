@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -12,6 +14,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
@@ -124,6 +127,13 @@ class Epoetry extends RemoteTranslationProviderBase {
       return isset($default_configuration[$key]);
     }, ARRAY_FILTER_USE_BOTH);
     $this->configuration = $configuration + $default_configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createAccess(?AccountInterface $account = NULL): AccessResultInterface {
+    return AccessResult::allowedIfHasPermission($account, 'request epoetry translation');
   }
 
   /**
