@@ -36,7 +36,6 @@
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0",
-        "phpspec/prophecy-phpunit": "^2",
         "symfony/property-access": "^6",
         "symfony/property-info": "^6"
     },
