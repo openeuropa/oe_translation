@@ -100,7 +100,6 @@
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "drupal/core-composer-scaffold": true,
             "php-http/discovery": false,
-            "phpro/grumphp": true,
             "phpro/grumphp-shim": true,
             "phpstan/extension-installer": true,
             "tbachert/spi": false
