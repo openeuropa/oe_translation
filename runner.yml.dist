@@ -77,3 +77,5 @@ commands:
         $settings["epoetry.notification.endpoint_prefix"] = getenv('EPOETRY_NOTIFICATION_ENDPOINT_PREFIX');
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }
+  setup:phpunit9:
+    - { task: "process", source: "phpunit9.xml.dist", destination: "phpunit.xml" }
