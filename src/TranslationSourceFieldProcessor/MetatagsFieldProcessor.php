@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\TranslationSourceFieldProcessor;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
 
@@ -21,7 +22,7 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
     }
 
     $metatag_manager = \Drupal::service('metatag.manager');
-    $meta_tag_values = unserialize($field->value);
+    $meta_tag_values = Json::decode($field->value);
 
     // If there are no meta tags or it is not an array, there is nothing to
     // do.
