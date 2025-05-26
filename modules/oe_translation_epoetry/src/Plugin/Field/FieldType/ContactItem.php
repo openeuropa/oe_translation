@@ -14,7 +14,7 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "oe_transalation_epoetry_contact",
  *   label = @Translation("ePoetry contact"),
- *   category = @Translation("OE Translation"),
+ *   category = "oe_translation",
  *   default_widget = "oe_transalation_epoetry_contact_widget",
  *   default_formatter = "oe_transalation_epoetry_contact_formatter"
  * )

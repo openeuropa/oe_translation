@@ -16,7 +16,7 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "poetry_request_id",
  *   label = @Translation("Poetry Request ID"),
- *   category = @Translation("OpenEuropa"),
+ *   category = "oe_translation",
  *   default_widget = "poetry_request_id_widget",
  *   default_formatter = "poetry_request_id_formatter"
  * )

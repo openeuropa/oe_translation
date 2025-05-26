@@ -17,7 +17,7 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "oe_translation_language_with_date",
  *   label = @Translation("Language with date"),
- *   category = @Translation("OE Translation"),
+ *   category = "oe_translation",
  *   default_widget = "string_textfield",
  *   default_formatter = "string"
  * )

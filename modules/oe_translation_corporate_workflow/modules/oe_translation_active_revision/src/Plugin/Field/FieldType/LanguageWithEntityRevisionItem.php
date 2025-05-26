@@ -16,7 +16,7 @@ use Drupal\oe_translation\Plugin\Field\FieldType\EntityRevisionWithTypeItem;
  * @FieldType(
  *   id = "oe_translation_language_with_entity_revision",
  *   label = @Translation("Language with entity revision"),
- *   category = @Translation("OE Translation"),
+ *   category = "oe_translation",
  *   default_widget = "string_textfield",
  *   default_formatter = "string",
  *   list_class = "Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList",

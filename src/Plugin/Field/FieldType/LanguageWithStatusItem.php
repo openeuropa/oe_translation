@@ -17,7 +17,7 @@ use Drupal\oe_translation\LanguageWithStatus;
  * @FieldType(
  *   id = "oe_translation_language_with_status",
  *   label = @Translation("Language with status"),
- *   category = @Translation("OE Translation"),
+ *   category = "oe_translation",
  *   default_widget = "string_textfield",
  *   default_formatter = "string"
  * )
