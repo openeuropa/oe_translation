@@ -1,6 +1,6 @@
 name: OE Translation Menu Tink Test
 description: Test module for OE Translation
-core_version_requirement: ^10 || ^11
+core_version_requirement: ^10.3 || ^11
 type: module
 package: Testing
 
