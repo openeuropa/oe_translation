@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_remote\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
@@ -16,15 +18,14 @@ use Drupal\Core\TypedData\DataDefinition;
  * language code and will contain the serialized data array containing
  * also the translation for that language. The data structure is the same as
  * in the entity data field.
- *
- * @FieldType(
- *   id = "oe_translation_remote_translated_data",
- *   label = @Translation("Translated data"),
- *   category = "oe_translation",
- *   default_widget = "string_textfield",
- *   default_formatter = "string"
- * )
  */
+#[FieldType(
+  id: 'oe_translation_remote_translated_data',
+  label: new TranslatableMarkup('Translated data'),
+  category: 'oe_translation',
+  default_widget: 'string_textfield',
+  default_formatter: 'string',
+)]
 class TranslatedDataItem extends FieldItemBase {
 
   /**

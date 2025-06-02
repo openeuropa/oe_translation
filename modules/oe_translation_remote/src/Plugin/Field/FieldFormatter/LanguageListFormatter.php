@@ -6,9 +6,11 @@ namespace Drupal\oe_translation_remote\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,15 +19,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * Shows the translation request languages with their statuses, as well as
  * operations to review the translation data.
- *
- * @FieldFormatter(
- *   id = "oe_translation_remote_language_list",
- *   label = @Translation("Language list"),
- *   field_types = {
- *     "oe_translation_language_with_status"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'oe_translation_remote_language_list',
+  label: new TranslatableMarkup('Language list'),
+  field_types: [
+    'oe_translation_language_with_status',
+  ],
+)]
 class LanguageListFormatter extends FormatterBase {
 
   /**

@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Defines the 'oe_transalation_epoetry_contact' field type.
- *
- * @FieldType(
- *   id = "oe_transalation_epoetry_contact",
- *   label = @Translation("ePoetry contact"),
- *   category = "oe_translation",
- *   default_widget = "oe_transalation_epoetry_contact_widget",
- *   default_formatter = "oe_transalation_epoetry_contact_formatter"
- * )
  */
+#[FieldType(
+  id: 'oe_transalation_epoetry_contact',
+  label: new TranslatableMarkup('ePoetry contact'),
+  category: 'oe_translation',
+  default_widget: 'oe_transalation_epoetry_contact_widget',
+  default_formatter: 'oe_transalation_epoetry_contact_formatter',
+)]
 class ContactItem extends FieldItemBase implements ContactItemInterface {
 
   /**

@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'Contact' formatter.
- *
- * @FieldFormatter(
- *   id = "oe_transalation_epoetry_contact_formatter",
- *   label = @Translation("Contact"),
- *   field_types = {
- *     "oe_transalation_epoetry_contact"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'oe_transalation_epoetry_contact_formatter',
+  label: new TranslatableMarkup('Contact'),
+  field_types: [
+    'oe_transalation_epoetry_contact',
+  ],
+)]
 class ContactFormatter extends FormatterBase {
 
   /**

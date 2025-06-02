@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the EntityRevisionWithTypeItem widget.
- *
- * @FieldWidget(
- *   id = "oe_translation_entity_revision_type_widget",
- *   label = @Translation("Entity revision with type widget"),
- *   field_types = {
- *     "oe_translation_entity_revision_type_item"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'oe_translation_entity_revision_type_widget',
+  label: new TranslatableMarkup('Entity revision with type widget'),
+  field_types: [
+    'oe_translation_entity_revision_type_item',
+  ],
+)]
 class EntityRevisionWithTypeWidget extends WidgetBase {
 
   /**

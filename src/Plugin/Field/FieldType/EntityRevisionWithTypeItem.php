@@ -4,23 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList;
 
 /**
  * Defines the "EntityRevisionWithType" field type.
- *
- * @FieldType(
- *   id = "oe_translation_entity_revision_type_item",
- *   label = @Translation("Entity revision with type"),
- *   category = "oe_translation",
- *   default_formatter = "oe_translation_entity_revision_type_formatter",
- *   default_widget = "oe_translation_entity_revision_type_widget",
- *   list_class = "Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList",
- *   no_ui = TRUE
- * )
  */
+#[FieldType(
+  id: 'oe_translation_entity_revision_type_item',
+  label: new TranslatableMarkup('Entity revision with type'),
+  category: 'oe_translation',
+  default_widget: 'oe_translation_entity_revision_type_widget',
+  default_formatter: 'oe_translation_entity_revision_type_formatter',
+  no_ui: TRUE,
+  list_class: EntityRevisionWithTypeItemList::class,
+)]
 class EntityRevisionWithTypeItem extends FieldItemBase {
 
   /**

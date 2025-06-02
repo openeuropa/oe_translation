@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\oe_translation\LanguageWithStatus;
 
@@ -13,15 +15,14 @@ use Drupal\oe_translation\LanguageWithStatus;
  * Defines the 'oe_translation_language_with_status' field type.
  *
  * This field stores a language code with a string status value.
- *
- * @FieldType(
- *   id = "oe_translation_language_with_status",
- *   label = @Translation("Language with status"),
- *   category = "oe_translation",
- *   default_widget = "string_textfield",
- *   default_formatter = "string"
- * )
  */
+#[FieldType(
+  id: 'oe_translation_language_with_status',
+  label: new TranslatableMarkup('Language with status'),
+  category: 'oe_translation',
+  default_widget: 'string_textfield',
+  default_formatter: 'string',
+)]
 class LanguageWithStatusItem extends FieldItemBase {
 
   /**

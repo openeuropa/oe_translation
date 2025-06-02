@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the 'oe_transalation_epoetry_contact_widget' field widget.
- *
- * @FieldWidget(
- *   id = "oe_transalation_epoetry_contact_widget",
- *   label = @Translation("Contact"),
- *   field_types = {"oe_transalation_epoetry_contact"},
- * )
  */
+#[FieldWidget(
+  id: 'oe_transalation_epoetry_contact_widget',
+  label: new TranslatableMarkup('Contact'),
+  field_types: [
+    'oe_transalation_epoetry_contact',
+  ],
+)]
 class ContactWidget extends WidgetBase {
 
   /**
