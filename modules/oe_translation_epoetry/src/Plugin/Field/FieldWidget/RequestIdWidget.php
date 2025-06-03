@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the 'epoetry_request_id_widget' field widget.
- *
- * @FieldWidget(
- *   id = "epoetry_request_id_widget",
- *   label = @Translation("ePoetry Request ID"),
- *   field_types = {"epoetry_request_id"},
- * )
  */
+#[FieldWidget(
+  id: 'epoetry_request_id_widget',
+  label: new TranslatableMarkup('ePoetry Request ID'),
+  field_types: [
+    'epoetry_request_id',
+  ],
+)]
 class RequestIdWidget extends WidgetBase {
 
   /**

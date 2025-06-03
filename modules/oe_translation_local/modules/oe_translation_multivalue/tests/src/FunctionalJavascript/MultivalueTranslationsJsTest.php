@@ -176,23 +176,12 @@ class MultivalueTranslationsJsTest extends TranslationTestBase {
     $this->drupalLogin($user);
     $this->drupalGet('/admin/structure/types/manage/multivalue/fields/add-field');
 
-    // @todo Remove when support for 10.2.x is dropped.
-    if (version_compare(\Drupal::VERSION, '10.3', '<')) {
-      $this->getSession()->getPage()->fillField('Label', 'Test');
-      $this->assertSession()->waitForElement('css', '.machine-name-label');
-      $this->getSession()->getPage()->find('css', '#edit-plain-text input')->click();
-      $this->assertSession()->waitForElement('css', 'input#string');
-      $this->getSession()->getPage()->find('css', 'input#string')->click();
-      $this->getSession()->getPage()->pressButton('Continue');
-    }
-    else {
-      $this->getSession()->getPage()->find('css', '#edit-plain-text')->click();
-      $this->getSession()->getPage()->pressButton('Continue');
-      $this->getSession()->getPage()->fillField('Label', 'Test');
-      $this->assertSession()->waitForElement('css', '.machine-name-label');
-      $this->getSession()->getPage()->find('css', '#string')->click();
-      $this->getSession()->getPage()->pressButton('Continue');
-    }
+    $this->getSession()->getPage()->find('css', '#edit-plain-text')->click();
+    $this->getSession()->getPage()->pressButton('Continue');
+    $this->getSession()->getPage()->fillField('Label', 'Test');
+    $this->assertSession()->waitForElement('css', '.machine-name-label');
+    $this->getSession()->getPage()->find('css', '#string')->click();
+    $this->getSession()->getPage()->pressButton('Continue');
 
     $this->getSession()->getPage()->selectFieldOption('Allowed number of values', '-1');
     $this->assertSession()->assertWaitOnAjaxRequest();

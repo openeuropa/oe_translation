@@ -2,23 +2,24 @@
 
 namespace Drupal\oe_translation\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\Plugin\Field\FieldType\PoetryRequestIdItem;
 
 /**
  * Plugin implementation of the 'Poetry Request ID Formatter' formatter.
  *
  * @todo Remove after version 2.x was deployed.
- *
- * @FieldFormatter(
- *   id = "poetry_request_id_formatter",
- *   label = @Translation("Poetry Request ID Formatter"),
- *   field_types = {
- *     "poetry_request_id"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'poetry_request_id_formatter',
+  label: new TranslatableMarkup('Poetry Request ID Formatter'),
+  field_types: [
+    'poetry_request_id',
+  ],
+)]
 class PoetryRequestIdFormatter extends FormatterBase {
 
   /**

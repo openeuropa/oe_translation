@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -13,15 +14,14 @@ use Drupal\Core\TypedData\DataDefinition;
  * Defines the 'oe_translation_language_with_date' field type.
  *
  * This field stores a language code with a date value.
- *
- * @FieldType(
- *   id = "oe_translation_language_with_date",
- *   label = @Translation("Language with date"),
- *   category = @Translation("OE Translation"),
- *   default_widget = "string_textfield",
- *   default_formatter = "string"
- * )
  */
+#[FieldType(
+  id: 'oe_translation_language_with_date',
+  label: new TranslatableMarkup('Language with date'),
+  category: 'oe_translation',
+  default_widget: 'string_textfield',
+  default_formatter: 'string',
+)]
 class LanguageWithDateItem extends FieldItemBase {
 
   /**

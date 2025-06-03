@@ -2,21 +2,24 @@
 
 namespace Drupal\oe_translation\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the 'poetry_request_id_widget' field widget.
  *
  * @todo Remove after version 2.x was deployed.
- *
- * @FieldWidget(
- *   id = "poetry_request_id_widget",
- *   label = @Translation("Poetry Request ID"),
- *   field_types = {"poetry_request_id"},
- * )
  */
+#[FieldWidget(
+  id: 'poetry_request_id_widget',
+  label: new TranslatableMarkup('Poetry Request ID'),
+  field_types: [
+    'poetry_request_id',
+  ],
+)]
 class PoetryRequestIdWidget extends WidgetBase {
 
   /**

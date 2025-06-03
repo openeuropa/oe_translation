@@ -156,7 +156,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
     $export = $formatter->export($this->request);
     $expected = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-original.html');
     $expected = str_replace('@request_id', $this->request->id(), $expected);
-    $this->assertEquals($expected, $export);
+    $this->assertSame($expected, (string) $export);
   }
 
   /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\Controller;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -43,6 +44,8 @@ class ContentTranslationDashboardController extends ContentTranslationController
    *   A content translation manager instance.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
@@ -52,8 +55,8 @@ class ContentTranslationDashboardController extends ContentTranslationController
    * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
    *   The translator providers service.
    */
-  public function __construct(ContentTranslationManagerInterface $manager, EntityFieldManagerInterface $entity_field_manager, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, LanguageManagerInterface $language_manager, TranslatorProvidersInterface $translatorProviders) {
-    parent::__construct($manager, $entity_field_manager);
+  public function __construct(ContentTranslationManagerInterface $manager, EntityFieldManagerInterface $entity_field_manager, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, LanguageManagerInterface $language_manager, TranslatorProvidersInterface $translatorProviders) {
+    parent::__construct($manager, $entity_field_manager, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->eventDispatcher = $event_dispatcher;
     $this->languageManager = $language_manager;
@@ -67,6 +70,7 @@ class ContentTranslationDashboardController extends ContentTranslationController
     return new static(
       $container->get('content_translation.manager'),
       $container->get('entity_field.manager'),
+      $container->get('datetime.time'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
       $container->get('language_manager'),

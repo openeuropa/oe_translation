@@ -5,25 +5,26 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_local\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'Single target language' formatter.
  *
  * Shows the translation request target language for local translations.
- *
- * @FieldFormatter(
- *   id = "oe_translation_local_single_target_language",
- *   label = @Translation("Single target language"),
- *   field_types = {
- *     "oe_translation_language_with_status"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'oe_translation_local_single_target_language',
+  label: new TranslatableMarkup('Single target language'),
+  field_types: [
+    'oe_translation_language_with_status',
+  ],
+)]
 class SingleTargetLanguage extends FormatterBase {
 
   /**

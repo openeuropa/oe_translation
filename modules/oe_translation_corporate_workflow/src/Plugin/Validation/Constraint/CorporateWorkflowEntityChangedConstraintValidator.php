@@ -13,7 +13,7 @@ class CorporateWorkflowEntityChangedConstraintValidator extends EntityChangedCon
   /**
    * {@inheritdoc}
    */
-  public function validate($entity, Constraint $constraint) {
+  public function validate($entity, Constraint $constraint): void {
     if (!isset($entity)) {
       return;
     }

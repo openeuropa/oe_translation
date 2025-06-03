@@ -1,0 +1,4 @@
+oe_translation:
+  label: 'OE Translation'
+  description: 'Field defined by OpenEuropa Translation module.'
+  weight: -40
