@@ -1,10 +1,20 @@
-# Change Log
+# Changelog
 
-## [2.15.0](https://github.com/openeuropa/oe_translation/tree/2.15.0) (2025-05-02)
+## [2.16.0](https://github.com/openeuropa/oe_translation/tree/2.16.0) (2025-06-03)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.15.0...2.16.0)
+
+**Merged pull requests:**
+
+- EWPP-4644: Update to Drupal 11. [\#351](https://github.com/openeuropa/oe_translation/pull/351) ([kp77](https://github.com/kp77))
+
+## [2.15.0](https://github.com/openeuropa/oe_translation/tree/2.15.0) (2025-05-05)
+
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.14.1...2.15.0)
 
 **Merged pull requests:**
 
+- 2.15.0: Update changelog. [\#350](https://github.com/openeuropa/oe_translation/pull/350) ([nagyad](https://github.com/nagyad))
 - EWPP-5269: Remote translation creation permission segregation. [\#348](https://github.com/openeuropa/oe_translation/pull/348) ([upchuk](https://github.com/upchuk))
 
 ## [2.14.1](https://github.com/openeuropa/oe_translation/tree/2.14.1) (2025-03-26)
