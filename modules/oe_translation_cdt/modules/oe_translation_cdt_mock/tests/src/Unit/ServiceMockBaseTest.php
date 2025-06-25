@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt_mock\Unit;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleExtensionList;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\UnitTestCase;
 use Drupal\oe_translation_cdt_mock\Plugin\ServiceMock\ServiceMockBase;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Test the helper mocking methods.
@@ -30,14 +30,42 @@ final class ServiceMockBaseTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->serviceMockStub = $this->getMockForAbstractClass(ServiceMockBase::class, [
-      [],
-      'service_mock',
-      [],
-      $this->createMock(ModuleExtensionList::class),
-      $this->createMock(EntityTypeManagerInterface::class),
-      $this->createMock(LoggerChannelFactoryInterface::class),
-    ]);
+    $this->serviceMockStub = new class() extends ServiceMockBase {
+      /**
+       * The endpoint URL path.
+       */
+      protected string $endpointPath;
+
+      /**
+       * Disable original plugin constructor.
+       */
+      public function __construct() {}
+
+      /**
+       * A new method that allows setting the endpoint URL path.
+       *
+       * @param string $path
+       *   The endpoint URL path to set.
+       */
+      public function setEndpointUrlPath(string $path) {
+        $this->endpointPath = $path;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      protected function getEndpointUrlPath(): string {
+        return $this->endpointPath;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      protected function getEndpointResponse(RequestInterface $request): ResponseInterface {
+        return new Response();
+      }
+
+    };
 
     $settings = [
       'cdt.base_api_url' => 'https://example.com/api',
@@ -66,9 +94,7 @@ final class ServiceMockBaseTest extends UnitTestCase {
    * Tests fetching path parameters.
    */
   public function testPathParameters(): void {
-    $this->serviceMockStub->expects(self::any())
-      ->method('getEndpointUrlPath')
-      ->willReturn('/method/:parameter1/:parameter_2/:parameter-3/::parameter4/:PARAMETER5');
+    $this->serviceMockStub->setEndpointUrlPath('/method/:parameter1/:parameter_2/:parameter-3/:parameter4/:PARAMETER5');
     $request1 = new Request('GET', 'https://example.com/api/method/1/2/3/4/5');
     $pathParameters = self::getMethod('getRequestParameters')->invokeArgs($this->serviceMockStub, [$request1]);
     self::assertEquals([
@@ -109,9 +135,7 @@ final class ServiceMockBaseTest extends UnitTestCase {
    * Tests matching URLs.
    */
   public function testUrlMatching(): void {
-    $this->serviceMockStub->expects(self::any())
-      ->method('getEndpointUrlPath')
-      ->willReturn('/method/:parameter1/:parameter2');
+    $this->serviceMockStub->setEndpointUrlPath('/method/:parameter1/:parameter2');
     self::assertTrue($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/1/2'), []));
     self::assertTrue($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/aa/bb'), []));
     self::assertFalse($this->serviceMockStub->applies(new Request('GET', 'https://example.com/api/method/1/2/3'), []));
