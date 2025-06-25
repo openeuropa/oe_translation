@@ -47,7 +47,8 @@
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
         "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions.",
-        "Requiring symfony serializer for the oe_translation_cdt module."
+        "Requiring symfony serializer for the oe_translation_cdt module.",
+        "CDT client is temporarily fetched from the repository, until it's added to packagist.org."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -62,8 +63,8 @@
             "url": "https://packages.drupal.org/8"
         },
         {
-            "type": "vcs",
-            "url": "https://github.com/openeuropa/cdt-client"
+            "type": "git",
+            "url": "https://github.com/openeuropa/cdt-client.git"
         }
     ],
     "autoload": {
