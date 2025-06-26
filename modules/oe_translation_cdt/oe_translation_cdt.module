@@ -10,6 +10,7 @@ declare(strict_types=1);
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -134,7 +135,7 @@ function oe_translation_cdt_preprocess_table__remote_language_list(array &$varia
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */
-function oe_translation_cdt_oe_translation_request_presave(TranslationRequestRemoteInterface $request) {
+function oe_translation_cdt_oe_translation_request_presave(TranslationRequestInterface $request) {
   if ($request->bundle() !== 'cdt') {
     return;
   }
