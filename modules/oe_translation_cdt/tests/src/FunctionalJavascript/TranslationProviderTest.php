@@ -36,6 +36,7 @@ class TranslationProviderTest extends TranslationTestBase {
     'oe_translation',
     'oe_translation_test',
     'oe_translation_remote',
+    'oe_translation_local',
     'oe_translation_cdt',
     'oe_translation_cdt_mock',
   ];
@@ -260,6 +261,14 @@ class TranslationProviderTest extends TranslationTestBase {
     $this->assertSession()->pageTextNotContains('Access denied');
     $this->assertSession()->pageTextContains($cdt_id);
     $this->assertSession()->pageTextContains('Finished');
+
+    // Check if CDT hooks do not affect local translations.
+    $this->drupalGet($request->getContentEntity()->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="hu"] a')->click();
+    $this->submitForm([], 'Save and synchronise');
+    $this->assertSession()->statusMessageContains('The translation has been saved.');
+    $this->assertSession()->statusMessageContains('The translation has been synchronised.');
 
     // Check the access to the translation pages.
     $this->drupalLogin($this->authenticatedUser);
