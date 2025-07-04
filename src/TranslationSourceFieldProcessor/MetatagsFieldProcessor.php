@@ -73,7 +73,7 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
     $meta_tags_values = [];
 
     // Loop over the groups and tags, either use the translated text or the
-    // original and then serialize the whole structure again.
+    // original and then encode the whole structure again.
     foreach (Element::children($field_data) as $group_name) {
       foreach (Element::children($field_data[$group_name]) as $tag_name) {
 
@@ -87,7 +87,7 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
       }
     }
 
-    $field->value = serialize($meta_tags_values);
+    $field->value = Json::encode($meta_tags_values);
   }
 
 }

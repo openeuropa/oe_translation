@@ -123,7 +123,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
    */
   public function extractData(ContentEntityInterface $entity): array {
     $field_definitions = $entity->getFieldDefinitions();
-    $exclude_field_types = ['language'];
+    $exclude_field_types = ['language', 'metatag_computed'];
     $exclude_field_names = ['moderation_state'];
 
     $is_bundle_translatable = $this->contentTranslationManager->isEnabled($entity->getEntityTypeId(), $entity->bundle());
