@@ -367,7 +367,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2035-08-18', $request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Message to the provider', $request->getMessage());
-    $this->assertEquals('DIGIT-' . date('Y') . '-01001(00)-0-TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-01001(00)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -379,7 +379,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT-' . date('Y') . '-01001(00)-0-TRA',
+      'DIGIT-' . date('Y') . '-01001(00)-00-TRA',
       'No',
       'No',
       '2035-Aug-18',
@@ -443,7 +443,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'Accepted',
-      'DIGIT-' . date('Y') . '-01001(00)-0-TRA',
+      'DIGIT-' . date('Y') . '-01001(00)-00-TRA',
       'No',
       'No',
       '2035-Aug-18',
@@ -788,7 +788,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('2034-10-10', $update_request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Some message to the provider', $update_request->getMessage());
     // The version got updated, not the number.
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-0-TRA', $update_request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-00-TRA', $update_request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient2',
       'Webmaster' => 'test_webmaster2',
@@ -801,7 +801,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'ePoetry',
       'SenttoDGT',
       // The version got updated, not the number.
-      'DIGIT-' . date('Y') . '-02000(01)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2034-Oct-10',
@@ -1014,7 +1014,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'ePoetry',
       'SenttoDGT',
       // The version got updated, not the number.
-      'DIGIT-' . date('Y') . '-02000(01)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2034-Oct-10',
@@ -1071,7 +1071,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('2034-10-10', $update_request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Some message to the provider', $update_request->getMessage());
     // The version got updated, not the number.
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-0-TRA', $update_request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-00-TRA', $update_request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient2',
       'Webmaster' => 'test_webmaster2',
@@ -1079,7 +1079,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ], $update_request->getContacts());
 
     // Assert we see information about the request we replaced.
-    $old_request_id = 'DIGIT-' . date('Y') . '-02000(00)-0-TRA';
+    $old_request_id = 'DIGIT-' . date('Y') . '-02000(00)-00-TRA';
     $this->assertSession()->pageTextContains('Updated request');
     $this->assertSession()->pageTextContains('The current request was created as an update to a previous one (' . $old_request_id . ') which was still ongoing in ePoetry with at least 1 language. That request has been marked as Finished and was replaced with the current one.');
     $this->clickLink($old_request_id);
@@ -1125,7 +1125,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Translated',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT-' . date('Y') . '-02000(01)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2034-Oct-10',
@@ -1342,7 +1342,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'Accepted',
-      'DIGIT-' . date('Y') . '-02000(00)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2035-Oct-10',
@@ -1397,7 +1397,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'Accepted',
-      'DIGIT-' . date('Y') . '-02000(00)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2035-Oct-10',
@@ -1435,7 +1435,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2035-10-10', $request->getDeadline()->format('Y-m-d'));
     // The version got updated, not the number.
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-0-TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -1589,7 +1589,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-0-TRA', $log['context']['@reference']);
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $log['context']['@reference']);
   }
 
   /**
@@ -1664,7 +1664,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-0-TRA', $log['context']['@reference']);
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $log['context']['@reference']);
     \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
     $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
@@ -1673,7 +1673,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-0-TRA', $log['context']['@reference']);
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $log['context']['@reference']);
   }
 
   /**
@@ -1889,7 +1889,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT-' . date('Y') . '-02000(00)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2035-Oct-10',
@@ -1929,13 +1929,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
     $this->assertNull($this->getSession()->getPage()->find('css', 'table.request-status-meta-table'));
-    $this->assertSession()->pageTextContains('The last ePoetry translation request with the ID DIGIT-' . date('Y') . '-02000(00)-0-TRA had been rejected. You can resubmit to correct it.');
+    $this->assertSession()->pageTextContains('The last ePoetry translation request with the ID DIGIT-' . date('Y') . '-02000(00)-00-TRA had been rejected. You can resubmit to correct it.');
     $this->assertSession()->fieldEnabled('Translator');
 
     // Make a new request to "correct" the reason why it was rejected. This can
     // be done even without making a change to the content.
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
-    $this->assertSession()->pageTextContains('You are making a request for a new version. The previous version was translated with the DIGIT-' . date('Y') . '-02000(00)-0-TRA request ID. The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.');
+    $this->assertSession()->pageTextContains('You are making a request for a new version. The previous version was translated with the DIGIT-' . date('Y') . '-02000(00)-00-TRA request ID. The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.');
     $this->getSession()->getPage()->checkField('French');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -1973,7 +1973,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-0-TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -1986,7 +1986,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'ePoetry',
       'SenttoDGT',
       // The ID is the same as the previous was rejected.
-      'DIGIT-' . date('Y') . '-02000(00)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2032-Oct-10',
@@ -2139,7 +2139,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Message to the provider', $request->getMessage());
-    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-0-TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -2151,7 +2151,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT-' . date('Y') . '-02000(01)-0-TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2032-Oct-10',
@@ -2729,7 +2729,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->getSession()->getPage()->pressButton('Reset');
 
-    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT-' . date('Y') . '-2000(00)-0-TRA');
+    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT-' . date('Y') . '-2000(00)-00-TRA');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->assertSession()->linkNotExistsExact('Second node');

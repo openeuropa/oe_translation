@@ -149,7 +149,7 @@ class RequestIdItem extends FieldItemBase {
       '@year' => $values['year'],
       '@number' => sprintf("%05d", $values['number']),
       '@version' => sprintf("%02d", $values['version']),
-      '@part' => $values['part'],
+      '@part' => sprintf("%02d", $values['part']),
       '@service' => $values['service'],
     ]);
   }
