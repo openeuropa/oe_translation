@@ -127,26 +127,48 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
   public function setTranslations($field_data, FieldItemListInterface $field): void {
     foreach (Element::children($field_data) as $delta) {
       $field_item = $field_data[$delta];
+
+      // Prepare the source field value so we can use it in case we need to
+      // unset some translation value.
+      $translation = $field->getEntity();
+      $source = $translation->getUntranslated();
+      $source_field = $source->get($field->getName());
+      $source_offset = $source_field->offsetGet($delta);
+
       foreach (Element::children($field_item) as $property) {
         $property_data = $field_item[$property];
-        // If there is translation data for the field property, save it.
-        if (isset($property_data['#translation']['#text']) && $property_data['#translate']) {
-
-          // If the offset does not exist, populate it with the current value
-          // from the source content, so that the translated field offset can be
-          // saved.
-          if (!$field->offsetExists(($delta))) {
-            $translation = $field->getEntity();
-            $source = $translation->getUntranslated();
-            $source_field = $source->get($field->getName());
-            $source_offset = $source_field->offsetGet($delta);
-            // Note that the source language value will be immediately
-            // overwritten.
-            $field->offsetSet($delta, $source_offset);
-          }
-
-          $field->offsetGet($delta)->set($property, $property_data['#translation']['#text']);
+        if (!isset($property_data['#translate']) || !$property_data['#translate']) {
+          // We directly skip if we don't have to translate this property.
+          continue;
         }
+
+        // If for a given property we don't have a translation value but we
+        // do have a value on the field for that property, we need to unset it
+        // using the source value of that property (which will be also empty
+        // most likely). This typically happens for field properties like
+        // "title" from link fields when we switch from external to internal
+        // and remove the title.
+        if (!isset($property_data['#translation']['#text']) && $field->offsetGet($delta)->get($property)->getValue()) {
+          $field->offsetGet($delta)->set($property, $source_offset->get($property)->getValue());
+          continue;
+        }
+
+        if (!isset($property_data['#translation']['#text'])) {
+          // Nothing else to do if there is no translation for this property.
+          continue;
+        }
+
+        // If the offset does not exist at all, populate it with the current
+        // value from the source content, so that the translated field offset
+        // can be saved.
+        if (!$field->offsetExists(($delta))) {
+          // Note that the source language value will be immediately
+          // overwritten.
+          $field->offsetSet($delta, $source_offset);
+        }
+
+        // If there is translation data for the field property, save it.
+        $field->offsetGet($delta)->set($property, $property_data['#translation']['#text']);
       }
     }
   }

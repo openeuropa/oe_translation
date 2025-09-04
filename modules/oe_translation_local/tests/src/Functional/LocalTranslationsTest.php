@@ -736,7 +736,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     // Add a remote URL.
     $node->set('ott_demo_link_field', [
       'uri' => 'http://example.com',
-      'title' => '',
+      'title' => 'This is the external link',
     ]);
     $node->save();
     $this->drupalGet($node->toUrl());
@@ -759,19 +759,24 @@ class LocalTranslationsTest extends TranslationTestBase {
         $element->setValue($data['value'] . ' FR');
       }
     }
-    // Translate the URL as well.
+    // Translate the link as well.
     $this->getSession()->getPage()->fillField('ott_demo_link_field|0|uri[translation]', 'http://example.com/fr');
+    $this->getSession()->getPage()->fillField('ott_demo_link_field|0|title[translation]', 'This is the external link FR');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     // Assert the node now has the FR translation.
     $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
-    $this->assertSession()->linkExistsExact('http://example.com/fr');
+    $this->assertSession()->linkExistsExact('This is the external link FR');
+    $this->assertSession()->linkByHrefExistsExact('http://example.com/fr');
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());
     $this->assertEquals('http://example.com', $node->get('ott_demo_link_field')->uri);
     $this->assertEquals('http://example.com/fr', $node->getTranslation('fr')->get('ott_demo_link_field')->uri);
+    $this->assertEquals('This is the external link FR', $node->getTranslation('fr')->get('ott_demo_link_field')->title);
     // Edit the node and change the link to internal.
     $this->drupalGet($node->toUrl('edit-form'));
     $this->getSession()->getPage()->fillField('ott_demo_link_field[0][uri]', '<front>');
+    // Empty the title.
+    $this->getSession()->getPage()->fillField('ott_demo_link_field[0][title]', '');
     $this->getSession()->getPage()->pressButton('Save (this translation)');
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());
@@ -792,6 +797,9 @@ class LocalTranslationsTest extends TranslationTestBase {
     $node = $node_storage->load($node->id());
     $this->assertEquals('internal:/', $node->get('ott_demo_link_field')->uri);
     $this->assertEquals('internal:/', $node->getTranslation('fr')->get('ott_demo_link_field')->uri);
+    // The title was reset as well.
+    $this->assertEquals("", $node->get('ott_demo_link_field')->title);
+    $this->assertEquals("", $node->getTranslation('fr')->get('ott_demo_link_field')->title);
   }
 
   /**
