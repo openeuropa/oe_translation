@@ -1,11 +1,22 @@
-# Changelog
+# Change Log
+
+## [2.17.0](https://github.com/openeuropa/oe_translation/tree/2.17.0) (2025-09-09)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.16.0...2.17.0)
+
+**Merged pull requests:**
+
+- EWPP-5768: Update to Drupal 10.5. [\#358](https://github.com/openeuropa/oe_translation/pull/358) ([intelektron](https://github.com/intelektron))
+- EWPP-5685: Leading 0 on the epoetry part request ID. [\#357](https://github.com/openeuropa/oe_translation/pull/357) ([upchuk](https://github.com/upchuk))
+- EWPP-5653: Fix metatag translation issues after upgrading to 2.x. [\#356](https://github.com/openeuropa/oe_translation/pull/356) ([nagyad](https://github.com/nagyad))
+- EWPP-5699: Update docker PHP image. [\#353](https://github.com/openeuropa/oe_translation/pull/353) ([nagyad](https://github.com/nagyad))
+- EWPP-5476: Etrans integration. [\#349](https://github.com/openeuropa/oe_translation/pull/349) ([upchuk](https://github.com/upchuk))
 
 ## [2.16.0](https://github.com/openeuropa/oe_translation/tree/2.16.0) (2025-06-03)
-
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.15.0...2.16.0)
 
 **Merged pull requests:**
 
+- Release-2.16.0: Update changelog. [\#352](https://github.com/openeuropa/oe_translation/pull/352) ([nagyad](https://github.com/nagyad))
 - EWPP-4644: Update to Drupal 11. [\#351](https://github.com/openeuropa/oe_translation/pull/351) ([kp77](https://github.com/kp77))
 
 ## [2.15.0](https://github.com/openeuropa/oe_translation/tree/2.15.0) (2025-05-05)
