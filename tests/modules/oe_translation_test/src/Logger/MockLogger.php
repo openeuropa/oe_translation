@@ -2,20 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Drupal\oe_translation_epoetry_mock\Logger;
+namespace Drupal\oe_translation_test\Logger;
 
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\State\StateInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Base class for mock logger to store the logged messages in state.
- *
- * Contains all the logic of the logger. The two implementations wrap this class
- * to offer support for the different log() method signature in psr/log 1.x
- * and 3.x (Drupal 9.x and 10.x).
+ * Mock logger to store the logged messages in state.
  */
-abstract class MockLoggerBase implements LoggerInterface {
+class MockLogger implements LoggerInterface {
 
   use RfcLoggerTrait;
 
@@ -39,17 +35,24 @@ abstract class MockLoggerBase implements LoggerInterface {
   /**
    * {@inheritdoc}
    */
+  public function log($level, string|\Stringable $message, array $context = []): void {
+    $this->doLog($level, $message, $context);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function doLog($level, string|\Stringable $message, array $context = []): void {
-    if ($context['channel'] !== 'oe_translation_epoetry') {
+    if (!str_contains($context['channel'], 'oe_translation_')) {
       return;
     }
-    $logs = $this->state->get('oe_translation_epoetry_mock_logs', []);
+    $logs = $this->state->get('oe_translation_mock_logs', []);
     $logs[] = [
       'level' => $level,
       'message' => $message,
       'context' => $context,
     ];
-    $this->state->set('oe_translation_epoetry_mock_logs', $logs);
+    $this->state->set('oe_translation_mock_logs', $logs);
   }
 
   /**
@@ -60,14 +63,14 @@ abstract class MockLoggerBase implements LoggerInterface {
    */
   public function getLogs(): array {
     $this->state->resetCache();
-    return $this->state->get('oe_translation_epoetry_mock_logs', []);
+    return $this->state->get('oe_translation_mock_logs', []);
   }
 
   /**
    * Clears all the logs.
    */
   public function clearLogs(): void {
-    $this->state->set('oe_translation_epoetry_mock_logs', []);
+    $this->state->set('oe_translation_mock_logs', []);
   }
 
 }

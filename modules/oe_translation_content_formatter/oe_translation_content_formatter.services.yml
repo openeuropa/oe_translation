@@ -1,0 +1,4 @@
+services:
+  oe_translation_content_formatter.html_formatter:
+    class: Drupal\oe_translation_content_formatter\ContentFormatter\HtmlFormatter
+    arguments: ['@renderer', '@entity_type.manager']

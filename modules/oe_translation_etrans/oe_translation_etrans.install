@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * OE Translation Etrans install file.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Site\Settings;
+
+/**
+ * Implements hook_requirements().
+ */
+function oe_translation_etrans_requirements($phase) {
+  $requirements = [];
+
+  // Show the etrans configuration.
+  if ($phase == 'runtime') {
+    $requirements['etrans.service_url'] = [
+      'title' => t('DGT Etrans service URL'),
+      'value' => Settings::get('etrans.service_url', t('Value not set')),
+      'severity' => REQUIREMENT_INFO,
+    ];
+
+    $requirements['etrans.application_name'] = [
+      'title' => t('DGT Etrans application name'),
+      'value' => Settings::get('etrans.application_name') ? t('Value set') : t('Value not set'),
+      'severity' => REQUIREMENT_INFO,
+    ];
+
+    $requirements['etrans.password'] = [
+      'title' => t('DGT Etrans password'),
+      'value' => Settings::get('etrans.password') ? t('Value set') : t('Value not set'),
+      'severity' => REQUIREMENT_INFO,
+    ];
+  }
+
+  return $requirements;
+}

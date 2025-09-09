@@ -8,3 +8,8 @@ services:
     arguments: ['@state']
     tags:
       - { name: event_subscriber }
+  oe_translation_test.logger.mock_logger:
+    class: Drupal\oe_translation_test\Logger\MockLogger
+    arguments: ['@state']
+    tags:
+      - { name: logger }

@@ -1,0 +1,7 @@
+oe_translation_etrans_mock.mock_settings:
+  path: '/admin/config/system/etrans-mock-settings'
+  defaults:
+    _title: 'eTrans mock settings'
+    _form: 'Drupal\oe_translation_etrans_mock\Form\MockSettings'
+  requirements:
+    _permission: 'administer site configuration'

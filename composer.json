@@ -22,6 +22,7 @@
         "drupal/core-composer-scaffold": "^10.3 || ^11",
         "drupal/core-dev": "^10.3 || ^11",
         "drupal/description_list_field": "^1.0@alpha",
+        "drupal/entity_browser": "2.13",
         "drupal/entity_version": "^1.0-beta8",
         "drupal/inline_entity_form": "^1.0-rc15 || ^3.0@RC",
         "drupal/link_description": "^1.0",
@@ -31,7 +32,7 @@
         "drush/drush": "^12 || ^13",
         "openeuropa/code-review-drupal": "^1.0.0-alpha",
         "openeuropa/epoetry-client": "2.x-dev || 3.x-dev || 4.x-dev",
-        "openeuropa/oe_content": "^4.8",
+        "openeuropa/oe_content": "4.x-dev",
         "openeuropa/oe_editorial": "^2.0",
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
@@ -40,7 +41,8 @@
         "symfony/property-info": "^6"
     },
     "_readme": [
-        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them."
+        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
+        "Locking entity_browser as 2.14 release is broken with https://www.drupal.org/project/entity_browser/issues/3461919."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
@@ -66,6 +68,8 @@
         "psr-4": {
             "Drupal\\Tests\\oe_translation\\": "./tests/src",
             "Drupal\\Tests\\oe_translation_epoetry\\": "./modules/oe_translation_epoetry/tests/src",
+            "Drupal\\Tests\\oe_translation_etrans\\": "./modules/oe_translation_etrans/tests/src",
+            "Drupal\\Tests\\oe_translation_content_formatter\\": "./modules/oe_translation_content_formatter/tests/src",
             "Drupal\\Tests\\oe_translation_corporate_workflow\\": "./modules/oe_translation_corporate_workflow/tests/src",
             "Drupal\\Tests\\oe_translation_active_revision\\": "./modules/oe_translation_corporate_workflow/modules/oe_translation_active_revision/tests/src",
             "Drupal\\Tests\\oe_translation_active_revision_link_lists\\": "./modules/oe_translation_corporate_workflow/modules/oe_translation_active_revision/modules/oe_translation_active_revision_link_lists/tests/src"

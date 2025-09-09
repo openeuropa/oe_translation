@@ -1,0 +1,111 @@
+<?php
+
+/**
+ * @file
+ * The oe_translation_etrans module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\oe_translation\Entity\TranslationRequestInterface;
+use Drupal\oe_translation_etrans\TranslationRequestEtrans;
+use Drupal\oe_translation_etrans\TranslationRequestEtransInterface;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function oe_translation_etrans_entity_bundle_info_alter(array &$bundles): void {
+  if (isset($bundles['oe_translation_request']['etrans'])) {
+    $bundles['oe_translation_request']['etrans']['class'] = TranslationRequestEtrans::class;
+  }
+}
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_view_alter().
+ */
+function oe_translation_etrans_oe_translation_request_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity->bundle() !== 'etrans') {
+    return;
+  }
+
+  /** @var \Drupal\oe_translation_etrans\TranslationRequestEtransInterface $entity */
+  if (!isset($build['meta'])) {
+    return;
+  }
+
+  $header = &$build['meta']['#header'];
+  $header['remote_id'] = t('Remote ID');
+  $row = &$build['meta']['#rows'][0];
+
+  $row['remote_id'] = $entity->getRemoteId();
+
+  $logs = _oe_translation_create_request_logs_tables($entity);
+  if ($logs) {
+    $build['logs'] = [
+      '#type' => 'details',
+      '#title' => t('Log messages (@count)', ['@count' => count($logs['#rows'])]),
+      0 => $logs,
+    ];
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function oe_translation_etrans_oe_translation_request_presave(TranslationRequestInterface $request) {
+  if ($request->bundle() !== 'etrans') {
+    return;
+  }
+
+  $languages = $request->getTargetLanguages();
+
+  // Mark the request as Translated if all languages are in Review.
+  // We do this in a presave because the notifications can come in any order so
+  // we have to check every time the request is saved.
+  $request_translated = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestEtransInterface::STATUS_LANGUAGE_REVIEW,
+    ])) {
+      // It means at least one language is still not in Review.
+      $request_translated = FALSE;
+    }
+  }
+
+  if ($request_translated) {
+    $request->setRequestStatus(TranslationRequestEtransInterface::STATUS_REQUEST_TRANSLATED);
+  }
+
+  // Mark the request as Finished if all languages are Synchronised. This is
+  // We do this in a presave because the etrans notifications can come in any
+  // order so we have to check every time the request is saved.
+  $request_finished = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestEtransInterface::STATUS_LANGUAGE_SYNCHRONISED,
+    ])) {
+      $request_finished = FALSE;
+    }
+  }
+
+  if ($request_finished) {
+    $request->setRequestStatus(TranslationRequestEtransInterface::STATUS_REQUEST_FINISHED);
+  }
+
+  // Mark the request as Failed if all languages are Failed.
+  $request_failed = TRUE;
+  foreach ($languages as $language_with_status) {
+    if (!in_array($language_with_status->getStatus(), [
+      TranslationRequestEtransInterface::STATUS_LANGUAGE_FAILED,
+    ])) {
+      $request_failed = FALSE;
+      break;
+    }
+  }
+
+  if ($request_failed && $request->getRequestStatus() !== TranslationRequestEtransInterface::STATUS_REQUEST_FAILED_FINISHED) {
+    $request->setRequestStatus(TranslationRequestEtransInterface::STATUS_REQUEST_FAILED);
+  }
+}

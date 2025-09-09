@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\oe_translation_epoetry\Kernel;
+namespace Drupal\Tests\oe_translation_content_formatter\Kernel;
 
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\field\Entity\FieldConfig;
@@ -13,7 +13,7 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 
 /**
- * Tests the ePoetry HTML content formatter.
+ * Tests the HTML content formatter.
  *
  * This is the service that transforms the translatable data into an HTML file
  * to be sent with the ePoetry request for translation.
@@ -26,6 +26,7 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'oe_translation_content_formatter',
     'oe_translation_epoetry',
     'oe_translation_remote',
     'filter',
@@ -149,12 +150,12 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
    * Test the HTML content formatter.
    */
   public function testHtmlContentExporter(): void {
-    /** @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $formatter */
-    $formatter = $this->container->get('oe_translation_epoetry.html_formatter');
+    /** @var \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $formatter */
+    $formatter = $this->container->get('oe_translation_content_formatter.html_formatter');
 
     /** @var \Drupal\Core\Render\Markup $export */
     $export = $formatter->export($this->request);
-    $expected = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-original.html');
+    $expected = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_content_formatter') . '/tests/fixtures/formatted-content-original.html');
     $expected = str_replace('@request_id', $this->request->id(), $expected);
     $this->assertSame($expected, (string) $export);
   }
@@ -163,10 +164,10 @@ class HtmlFormatterTest extends TranslationKernelTestBase {
    * Test the HTML content formatter.
    */
   public function testHtmlContentImporter(): void {
-    /** @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $formatter */
-    $formatter = $this->container->get('oe_translation_epoetry.html_formatter');
+    /** @var \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $formatter */
+    $formatter = $this->container->get('oe_translation_content_formatter.html_formatter');
 
-    $formatted_content = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_epoetry') . '/tests/fixtures/formatted-content-translated.html');
+    $formatted_content = file_get_contents(\Drupal::service('extension.path.resolver')->getPath('module', 'oe_translation_content_formatter') . '/tests/fixtures/formatted-content-translated.html');
 
     // Assert we get an exception if we try to import the content of a wrong
     // request.

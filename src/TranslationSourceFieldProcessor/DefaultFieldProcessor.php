@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\TranslationSourceFieldProcessor;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\OptionsProviderInterface;
+use Drupal\Core\TypedData\Plugin\DataType\Uri;
 use Drupal\Core\TypedData\PrimitiveInterface;
 use Drupal\Core\TypedData\Type\StringInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
@@ -162,6 +164,13 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
     // Ignore properties with limited allowed values or if they're not strings.
     if ($property instanceof OptionsProviderInterface || !($property instanceof StringInterface)) {
       return FALSE;
+    }
+
+    if ($property instanceof Uri) {
+      $value = $property->getValue();
+      if ($value && !UrlHelper::isExternal($value)) {
+        return FALSE;
+      }
     }
 
     return TRUE;
