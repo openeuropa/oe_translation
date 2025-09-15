@@ -16,11 +16,13 @@ interface TranslationSourceManagerInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
+   * @param array $context
+   *   Optional context to pass to the extractor.
    *
    * @return array
    *   The translation source data.
    */
-  public function extractData(ContentEntityInterface $entity): array;
+  public function extractData(ContentEntityInterface $entity, array $context = []): array;
 
   /**
    * Saves the data.
