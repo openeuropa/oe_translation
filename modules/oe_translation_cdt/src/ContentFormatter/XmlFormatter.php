@@ -13,6 +13,7 @@ use Drupal\oe_translation\TranslationSourceHelper;
 use Drupal\oe_translation_cdt\Model\Transaction;
 use Drupal\oe_translation_cdt\Model\TransactionItem;
 use Drupal\oe_translation_cdt\Model\TransactionItemField;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
