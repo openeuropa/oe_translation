@@ -6,3 +6,4 @@ type: module
 core_version_requirement: ^10.3 || ^11
 dependencies:
   - oe_translation:oe_translation_remote
+  - oe_translation:oe_translation_content_formatter

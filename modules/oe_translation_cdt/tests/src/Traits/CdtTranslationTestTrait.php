@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Traits;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\oe_translation\Entity\TranslationRequest;
+use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 
@@ -55,7 +55,7 @@ trait CdtTranslationTestTrait {
    *   The translation request.
    */
   private function createTranslationRequest(array $data, array $languages, ?ContentEntityInterface $entity = NULL): TranslationRequestCdtInterface {
-    $request = TranslationRequest::create($data);
+    $request = TranslationRequestCdt::create($data);
     assert($request instanceof TranslationRequestCdtInterface);
     foreach ($languages as $language) {
       $request->updateTargetLanguageStatus($language, TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);

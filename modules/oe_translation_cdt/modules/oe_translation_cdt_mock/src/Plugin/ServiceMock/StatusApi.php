@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_cdt_mock\Plugin\ServiceMock;
 
 use Drupal\Core\Site\Settings;
+use Drupal\oe_translation\LanguageMapper;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
-use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use GuzzleHttp\Psr7\Response;
@@ -84,7 +84,7 @@ class StatusApi extends ServiceMockBase {
     }
 
     // Add source language, jobs, and translated files.
-    $cdt_source_language = LanguageCodeMapper::getCdtLanguageCode($entity->getSourceLanguageCode(), $entity);
+    $cdt_source_language = LanguageMapper::getMappedLanguageCode($entity->getSourceLanguageCode(), $entity);
     $response['sourceLanguage'] = $cdt_source_language;
     $response['targetFiles'] = [];
     $response['targetLanguages'] = [];
@@ -92,7 +92,7 @@ class StatusApi extends ServiceMockBase {
     $response['pricing']['jobSummary'] = [];
     $base_url = rtrim(Settings::get('cdt.base_api_url'), '/');
     foreach ($entity->getTargetLanguages() as $language) {
-      $cdt_target_language = LanguageCodeMapper::getCdtLanguageCode($language->getLangcode(), $entity);
+      $cdt_target_language = LanguageMapper::getMappedLanguageCode($language->getLangcode(), $entity);
       $response['targetLanguages'][] = $cdt_target_language;
 
       $response['pricing']['jobSummary'][] = [
