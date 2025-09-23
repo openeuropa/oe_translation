@@ -105,10 +105,7 @@
             "locations": {
                 "web-root": "./build"
             }
-        },
-        "_readme": [
-            "CDT client is temporarily fetched from the repository, until it's added to packagist.org."
-        ]
+        }
     },
     "config": {
         "sort-packages": true,

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt;
 
+use Drupal\oe_translation\LanguageMapper;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
-use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use OpenEuropa\CdtClient\Model\Callback\JobStatus;
 use OpenEuropa\CdtClient\Model\Callback\RequestStatus;
@@ -31,7 +31,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    * {@inheritdoc}
    */
   public function updateFromJobStatus(TranslationRequestCdtInterface $translation_request, JobStatus $job_status): bool {
-    $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job_status->getTargetLanguageCode(), $translation_request);
+    $drupal_langcode = LanguageMapper::getDrupalLanguageCode($job_status->getTargetLanguageCode(), $translation_request);
     return $this->updateFieldset($translation_request, [
       'languages' => [$drupal_langcode => $job_status->getStatus()],
     ], "Received CDT callback, updating the job...");
@@ -54,7 +54,7 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
 
     // Get the job summary data, if available. All jobs have the same priority.
     foreach ($translation_response->getJobSummary() as $job) {
-      $drupal_langcode = LanguageCodeMapper::getDrupalLanguageCode($job->getTargetLanguage(), $translation_request);
+      $drupal_langcode = LanguageMapper::getDrupalLanguageCode($job->getTargetLanguage(), $translation_request);
       $changes['languages'][$drupal_langcode] = $job->getStatus();
       $changes['priority'] = $job->getPriorityCode();
     }

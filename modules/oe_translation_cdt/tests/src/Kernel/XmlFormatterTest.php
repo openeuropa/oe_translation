@@ -6,12 +6,12 @@ namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Composer\InstalledVersions;
 use Drupal\Component\Datetime\Time;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\node\Entity\Node;
-use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
