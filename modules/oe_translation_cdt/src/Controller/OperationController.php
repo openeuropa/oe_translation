@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_cdt\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\oe_translation\LanguageMapper;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
-use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
-use Drupal\oe_translation_cdt\Mapper\LanguageCodeMapper;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,7 +27,7 @@ final class OperationController extends ControllerBase {
    *   The CDT API wrapper.
    * @param \Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface $updater
    *   The translation request updater.
-   * @param \Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface $xmlFormatter
+   * @param \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $xmlFormatter
    *   The XML formatter.
    */
   public function __construct(
@@ -96,7 +96,7 @@ final class OperationController extends ControllerBase {
   public function fetchTranslation(TranslationRequestCdtInterface $translation_request, string $langcode, Request $request): RedirectResponse {
     $translation_response = $this->apiWrapper->getClient()->getRequestStatus((string) $translation_request->getCdtId());
     foreach ($translation_response->getTargetFiles() as $file) {
-      if (LanguageCodeMapper::getDrupalLanguageCode((string) $file->getTargetLanguage(), $translation_request) == $langcode) {
+      if (LanguageMapper::getDrupalLanguageCode((string) $file->getTargetLanguage(), $translation_request) == $langcode) {
         $xml = $this->apiWrapper->getClient()->downloadFile($file->getLinks()['files']->getHref());
         $data = $this->xmlFormatter->import($xml, $translation_request);
         $translation_request->setTranslatedData($langcode, $data);
