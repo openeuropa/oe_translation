@@ -57,6 +57,7 @@ class TargetLanguagesWithTooltipTest extends TranslationKernelTestBase {
   public function testRender(): void {
     $request = TranslationRequestCdt::create([
       'bundle' => 'cdt',
+      'translator_provider' => 'cdt',
     ]);
     assert($request instanceof TranslationRequestCdtInterface);
     $request->updateTargetLanguageStatus('fr', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);

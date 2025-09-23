@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Drupal\Core\Site\Settings;
+use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
-use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Controller\CallbackController;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
@@ -114,10 +114,11 @@ class CallbackControllerTest extends TranslationKernelTestBase {
       ])
     );
     $request_with_id->headers->set('apikey', '12345');
-    $translation_request_with_id = TranslationRequest::create([
+    $translation_request_with_id = TranslationRequestCdt::create([
       'bundle' => 'cdt',
       'cdt_id' => '2024/12345a',
       'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      'translator_provider' => 'cdt',
     ]);
     assert($translation_request_with_id instanceof TranslationRequestCdtInterface);
     $translation_request_with_id->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
@@ -137,10 +138,11 @@ class CallbackControllerTest extends TranslationKernelTestBase {
       ])
     );
     $request_without_id->headers->set('apikey', '12345');
-    $translation_request_without_id = TranslationRequest::create([
+    $translation_request_without_id = TranslationRequestCdt::create([
       'bundle' => 'cdt',
       'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
       'correlation_id' => 'bbb',
+      'translator_provider' => 'cdt',
     ]);
     assert($translation_request_without_id instanceof TranslationRequestCdtInterface);
     $translation_request_without_id->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);
@@ -181,10 +183,11 @@ class CallbackControllerTest extends TranslationKernelTestBase {
       ])
     );
     $request->headers->set('apikey', '12345');
-    $translation_request = TranslationRequest::create([
+    $translation_request = TranslationRequestCdt::create([
       'bundle' => 'cdt',
       'cdt_id' => '2024/12345a',
       'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      'translator_provider' => 'cdt',
     ]);
     assert($translation_request instanceof TranslationRequestCdtInterface);
     $translation_request->updateTargetLanguageStatus('es', TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED);

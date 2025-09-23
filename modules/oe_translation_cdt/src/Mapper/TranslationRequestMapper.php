@@ -8,9 +8,10 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
+use Drupal\oe_translation\LanguageMapper;
 use Drupal\oe_translation\TranslationSourceHelper;
-use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use OpenEuropa\CdtClient\Model\Request\Callback;
 use OpenEuropa\CdtClient\Model\Request\CallbackCollection;
 use OpenEuropa\CdtClient\Model\Request\File;
@@ -33,7 +34,7 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
   /**
    * TranslationRequestMapper constructor.
    *
-   * @param \Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface $contentFormatter
+   * @param \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $contentFormatter
    *   The content formatter.
    */
   public function __construct(
@@ -80,7 +81,7 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
     $translation_jobs = $this->createTranslationJobs($translation_request);
     $source_document->setTranslationJobs($translation_jobs);
     $source_languages = [
-      LanguageCodeMapper::getCdtLanguageCode($translation_request->getSourceLanguageCode(), $translation_request),
+      LanguageMapper::getMappedLanguageCode($translation_request->getSourceLanguageCode(), $translation_request),
     ];
     $source_document->setSourceLanguages(new StringCollection($source_languages));
     $source_document->setIsPrivate(FALSE);
@@ -124,9 +125,9 @@ class TranslationRequestMapper implements TranslationRequestMapperInterface {
     $volume = $this->countVolume($character_count);
     foreach ($translation_request->getTargetLanguages() as $target_language) {
       $translation_job = new TranslationJob();
-      $source_langcode = LanguageCodeMapper::getCdtLanguageCode($translation_request->getSourceLanguageCode(), $translation_request);
+      $source_langcode = LanguageMapper::getMappedLanguageCode($translation_request->getSourceLanguageCode(), $translation_request);
       $translation_job->setSourceLanguage($source_langcode);
-      $target_langcode = LanguageCodeMapper::getCdtLanguageCode($target_language->getLangcode(), $translation_request);
+      $target_langcode = LanguageMapper::getMappedLanguageCode($target_language->getLangcode(), $translation_request);
       $translation_job->setTargetLanguage($target_langcode);
       $translation_job->setVolume($volume);
       $translation_jobs[] = $translation_job;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
+use Drupal\oe_translation_cdt\TranslationRequestCdt;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
-use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 
 /**
@@ -39,8 +39,9 @@ class TranslationRequestBundleClassTest extends TranslationKernelTestBase {
    * Tests the CDT bundle class setters and getters.
    */
   public function testCdtBundleClass(): void {
-    $request = TranslationRequest::create([
+    $request = TranslationRequestCdt::create([
       'bundle' => 'cdt',
+      'translator_provider' => 'cdt',
     ]);
     assert($request instanceof TranslationRequestCdtInterface);
 

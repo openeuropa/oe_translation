@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\TranslationSourceHelper;
-use Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -40,7 +40,7 @@ class FileApi extends ServiceMockBase {
    *   The entity type manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger factory.
-   * @param \Drupal\oe_translation_cdt\ContentFormatter\ContentFormatterInterface $xmlFormatter
+   * @param \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $xmlFormatter
    *   The XML formatter.
    */
   public function __construct(
