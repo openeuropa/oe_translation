@@ -12,7 +12,6 @@ use OpenEuropa\CdtClient\Contract\ApiClientInterface;
 interface CdtApiWrapperInterface {
 
   const STATUS_JOB_COMPLETED = 'CMP';
-  const STATUS_JOB_FAILED = 'FLR';
   const STATUS_JOB_IN_PROGRESS = 'INP';
   const STATUS_JOB_CANCELLED = 'CNC';
   const STATUS_JOB_TO_BE_CANCELLED = 'TCN';
