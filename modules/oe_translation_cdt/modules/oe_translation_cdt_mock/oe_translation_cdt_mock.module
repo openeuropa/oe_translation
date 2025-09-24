@@ -74,7 +74,6 @@ function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$
 
   $all_statuses = [
     CdtApiWrapperInterface::STATUS_JOB_COMPLETED => 'Completed',
-    CdtApiWrapperInterface::STATUS_JOB_FAILED => 'Failed',
     CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS => 'In progress',
     CdtApiWrapperInterface::STATUS_JOB_CANCELLED => 'Cancelled',
     CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => 'To be cancelled',

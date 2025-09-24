@@ -100,7 +100,6 @@ class StatusApi extends ServiceMockBase {
         'fileName' => 'translation_job_5_request.xml',
         'priorityCode' => $entity->getPriority(),
         'status' => match($language->getStatus()) {
-            TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED => CdtApiWrapperInterface::STATUS_JOB_FAILED,
             TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED => CdtApiWrapperInterface::STATUS_JOB_CANCELLED,
             TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW, TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED, TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED => CdtApiWrapperInterface::STATUS_JOB_COMPLETED,
             default => CdtApiWrapperInterface::STATUS_JOB_IN_PROGRESS
