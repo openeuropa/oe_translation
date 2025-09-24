@@ -166,12 +166,8 @@ final class TranslationRequestCdt extends TranslationRequest implements Translat
    * {@inheritdoc}
    */
   public function getLanguageStatusDescription(string $status, string $langcode): TranslatableMarkup {
-    switch ($status) {
-      case TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED:
-        return $this->t('The translation for this language has been cancelled by CDT. It cannot be reopened.');
-
-      case TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED:
-        return $this->t('The translation for this language has failed in CDT. It cannot be reopened.');
+    if ($status === TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED) {
+      return $this->t('The translation for this language has been cancelled by CDT. It cannot be reopened.');
     }
 
     return $this->traitGetLanguageStatusDescription($status, $langcode);
