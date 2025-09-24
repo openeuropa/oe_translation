@@ -9,7 +9,6 @@ use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
  */
 interface TranslationRequestCdtInterface extends TranslationRequestRemoteInterface {
 
-  const STATUS_LANGUAGE_FAILED = 'Failed';
   const STATUS_LANGUAGE_CANCELLED = 'Cancelled';
 
   /**

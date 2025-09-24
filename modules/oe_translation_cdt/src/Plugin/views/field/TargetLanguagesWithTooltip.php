@@ -132,7 +132,6 @@ class TargetLanguagesWithTooltip extends FieldPluginBase {
       TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
       TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED,
       TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
-      TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
     ];
 
     uksort($grouped, fn($a, $b) => array_search($a, $order) <=> array_search($b, $order));
