@@ -203,7 +203,6 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
       if ($old_status != $new_status) {
         if (in_array($new_status, [
           TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,
-          TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
           TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
         ],)) {
           $translation_request->removeTranslatedData($langcode);
@@ -253,7 +252,6 @@ final class TranslationRequestUpdater implements TranslationRequestUpdaterInterf
    */
   protected function convertLanguageStatusFromCdt(?string $cdt_language_status): string {
     return match($cdt_language_status) {
-      CdtApiWrapperInterface::STATUS_JOB_FAILED => TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED,
       CdtApiWrapperInterface::STATUS_JOB_CANCELLED, CdtApiWrapperInterface::STATUS_JOB_TO_BE_CANCELLED => TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED,
       CdtApiWrapperInterface::STATUS_JOB_COMPLETED => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW,
       default => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,

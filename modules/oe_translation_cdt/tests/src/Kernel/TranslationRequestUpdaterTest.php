@@ -179,16 +179,16 @@ class TranslationRequestUpdaterTest extends TranslationKernelTestBase {
     $translation_response->setJobSummary(new JobSummaryCollection([
       (new JobSummary())
         ->setTargetLanguage('FR')
-        ->setStatus(CdtApiWrapperInterface::STATUS_JOB_FAILED)
+        ->setStatus(CdtApiWrapperInterface::STATUS_JOB_CANCELLED)
         ->setPriorityCode('PRIO2'),
     ]));
     $this->updater->updateFromTranslationResponse($request, $translation_response, $reference_data);
-    $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_FAILED, $request->getTargetLanguages()['fr']->getStatus());
+    $this->assertEquals(TranslationRequestCdtInterface::STATUS_LANGUAGE_CANCELLED, $request->getTargetLanguages()['fr']->getStatus());
     $this->assertTranslationRequestLog($request, [
       '*',
       '*',
       'Manually updated the status.' .
-      'The following languages are updated: fr (Review =&gt; Failed).',
+      'The following languages are updated: fr (Review =&gt; Cancelled).',
     ]);
   }
 
