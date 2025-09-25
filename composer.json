@@ -22,7 +22,7 @@
         "drupal/core-composer-scaffold": "^10.3 || ^11",
         "drupal/core-dev": "^10.3 || ^11",
         "drupal/description_list_field": "^1.0@alpha",
-        "drupal/entity_browser": "2.13",
+        "drupal/entity_browser": "^2.15",
         "drupal/entity_version": "^1.0-beta8",
         "drupal/inline_entity_form": "^1.0-rc15 || ^3.0@RC",
         "drupal/link_description": "^1.0",
@@ -41,8 +41,7 @@
         "symfony/property-info": "^6"
     },
     "_readme": [
-        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
-        "Locking entity_browser as 2.14 release is broken with https://www.drupal.org/project/entity_browser/issues/3461919."
+        "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
