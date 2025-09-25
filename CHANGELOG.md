@@ -1,10 +1,18 @@
 # Change Log
 
+## [2.17.1](https://github.com/openeuropa/oe_translation/tree/2.17.1) (2025-09-25)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.17.0...2.17.1)
+
+**Merged pull requests:**
+
+- EWPP-5805: Unlock entity\_browser. [\#362](https://github.com/openeuropa/oe_translation/pull/362) ([nagyad](https://github.com/nagyad))
+
 ## [2.17.0](https://github.com/openeuropa/oe_translation/tree/2.17.0) (2025-09-09)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.16.0...2.17.0)
 
 **Merged pull requests:**
 
+- Release-2.17.0: Update changelog. [\#361](https://github.com/openeuropa/oe_translation/pull/361) ([nagyad](https://github.com/nagyad))
 - EWPP-5768: Update to Drupal 10.5. [\#358](https://github.com/openeuropa/oe_translation/pull/358) ([intelektron](https://github.com/intelektron))
 - EWPP-5685: Leading 0 on the epoetry part request ID. [\#357](https://github.com/openeuropa/oe_translation/pull/357) ([upchuk](https://github.com/upchuk))
 - EWPP-5653: Fix metatag translation issues after upgrading to 2.x. [\#356](https://github.com/openeuropa/oe_translation/pull/356) ([nagyad](https://github.com/nagyad))
