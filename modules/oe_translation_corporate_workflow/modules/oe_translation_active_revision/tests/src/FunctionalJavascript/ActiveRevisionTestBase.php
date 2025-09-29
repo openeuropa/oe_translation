@@ -13,7 +13,7 @@ use Drupal\user\Entity\Role;
 /**
  * Base class for the active revision tests.
  *
- * @group batch2
+ * @group batch3
  */
 abstract class ActiveRevisionTestBase extends WebDriverTestBase {
 

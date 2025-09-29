@@ -16,7 +16,7 @@ use Drupal\user\Entity\Role;
  * When content is validated, there is a checkbox that allows to drop
  * the translations and not carry them over onto the next version.
  *
- * @group batch1
+ * @group batch3
  */
 class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
 

@@ -20,7 +20,7 @@ use Drupal\user\Entity\Role;
  * It only covers ePoetry specific things that are not covered as part of the
  * generic remote translation tests.
  *
- * @group batch2
+ * @group batch3
  */
 class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
 
