@@ -103,9 +103,9 @@ toolkit:
     PHP:
       - 8.3
     DRUPAL:
-      - 10.4.0
-      - 10.5.0
-      - 11.1.0
+      - ~10.4.0
+      - ~10.5.0
+      - ~11.1.0
     PUBLISH: false
     BEHAT: false
     PHPUNIT: true

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\oe_translation\TaskRunner\Commands;
+namespace Drupal\oe_translation_commands\TaskRunner\Commands;
 
 use EcEuropa\Toolkit\TaskRunner\AbstractCommands;
 use Robo\Exception\AbortTasksException;
