@@ -1,6 +1,8 @@
 includes:
   - ./vendor/openeuropa/code-review-drupal/dist/phpstan.drupal.neon
 parameters:
+  parallel:
+      maximumNumberOfProcesses: 2
   excludePaths:
     # Exclude the following file from analysis as RawDrupalContext is not
     # present.
@@ -8,3 +10,4 @@ parameters:
     # Exclude PHPUnit extension as contains classes that might not be present
     # depending on PHPUnit version.
     - tests/src/EnsurePHPUnitBatchingTestExtension.php
+    - '*.yml'

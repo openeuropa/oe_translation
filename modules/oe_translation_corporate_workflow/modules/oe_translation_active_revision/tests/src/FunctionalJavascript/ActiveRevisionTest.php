@@ -16,7 +16,7 @@ use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
- * @group batch2
+ * @group batch3
  */
 class ActiveRevisionTest extends ActiveRevisionTestBase {
 

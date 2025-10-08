@@ -11,7 +11,7 @@ use Drupal\user\Entity\Role;
 /**
  * Tests active revision functionality with link lists.
  *
- * @group batch1
+ * @group batch3
  */
 class ActiveRevisionLinkListTest extends ActiveRevisionTestBase {
 

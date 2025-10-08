@@ -36,7 +36,7 @@ use Drupal\user\Entity\Role;
  * published revision. But not on any future drafts which create new minor
  * versions.
  *
- * @group batch1
+ * @group batch3
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */

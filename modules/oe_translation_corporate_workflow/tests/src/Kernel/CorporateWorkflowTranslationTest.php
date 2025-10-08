@@ -13,7 +13,7 @@ use Drupal\workflows\Entity\Workflow;
 /**
  * Testing custom translation-related logic.
  *
- * @group batch1
+ * @group batch3
  */
 class CorporateWorkflowTranslationTest extends KernelTestBase {
 
