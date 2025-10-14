@@ -43,11 +43,11 @@ drupal:
       $settings["etrans.application_name"] = getenv('ETRANS_APPLICATION_NAME');
       $settings["etrans.password"] = getenv('ETRANS_PASSWORD');
 
-      $settings["cdt.base_api_url"] = getenv('CDT_BASE_API_URL');
-      $settings["cdt.username"] = getenv('CDT_USERNAME');
-      $settings["cdt.password"] = getenv('CDT_PASSWORD');
-      $settings["cdt.client"] = getenv('CDT_CLIENT');
-      $settings["cdt.api_key"] = getenv('CDT_API_KEY');
+      $settings["cdt.base_api_url"] = 'https://example.com/api';
+      $settings["cdt.username"] = 'test_username';
+      $settings["cdt.password"] = 'test_password';
+      $settings["cdt.client"] = 'test_client';
+      $settings["cdt.api_key"] = 'test_apikey';
 
 selenium:
   host: "http://selenium"
