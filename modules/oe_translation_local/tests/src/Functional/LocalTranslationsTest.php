@@ -719,6 +719,90 @@ class LocalTranslationsTest extends TranslationTestBase {
   }
 
   /**
+   * Tests that if the translatability changes, the next form fixes it.
+   *
+   * If, for example, a remote URI which was translated, got switched to a
+   * local one which is not translatable, we can see it in the translation form
+   * and it gets reset to the source value in the new translation.
+   */
+  public function testTranslatabilityChange(): void {
+    $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+    // Grant permission to edit nodes for the Translator role.
+    $role = Role::load('oe_translator');
+    $role->grantPermission('edit any oe_demo_translatable_page content');
+    $role->save();
+    // Create a node and translate it to French.
+    $node = $this->createFullTestNode();
+    // Add a remote URL.
+    $node->set('ott_demo_link_field', [
+      'uri' => 'http://example.com',
+      'title' => 'This is the external link',
+    ]);
+    $node->save();
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    // Translate each of the fields.
+    foreach ($this->fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      if (!$table_header) {
+        $this->fail(sprintf('The form label for the "%s" field was not found on the page.', $key));
+      }
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+      if (!$element) {
+        $this->fail(sprintf('The translation element for the "%s" field was not found on the page.', $key));
+      }
+      // Set a translation value.
+      if (isset($data['translate'])) {
+        $element->setValue($data['value'] . ' FR');
+      }
+    }
+    // Translate the link as well.
+    $this->getSession()->getPage()->fillField('ott_demo_link_field|0|uri[translation]', 'http://example.com/fr');
+    $this->getSession()->getPage()->fillField('ott_demo_link_field|0|title[translation]', 'This is the external link FR');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    // Assert the node now has the FR translation.
+    $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
+    $this->assertSession()->linkExistsExact('This is the external link FR');
+    $this->assertSession()->linkByHrefExistsExact('http://example.com/fr');
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    $this->assertEquals('http://example.com', $node->get('ott_demo_link_field')->uri);
+    $this->assertEquals('http://example.com/fr', $node->getTranslation('fr')->get('ott_demo_link_field')->uri);
+    $this->assertEquals('This is the external link FR', $node->getTranslation('fr')->get('ott_demo_link_field')->title);
+    // Edit the node and change the link to internal.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->fillField('ott_demo_link_field[0][uri]', '<front>');
+    // Empty the title.
+    $this->getSession()->getPage()->fillField('ott_demo_link_field[0][title]', '');
+    $this->getSession()->getPage()->pressButton('Save (this translation)');
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    $this->assertEquals('internal:/', $node->get('ott_demo_link_field')->uri);
+    $this->assertEquals('http://example.com/fr', $node->getTranslation('fr')->get('ott_demo_link_field')->uri);
+    // Navigate to the French local translation.
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    // Assert that we see the URI translation element, filled in with the
+    // source and not the former translation and that it's disabled.
+    $this->assertSession()->fieldValueEquals('ott_demo_link_field|0|uri[translation]', 'internal:/');
+    $field = $this->getSession()->getPage()->findField('ott_demo_link_field|0|uri[translation]');
+    $this->assertEquals('readonly', $field->getAttribute('readonly'));
+    // Sync the translation and assert it got saved correctly.
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    $this->assertEquals('internal:/', $node->get('ott_demo_link_field')->uri);
+    $this->assertEquals('internal:/', $node->getTranslation('fr')->get('ott_demo_link_field')->uri);
+    // The title was reset as well.
+    $this->assertEquals("", $node->get('ott_demo_link_field')->title);
+    $this->assertEquals("", $node->getTranslation('fr')->get('ott_demo_link_field')->title);
+  }
+
+  /**
    * Asserts the ongoing translations table.
    *
    * @param array $languages
