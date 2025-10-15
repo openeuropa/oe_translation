@@ -121,7 +121,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  public function extractData(ContentEntityInterface $entity): array {
+  public function extractData(ContentEntityInterface $entity, array $context = []): array {
     $field_definitions = $entity->getFieldDefinitions();
     $exclude_field_types = ['language', 'metatag_computed'];
     $exclude_field_names = ['moderation_state'];
@@ -195,7 +195,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
             if ($this->contentTranslationManager->isEnabled($referenced_entity->getEntityTypeId(), $referenced_entity->bundle()) && $referenced_entity->hasTranslation($langcode)) {
               $referenced_entity = $referenced_entity->getTranslation($langcode);
             }
-            $data[$field_name][$delta][$property_key] = $this->extractData($referenced_entity);
+            $data[$field_name][$delta][$property_key] = $this->extractData($referenced_entity, $context);
             // Use the ID of the entity to identify it later, do not rely on the
             // UUID as content entities are not required to have one.
             $data[$field_name][$delta][$property_key]['#id'] = $property->getValue()->id();
@@ -211,7 +211,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
     $data['#entity_type'] = $entity->getEntityTypeId();
     $data['#entity_bundle'] = $entity->bundle();
 
-    $event = new TranslationSourceEvent($entity, $data, $entity->language()->getId());
+    $event = new TranslationSourceEvent($entity, $data, $entity->language()->getId(), context: $context);
     $this->eventDispatcher->dispatch($event, TranslationSourceEvent::EXTRACT);
     return $event->getData();
   }

@@ -58,6 +58,13 @@ class TranslationSourceEvent extends Event {
   protected $save = FALSE;
 
   /**
+   * Optional context for the extraction event.
+   *
+   * @var array
+   */
+  protected $context = [];
+
+  /**
    * TranslationSourceEvent constructor.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -68,12 +75,15 @@ class TranslationSourceEvent extends Event {
    *   The langcode.
    * @param bool $save
    *   Whether the values are being saved.
+   * @param array $context
+   *   Optional context for the event.
    */
-  public function __construct(ContentEntityInterface $entity, array $data, string $langcode, bool $save = TRUE) {
+  public function __construct(ContentEntityInterface $entity, array $data, string $langcode, bool $save = TRUE, array $context = []) {
     $this->entity = $entity;
     $this->data = $data;
     $this->langcode = $langcode;
     $this->save = $save;
+    $this->context = $context;
   }
 
   /**
@@ -144,6 +154,16 @@ class TranslationSourceEvent extends Event {
    */
   public function isSave(): bool {
     return $this->save;
+  }
+
+  /**
+   * Returns the context.
+   *
+   * @return array
+   *   The context.
+   */
+  public function getContext(): array {
+    return $this->context;
   }
 
 }
