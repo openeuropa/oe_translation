@@ -130,10 +130,10 @@ class TranslationAccessEvent extends Event {
   }
 
   /**
-   * Sets the target language..
+   * Sets the target language.
    *
    * @param \Drupal\Core\Language\Language $target
-   *   The target language..
+   *   The target language.
    */
   public function setTarget(Language $target): void {
     $this->target = $target;
