@@ -1,4 +1,12 @@
-# Change Log
+# Changelog
+
+## [2.18.0](https://github.com/openeuropa/oe_translation/tree/2.18.0) (2025-10-21)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.17.1...2.18.0)
+
+- EWPP-6047: Move oe\_translation to GitLab CI. [\#366](https://github.com/openeuropa/oe_translation/pull/366) ([intelektron](https://github.com/intelektron))
+- EWPP-5970: Passing optional context to the translation data extractor. [\#363](https://github.com/openeuropa/oe_translation/pull/363) ([upchuk](https://github.com/upchuk))
+- EWPP-5663: Fixing URI translatability when switching types. [\#359](https://github.com/openeuropa/oe_translation/pull/359) ([upchuk](https://github.com/upchuk))
 
 ## [2.17.1](https://github.com/openeuropa/oe_translation/tree/2.17.1) (2025-09-25)
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.17.0...2.17.1)
