@@ -138,6 +138,15 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
       foreach (Element::children($field_item) as $property) {
         $property_data = $field_item[$property];
         if (!isset($property_data['#translate']) || !$property_data['#translate']) {
+          if ($field->getFieldDefinition()->getType() === 'link' && $field->offsetGet($delta) && $property === 'uri' && !UrlHelper::isExternal($property_data['#text'])) {
+            // In case we are dealing with a link field URI column, we need to
+            // check if the URI is not external because if it is, it is
+            // marked as not translatable (see ::shouldTranslateProperty()).
+            // In this case need to keep the col in sync with the source.
+            $field->offsetGet($delta)->set($property, $source_offset->get($property)->getValue());
+            continue;
+          }
+
           // We directly skip if we don't have to translate this property.
           continue;
         }
@@ -148,7 +157,7 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
         // most likely). This typically happens for field properties like
         // "title" from link fields when we switch from external to internal
         // and remove the title.
-        if (!isset($property_data['#translation']['#text']) && $field->offsetGet($delta)->get($property)->getValue()) {
+        if (!isset($property_data['#translation']['#text']) && $field->offsetGet($delta) && $field->offsetGet($delta)->get($property)->getValue()) {
           $field->offsetGet($delta)->set($property, $source_offset->get($property)->getValue());
           continue;
         }
