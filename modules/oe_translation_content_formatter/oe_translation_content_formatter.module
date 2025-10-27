@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * The oe_translation_content_formatter module.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_theme().
+ */
+function oe_translation_content_formatter_theme() {
+  return [
+    'content_html_template' => [
+      'variables' => [
+        'request_id' => NULL,
+        'source_language' => NULL,
+        'items' => NULL,
+      ],
+    ],
+  ];
+}

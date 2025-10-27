@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_poetry_legacy\FunctionalJavascript;
 
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_poetry_legacy\Entity\LegacyPoetryReference;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the Legacy Poetry reference entity.
@@ -64,7 +65,6 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
       'poetry_request_id' => 'WEB/2022/2000/0/0/TRA',
     ])->save();
 
-    $this->drupalLogout();
     $this->drupalGet('admin/content/legacy-poetry-references');
     // Anonymous users do not have access to the view.
     $this->assertSession()->pageTextContains('Access denied');
@@ -151,6 +151,9 @@ class LegacyPoetryReferenceTest extends TranslationTestBase {
     $provider->save();
 
     $user = $this->setUpTranslatorUser();
+    $role = Role::load('oe_translator');
+    $role->grantPermission('request epoetry translation');
+    $role->save();
     $this->drupalLogin($user);
 
     // Create a node and a legacy ID for it.

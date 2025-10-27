@@ -6,25 +6,26 @@ namespace Drupal\oe_translation\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\oe_translation\Plugin\Field\FieldType\EntityRevisionWithTypeItem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the "Entity revision with type" formatter.
- *
- * @FieldFormatter(
- *   id = "oe_translation_entity_revision_type_formatter",
- *   label = @Translation("Entity revision with type formatter"),
- *   field_types = {
- *     "oe_translation_entity_revision_type_item"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'oe_translation_entity_revision_type_formatter',
+  label: new TranslatableMarkup('Entity revision with type formatter'),
+  field_types: [
+    'oe_translation_entity_revision_type_item',
+  ],
+)]
 class EntityRevisionWithTypeFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -141,6 +142,7 @@ class EntityRevisionWithTypeFormatter extends FormatterBase implements Container
       ]),
     ];
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($item->entity_type);
     $entity = $storage->loadRevision($item->entity_revision_id);
     if (!$entity instanceof EntityInterface) {

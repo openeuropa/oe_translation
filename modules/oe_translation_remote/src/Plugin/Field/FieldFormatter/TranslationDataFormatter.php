@@ -6,10 +6,12 @@ namespace Drupal\oe_translation_remote\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\oe_translation\TranslationFormTrait;
 use Drupal\oe_translation\TranslationSourceHelper;
@@ -21,15 +23,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * This is a special formatter, meant to be used dynamically and not configured
  * with a view mode as it requires a language object to render the review
  * form elements for a given translation language.
- *
- * @FieldFormatter(
- *   id = "oe_translation_remote_translation_data",
- *   label = @Translation("Translation data"),
- *   field_types = {
- *     "oe_translation_remote_translated_data"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'oe_translation_remote_translation_data',
+  label: new TranslatableMarkup('Translation data'),
+  field_types: [
+    'oe_translation_remote_translated_data',
+  ],
+)]
 class TranslationDataFormatter extends FormatterBase {
 
   use TranslationFormTrait;

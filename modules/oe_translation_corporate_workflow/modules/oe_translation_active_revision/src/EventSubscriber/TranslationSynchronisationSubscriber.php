@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_active_revision\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\node\NodeInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\TranslationSynchronisationEvent;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
@@ -60,6 +61,10 @@ class TranslationSynchronisationSubscriber implements EventSubscriberInterface {
    */
   public function onSync(TranslationSynchronisationEvent $event): void {
     $entity = $event->getEntity();
+    if (!$entity instanceof NodeInterface) {
+      // We only support nodes for the time being.
+      return;
+    }
     // We need to make sure we are using the entity onto which the sync would
     // take place.
     $entity = $this->entityRevisionInfo->getEntityRevision($entity, $event->getLangcode());

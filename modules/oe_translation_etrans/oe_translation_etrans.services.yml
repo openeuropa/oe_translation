@@ -1,0 +1,17 @@
+services:
+  oe_translation_etrans.client:
+    class: Drupal\oe_translation_etrans\EtransClient
+    arguments: ['@http_client']
+  oe_translation_etrans.etrans_subscriber:
+    class: Drupal\oe_translation_etrans\EventSubscriber\EtransSubscriber
+    arguments: ['@entity_type.manager', '@logger.factory', '@oe_translation_content_formatter.html_formatter', '@queue.database']
+    tags:
+      - { name: event_subscriber }
+  oe_translation_etrans.event_subscriber.operations_provider:
+    class: Drupal\oe_translation_etrans\EventSubscriber\TranslationRequestOperationsProviderSubscriber
+    tags:
+      - { name: event_subscriber }
+  oe_translation_etrans.translation_source_subscriber:
+    class: Drupal\oe_translation_etrans\EventSubscriber\TranslationSourceEventSubscriber
+    tags:
+      - { name: event_subscriber }

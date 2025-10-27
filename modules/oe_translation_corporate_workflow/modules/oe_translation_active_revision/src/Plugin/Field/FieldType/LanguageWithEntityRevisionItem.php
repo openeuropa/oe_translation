@@ -4,25 +4,27 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_active_revision\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList;
 use Drupal\oe_translation\Plugin\Field\FieldType\EntityRevisionWithTypeItem;
 
 /**
  * Defines the 'oe_translation_language_with_entity_revision' field type.
  *
  * This field stores a language code and an entity revision.
- *
- * @FieldType(
- *   id = "oe_translation_language_with_entity_revision",
- *   label = @Translation("Language with entity revision"),
- *   category = @Translation("OE Translation"),
- *   default_widget = "string_textfield",
- *   default_formatter = "string",
- *   list_class = "Drupal\oe_translation\Plugin\Field\EntityRevisionWithTypeItemList",
- *   no_ui = TRUE
- * )
  */
+#[FieldType(
+  id: 'oe_translation_language_with_entity_revision',
+  label: new TranslatableMarkup('Language with entity revision'),
+  category: 'oe_translation',
+  default_widget: 'string_textfield',
+  default_formatter: 'string',
+  no_ui: TRUE,
+  list_class: EntityRevisionWithTypeItemList::class,
+)]
 class LanguageWithEntityRevisionItem extends EntityRevisionWithTypeItem {
 
   /**

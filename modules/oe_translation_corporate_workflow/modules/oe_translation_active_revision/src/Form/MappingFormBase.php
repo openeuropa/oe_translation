@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_active_revision\Form;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -112,24 +113,26 @@ abstract class MappingFormBase extends FormBase {
    *
    * @return array
    *   The options.
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   protected function getVersionOptions(string $entity_type, string $entity_id, string $langcode): array {
-    $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
-    $storage = $this->entityTypeManager->getStorage($entity_type);
-    $ids = $storage->getQuery()
-      ->condition($entity_type_definition->getKey('id'), $entity_id)
-      ->condition('version.minor', 0)
-      ->accessCheck(TRUE)
-      ->allRevisions()
-      ->execute();
-
-    if (!$ids) {
-      return [];
+    $options = &drupal_static('entity_version_options_' . $entity_type . '_' . $entity_id . '_' . $langcode);
+    if ($options) {
+      return $options;
     }
+    $options = [];
+
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage($entity_type);
+
+    $latest_revision = $storage->loadRevision($storage->getLatestRevisionId($entity_id));
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface[] $version_revisions */
-    $version_revisions = $this->entityTypeManager->getStorage($entity_type)->loadMultipleRevisions(array_keys($ids));
-    $options = [];
+    $version_revisions = $this->getVersionRevisions($entity_type, $entity_id);
+    if (!$version_revisions) {
+      return [];
+    }
     foreach ($version_revisions as $revision) {
       if (!$revision->hasTranslation($langcode)) {
         // We don't want to include the version if it doesn't have a
@@ -137,7 +140,11 @@ abstract class MappingFormBase extends FormBase {
         continue;
       }
 
-      $latest_revision = $storage->loadRevision($storage->getLatestRevisionId($revision->id()));
+      if (isset($options[$revision->getRevisionId()])) {
+        // Continue already if we included this revision in the list of
+        // options.
+        continue;
+      }
 
       // For each major version we find, we need to load the latest revision
       // of that major because the major can be the published one but can also
@@ -145,7 +152,7 @@ abstract class MappingFormBase extends FormBase {
       // include only the published one. This is to account for allowing the
       // user to pick also the validated major revision in case it hasn't yet
       // been published.
-      $latest_version_revision = $this->entityRevisionInfo->getEntityRevision($revision, $langcode);
+      $latest_version_revision = $this->getEntityRevisionInfo($revision);
       if ($latest_version_revision->getRevisionId() == $latest_revision->getRevisionId()) {
         // Prevent the mapping to the latest revision.
         continue;
@@ -172,6 +179,72 @@ abstract class MappingFormBase extends FormBase {
     }
 
     return $options;
+  }
+
+  /**
+   * Loads the version revisions for this entity.
+   *
+   * This includes the validated and published revisions.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $entity_id
+   *   The entity ID.
+   *
+   * @return array
+   *   The revisions.
+   */
+  protected function getVersionRevisions(string $entity_type, string $entity_id): array {
+    $revisions = &drupal_static('entity_version_revisions_' . $entity_type . '_' . $entity_id);
+    if ($revisions) {
+      return $revisions;
+    }
+
+    $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
+    $storage = $this->entityTypeManager->getStorage($entity_type);
+    $ids = $storage->getQuery()
+      ->condition($entity_type_definition->getKey('id'), $entity_id)
+      ->condition('version.minor', 0)
+      ->accessCheck(TRUE)
+      ->allRevisions()
+      ->execute();
+
+    if (!$ids) {
+      // We don't bother to cache this.
+      return [];
+    }
+
+    /** @var \Drupal\Core\Entity\ContentEntityInterface[] $version_revisions */
+    $revisions = $storage->loadMultipleRevisions(array_keys($ids));
+    return $revisions;
+  }
+
+  /**
+   * Gets the entity revision info of a given revision.
+   *
+   * This is to load the latest revision of that major because the major can
+   * be the published one but can also be the validated one before it.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $revision
+   *   The major revision.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The corresponding latest major revision.
+   */
+  protected function getEntityRevisionInfo(ContentEntityInterface $revision): ContentEntityInterface {
+    $entity_revision_info = &drupal_static('entity_revision_info_' . $revision->getEntityTypeId() . '_' . $revision->id());
+    if ($revision->get('moderation_state')->value === 'published') {
+      return $revision;
+    }
+    if (isset($entity_revision_info[$revision->getRevisionId()])) {
+      return $entity_revision_info[$revision->getRevisionId()];
+    }
+
+    // It doesn't matter what langcode we set here, we don't use this revision
+    // for any processing, just to determine the revision ID.
+    $entity_revision_info[$revision->getRevisionId()] = $this->entityRevisionInfo->getEntityRevision($revision, 'en');
+
+    return $entity_revision_info[$revision->getRevisionId()];
   }
 
 }

@@ -271,7 +271,7 @@ class TranslationLocalController extends ControllerBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access.
    */
-  protected function dispatchLocalTranslationAccessEvent(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, Language $source = NULL, Language $target = NULL): AccessResultInterface {
+  protected function dispatchLocalTranslationAccessEvent(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, ?Language $source = NULL, ?Language $target = NULL): AccessResultInterface {
     $event = new TranslationAccessEvent($entity, $account, $access, $source, $target);
     $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
     return $event->getAccess();

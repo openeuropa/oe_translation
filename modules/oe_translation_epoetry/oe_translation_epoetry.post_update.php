@@ -43,3 +43,10 @@ function oe_translation_epoetry_post_update_0002() {
     $translator->save();
   }
 }
+
+/**
+ * Install the oe_translation_content_formatter module.
+ */
+function oe_translation_epoetry_post_update_0003() {
+  \Drupal::service('module_installer')->install(['oe_translation_content_formatter']);
+}

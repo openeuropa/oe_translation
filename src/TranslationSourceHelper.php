@@ -37,7 +37,7 @@ class TranslationSourceHelper {
    * @return array
    *   The flattened data array.
    */
-  public static function flatten(array $data, string $prefix = NULL, array $label = []): array {
+  public static function flatten(array $data, ?string $prefix = NULL, array $label = []): array {
     $flattened_data = [];
     if (isset($data['#label'])) {
       $label[] = $data['#label'];

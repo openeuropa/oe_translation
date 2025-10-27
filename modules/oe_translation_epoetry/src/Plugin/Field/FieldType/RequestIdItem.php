@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_epoetry\Plugin\Field\FieldType;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Defines the 'epoetry_request_id' field type.
- *
- * @FieldType(
- *   id = "epoetry_request_id",
- *   label = @Translation("ePoetry Request ID"),
- *   category = @Translation("OE Translation"),
- *   default_widget = "epoetry_request_id_widget",
- *   default_formatter = "epoetry_request_id_formatter"
- * )
  */
+#[FieldType(
+  id: 'epoetry_request_id',
+  label: new TranslatableMarkup('ePoetry Request ID'),
+  category: 'oe_translation',
+  default_widget: 'epoetry_request_id_widget',
+  default_formatter: 'epoetry_request_id_formatter',
+)]
 class RequestIdItem extends FieldItemBase {
 
   /**
@@ -129,6 +131,27 @@ class RequestIdItem extends FieldItemBase {
    */
   public static function toReference(array $values): string {
     return implode('/', $values);
+  }
+
+  /**
+   * Builds a DGT specific format of the reference.
+   *
+   * @param array $values
+   *   The values in this field.
+   *
+   * @return string
+   *   The reference string.
+   */
+  public static function toDgtFormattedReference(array $values): string {
+    // Append leading zeroes to the number.
+    return (string) new FormattableMarkup('@code-@year-@number(@version)-@part-@service', [
+      '@code' => $values['code'],
+      '@year' => $values['year'],
+      '@number' => sprintf("%05d", $values['number']),
+      '@version' => sprintf("%02d", $values['version']),
+      '@part' => sprintf("%02d", $values['part']),
+      '@service' => $values['service'],
+    ]);
   }
 
   /**

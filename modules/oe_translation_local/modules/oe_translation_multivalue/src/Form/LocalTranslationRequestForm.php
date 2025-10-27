@@ -107,7 +107,20 @@ class LocalTranslationRequestForm extends LocalTranslationRequestFormOriginal {
           if (!$translation_id) {
             continue;
           }
-          $existing_translation_data[$key][$delta] = $this->getDeltaForTranslationId($translation_id, $existing_translation_data_source);
+
+          $delta_for_translation_id = $this->getDeltaForTranslationId($translation_id, $existing_translation_data_source);
+          if (!$delta_for_translation_id) {
+            // It can happen that the translation doesn't have a translation ID
+            // while the source does. This is if the node was created and
+            // translated before this feature and an update to the source was
+            // made after the feature was deployed, hence the source having
+            // a translation ID and the translation not. In this case, we do
+            // nothing and maintain best effort to prevent all the fields from
+            // becoming empty for no reason.
+            continue;
+          }
+
+          $existing_translation_data[$key][$delta] = $delta_for_translation_id;
         }
       }
     }

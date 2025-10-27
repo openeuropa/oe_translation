@@ -61,7 +61,9 @@ class RouteSubscriber extends RouteSubscriberBase {
       }
     }
 
-    // Switch out the node revision delete confirm route.
+    // Switch out the node revision delete for (which is different than for
+    // other entities). For other entity types, it's a form class.
+    // @see oe_translation_corporate_workflow_entity_type_alter().
     $route = $collection->get('node.revision_delete_confirm');
     if ($route) {
       $defaults = $route->getDefaults();

@@ -9,9 +9,10 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
-use Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface;
-use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
+use Drupal\oe_translation\LanguageMapper;
+use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_epoetry\Event\EpoetryNotificationRequestUpdateEvent;
+use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\RequestIdItem;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_remote\RemoteTranslationSynchroniser;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
@@ -54,7 +55,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
   /**
    * The content formatter.
    *
-   * @var \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface
+   * @var \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface
    */
   protected $contentFormatter;
 
@@ -98,7 +99,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\oe_translation_epoetry\ContentFormatter\ContentFormatterInterface $contentFormatter
+   * @param \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $contentFormatter
    *   The content formatter.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
@@ -255,7 +256,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $language = $product->getProductReference()->getLanguage();
-    $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
+    $langcode = LanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
     $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
@@ -321,7 +322,7 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     }
 
     $language = $product->getProductReference()->getLanguage();
-    $langcode = EpoetryLanguageMapper::getDrupalLanguageCode($language, $translation_request);
+    $langcode = LanguageMapper::getDrupalLanguageCode($language, $translation_request);
     $language = $this->languageManager->getLanguage($langcode);
 
     $lock_id = 'oe_translation_epoetry_lock_' . $translation_request->id();
@@ -340,7 +341,16 @@ class NotificationsSubscriber implements EventSubscriberInterface {
 
     // Process the translated file.
     $file = $product->getFile();
-    $data = $this->contentFormatter->import($file, $translation_request);
+    try {
+      $data = $this->contentFormatter->import($file, $translation_request);
+    }
+    catch (\Exception $exception) {
+      $event->setErrorResponse($exception->getMessage());
+      $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
+      $this->logger->error('The ePoetry notification did not provide a valid translation. ' . $exception->getMessage() . ' Reference: <strong>@reference</strong>.', ['@reference' => $reference]);
+      return;
+    }
+
     if (!$data) {
       $event->setErrorResponse('Translation data is missing or is invalid.');
       $reference = $this->formatRequestReference($product->getProductReference()->getRequestReference());
@@ -353,20 +363,6 @@ class NotificationsSubscriber implements EventSubscriberInterface {
     // Check if we need to auto-accept and/or auto-sync the request.
     $auto_accept = $translation_request->isAutoAccept();
     $auto_sync = $translation_request->isAutoSync();
-    // Check the provider configuration because we may have global settings for
-    // the auto-accept feature.
-    $provider_configuration = $translation_request->getTranslatorProvider()->getProviderConfiguration();
-    if ((bool) $provider_configuration['auto_accept'] === TRUE) {
-      $auto_accept = TRUE;
-    }
-
-    // We can only auto-accept and auto-sync if the language has not already
-    // been synced. This is to prevent issues if ePoetry sends a translation
-    // again after it has done already and the request is potentially finished.
-    if ($translation_request->getTargetLanguage($langcode)->getStatus() === TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED) {
-      $auto_accept = FALSE;
-      $auto_sync = FALSE;
-    }
 
     $status = $auto_accept ? TranslationRequestRemoteInterface::STATUS_LANGUAGE_ACCEPTED : TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW;
     $translation_request->updateTargetLanguageStatus($langcode, $status);
@@ -603,15 +599,15 @@ class NotificationsSubscriber implements EventSubscriberInterface {
    */
   protected function formatRequestReference(RequestReference $reference): string {
     $values = [
-      $reference->getRequesterCode(),
-      $reference->getYear(),
-      $reference->getNumber(),
-      $reference->getVersion(),
-      $reference->getPart(),
-      $reference->getProductType(),
+      'code' => $reference->getRequesterCode(),
+      'year' => $reference->getYear(),
+      'number' => $reference->getNumber(),
+      'version' => $reference->getVersion(),
+      'part' => $reference->getPart(),
+      'service' => $reference->getProductType(),
     ];
 
-    return implode('/', $values);
+    return RequestIdItem::toDgtFormattedReference($values);
   }
 
   /**

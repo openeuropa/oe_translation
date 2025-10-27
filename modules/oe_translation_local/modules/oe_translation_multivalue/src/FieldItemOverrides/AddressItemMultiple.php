@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_multivalue\FieldItemOverrides;
 
-use Drupal\address\Plugin\Field\FieldType\AddressItem;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\address\Plugin\Field\FieldType\AddressItem;
 
 /**
  * Multivalue override class.

@@ -1,0 +1,7 @@
+name: OE Translation HTML formatter
+description: Provides logic for formatting entity data into an HTML file.
+core_version_requirement: ^10 || ^11
+type: module
+
+dependencies:
+  - oe_translation:oe_translation

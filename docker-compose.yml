@@ -1,7 +1,6 @@
-version: '2'
 services:
   web:
-    image: fpfis/httpd-php-dev:8.1
+    image: registry.fpfis.eu/digit/devsecops/httpd-php:8.3-dev
     working_dir: /var/www/html
     ports:
       - 8080:8080
@@ -14,6 +13,12 @@ services:
       # XDEBUG_CONFIG: "client_host=host.docker.internal" # Mac users.
       XDEBUG_MODE: "develop, debug"
       PHP_IDE_CONFIG: "serverName=Docker"
+      DRUPAL_DATABASE_NAME: "drupal"
+      DRUPAL_DATABASE_USERNAME: "root"
+      DRUPAL_DATABASE_PASSWORD: ""
+      DRUPAL_DATABASE_HOST: "mysql"
+      DRUPAL_DATABASE_PORT: "3306"
+      DRUPAL_DATABASE_PREFIX: ""
       # Enable step debugging for all PHP request. See ./README.md#step-debugging for more information.
       # XDEBUG_SESSION: 1
       EPOETRY_SERVICE_URL: "http://web:8080/build/epoetry-mock/server"
@@ -26,9 +31,12 @@ services:
       EPOETRY_TICKET_VALIDATION_JOB_ACCOUNT: ""
       EPOETRY_TICKET_VALIDATION_CALLBACK_URL: ""
       EPOETRY_TICKET_VALIDATION_ON: ""
+      ETRANS_SERVICE_URL: ""
+      ETRANS_APPLICATION_NAME: ""
+      ETRANS_PASSWORD: ""
   mysql:
-    image: percona/percona-server:5.7
-    command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3
+    image: percona/percona-server:8.0
+    command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3 --skip-log-bin --innodb-flush-log-at-trx-commit=2 --innodb-read-io-threads=16 --innodb-write-io-threads=16
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
 #    ports:

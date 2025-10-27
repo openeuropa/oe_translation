@@ -78,8 +78,10 @@ class EpoetryOngoingNewVersionRequestHandler implements EpoetryOngoingNewVersion
    */
   public function getUpdateEntity(TranslationRequestEpoetryInterface $request): ContentEntityInterface {
     $entity = $request->getContentEntity();
-    $revision_id = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->getLatestRevisionId($entity->id());
-    return $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($revision_id);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+    $revision_id = $storage->getLatestRevisionId($entity->id());
+    return $storage->loadRevision($revision_id);
   }
 
 }

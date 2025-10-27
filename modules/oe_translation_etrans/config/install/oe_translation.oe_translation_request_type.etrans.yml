@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: etrans
+label: ETrans
+third_party_settings:
+  oe_translation_remote:
+    remote_bundle: true

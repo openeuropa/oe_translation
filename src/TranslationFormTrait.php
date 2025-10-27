@@ -33,9 +33,26 @@ trait TranslationFormTrait {
    */
   protected function translationFormElement(array $data, array $existing_translation_data, bool $disable) {
     $element = [];
+    $translation_request = $this->entity ?? NULL;
 
     foreach (Element::children($existing_translation_data) as $key) {
       if (isset($data[$key]) || !TranslationSourceHelper::filterData($existing_translation_data[$key])) {
+
+        if ($translation_request && isset($data[$key]) && $data[$key]['#translate'] === FALSE && $existing_translation_data[$key]['#translate'] === TRUE) {
+          // If we encounter an element which used to be translatable but now
+          // it's not anymore, we need to still show it and reset its value
+          // to be the same as the source so that when the user saves the form,
+          // it gets saved as the source and doesn't linger as the old
+          // translated value.
+          $data[$key]['#changed_translatability'] = TRUE;
+          $data[$key]['#translate'] = TRUE;
+          $parents = explode('][', $key);
+          $parents[] = '#translate';
+          $translation_request_data = $translation_request->getData();
+          NestedArray::setValue($translation_request_data, $parents, TRUE);
+          $translation_request->setData($translation_request_data);
+        }
+
         continue;
       }
 
@@ -98,7 +115,7 @@ trait TranslationFormTrait {
       else {
         // Otherwise, we fish it out from the source values of the
         // existing translation data.
-        $translation_value = $existing_translation_data[$key]['#text'] ?? NULL;
+        $translation_value = $existing_translation_data[$key]['#text'] ?? $data[$key]['#text'];
       }
 
       $element[$target_key]['translation'] = [
@@ -114,6 +131,17 @@ trait TranslationFormTrait {
         $element[$target_key]['translation']['#max_length'] = $data[$key]['#max_length'];
         $element[$target_key]['translation']['#element_validate'] = [
           [TranslationRequestForm::class, 'validateMaxLength'],
+        ];
+      }
+
+      if (isset($data[$key]['#changed_translatability'])) {
+        $element[$target_key]['translation']['#default_value'] = $data[$key]['#text'];
+        $element[$target_key]['translation']['#disabled'] = TRUE;
+        $element[$target_key]['translation_message'] = [
+          '#theme' => 'status_messages',
+          '#message_list' => [
+            'warning' => [$this->t('Source value for this element became untranslatable. <br />Synchronising this translation will reset the translation value to the source value.')],
+          ],
         ];
       }
 

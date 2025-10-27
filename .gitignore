@@ -5,6 +5,7 @@ build
 composer.lock
 docker-compose.*.yml
 grumphp.yml
+junit-export
 phpunit.xml
 runner.yml
 vendor

@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_local\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Drupal\oe_translation_local\TranslationRequestLocal;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -34,16 +37,26 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected $languageManager;
 
   /**
+   * Translation providers.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * Creates a new TranslationDashboardAlterSubscriber.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   Translation providers.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, TranslatorProvidersInterface $translatorProviders) {
     $this->entityTypeManager = $entityTypeManager;
     $this->languageManager = $languageManager;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -60,6 +73,14 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function alterDashboard(ContentTranslationDashboardAlterEvent $event) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
+    $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
+    if (!$this->translatorProviders->hasLocal($current_entity->getEntityType())) {
+      // If the current entity doesn't have the local translations enabled,
+      // we don't need to do anything.
+      return;
+    }
+
     $build = $event->getBuild();
     $cache = CacheableMetadata::createFromRenderArray($build);
 
@@ -72,8 +93,6 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       '#template' => "<h3>{{ 'Started local translations' }}</h3>",
     ];
 
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $current_entity */
-    $current_entity = $event->getRouteMatch()->getParameter($event->getEntityTypeId());
     /** @var \Drupal\oe_translation\TranslationRequestStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('oe_translation_request');
 
@@ -82,6 +101,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $translation_requests = array_filter($translation_requests, function (TranslationRequestLocal $translation_request) {
       return $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED;
     });
+
+    $this->addLocalTranslationOperation($build, $translation_requests, $current_entity);
 
     $cache->addCacheTags(['oe_translation_request_list']);
     if (!$translation_requests) {
@@ -129,6 +150,60 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
 
     $cache->applyTo($build);
     $event->setBuild($build);
+  }
+
+  /**
+   * Adds the link to create a new local translation.
+   *
+   * @param array $build
+   *   The page build.
+   * @param array $translation_requests
+   *   The existing translation requests.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The current entity.
+   */
+  protected function addLocalTranslationOperation(array &$build, array $translation_requests, ContentEntityInterface $entity) {
+    $started_local_requests = [];
+    foreach ($translation_requests as $request) {
+      $started_local_requests[] = $request->getTargetLanguageWithStatus()->getLangcode();
+    }
+    foreach ($build['existing_translations']['table']['#rows'] as $index => &$row) {
+      $langcode = $row['hreflang'];
+      if (in_array($langcode, $started_local_requests) || $langcode === $entity->getUntranslated()->language()->getId()) {
+        // If there is already a started translation request, we don't add any
+        // operation.
+        continue;
+      }
+
+      $url = Url::fromRoute('oe_translation_local.create_local_translation_request', [
+        'entity_type' => $entity->getEntityTypeId(),
+        'entity' => $entity->getRevisionId(),
+        'source' => $entity->getUntranslated()->language()->getId(),
+        'target' => $langcode,
+      ], ['query' => ['destination' => Url::fromRoute('<current>')->toString()]]);
+
+      if (!$url->access()) {
+        continue;
+      }
+      $link = [
+        'title' => $this->t('Add new local translation'),
+        'weight' => -100,
+        'url' => $url,
+      ];
+      if (isset($row['data']['operations']['data']['#links'])) {
+        // It means we have already the operations.
+        $row['data']['operations']['data']['#links']['add'] = $link;
+        continue;
+      }
+
+      // Otherwise, start the operations.
+      $row['data']['operations']['data'] = [
+        '#type' => 'operations',
+        '#links' => [
+          'add' => $link,
+        ],
+      ];
+    }
   }
 
 }

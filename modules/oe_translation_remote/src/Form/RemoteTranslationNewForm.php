@@ -116,7 +116,7 @@ class RemoteTranslationNewForm extends FormBase {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  public function buildForm(array $form, FormStateInterface $form_state, RouteMatchInterface $route_match = NULL, $entity_type_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?RouteMatchInterface $route_match = NULL, $entity_type_id = NULL) {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $route_match->getParameter($entity_type_id);
     $form['#entity'] = $entity;
@@ -131,6 +131,11 @@ class RemoteTranslationNewForm extends FormBase {
     $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadByProperties(['enabled' => TRUE]);
     $options = [];
     foreach ($translators as $translator) {
+      $plugin = $this->providerManager->createInstance($translator->getProviderPlugin(), $translator->getProviderConfiguration());
+      $access = $plugin->createAccess($this->account);
+      if (!$access->isAllowed()) {
+        continue;
+      }
       $options[$translator->id()] = $translator->label();
     }
 
@@ -299,7 +304,11 @@ class RemoteTranslationNewForm extends FormBase {
   protected function getExistingTranslationRequests(ContentEntityInterface $entity): array {
     // Defer to the provider manager to get the requests for this given
     // revision.
-    return $this->providerManager->getExistingTranslationRequests($entity, FALSE);
+    $requests = $this->providerManager->getExistingTranslationRequests($entity, FALSE);
+    return array_filter($requests, function (TranslationRequestRemoteInterface $request) {
+      // Filter out the non-enabled translators.
+      return $request->getTranslatorProvider()->isEnabled();
+    });
   }
 
   /**
@@ -408,6 +417,11 @@ class RemoteTranslationNewForm extends FormBase {
       TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED_FINISHED,
     ];
     $translation_requests = $this->providerManager->getExistingTranslationRequests($entity, FALSE, $statuses);
+    $translation_requests = array_filter($translation_requests, function (TranslationRequestRemoteInterface $request) {
+      // Filter out the non-enabled translators.
+      return $request->getTranslatorProvider()->isEnabled();
+    });
+
     $cache->addCacheTags(['oe_translation_request_list']);
     if (!$translation_requests) {
       return AccessResult::allowed()->addCacheableDependency($cache);

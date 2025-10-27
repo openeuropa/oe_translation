@@ -54,9 +54,10 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ActiveRevisionInterface $active_revision = NULL, string $langcode = NULL, string $entity_type = NULL, string $entity_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ActiveRevisionInterface $active_revision = NULL, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL) {
     $form = parent::buildForm($form, $form_state);
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $entity = $storage->load($entity_id);
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);
@@ -88,7 +89,7 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(ActiveRevisionInterface $active_revision = NULL, string $langcode = NULL): AccessResultInterface {
+  public function access(?ActiveRevisionInterface $active_revision = NULL, ?string $langcode = NULL): AccessResultInterface {
     if ($active_revision->hasLanguageMapping($langcode)) {
       return AccessResult::allowed()->addCacheableDependency($active_revision);
     }
@@ -130,6 +131,7 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
    */
   public function getCancelUrl() {
     // We rely on the destination query parameter.
+    // @phpstan-ignore return.missing
   }
 
 }

@@ -78,6 +78,7 @@ class TranslationRequestTypeForm extends BundleEntityFormBase {
     $status = $entity_type->save();
 
     $t_args = ['%name' => $entity_type->label()];
+    $message = '';
     if ($status == SAVED_UPDATED) {
       $message = $this->t('The translation request type %name has been updated.', $t_args);
     }
@@ -87,6 +88,8 @@ class TranslationRequestTypeForm extends BundleEntityFormBase {
     $this->messenger()->addStatus($message);
 
     $form_state->setRedirectUrl($entity_type->toUrl('collection'));
+
+    return $status;
   }
 
 }

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_block_field;
 
-use Drupal\block_field\BlockFieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\block_field\BlockFieldItemInterface;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\DefaultFieldProcessor;
 
 /**

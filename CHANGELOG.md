@@ -1,11 +1,141 @@
 # Changelog
 
+## [2.18.0](https://github.com/openeuropa/oe_translation/tree/2.18.0) (2025-10-21)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.17.1...2.18.0)
+
+- EWPP-6047: Move oe\_translation to GitLab CI. [\#366](https://github.com/openeuropa/oe_translation/pull/366) ([intelektron](https://github.com/intelektron))
+- EWPP-5970: Passing optional context to the translation data extractor. [\#363](https://github.com/openeuropa/oe_translation/pull/363) ([upchuk](https://github.com/upchuk))
+- EWPP-5663: Fixing URI translatability when switching types. [\#359](https://github.com/openeuropa/oe_translation/pull/359) ([upchuk](https://github.com/upchuk))
+
+## [2.17.1](https://github.com/openeuropa/oe_translation/tree/2.17.1) (2025-09-25)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.17.0...2.17.1)
+
+**Merged pull requests:**
+
+- EWPP-5805: Unlock entity\_browser. [\#362](https://github.com/openeuropa/oe_translation/pull/362) ([nagyad](https://github.com/nagyad))
+
+## [2.17.0](https://github.com/openeuropa/oe_translation/tree/2.17.0) (2025-09-09)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.16.0...2.17.0)
+
+**Merged pull requests:**
+
+- Release-2.17.0: Update changelog. [\#361](https://github.com/openeuropa/oe_translation/pull/361) ([nagyad](https://github.com/nagyad))
+- EWPP-5768: Update to Drupal 10.5. [\#358](https://github.com/openeuropa/oe_translation/pull/358) ([intelektron](https://github.com/intelektron))
+- EWPP-5685: Leading 0 on the epoetry part request ID. [\#357](https://github.com/openeuropa/oe_translation/pull/357) ([upchuk](https://github.com/upchuk))
+- EWPP-5653: Fix metatag translation issues after upgrading to 2.x. [\#356](https://github.com/openeuropa/oe_translation/pull/356) ([nagyad](https://github.com/nagyad))
+- EWPP-5699: Update docker PHP image. [\#353](https://github.com/openeuropa/oe_translation/pull/353) ([nagyad](https://github.com/nagyad))
+- EWPP-5476: Etrans integration. [\#349](https://github.com/openeuropa/oe_translation/pull/349) ([upchuk](https://github.com/upchuk))
+
+## [2.16.0](https://github.com/openeuropa/oe_translation/tree/2.16.0) (2025-06-03)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.15.0...2.16.0)
+
+**Merged pull requests:**
+
+- Release-2.16.0: Update changelog. [\#352](https://github.com/openeuropa/oe_translation/pull/352) ([nagyad](https://github.com/nagyad))
+- EWPP-4644: Update to Drupal 11. [\#351](https://github.com/openeuropa/oe_translation/pull/351) ([kp77](https://github.com/kp77))
+
+## [2.15.0](https://github.com/openeuropa/oe_translation/tree/2.15.0) (2025-05-05)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.14.1...2.15.0)
+
+**Merged pull requests:**
+
+- 2.15.0: Update changelog. [\#350](https://github.com/openeuropa/oe_translation/pull/350) ([nagyad](https://github.com/nagyad))
+- EWPP-5269: Remote translation creation permission segregation. [\#348](https://github.com/openeuropa/oe_translation/pull/348) ([upchuk](https://github.com/upchuk))
+
+## [2.14.1](https://github.com/openeuropa/oe_translation/tree/2.14.1) (2025-03-26)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.14.0...2.14.1)
+
+**Merged pull requests:**
+
+- Release-2.14.1: Update changelog. [\#345](https://github.com/openeuropa/oe_translation/pull/345) ([nagyad](https://github.com/nagyad))
+- EWPP-5136: Ensuring the moderation state is in sync with the original. [\#344](https://github.com/openeuropa/oe_translation/pull/344) ([upchuk](https://github.com/upchuk))
+- EWPP-5266: Attach language checkboxes library to the form element instead of the form itself. [\#343](https://github.com/openeuropa/oe_translation/pull/343) ([nagyad](https://github.com/nagyad))
+
+## [2.14.0](https://github.com/openeuropa/oe_translation/tree/2.14.0) (2025-03-11)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.13.0...2.14.0)
+
+**Merged pull requests:**
+
+- Release-2.14.0: Update changelog. [\#342](https://github.com/openeuropa/oe_translation/pull/342) ([nagyad](https://github.com/nagyad))
+- EWPP-5161: Use ePoetry 3.x and update to php8.3. [\#339](https://github.com/openeuropa/oe_translation/pull/339) ([nagyad](https://github.com/nagyad))
+
+## [2.13.0](https://github.com/openeuropa/oe_translation/tree/2.13.0) (2025-03-07)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.12.0...2.13.0)
+
+**Merged pull requests:**
+
+- Release-2.13.0: Update changelog. [\#341](https://github.com/openeuropa/oe_translation/pull/341) ([nagyad](https://github.com/nagyad))
+- EWPP-5278: Various performance improvements of the active version calculations [\#340](https://github.com/openeuropa/oe_translation/pull/340) ([upchuk](https://github.com/upchuk))
+
+## [2.12.0](https://github.com/openeuropa/oe_translation/tree/2.12.0) (2025-02-12)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.11.0...2.12.0)
+
+**Merged pull requests:**
+
+- Release-2.12.0: Update changelog. [\#338](https://github.com/openeuropa/oe_translation/pull/338) ([nagyad](https://github.com/nagyad))
+- EWPP-5074: Defaulting to the source value if not having a translation. [\#336](https://github.com/openeuropa/oe_translation/pull/336) ([upchuk](https://github.com/upchuk))
+- EWPP-5042: Fixing source language in ePoetry requests. [\#335](https://github.com/openeuropa/oe_translation/pull/335) ([upchuk](https://github.com/upchuk))
+
+## [2.11.0](https://github.com/openeuropa/oe_translation/tree/2.11.0) (2024-12-16)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.10.0...2.11.0)
+
+**Merged pull requests:**
+
+- Release 2.11.0 changelog. [\#334](https://github.com/openeuropa/oe_translation/pull/334) ([22Alexandra](https://github.com/22Alexandra))
+- EWPP-4928: Allow editors to globally set auto-sync for requests. [\#333](https://github.com/openeuropa/oe_translation/pull/333) ([22Alexandra](https://github.com/22Alexandra))
+- D8AGE-871: Fix the callback URLs in the translation request. [\#332](https://github.com/openeuropa/oe_translation/pull/332) ([intelektron](https://github.com/intelektron))
+- EWPP-4826: A more DGT specific formatting of the ePoetry reference. [\#329](https://github.com/openeuropa/oe_translation/pull/329) ([upchuk](https://github.com/upchuk))
+
+## [2.10.0](https://github.com/openeuropa/oe_translation/tree/2.10.0) (2024-10-28)
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.9.0...2.10.0)
+
+**Merged pull requests:**
+
+- EWPP-4794: Add translation request id to translation dashboard. [\#328](https://github.com/openeuropa/oe_translation/pull/328) ([intelektron](https://github.com/intelektron))
+- EWPP-3783: Logging incorrect incoming epoetry request translation files. [\#313](https://github.com/openeuropa/oe_translation/pull/313) ([upchuk](https://github.com/upchuk))
+- EWPP-4243: Fixing multivalue translation removals. [\#304](https://github.com/openeuropa/oe_translation/pull/304) ([upchuk](https://github.com/upchuk))
+- EWPP-3904: Do not prevent auto-accept and auto-sync if epoetry resends the translation. [\#293](https://github.com/openeuropa/oe_translation/pull/293) ([upchuk](https://github.com/upchuk))
+
+## [2.9.0](https://github.com/openeuropa/oe_translation/tree/2.9.0) (2024-08-29)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.8.0...2.9.0)
+
+**Merged pull requests:**
+
+- Release-2.9.0: Update changelog. [\#327](https://github.com/openeuropa/oe_translation/pull/327) ([nagyad](https://github.com/nagyad))
+- EWPP-4411: Checking for existence of delta before setting translation\_id. [\#326](https://github.com/openeuropa/oe_translation/pull/326) ([upchuk](https://github.com/upchuk))
+- OEL-3047: Update to Drupal 10.3 [\#321](https://github.com/openeuropa/oe_translation/pull/321) ([AaronGilMartinez](https://github.com/AaronGilMartinez))
+- EWPP-4442: Account for missing translation ID on the translated value. [\#319](https://github.com/openeuropa/oe_translation/pull/319) ([upchuk](https://github.com/upchuk))
+- Epic EWPP-4413: Generic remote and local translation and corporate workflow. [\#315](https://github.com/openeuropa/oe_translation/pull/315) ([upchuk](https://github.com/upchuk))
+
+## [2.8.0](https://github.com/openeuropa/oe_translation/tree/2.8.0) (2024-06-11)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.7.0...2.8.0)
+
+**Merged pull requests:**
+
+- Prepare release 2.8.0. [\#316](https://github.com/openeuropa/oe_translation/pull/316) ([imanoleguskiza](https://github.com/imanoleguskiza))
+- EWPP-3399: Dashboard links for new local translations. [\#292](https://github.com/openeuropa/oe_translation/pull/292) ([upchuk](https://github.com/upchuk))
+
+## [2.7.0](https://github.com/openeuropa/oe_translation/tree/2.7.0) (2024-04-16)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.6.0...2.7.0)
+
+**Merged pull requests:**
+
+- Release-2.7.0: Update changelog. [\#303](https://github.com/openeuropa/oe_translation/pull/303) ([nagyad](https://github.com/nagyad))
+- EWPP-4126: Account for incorrectly versioned nodes in active revision creation [\#296](https://github.com/openeuropa/oe_translation/pull/296) ([upchuk](https://github.com/upchuk))
+- EWPP-0000: Update submodules readme information. [\#208](https://github.com/openeuropa/oe_translation/pull/208) ([22Alexandra](https://github.com/22Alexandra))
+
 ## [2.6.0](https://github.com/openeuropa/oe_translation/tree/2.6.0) (2024-02-14)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.5.0...2.6.0)
 
 **Merged pull requests:**
 
+- Release-2.6.0: Update changelog. [\#295](https://github.com/openeuropa/oe_translation/pull/295) ([nagyad](https://github.com/nagyad))
 - EWPP-4077: Support D10.2 and drop D9 [\#294](https://github.com/openeuropa/oe_translation/pull/294) ([brummbar](https://github.com/brummbar))
 
 ## [2.5.0](https://github.com/openeuropa/oe_translation/tree/2.5.0) (2024-01-15)

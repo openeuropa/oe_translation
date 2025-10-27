@@ -6,13 +6,13 @@ namespace Drupal\Tests\oe_translation_remote\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Config\FileStorage;
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\oe_translation\LanguageWithStatus;
 use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 use Drupal\oe_translation_remote_test\TranslationRequestTestRemote;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
-use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\user\Entity\Role;
 
 /**
@@ -369,6 +369,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->buttonNotExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
     // Do the same for the sync permission.
+    \Drupal::service('cache_tags.invalidator')->resetChecksums();
     $role->revokePermission('sync translation request');
     $role->save();
     $this->getSession()->reload();
@@ -376,6 +377,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->assertSession()->buttonNotExists('Save and synchronise');
 
     // Add back the permissions.
+    \Drupal::service('cache_tags.invalidator')->resetChecksums();
     $role->grantPermission('accept translation request');
     $role->grantPermission('sync translation request');
     $role->save();

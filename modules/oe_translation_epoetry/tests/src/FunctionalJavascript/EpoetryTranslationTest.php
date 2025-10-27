@@ -6,6 +6,10 @@ namespace Drupal\Tests\oe_translation_epoetry\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
+use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
+use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
+use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\node\Entity\Node;
 use Drupal\oe_translation\Entity\TranslationRequest;
 use Drupal\oe_translation\LanguageWithStatus;
@@ -16,10 +20,7 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
-use Drupal\Tests\oe_translation\FunctionalJavascript\TranslationTestBase;
-use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
-use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
-use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the remote translations via ePoetry.
@@ -75,6 +76,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $provider->save();
 
     $this->user = $this->setUpTranslatorUser();
+    $role = Role::load('oe_translator');
+    $role->grantPermission('request epoetry translation');
+    $role->save();
     $this->drupalLogin($this->user);
   }
 
@@ -107,6 +111,11 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Assert we have the auto-accept checkbox.
     $this->assertSession()->fieldExists('Auto-accept translations');
+    $this->assertSession()->pageTextContains('If checked, all ePoetry translation requests will be auto-accepted. You can control this at the individual request level.');
+
+    // Assert we have the auto-sync checkbox.
+    $this->assertSession()->fieldExists('Auto-sync translations');
+    $this->assertSession()->pageTextContains('If checked, all ePoetry translation requests will be automatically synchronised. You can control this at the individual request level.');
 
     // Fill in the first 3 contact types.
     $this->getSession()->getPage()->fillField('Recipient', 'test_recipient');
@@ -115,6 +124,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     // Check the box for auto-accepting.
     $this->getSession()->getPage()->checkField('Auto-accept translations');
+
+    // Check the box for auto-syncing.
+    $this->getSession()->getPage()->checkField('Auto-sync translations');
 
     // Set the title prefix and site ID.
     $this->getSession()->getPage()->fillField('Request title prefix', 'The title prefix');
@@ -145,6 +157,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'Editor' => 'test_editor',
       ],
       'auto_accept' => TRUE,
+      'auto_sync' => TRUE,
       'title_prefix' => 'The title prefix',
       'site_id' => 'The site ID',
       'language_mapping' => $default_language_mapping,
@@ -160,6 +173,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->fieldValueEquals('Site ID', 'The site ID');
     $this->getSession()->getPage()->fillField('Name', 'ePoetry provider edited');
     $this->getSession()->getPage()->uncheckField('Auto-accept translations');
+    $this->getSession()->getPage()->uncheckField('Auto-sync translations');
     $this->getSession()->getPage()->pressButton('Save');
     $this->assertSession()->pageTextContains('Saved the ePoetry provider edited Remote Translator Provider.');
     $translator = \Drupal::entityTypeManager()->getStorage('remote_translation_provider')->load('epoetry_provider');
@@ -170,6 +184,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'Editor' => 'test_editor',
       ],
       'auto_accept' => FALSE,
+      'auto_sync' => FALSE,
       'title_prefix' => 'The title prefix',
       'site_id' => 'The site ID',
       'language_mapping' => $default_language_mapping,
@@ -185,11 +200,14 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->clickLink('Remote translations');
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
 
-    // The contacts fields are empty and the auto-accept checkbox is enabled
-    // because the provider is not yet configured.
+    // The contacts fields are empty and the auto-accept and auto-sync
+    // checkboxes are unchecked because the provider is not yet configured.
     $this->assertSession()->fieldEnabled('Auto accept translations');
+    $this->assertSession()->checkboxNotChecked('Auto accept translations');
     $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-accept-value .description', 'Choose if incoming translations should be auto-accepted');
-    $this->assertSession()->fieldExists('Auto sync translations');
+    $this->assertSession()->fieldEnabled('Auto sync translations');
+    $this->assertSession()->checkboxNotChecked('Auto sync translations');
+    $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-sync-value .description', 'Choose if incoming translations should be automatically synchronised with the content (i.e. copied over onto the main content)');
     // The deadline field has a "Date" hidden label.
     $this->assertSession()->fieldExists('Date');
     $this->assertSession()->fieldExists('Message');
@@ -210,7 +228,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     }
 
     // Update the provider configuration to provide default contacts and
-    // pre-configure the auto-accept.
+    // pre-configure the auto-accept and auto-sync.
     $translator = RemoteTranslatorProvider::load('epoetry');
     $translator->setProviderConfiguration([
       'contacts' => [
@@ -219,11 +237,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
         'Editor' => 'test_editor',
       ],
       'auto_accept' => TRUE,
+      'auto_sync' => TRUE,
     ]);
     $translator->save();
 
-    // Now the contact fields are pre-filled and the auto-accept checkbox
-    // is disabled.
+    // Now the contact fields are pre-filled and the auto-accept and auto-sync
+    // checkboxes are enabled.
     $this->getSession()->reload();
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
     $contact_fields = [
@@ -234,8 +253,36 @@ class EpoetryTranslationTest extends TranslationTestBase {
     foreach ($contact_fields as $field => $value) {
       $this->assertSession()->fieldValueEquals($field, $value);
     }
-    $this->assertSession()->fieldDisabled('Auto accept translations');
-    $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-accept-value .description', 'Choose if incoming translations should be auto-accepted. The auto-accept feature is enabled at site level. All requests will be auto-accepted.');
+    $this->assertSession()->fieldEnabled('Auto accept translations');
+    $this->assertSession()->checkboxChecked('Auto accept translations');
+    $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-accept-value .description', 'Choose if incoming translations should be auto-accepted. The auto-accept feature is enabled at site level.');
+    $this->assertSession()->fieldEnabled('Auto sync translations');
+    $this->assertSession()->checkboxChecked('Auto sync translations');
+    $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-sync-value .description', 'Choose if incoming translations should be automatically synchronised with the content (i.e. copied over onto the main content). The auto-sync feature is enabled at site level.');
+
+    // Update the provider configuration to disable the auto-accept but keep
+    // auto-sync enabled.
+    $translator = RemoteTranslatorProvider::load('epoetry');
+    $translator->setProviderConfiguration([
+      'contacts' => [
+        'Recipient' => 'test_recipient',
+        'Webmaster' => 'test_webmaster',
+        'Editor' => 'test_editor',
+      ],
+      'auto_accept' => FALSE,
+      'auto_sync' => TRUE,
+    ]);
+    $translator->save();
+
+    // Now the auto-accept and auto-sync checkboxes are both enabled, and the
+    // field description of auto-accept is updated to explain why is enabled.
+    $this->getSession()->reload();
+    $this->assertSession()->fieldEnabled('Auto accept translations');
+    $this->assertSession()->checkboxChecked('Auto accept translations');
+    $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-accept-value .description', 'Choose if incoming translations should be auto-accepted. The auto-sync feature is enabled at site level so the translations are automatically accepted before being automatically synchronised.');
+    $this->assertSession()->fieldEnabled('Auto sync translations');
+    $this->assertSession()->checkboxChecked('Auto sync translations');
+    $this->assertSession()->elementTextEquals('css', '.form-item-translator-configuration-epoetry-auto-sync-value .description', 'Choose if incoming translations should be automatically synchronised with the content (i.e. copied over onto the main content). The auto-sync feature is enabled at site level.');
   }
 
   /**
@@ -320,7 +367,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2035-08-18', $request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Message to the provider', $request->getMessage());
-    $this->assertEquals('DIGIT/' . date('Y') . '/1001/0/0/TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-01001(00)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -332,7 +379,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT/' . date('Y') . '/1001/0/0/TRA',
+      'DIGIT-' . date('Y') . '-01001(00)-00-TRA',
       'No',
       'No',
       '2035-Aug-18',
@@ -396,7 +443,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'Accepted',
-      'DIGIT/' . date('Y') . '/1001/0/0/TRA',
+      'DIGIT-' . date('Y') . '-01001(00)-00-TRA',
       'No',
       'No',
       '2035-Aug-18',
@@ -431,7 +478,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $expected_languages['pt-pt']['accepted_deadline'] = '2050-Apr-04';
 
     // Send the translation.
-    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
     EpoetryTranslationMockHelper::translateRequest($request, 'pt-pt');
     $this->getSession()->reload();
     $expected_languages['pt-pt']['status'] = 'Review';
@@ -453,7 +500,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertLogMessagesTable($expected_logs);
 
     // Assert the logs themselves.
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $log = $logs[3];
     $this->assertStringContainsString('The translation has been saved.', $log['context']['response']);
 
@@ -487,6 +534,30 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('pt-pt'));
     $this->assertEquals("The translation's page - PT", $node->getTranslation('pt-pt')->label());
+
+    // Translate another node made in a different language and assert the
+    // source language is correctly sent to DGT.
+    $node = $this->createBasicTestNode('oe_demo_translatable_page', "FR page");
+    $node->set('langcode', 'fr');
+    $node->save();
+    \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '08/18/2035');
+    // Fill in contacts.
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+    $this->getSession()->executeScript('window.scrollTo(0,300);');
+    $this->getSession()->getPage()->checkField('Bulgarian');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+
+    // Assert that the XML request we built is correct.
+    $requests = \Drupal::state()->get('oe_translation_epoetry_mock.mock_requests');
+    $this->assertCount(2, $requests);
+    $xml = $requests[1];
+    $this->assertEquals('<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://eu.europa.ec.dgt.epoetry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Header xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws"><ecas:ProxyTicket xmlns:ecas="https://ecas.ec.europa.eu/cas/schemas/ws">ticket</ecas:ProxyTicket></soap:Header><SOAP-ENV:Body><ns1:addNewPartToDossier><dossier><requesterCode>DIGIT</requesterCode><number>1001</number><year>' . date('Y') . '</year></dossier><requestDetails><title>A title prefix: A site ID - FR page</title><internalReference>Translation request 2</internalReference><requestedDeadline>2035-08-18T23:59:00+02:00</requestedDeadline><destination>PUBLIC</destination><procedure>NEANT</procedure><slaAnnex>NO</slaAnnex><comment>Page URL: http://web:8080/build/fr/fr-page</comment><accessibleTo>CONTACTS</accessibleTo><contacts><contact userId="test_recipient" contactRole="RECIPIENT"/><contact userId="test_webmaster" contactRole="WEBMASTER"/><contact userId="test_editor" contactRole="EDITOR"/></contacts><originalDocument><fileName>FR-page.html</fileName><content>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgU3RyaWN0Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXN0cmljdC5kdGQiPgo8aHRtbCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCI+CiAgPGhlYWQ+CiAgICA8bWV0YSBodHRwLWVxdWl2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KICAgIDxtZXRhIG5hbWU9InJlcXVlc3RJZCIgY29udGVudD0iMiIgLz4KICAgIDxtZXRhIG5hbWU9Imxhbmd1YWdlU291cmNlIiBjb250ZW50PSJGUiIgLz4KICAgIDx0aXRsZT5SZXF1ZXN0IElEIDI8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImFzc2V0IiBpZD0iaXRlbS0yIj4KICAgICAgICAgICAgICAgICAgPCEtLQogICAgICAgICAgbGFiZWw9IlRpdGxlIgogICAgICAgICAgY29udGV4dD0iWzJdW3RpdGxlXVswXVt2YWx1ZV0iCiAgICAgICAgICAtLT4KICAgICAgICAgIDxkaXYgY2xhc3M9ImF0b20iIGlkPSJiTWwxYmRHbDBiR1ZkV3pCZFczWmhiSFZsIj5GUiBwYWdlPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgIDwvYm9keT4KPC9odG1sPgo=</content><linguisticSections><linguisticSection xsi:type="ns1:linguisticSectionOut"><language>FR</language></linguisticSection></linguisticSections><trackChanges>false</trackChanges></originalDocument><products><product requestedDeadline="2035-08-18T23:59:00+02:00" trackChanges="false"><language>BG</language></product></products></requestDetails><applicationName>digit</applicationName></ns1:addNewPartToDossier></SOAP-ENV:Body></SOAP-ENV:Envelope>', $xml);
   }
 
   /**
@@ -717,7 +788,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('2034-10-10', $update_request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Some message to the provider', $update_request->getMessage());
     // The version got updated, not the number.
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/1/0/TRA', $update_request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-00-TRA', $update_request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient2',
       'Webmaster' => 'test_webmaster2',
@@ -730,7 +801,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'ePoetry',
       'SenttoDGT',
       // The version got updated, not the number.
-      'DIGIT/' . date('Y') . '/2000/1/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2034-Oct-10',
@@ -943,7 +1014,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'ePoetry',
       'SenttoDGT',
       // The version got updated, not the number.
-      'DIGIT/' . date('Y') . '/2000/1/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2034-Oct-10',
@@ -1000,7 +1071,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertEquals('2034-10-10', $update_request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Some message to the provider', $update_request->getMessage());
     // The version got updated, not the number.
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/1/0/TRA', $update_request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-00-TRA', $update_request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient2',
       'Webmaster' => 'test_webmaster2',
@@ -1008,7 +1079,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ], $update_request->getContacts());
 
     // Assert we see information about the request we replaced.
-    $old_request_id = 'DIGIT/' . date('Y') . '/2000/0/0/TRA';
+    $old_request_id = 'DIGIT-' . date('Y') . '-02000(00)-00-TRA';
     $this->assertSession()->pageTextContains('Updated request');
     $this->assertSession()->pageTextContains('The current request was created as an update to a previous one (' . $old_request_id . ') which was still ongoing in ePoetry with at least 1 language. That request has been marked as Finished and was replaced with the current one.');
     $this->clickLink($old_request_id);
@@ -1054,7 +1125,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Translated',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT/' . date('Y') . '/2000/1/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2034-Oct-10',
@@ -1271,7 +1342,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'Accepted',
-      'DIGIT/' . date('Y') . '/2000/0/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2035-Oct-10',
@@ -1326,7 +1397,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'Accepted',
-      'DIGIT/' . date('Y') . '/2000/0/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2035-Oct-10',
@@ -1364,7 +1435,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2035-10-10', $request->getDeadline()->format('Y-m-d'));
     // The version got updated, not the number.
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -1509,7 +1580,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'status' => 'Accepted',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     // The last two logs should show the missing request: the last one is our
     // response to ePoetry and the one before last is us logging that we are
     // missing the request.
@@ -1518,7 +1589,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $log['context']['@reference']);
   }
 
   /**
@@ -1584,7 +1655,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'language' => 'fr',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     // The last two logs should show the missing request: the last one is our
     // response to ePoetry and the one before last is us logging that we are
     // missing the request.
@@ -1593,16 +1664,17 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
-    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $log['context']['@reference']);
+    \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::INFO, $log['level']);
     $log = array_pop($logs);
     $this->assertEquals(RfcLogLevel::ERROR, $log['level']);
     $this->assertEquals('The ePoetry notification could not find a translation request for the reference: <strong>@reference</strong>.', $log['message']);
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $log['context']['@reference']);
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $log['context']['@reference']);
+
   }
 
   /**
@@ -1617,11 +1689,23 @@ class EpoetryTranslationTest extends TranslationTestBase {
     EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
     EpoetryTranslationMockHelper::$translationRequestErrors['missing translation'] = TRUE;
     EpoetryTranslationMockHelper::translateRequest($request, 'fr');
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $log = $logs[3];
     $this->assertStringContainsString('The ePoetry notification did not provide a valid translation. Reference:', $log['message']);
     $log = $logs[4];
     $this->assertStringContainsString('<success>false</success><message>Translation data is missing or is invalid.</message>', $log['context']['response']);
+
+    // Translate the request with the file of a different request.
+    $request = TranslationRequest::load($request->id());
+    \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
+    unset(EpoetryTranslationMockHelper::$translationRequestErrors['missing translation']);
+    EpoetryTranslationMockHelper::$translationRequestErrors['wrong request id'] = TRUE;
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
+    $log = $logs[3];
+    $this->assertStringContainsString('The ePoetry notification did not provide a valid translation. The translation request file does not match the translation request. Reference:', $log['message']);
+    $log = $logs[4];
+    $this->assertStringContainsString('<success>false</success><message>The translation request file does not match the translation request.</message>', $log['context']['response']);
   }
 
   /**
@@ -1661,7 +1745,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     // Wait a bit until the "Requested" update has had a chance to finish
     // before loading the request and asserting.
     sleep(6);
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $log = $logs[6];
     $this->assertEquals('Lock already acquired: The translation request 1 is already being updated.', $log['message']);
 
@@ -1682,7 +1766,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     $request->setEpoetryRequestStatus('SenttoDGT');
     $request->save();
-    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
     foreach ($request_statuses as $request_status) {
       $notification_two = [
         'type' => 'RequestStatusChange',
@@ -1693,10 +1777,10 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
       sleep(6);
 
-      $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+      $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
       $log = $logs[6];
       $this->assertEquals('Lock already acquired: The translation request 1 is already being updated.', $log['message']);
-      \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+      \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
 
       $storage->resetCache();
       $request = $storage->load($request->id());
@@ -1712,7 +1796,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
 
     sleep(6);
 
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $log = $logs[6];
     $this->assertEquals('Lock already acquired: The translation request 1 is already being updated.', $log['message']);
     $storage->resetCache();
@@ -1806,7 +1890,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT/' . date('Y') . '/2000/0/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2035-Oct-10',
@@ -1846,13 +1930,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
     $this->assertNull($this->getSession()->getPage()->find('css', 'table.request-status-meta-table'));
-    $this->assertSession()->pageTextContains('The last ePoetry translation request with the ID DIGIT/' . date('Y') . '/2000/0/0/TRA had been rejected. You can resubmit to correct it.');
+    $this->assertSession()->pageTextContains('The last ePoetry translation request with the ID DIGIT-' . date('Y') . '-02000(00)-00-TRA had been rejected. You can resubmit to correct it.');
     $this->assertSession()->fieldEnabled('Translator');
 
     // Make a new request to "correct" the reason why it was rejected. This can
     // be done even without making a change to the content.
     $this->assertSession()->pageTextContains('New translation request using ePoetry');
-    $this->assertSession()->pageTextContains('You are making a request for a new version. The previous version was translated with the DIGIT/' . date('Y') . '/2000/0/0/TRA request ID. The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.');
+    $this->assertSession()->pageTextContains('You are making a request for a new version. The previous version was translated with the DIGIT-' . date('Y') . '-02000(00)-00-TRA request ID. The previous request had been rejected. You are now resubmitting the request, please ensure it is now valid.');
     $this->getSession()->getPage()->checkField('French');
     $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
     $contact_fields = [
@@ -1890,7 +1974,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoAccept());
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/0/0/TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(00)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -1903,7 +1987,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'ePoetry',
       'SenttoDGT',
       // The ID is the same as the previous was rejected.
-      'DIGIT/' . date('Y') . '/2000/0/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(00)-00-TRA',
       'No',
       'No',
       '2032-Oct-10',
@@ -2056,7 +2140,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertFalse($request->isAutoSync());
     $this->assertEquals('2032-10-10', $request->getDeadline()->format('Y-m-d'));
     $this->assertEquals('Message to the provider', $request->getMessage());
-    $this->assertEquals('DIGIT/' . date('Y') . '/2000/1/0/TRA', $request->getRequestId(TRUE));
+    $this->assertEquals('DIGIT-' . date('Y') . '-02000(01)-00-TRA', $request->getRequestId(TRUE));
     $this->assertEquals([
       'Recipient' => 'test_recipient',
       'Webmaster' => 'test_webmaster',
@@ -2068,7 +2152,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'Requested',
       'ePoetry',
       'SenttoDGT',
-      'DIGIT/' . date('Y') . '/2000/1/0/TRA',
+      'DIGIT-' . date('Y') . '-02000(01)-00-TRA',
       'No',
       'No',
       '2032-Oct-10',
@@ -2298,23 +2382,51 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('The French translation has been automatically accepted.');
     $this->assertSession()->pageTextNotContains('The French translation has been accepted.');
 
-    // Sync the translation and assert that if we resend the translation, it
-    // doesn't get auto-accepted anymore.
-    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
-    $storage->resetCache();
-    $request = $storage->load($request->id());
-    \Drupal::service('oe_translation_remote.translation_synchroniser')->synchronise($request, 'fr');
-    $storage->resetCache();
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
-    $request = $storage->load($request->id());
-    $languages = $request->getTargetLanguages();
-    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_SYNCHRONISED, $languages['fr']->getStatus());
-    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
-    $storage->resetCache();
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
-    $request = $storage->load($request->id());
-    $languages = $request->getTargetLanguages();
-    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW, $languages['fr']->getStatus());
+    // While the provider is set to auto-accept requests, make another request
+    // and override the option.
+    // Create a test node.
+    $node = $this->createBasicTestNode();
+
+    // Create a request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->checkField('Spanish');
+    // Unset the auto-accept.
+    $this->getSession()->getPage()->uncheckField('Auto accept translations');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/10/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+
+    // Translate the language.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'es');
+    $this->getSession()->reload();
+
+    $expected_languages = [];
+    $expected_languages['es'] = [
+      'langcode' => 'es',
+      // The translation should not be automatically accepted, so the status
+      // is in review.
+      'status' => 'Review',
+      'accepted_deadline' => 'N/A',
+      'review' => TRUE,
+    ];
+    $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('The Spanish translation has been delivered.');
+    $this->assertSession()->pageTextNotContains('The Spanish translation has been automatically accepted.');
   }
 
   /**
@@ -2364,17 +2476,106 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->pageTextContains('The Bulgarian translation has been automatically synchronised with the content.');
     $this->assertSession()->pageTextNotContains('The Bulgarian translation has been synchronised with the content.');
 
-    // Sync the translation and assert that if we resend the translation, it
-    // doesn't get auto-synced anymore.
-    $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_request');
-    $storage->resetCache();
-    $request = $storage->load($request->id());
-    EpoetryTranslationMockHelper::translateRequest($request, 'bg');
-    $storage->resetCache();
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestEpoetryInterface $request */
-    $request = $storage->load($request->id());
-    $languages = $request->getTargetLanguages();
-    $this->assertEquals(TranslationRequestEpoetryInterface::STATUS_LANGUAGE_REVIEW, $languages['bg']->getStatus());
+    // Set the global setting to auto-sync all requests and make a new
+    // request for a new node. This time, don't check the auto-sync.
+    $provider = RemoteTranslatorProvider::load('epoetry');
+    $configuration = $provider->getProviderConfiguration();
+    $configuration['auto_sync'] = TRUE;
+    $provider->setProviderConfiguration($configuration);
+    $provider->save();
+
+    // Create a test node.
+    $node = $this->createBasicTestNode();
+
+    // Create a request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->checkField('French');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/11/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+    // Assert there is no weekend deadline warning.
+    $this->assertSession()->pageTextNotContains('The selected deadline is a weekend day and it can delay receiving the translation request.');
+
+    // Translate the language.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'fr');
+    $this->drupalGet($request->toUrl());
+
+    $expected_languages = [];
+    $expected_languages['fr'] = [
+      'langcode' => 'fr',
+      // The language has been automatically synced.
+      'status' => 'Synchronised',
+      'accepted_deadline' => 'N/A',
+      'review' => FALSE,
+    ];
+    $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('The French translation has been automatically synchronised with the content.');
+    $this->assertSession()->pageTextNotContains('The French translation has been synchronised with the content.');
+
+    // While the global auto-sync option is enabled, make another request and
+    // override the option.
+    // Create a test node.
+    $node = $this->createBasicTestNode();
+
+    // Create a request.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Remote translations');
+    $this->getSession()->getPage()->checkField('Spanish');
+    // When the auto-sync is globally enabled, both auto-sync and auto-accept
+    // are enabled in the request, so unset both options.
+    $this->getSession()->getPage()->uncheckField('Auto accept translations');
+    $this->getSession()->getPage()->uncheckField('Auto sync translations');
+    $this->getSession()->getPage()->fillField('translator_configuration[epoetry][deadline][0][value][date]', '10/11/2032');
+    $contact_fields = [
+      'Recipient' => 'test_recipient',
+      'Webmaster' => 'test_webmaster',
+      'Editor' => 'test_editor',
+    ];
+    foreach ($contact_fields as $field => $value) {
+      $this->getSession()->getPage()->fillField($field, $value);
+    }
+
+    $this->getSession()->getPage()->fillField('Message', 'Message to the provider');
+    $this->getSession()->getPage()->pressButton('Save and send');
+    $this->assertSession()->pageTextContains('The translation request has been sent to ePoetry.');
+    // Assert there is no weekend deadline warning.
+    $this->assertSession()->pageTextNotContains('The selected deadline is a weekend day and it can delay receiving the translation request.');
+
+    // Translate the language.
+    $requests = \Drupal::service('plugin.manager.oe_translation_remote.remote_translation_provider_manager')->getExistingTranslationRequests($node, TRUE);
+    $request = reset($requests);
+    EpoetryTranslationMockHelper::$databasePrefix = $this->databasePrefix;
+    EpoetryTranslationMockHelper::translateRequest($request, 'es');
+    $this->drupalGet($request->toUrl());
+
+    $expected_languages = [];
+    $expected_languages['es'] = [
+      'langcode' => 'es',
+      // The translation should not be automatically accepted, so the status
+      // is in review.
+      'status' => 'Review',
+      'accepted_deadline' => 'N/A',
+      'review' => TRUE,
+    ];
+    $this->assertRemoteOngoingTranslationLanguages($expected_languages);
+    $this->getSession()->getPage()->find('css', 'summary')->click();
+    $this->assertSession()->pageTextContains('The Spanish translation has been delivered.');
+    $this->assertSession()->pageTextNotContains('The Spanish translation has been automatically synchronised with the content.');
   }
 
   /**
@@ -2529,7 +2730,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->getSession()->getPage()->pressButton('Reset');
 
-    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT/' . date('Y') . '/2000/0/0/TRA');
+    $this->getSession()->getPage()->fillField('Request ID', 'DIGIT-' . date('Y') . '-2000(00)-00-TRA');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertSession()->linkNotExistsExact('Third node');
     $this->assertSession()->linkNotExistsExact('Second node');
@@ -2580,12 +2781,12 @@ class EpoetryTranslationTest extends TranslationTestBase {
       'status' => 'Accepted',
     ];
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     foreach ($logs as $log) {
       $this->assertStringNotContainsString('The mock ticket validation kicked in.', $log['message']);
     }
 
-    \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->clearLogs();
+    \Drupal::service('oe_translation_test.logger.mock_logger')->clearLogs();
 
     // Turn on the ticket validation.
     $this->writeSettings([
@@ -2600,7 +2801,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     );
 
     EpoetryTranslationMockHelper::notifyRequest($request, $notification);
-    $logs = \Drupal::service('oe_translation_epoetry_mock.logger.mock_logger')->getLogs();
+    $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $found = FALSE;
     foreach ($logs as $log) {
       if (str_contains('The mock ticket validation kicked in.', $log['message'])) {

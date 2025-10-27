@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\oe_translation\Event\EntityRevisionEvent;
+use Drupal\oe_translation\TranslatorProvidersInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -33,16 +34,26 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
   protected $moderationInformation;
 
   /**
+   * The translator providers service.
+   *
+   * @var \Drupal\oe_translation\TranslatorProvidersInterface
+   */
+  protected $translatorProviders;
+
+  /**
    * EntityRevisionInfoSubscriber constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderationInformation
    *   The moderation information.
+   * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
+   *   The translator providers service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModerationInformationInterface $moderationInformation) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModerationInformationInterface $moderationInformation, TranslatorProvidersInterface $translatorProviders) {
     $this->entityTypeManager = $entityTypeManager;
     $this->moderationInformation = $moderationInformation;
+    $this->translatorProviders = $translatorProviders;
   }
 
   /**
@@ -66,9 +77,9 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
 
     /** @var \Drupal\workflows\WorkflowInterface $workflow */
     $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
-    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
+    if (!$workflow || $workflow->id() !== 'oe_corporate_workflow' || !$this->translatorProviders->hasTranslators($entity->getEntityType())) {
       // We only care about the entities moderated using the corporate
-      // workflow.
+      // workflow and which are using our translation system.
       return;
     }
 
@@ -82,10 +93,12 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     $original_major = $original_version->get('major')->getValue();
     $original_minor = $original_version->get('minor')->getValue();
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     // Load the latest revision of the same entity that has the same major and
     // minor version. This is in case the entity is published since it was
     // validated to ensure we save the translation onto that version.
-    $results = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->getQuery()
+    $results = $storage->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
       ->condition('version.major', $original_major)
       ->condition('version.minor', $original_minor)
@@ -96,7 +109,7 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     end($results);
     $vid = key($results);
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($vid);
+    $entity = $storage->loadRevision($vid);
 
     // We create the empty translation on the entity so that we ensure if we
     // need to set the entity to not be the default revision (see below), it
@@ -121,7 +134,7 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     $has_forward_published = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
       ->condition($entity->getEntityType()->getKey('revision'), $vid, '>')
-      ->condition($entity->getEntityType()->getKey('status'), TRUE)
+      ->condition($entity->getEntityType()->getKey('published'), TRUE)
       ->accessCheck(FALSE)
       ->allRevisions()
       ->execute();

@@ -26,7 +26,7 @@ class ActiveRevisionStorage extends SqlContentEntityStorage {
    * @return ActiveRevisionInterface|null
    *   The active revision entity if found.
    */
-  public function getActiveRevisionForEntity(string $entity_type, string $entity_id, string $entity_revision_id = NULL): ?ActiveRevisionInterface {
+  public function getActiveRevisionForEntity(string $entity_type, string $entity_id, ?string $entity_revision_id = NULL): ?ActiveRevisionInterface {
     $query = \Drupal::entityTypeManager()
       ->getStorage('oe_translation_active_revision')
       ->getQuery()

@@ -51,7 +51,7 @@ class LanguageRevisionMapping {
    * @param \Drupal\Core\Entity\ContentEntityInterface|null $entity
    *   The entity revision, if mapped.
    */
-  public function __construct(string $langcode, ContentEntityInterface $entity = NULL) {
+  public function __construct(string $langcode, ?ContentEntityInterface $entity = NULL) {
     $this->langcode = $langcode;
     $this->entity = $entity;
   }

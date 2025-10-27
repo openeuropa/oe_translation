@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_local\Event\TranslationLocalControllerAlterEvent;
@@ -127,6 +127,7 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
     // the entity may have some drafts created after a published (default)
     // revision. So we need to inform the user. But there are two cases.
     if ($entity->isDefaultRevision() && !$entity->isLatestRevision()) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
       $latest_revision = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
       $version = $this->getEntityVersion($entity);
@@ -261,7 +262,9 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
 
     // The validated one should be the first.
     $revision_id = key($results);
-    $validated = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->loadRevision($revision_id);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+    $validated = $storage->loadRevision($revision_id);
 
     $table = &$build['local_translation_overview'];
     foreach ($table['#rows'] as &$row) {

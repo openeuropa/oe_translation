@@ -168,7 +168,7 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
     $values = array_filter($this->get('request_id')->first()->getValue(), function ($value) {
       return !is_array($value);
     });
-    return $formatted ? $this->get('request_id')->first()->toReference($values) : $values;
+    return $formatted ? $this->get('request_id')->first()->toDgtFormattedReference($values) : $values;
   }
 
   /**
@@ -210,6 +210,8 @@ class TranslationRequestEpoetry extends TranslationRequest implements Translatio
       case TranslationRequestEpoetryInterface::STATUS_REQUEST_EXECUTED:
         return t('The translation request has been executed by ePoetry. This means they have dispatched the translations for all the languages.');
     }
+
+    return t('Unknown status');
   }
 
   /**

@@ -1,0 +1,6 @@
+name: OpenEuropa Translation eTrans Mock
+description: Mocks the integrates with the DGT etrans
+package: OpenEuropa
+
+type: module
+core_version_requirement: ^10 || ^11

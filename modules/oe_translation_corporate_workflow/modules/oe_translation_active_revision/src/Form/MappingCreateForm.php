@@ -40,7 +40,7 @@ class MappingCreateForm extends MappingFormBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(string $langcode = NULL, string $entity_type = NULL, string $entity_id = NULL): AccessResultInterface {
+  public function access(?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL): AccessResultInterface {
     $options = $this->getVersionOptions($entity_type, $entity_id, $langcode);
 
     if (count($options) > 0) {
@@ -53,8 +53,9 @@ class MappingCreateForm extends MappingFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, string $langcode = NULL, string $entity_type = NULL, string $entity_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL) {
     $language = $this->languageManager->getLanguage($langcode);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $entity = $storage->load($entity_id);
     $form['#title'] = $this->t('Add a mapping for @title', ['@title' => $entity->label()]);

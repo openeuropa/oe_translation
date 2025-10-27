@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_active_revision\FunctionalJavascript;
 
+use Drupal\content_moderation\Entity\ContentModerationState;
+use Drupal\node\Entity\Node;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Entity\ActiveRevision;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
@@ -14,7 +16,7 @@ use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
- * @group batch2
+ * @group batch3
  */
 class ActiveRevisionTest extends ActiveRevisionTestBase {
 
@@ -732,7 +734,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'Remove mapping' => TRUE,
       // The update mapping op is missing because we only have 1 previous major
       // version it can map to, and it's already mapped to it.
-      'Update mapping' => FALSE,
+      // @todo , however, we enable it due to performance issues in calculating
+      // this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
 
@@ -813,15 +817,18 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'scope' => 0,
     ], $language_values[0]);
     $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
+    $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
       'Delete translation' => FALSE,
       'Add mapping' => FALSE,
       'Map to version' => FALSE,
       'Remove mapping' => TRUE,
-     // The update mapping op is missing because we only have 1 previous major
-     // version it can map to, and it's already mapped to it.
-      'Update mapping' => FALSE,
+      // The update mapping op is missing because we only have 1 previous major
+      // version it can map to, and it's already mapped to it.
+      // @todo , however, we enable it due to performance issues in calculating
+      // this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
 
@@ -878,7 +885,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'Add mapping' => FALSE,
       'Map to version' => FALSE,
       'Remove mapping' => TRUE,
-      'Update mapping' => FALSE,
+      // @todo , normally, the update op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
 
@@ -901,7 +910,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'Add mapping' => FALSE,
       'Map to version' => FALSE,
       'Remove mapping' => TRUE,
-      'Update mapping' => FALSE,
+      // @todo , normally, the update op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $french_operations);
     // For the new language created in the latest version, we can only hide it.
@@ -910,7 +921,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertOperationLinks([
       'View' => TRUE,
       'Delete translation' => TRUE,
-      'Add mapping' => FALSE,
+      // @todo , normally, the add op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Add mapping' => TRUE,
       'Map to version' => FALSE,
       'Remove mapping' => FALSE,
       'Update mapping' => FALSE,
@@ -952,7 +965,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'View' => TRUE,
       'Delete translation' => FALSE,
       'Add mapping' => FALSE,
-      'Map to version' => FALSE,
+      // @todo , normally, the map op should not show but we enable it due to
+      // performance issues in calculating this at scale.
+      'Map to version' => TRUE,
       'Remove mapping' => TRUE,
       'Update mapping' => FALSE,
       'Map to "hidden" (hide translation)' => FALSE,
@@ -1045,7 +1060,9 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       // For IT, we cannot update the mapping because version 1 doesn't have
       // a translation in IT and version 3 is the current version. And it's
       // already mapped to version 2.
-      'Update mapping' => FALSE,
+      // @todo , however, we enable it due to
+      // performance issues in calculating this at scale.
+      'Update mapping' => TRUE,
       'Map to "hidden" (hide translation)' => TRUE,
     ], $italian_operations);
 
@@ -1147,9 +1164,11 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $french_mapping_operations = $french_row->findAll('xpath', '//td[6]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
+      'Add new local translation' => TRUE,
     ], $french_published_operations);
     $this->assertOperationLinks([
       'View' => TRUE,
+      'Add new local translation' => TRUE,
       // We cannot delete the validated translation if we have a mapping.
       'Delete translation' => FALSE,
       'Add mapping' => FALSE,
@@ -1492,6 +1511,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     // Map the IT to hidden.
     // There is only one operation for the IT row so we don't have a dropdown
     // to open.
+    $italian_row->find('xpath', '//td[6]')->pressButton('List additional actions');
     $italian_row->find('xpath', '//td[6]')->clickLink('Map to "hidden" (hide translation)');
     $this->assertSession()->pageTextContains('Are you sure you want to map this translation to "hidden"?');
     $this->assertSession()->pageTextContains('Please be aware that mapping to "hidden" will be relevant to the new Validated major version as there is no translation to hide in the Published version.');
@@ -1879,12 +1899,30 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
     ], $language_values[0]);
 
+    // "Break" the system by deleting the moderation state entity translation.
+    $validated_revision = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $moderation_state = ContentModerationState::loadFromModeratedEntity($validated_revision);
+    $moderation_state->removeTranslation('fr');
+    ContentModerationState::updateOrCreateFromEntity($moderation_state);
+    // Now only the original will be validated, and the translation of the
+    // node becomes "draft" because it no longer is translated. This situation
+    // should not really occur, but if it does, it can break new translations
+    // which when being saved onto the node, cause the moderation state of
+    // the original to be set to draft instead of keeping it on validated.
+    // With this we assert that even in this scenario, things still work and
+    // the active version gets updated.
+    $node_storage->resetCache();
+    $validated_revision = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $this->assertEquals('validated', $validated_revision->get('moderation_state')->value);
+    $this->assertEquals('draft', $validated_revision->getTranslation('fr')->get('moderation_state')->value);
+
     // Create a new translation of version 3 in FR (which is the validated
     // version).
     $this->drupalGet('/node/' . $node->id() . '/translations/local');
     $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] td[data-version="3.0.0"] a')->click();
     $this->getSession()->getPage()->fillField('title|0|value[translation]', 'My FR version 3 node');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
+
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
@@ -1977,6 +2015,65 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertCount(1, $language_values);
     $this->assertEquals(LanguageWithEntityRevisionItem::SCOPE_BOTH, $language_values[0]['scope']);
     $this->assertEquals('it', $language_values[0]['langcode']);
+  }
+
+  /**
+   * Tests a case with incorrectly versioned node.
+   *
+   * We might have nodes migrated as published with version 0.1 which don't have
+   * a major so we cannot rely on ALWAYS having a major.
+   */
+  public function testIncorrectlyVersionedNode(): void {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+
+    $node = Node::create([
+      'type' => 'page',
+      'title' => 'Test incorrect version',
+      'moderation_state' => 'published',
+      'status' => 1,
+    ]);
+    $node->addTranslation('fr', ['title' => 'test fr'] + $node->toArray());
+    $node->save();
+
+    $this->assertEquals(0, $node->get('version')->major);
+    $this->assertEquals(1, $node->get('version')->minor);
+
+    // Edit the node to make a new draft and then publish it.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->fillField('Title', 'Test incorrect version 2');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page Test incorrect version 2 has been updated.');
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->pageTextContains('The moderation state has been updated.');
+
+    // No active revisions were created.
+    $this->assertCount(0, ActiveRevision::loadMultiple());
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    // We now have a major version.
+    $this->assertEquals(1, $node->get('version')->major);
+    $this->assertEquals(0, $node->get('version')->minor);
+
+    // And if now we make a new draft and then publish, we'll also get an
+    // active revision entity.
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->fillField('Title', 'Test incorrect version 3');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page Test incorrect version 3 has been updated.');
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->pageTextContains('The moderation state has been updated.');
+    $this->assertCount(1, ActiveRevision::loadMultiple());
+    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity('node', $node->id());
+    $this->assertInstanceOf(ActiveRevisionInterface::class, $active_revision);
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+    $this->assertEquals(2, $node->get('version')->major);
+    $this->assertEquals(0, $node->get('version')->minor);
   }
 
 }

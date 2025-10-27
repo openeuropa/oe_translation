@@ -127,6 +127,12 @@ function oe_translation_multivalue_field_widget_complete_form_alter(&$field_widg
     return;
   }
 
+  if ($context['default']) {
+    // We don't want this to run on the field config form when the field is
+    // created and a default value may be set.
+    return;
+  }
+
   $id_generator = \Drupal::service('oe_translation_multivalue.translation_id_generator');
   $field_id = $items->getFieldDefinition()->getFieldStorageDefinition()->id();
   foreach ($items as $delta => $item) {

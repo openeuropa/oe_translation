@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
@@ -16,6 +15,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Render\Element;
+use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\TranslationSourceEvent;
 use Drupal\oe_translation\TranslationSourceFieldProcessor\TranslationSourceFieldProcessorInterface;
@@ -121,9 +121,9 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
    */
-  public function extractData(ContentEntityInterface $entity): array {
+  public function extractData(ContentEntityInterface $entity, array $context = []): array {
     $field_definitions = $entity->getFieldDefinitions();
-    $exclude_field_types = ['language'];
+    $exclude_field_types = ['language', 'metatag_computed'];
     $exclude_field_names = ['moderation_state'];
 
     $is_bundle_translatable = $this->contentTranslationManager->isEnabled($entity->getEntityTypeId(), $entity->bundle());
@@ -195,7 +195,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
             if ($this->contentTranslationManager->isEnabled($referenced_entity->getEntityTypeId(), $referenced_entity->bundle()) && $referenced_entity->hasTranslation($langcode)) {
               $referenced_entity = $referenced_entity->getTranslation($langcode);
             }
-            $data[$field_name][$delta][$property_key] = $this->extractData($referenced_entity);
+            $data[$field_name][$delta][$property_key] = $this->extractData($referenced_entity, $context);
             // Use the ID of the entity to identify it later, do not rely on the
             // UUID as content entities are not required to have one.
             $data[$field_name][$delta][$property_key]['#id'] = $property->getValue()->id();
@@ -211,7 +211,7 @@ class TranslationSourceManager implements TranslationSourceManagerInterface {
     $data['#entity_type'] = $entity->getEntityTypeId();
     $data['#entity_bundle'] = $entity->bundle();
 
-    $event = new TranslationSourceEvent($entity, $data, $entity->language()->getId());
+    $event = new TranslationSourceEvent($entity, $data, $entity->language()->getId(), context: $context);
     $this->eventDispatcher->dispatch($event, TranslationSourceEvent::EXTRACT);
     return $event->getData();
   }

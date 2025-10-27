@@ -37,7 +37,7 @@ function oe_translation_remote_entity_type_alter(array &$entity_types) {
 /**
  * Select list allowed options callback for the request statuses.
  */
-function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, bool $cacheable): array {
+function oe_translation_remote_request_statuses(FieldStorageConfig $definition, ?ContentEntityInterface $entity = NULL, bool $cacheable = TRUE): array {
   $options = [
     TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED => t('Requested'),
     TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED => t('Translated'),

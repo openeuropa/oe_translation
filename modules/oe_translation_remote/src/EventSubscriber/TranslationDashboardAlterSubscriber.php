@@ -93,6 +93,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     // Get all the translation requests that are not synced for all revisions.
     /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface[] $translation_requests */
     $translation_requests = $this->providerManager->getExistingTranslationRequests($current_entity, FALSE);
+    $translation_requests = array_filter($translation_requests, function (TranslationRequestRemoteInterface $request) {
+      // Filter out the non-enabled translators.
+      return $request->getTranslatorProvider()->isEnabled();
+    });
 
     $cache->addCacheTags(['oe_translation_request_list']);
     if (!$translation_requests) {
@@ -132,6 +136,7 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       $rows[] = [
         'data' => $row,
         'data-revision-id' => $entity->getRevisionId(),
+        'data-translation-request-id' => $translation_request->id(),
         'class' => $translation_request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED ? ['color-error'] : [],
       ];
     }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_block_field\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
-use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 
 /**
  * Tests for the block title translation.

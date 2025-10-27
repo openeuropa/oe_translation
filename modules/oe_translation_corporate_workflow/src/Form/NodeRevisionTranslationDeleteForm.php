@@ -16,6 +16,8 @@ use Drupal\node\Form\NodeRevisionDeleteForm;
  * In case we are deleting a translation, we need to ensure only the translation
  * of that revision gets cleared without making any other change to the node
  * or the revision.
+ *
+ * For other entity types, it's handled in RevisionTranslationDeleteForm.
  */
 class NodeRevisionTranslationDeleteForm extends NodeRevisionDeleteForm {
 

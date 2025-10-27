@@ -69,12 +69,13 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(string $langcode = NULL, string $entity_type = NULL, string $entity_id = NULL): AccessResultInterface {
+  public function access(?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL): AccessResultInterface {
     $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
     if ($entity->hasTranslation($langcode)) {
       return AccessResult::allowed()->addCacheableDependency($entity);
     }
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value === 'validated' && $latest_entity->hasTranslation($langcode)) {
@@ -87,7 +88,7 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, string $langcode = NULL, string $entity_type = NULL, string $entity_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL) {
     $form = parent::buildForm($form, $form_state);
 
     $active_revision = $this->entityTypeManager->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity($entity_type, $entity_id);
@@ -98,6 +99,7 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
         ]);
     }
 
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $entity = $storage->load($entity_id);
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);
@@ -152,6 +154,7 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    */
   public function getCancelUrl() {
     // We rely on the destination query parameter.
+    // @phpstan-ignore return.missing
   }
 
 }

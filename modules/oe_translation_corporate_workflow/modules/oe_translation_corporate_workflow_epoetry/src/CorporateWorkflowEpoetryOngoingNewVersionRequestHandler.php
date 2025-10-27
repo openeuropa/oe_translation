@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_corporate_workflow_epoetry;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandler;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 

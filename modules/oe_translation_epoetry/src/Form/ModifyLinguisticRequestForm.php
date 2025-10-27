@@ -124,7 +124,7 @@ class ModifyLinguisticRequestForm extends FormBase {
     $cache->addCacheContexts(['user.permissions']);
     $cache->addCacheableDependency($translation_request);
 
-    if (!$account->hasPermission('translate any entity')) {
+    if (!$account->hasPermission('translate any entity') || !$account->hasPermission('request epoetry translation')) {
       return AccessResult::forbidden()->addCacheableDependency($cache);
     }
 
@@ -184,7 +184,7 @@ class ModifyLinguisticRequestForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, TranslationRequestEpoetryInterface $translation_request = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?TranslationRequestEpoetryInterface $translation_request = NULL) {
     if (!$translation_request) {
       throw new NotFoundHttpException();
     }

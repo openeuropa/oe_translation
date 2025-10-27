@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Drupal\oe_translation\TranslationSourceFieldProcessor;
 
 use CommerceGuys\Addressing\AddressFormat\AddressFormatRepositoryInterface;
-use Drupal\address\FieldHelper;
-use Drupal\address\LabelHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
+use Drupal\address\FieldHelper;
+use Drupal\address\LabelHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

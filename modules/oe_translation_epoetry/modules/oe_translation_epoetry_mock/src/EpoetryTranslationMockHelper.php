@@ -6,7 +6,7 @@ namespace Drupal\oe_translation_epoetry_mock;
 
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Site\Settings;
-use Drupal\oe_translation_epoetry\EpoetryLanguageMapper;
+use Drupal\oe_translation\LanguageMapper;
 use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetry;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -47,7 +47,7 @@ class EpoetryTranslationMockHelper {
   public static function translateRequest(TranslationRequestRemoteInterface $request, string $langcode, ?string $suffix = NULL): void {
     $data = $request->getData();
 
-    $langcode = EpoetryLanguageMapper::getEpoetryLanguageCode($langcode, $request);
+    $langcode = LanguageMapper::getMappedLanguageCode($langcode, $request);
 
     foreach ($data as $field => &$info) {
       if (!is_array($info)) {
@@ -65,7 +65,11 @@ class EpoetryTranslationMockHelper {
       $request->setData([]);
     }
 
-    $exported = \Drupal::service('oe_translation_epoetry.html_formatter')->export($request);
+    $exported = \Drupal::service('oe_translation_content_formatter.html_formatter')->export($request);
+    if (isset(static::$translationRequestErrors['wrong request id'])) {
+      // Mimic the wrong file being sent (for a different request).
+      $exported = str_replace('item-' . $request->id(), 'item-4534353453', (string) $exported);
+    }
 
     $values = [
       '#request_id' => $request->getRequestId(),
@@ -176,7 +180,7 @@ class EpoetryTranslationMockHelper {
       case 'ProductStatusChange':
         $values = [
           '#request_id' => $request->getRequestId(),
-          '#language' => EpoetryLanguageMapper::getEpoetryLanguageCode($notification['language'], $request),
+          '#language' => LanguageMapper::getMappedLanguageCode($notification['language'], $request),
           '#status' => $notification['status'],
         ];
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation\TranslationSourceFieldProcessor;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\Element;
 
@@ -21,7 +22,7 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
     }
 
     $metatag_manager = \Drupal::service('metatag.manager');
-    $meta_tag_values = unserialize($field->value);
+    $meta_tag_values = Json::decode($field->value);
 
     // If there are no meta tags or it is not an array, there is nothing to
     // do.
@@ -72,7 +73,7 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
     $meta_tags_values = [];
 
     // Loop over the groups and tags, either use the translated text or the
-    // original and then serialize the whole structure again.
+    // original and then encode the whole structure again.
     foreach (Element::children($field_data) as $group_name) {
       foreach (Element::children($field_data[$group_name]) as $tag_name) {
 
@@ -86,7 +87,7 @@ class MetatagsFieldProcessor extends DefaultFieldProcessor {
       }
     }
 
-    $field->value = serialize($meta_tags_values);
+    $field->value = Json::encode($meta_tags_values);
   }
 
 }

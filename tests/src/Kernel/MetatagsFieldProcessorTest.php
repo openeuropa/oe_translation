@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
@@ -55,11 +56,11 @@ class MetatagsFieldProcessorTest extends TranslationKernelTestBase {
       'type' => 'page',
       'title' => 'Test node',
       'metatags_field' => [
-        'value' => serialize([
+        'value' => Json::encode([
           'description' => 'The description',
           'robots' => 'noindex,nofollow',
           'referer' => 'origin',
-          'news_keywords' => 'Sport',
+          'rights' => 'Details about intellectual property',
         ]),
       ],
     ]);
@@ -84,10 +85,10 @@ class MetatagsFieldProcessorTest extends TranslationKernelTestBase {
           '#text' => 'noindex,nofollow',
           '#label' => 'Robots',
         ],
-        'news_keywords' => [
+        'rights' => [
           '#translate' => TRUE,
-          '#text' => 'Sport',
-          '#label' => 'News Keywords',
+          '#text' => 'Details about intellectual property',
+          '#label' => 'Rights',
         ],
       ],
       '#label' => 'Metatags',
@@ -96,15 +97,15 @@ class MetatagsFieldProcessorTest extends TranslationKernelTestBase {
 
     // Translate the data.
     $data['metatags_field']['basic']['description']['#translation']['#text'] = 'The description FR';
-    $data['metatags_field']['advanced']['news_keywords']['#translation']['#text'] = 'Sport FR';
+    $data['metatags_field']['advanced']['rights']['#translation']['#text'] = 'Details about intellectual property FR';
     $this->translationManager->saveData($data, $node, 'fr');
 
     $translation = $node->getTranslation('fr');
-    $translated_meta_tags = unserialize($translation->get('metatags_field')->value);
+    $translated_meta_tags = Json::decode($translation->get('metatags_field')->value);
     $expected_meta_tags = [
       'description' => 'The description FR',
       'robots' => 'noindex,nofollow',
-      'news_keywords' => 'Sport FR',
+      'rights' => 'Details about intellectual property FR',
     ];
     $this->assertEquals($expected_meta_tags, $translated_meta_tags);
 

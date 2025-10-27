@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.oe_translation_request.etrans.etrans_access_token
+    - field.field.oe_translation_request.etrans.remote_id
+    - field.field.oe_translation_request.etrans.request_status
+    - field.field.oe_translation_request.etrans.target_languages
+    - field.field.oe_translation_request.etrans.translated_data
+    - field.field.oe_translation_request.etrans.translator_provider
+    - oe_translation.oe_translation_request_type.etrans
+id: oe_translation_request.etrans.default
+targetEntityType: oe_translation_request
+bundle: etrans
+mode: default
+content: {  }
+hidden:
+  etrans_access_token: true
+  remote_id: true
+  request_status: true
+  target_languages: true
+  translated_data: true
+  translator_provider: true
