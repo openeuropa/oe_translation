@@ -176,18 +176,35 @@ class MultivalueTranslationsJsTest extends TranslationTestBase {
     $this->drupalLogin($user);
     $this->drupalGet('/admin/structure/types/manage/multivalue/fields/add-field');
 
-    $this->getSession()->getPage()->find('css', '#edit-plain-text')->click();
-    $this->getSession()->getPage()->pressButton('Continue');
-    $this->getSession()->getPage()->fillField('Label', 'Test');
-    $this->assertSession()->waitForElement('css', '.machine-name-label');
-    $this->getSession()->getPage()->find('css', '#string')->click();
-    $this->getSession()->getPage()->pressButton('Continue');
+    if (version_compare(\Drupal::VERSION, '11.2.0', '>=')) {
+      $this->getSession()->getPage()->clickLink('Plain text');
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->getPage()->fillField('label', 'Test');
+      $this->assertSession()->waitForText('field_test');
+      $this->assertSession()->elementExists('css', '#string')->click();
+      $this->assertSession()->elementExists('xpath', '//button[text()="Continue"]')->press();
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->getPage()->selectFieldOption('Allowed number of values', '-1');
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->getPage()->checkField('Translation multivalue');
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->getPage()->find('css', '.ui-dialog-buttonset')->pressButton('Save');
+      $this->rebuildContainer();
+    }
+    else {
+      $this->getSession()->getPage()->find('css', '#edit-plain-text')->click();
+      $this->getSession()->getPage()->pressButton('Continue');
+      $this->getSession()->getPage()->fillField('Label', 'Test');
+      $this->assertSession()->waitForElement('css', '.machine-name-label');
+      $this->getSession()->getPage()->find('css', '#string')->click();
+      $this->getSession()->getPage()->pressButton('Continue');
+      $this->getSession()->getPage()->selectFieldOption('Allowed number of values', '-1');
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->getPage()->checkField('Translation multivalue');
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->getPage()->pressButton('Save settings');
+    }
 
-    $this->getSession()->getPage()->selectFieldOption('Allowed number of values', '-1');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->getSession()->getPage()->checkField('Translation multivalue');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->getSession()->getPage()->pressButton('Save settings');
     $field = FieldStorageConfig::load('node.field_test');
     $this->assertTrue($field->getSetting('translation_multivalue'));
   }

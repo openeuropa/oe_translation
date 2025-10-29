@@ -226,6 +226,20 @@ trait TranslationsTestTrait {
     $role->grantPermission('translate editable entities');
     $role->grantPermission('create content translations');
     $role->grantPermission('update content translations');
+
+    // These permissions are granted in the hook_install of other modules.
+    // However, the installation relies on the existence of the optional config
+    // containing the 'oe_translator' role. Inside the functional tests,
+    // the install hooks may be executed before the 'oe_translator' role is
+    // installed. Therefore, it is safer to assign them in setUp() too.
+    $role->grantPermission('view any unpublished content');
+    $role->grantPermission('delete local translation request');
+    if (\Drupal::service('module_handler')->moduleExists('oe_corporate_workflow')) {
+      $role->grantPermission('use oe_corporate_workflow transition validated_to_published');
+      $role->grantPermission('view all revisions');
+      $role->grantPermission('view latest version');
+    }
+
     $role->save();
     $user = $this->drupalCreateUser();
     $user->addRole($role->id());

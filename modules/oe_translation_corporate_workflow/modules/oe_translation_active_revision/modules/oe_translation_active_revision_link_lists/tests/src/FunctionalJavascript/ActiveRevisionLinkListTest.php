@@ -35,40 +35,38 @@ class ActiveRevisionLinkListTest extends ActiveRevisionTestBase {
     $role->grantPermission('access link list canonical page');
     $role->save();
 
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-
     // Create a node, publish it, and translate it.
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My version 1 node',
-      'field_non_translatable_field' => 'Non translatable v1 value',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
+    $this->drupalGet('/node/add/page');
+    $this->getSession()->getPage()->fillField('Title', 'My version 1 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable v1 value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 1 node has been created.');
 
-    $node = $node_storage->load($node->id());
-    $node = $this->moderateNode($node, 'published');
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->waitForText('The moderation state has been updated.');
 
-    $translation = $node->addTranslation('fr', ['title' => 'My version 1 FR node']);
-    $translation->save();
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->getSession()->getPage()->fillField('Translation', 'My version 1 FR node');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation has been synchronised.');
 
-    // Start a new draft and publish it.
-    $node = $node_storage->load($node->id());
-    $node->set('title', 'My version 2 node');
-    $node->set('field_non_translatable_field', 'Non translatable v2 value');
-    $node->set('moderation_state', 'draft');
-    $node->setNewRevision();
-    $node->save();
-    $this->drupalGet($node->toUrl('latest-version'));
+    $this->clickLink('New draft');
+    $this->getSession()->getPage()->fillField('Title', 'My version 2 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable v2 value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 2 node has been updated.');
+    // By default, the mapping option is selected by default.
     $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->waitForBatchExecution();
     $this->assertSession()->waitForText('The moderation state has been updated.');
 
     // Quick assertion that we have a mapping.
-    $this->drupalGet('/node/' . $node->id() . '/translations');
+    $this->clickLink('Translate');
 
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');

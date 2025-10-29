@@ -115,6 +115,8 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
     $role = Role::load('oe_translator');
     $role->grantPermission('request epoetry translation');
     $role->save();
+
+    $this->rebuildContainer();
     $this->drupalLogin($this->user);
   }
 

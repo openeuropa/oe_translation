@@ -39,6 +39,7 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
     'field',
     'text',
     'options',
+    'block',
     'oe_editorial_workflow_demo',
     'oe_translation',
     'oe_translation_corporate_workflow',
@@ -89,6 +90,11 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
     $role->grantPermission('delete content translations');
     $role->grantPermission('delete all revisions');
     $role->save();
+
+    $this->drupalPlaceBlock('local_tasks_block');
+    $this->drupalPlaceBlock('page_title_block');
+
+    $this->rebuildContainer();
     $this->drupalLogin($user);
   }
 
