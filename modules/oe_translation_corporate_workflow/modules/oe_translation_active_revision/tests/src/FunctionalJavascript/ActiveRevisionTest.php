@@ -336,66 +336,69 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
    * the validated one no longer shows the mapping.
    */
   public function testActiveRevisionScope(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-
     // Create version 1 with a FR translation.
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My version 1 node',
-      'field_non_translatable_field' => 'Non translatable value',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
-
-    $node = $node_storage->load($node->id());
-    $node = $this->moderateNode($node, 'published');
-
-    $node->addTranslation('fr', ['title' => 'My FR version 1 node']);
-    $node->save();
+    $this->drupalGet('/node/add/page');
+    $this->getSession()->getPage()->fillField('Title', 'My version 1 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 1 node has been created.');
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->waitForText('The moderation state has been updated.');
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->getSession()->getPage()->fillField('Translation', 'My FR version 1 node');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation has been synchronised.');
 
     // Keep track of the version 1 revision ID.
+    $node = $this->drupalGetNodeByTitle('My version 1 node');
     $version_one_revision_id = $node->getRevisionId();
 
     // Make a change and create version 2, mapping FR to version 1.
-    $node->set('title', 'My version 2 node');
-    $node->set('field_non_translatable_field', 'Non translatable updated version 2 value');
-    $node->set('moderation_state', 'draft');
-    $node->setNewRevision();
-    $node->save();
-    $this->drupalGet($node->toUrl('latest-version'));
+    $this->clickLink('New draft');
+    $this->getSession()->getPage()->fillField('Title', 'My version 2 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable updated version 2 value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 2 node has been updated.');
+
     // By default, the mapping option is selected by default.
+    // This maps the translation to version 1.0.0 with scope BOTH.
     $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->waitForBatchExecution();
     $this->assertSession()->waitForText('The moderation state has been updated.');
 
-    // Make a change and create version 3 but only validated.
-    $node->set('title', 'My version 3 node');
-    $node->set('field_non_translatable_field', 'Non translatable version 3 updated value');
-    $node->set('moderation_state', 'draft');
-    $node->setNewRevision();
-    $node->save();
-    $this->drupalGet($node->toUrl('latest-version'));
-    // By default, the mapping option is selected by default.
+    $this->assertActiveRevisionEntry([
+      'entity_type' => 'node',
+      'entity_id' => $node->id(),
+      'entity_revision_id' => $version_one_revision_id,
+      'langcode' => 'fr',
+      'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
+    ]);
+
+    // Make a change and create version 3.
+    // The translation will still be mapped to 1.0.0 with scope BOTH.
+    // Only validate, do not publish yet.
+    $this->clickLink('New draft');
+    $this->getSession()->getPage()->fillField('Title', 'My version 3 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable updated version 3 value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 3 node has been updated.');
     $this->getSession()->getPage()->selectFieldOption('Change to', 'Validated');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->waitForBatchExecution();
     $this->assertSession()->waitForText('The moderation state has been updated.');
 
-    $this->assertCount(1, ActiveRevision::loadMultiple());
-    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity('node', $node->id());
-    $this->assertInstanceOf(ActiveRevisionInterface::class, $active_revision);
-    $language_values = $active_revision->get('field_language_revision')->getValue();
-    $this->assertCount(1, $language_values);
-    $this->assertEquals([
+    $this->assertActiveRevisionEntry([
       'entity_type' => 'node',
       'entity_id' => $node->id(),
       'entity_revision_id' => $version_one_revision_id,
       'langcode' => 'fr',
-      'scope' => 0,
-    ], $language_values[0]);
+      'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
+    ]);
 
     // For the moment, both the published version and the validated version
     // show the version 1 translation in FR.
@@ -406,18 +409,29 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('My FR version 1 node');
     $this->assertSession()->pageTextContains('Non translatable value');
 
-    // Now change the scope of the mapping to only apply to the Published
-    // version.
-    $language_values[0]['scope'] = LanguageWithEntityRevisionItem::SCOPE_PUBLISHED;
-    $active_revision->set('field_language_revision', $language_values);
-    $active_revision->save();
+    // Add a new translation to validated revision to change the scope.
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td:last-child a')->click();
+    $this->getSession()->getPage()->fillField('Translation', 'My FR version 2 node');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation has been synchronised.');
+
+    // Assert the scope now, it should change to "revision".
+    $this->assertActiveRevisionEntry([
+      'entity_type' => 'node',
+      'entity_id' => $node->id(),
+      'entity_revision_id' => $version_one_revision_id,
+      'langcode' => 'fr',
+      'scope' => LanguageWithEntityRevisionItem::SCOPE_PUBLISHED,
+    ]);
 
     $this->drupalGet('/fr/node/' . $node->id());
     $this->assertSession()->pageTextContains('My FR version 1 node');
     $this->assertSession()->pageTextContains('Non translatable value');
     $this->drupalGet('/fr/node/' . $node->id() . '/latest');
-    $this->assertSession()->pageTextContains('My FR version 1 node');
-    $this->assertSession()->pageTextContains('Non translatable version 3 updated value');
+    $this->assertSession()->pageTextContains('My FR version 2 node');
+    $this->assertSession()->pageTextContains('Non translatable updated version 3 value');
 
     // Publish the node and make a new version, validating it.
     $this->drupalGet('/node/' . $node->id() . '/latest');
@@ -425,29 +439,65 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Apply');
     $this->waitForBatchExecution();
     $this->assertSession()->waitForText('The moderation state has been updated.');
-    $node->set('title', 'My version 4 node');
-    $node->set('field_non_translatable_field', 'Non translatable updated version 4 value');
-    $node->set('moderation_state', 'draft');
-    $node->setNewRevision();
-    $node->save();
-    $this->drupalGet($node->toUrl('latest-version'));
-    // By default, the mapping option is selected by default.
+
+    // At this point, the active_revision entity should be removed.
+    $this->assertActiveRevisionEntry(NULL);
+
+    // Save the node revision id for later.
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+    $node_storage->resetCache();
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->load($node->id());
+    $last_published_revision_id = $node->getRevisionId();
+
+    // Create a new version to add a mapping again.
+    $this->clickLink('New draft');
+    $this->getSession()->getPage()->fillField('Title', 'My version 4 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable updated version 4 value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 4 node has been updated.');
     $this->getSession()->getPage()->selectFieldOption('Change to', 'Validated');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->waitForBatchExecution();
     $this->assertSession()->waitForText('The moderation state has been updated.');
 
-    // Assert that the active revision mapping scope is back to support both
-    // moderation states.
-    $active_revision = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision')->getActiveRevisionForEntity('node', $node->id());
-    $language_values = $active_revision->get('field_language_revision')->getValue();
-    $this->assertEquals([
+    // Assert that the new active revision is in BOTH scope.
+    $this->assertActiveRevisionEntry([
       'entity_type' => 'node',
       'entity_id' => $node->id(),
-      'entity_revision_id' => $version_one_revision_id,
+      'entity_revision_id' => $last_published_revision_id,
       'langcode' => 'fr',
-      'scope' => 0,
-    ], $language_values[0]);
+      'scope' => LanguageWithEntityRevisionItem::SCOPE_BOTH,
+    ]);
+  }
+
+  /**
+   * Asserts the values of active_revision entity storage.
+   *
+   * For the sake of simplicity, it only supports zero or one
+   * active_revision entries.
+   *
+   * @param array|null $expected_values
+   *   The list of active_revision values to assert. NULL means that the
+   *   active_revision storage is empty.
+   */
+  public function assertActiveRevisionEntry(?array $expected_values): void {
+    /** @var \Drupal\oe_translation_active_revision\ActiveRevisionStorage $active_revision_storage */
+    $active_revision_storage = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision');
+    $active_revision_storage->resetCache();
+
+    if (is_null($expected_values)) {
+      $this->assertCount(0, $active_revision_storage->loadMultiple());
+      return;
+    }
+
+    $this->assertCount(1, $active_revision_storage->loadMultiple());
+    $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $expected_values['entity_id']);
+    $this->assertInstanceOf(ActiveRevisionInterface::class, $active_revision);
+    $language_values = $active_revision->get('field_language_revision')->getValue();
+    $this->assertCount(1, $language_values);
+    $this->assertEquals($expected_values, $language_values[0]);
   }
 
   /**
@@ -458,38 +508,38 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
    * CorporateWorkflowTranslationDropTest.
    */
   public function testTranslationsDrop(): void {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
+    $this->drupalGet('/node/add/page');
+    $this->getSession()->getPage()->fillField('Title', 'My version 1 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 1 node has been created.');
 
-    // Create version 1 with a FR translation.
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->create([
-      'type' => 'page',
-      'title' => 'My version 1 node',
-      'field_non_translatable_field' => 'Non translatable value',
-      'moderation_state' => 'draft',
-    ]);
-    $node->save();
+    // By default, the mapping option is selected by default.
+    $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->waitForBatchExecution();
+    $this->assertSession()->waitForText('The moderation state has been updated.');
 
-    $node = $node_storage->load($node->id());
-    $node = $this->moderateNode($node, 'published');
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->getSession()->getPage()->fillField('Translation', 'My FR version 1 node');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation has been synchronised.');
 
-    $node->addTranslation('fr', ['title' => 'My FR version 1 node']);
-    $node->save();
-
-    $node_storage->resetCache();
-    $node = $node_storage->load($node->id());
+    $node = $this->drupalGetNodeByTitle('My version 1 node');
     $this->assertTrue($node->hasTranslation('fr'));
 
     $version_one_revision_id = $node->getRevisionId();
 
     // Make a change and create version 2, marking to delete the translations.
-    $node->set('title', 'My version 2 node');
-    $node->set('field_non_translatable_field', 'Non translatable updated version 2 value');
-    $node->set('moderation_state', 'draft');
-    $node->setNewRevision();
-    $node->save();
-    $this->drupalGet($node->toUrl('latest-version'));
+    $this->clickLink('New draft');
+    $this->getSession()->getPage()->fillField('Title', 'My version 2 node');
+    $this->getSession()->getPage()->fillField('Non translatable', 'Non translatable updated version 2 value');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Page My version 2 node has been updated.');
+
+    // By default, the mapping option is selected by default.
     $this->getSession()->getPage()->selectFieldOption('Change to', 'Published');
     $this->getSession()->getPage()->findField('Delete current translations for this version until new ones are synchronised')->click();
     $this->getSession()->getPage()->pressButton('Apply');
@@ -497,6 +547,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->waitForText('The moderation state has been updated.');
 
     // Assert that version 1 has the translation but version 2 no longer does.
+    $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+    $node_storage->resetCache();
     $version_one = $node_storage->loadRevision($version_one_revision_id);
     $this->assertTrue($version_one->hasTranslation('fr'));
     $node = $node_storage->load($node->id());

@@ -528,8 +528,13 @@ class EpoetryTranslationTest extends TranslationTestBase {
     ];
     $this->assertLogMessagesTable($expected_logs);
     // Assert link to user profile in the log messages table.
+    // Ignore lang prefix that appears across different Drupal versions.
     $rows = $this->getSession()->getPage()->findAll('css', 'table.translation-request-log-messages tbody tr');
-    $this->assertEquals($this->user->toUrl()->toString(), $rows[7]->find('css', 'td:nth-child(4) a')->getAttribute('href'));
+    $expected_href = $this->user->toUrl()->toString();
+    $expected_href = str_replace('/en/', '/', $expected_href);
+    $actual_href = $rows[7]->find('css', 'td:nth-child(4) a')->getAttribute('href');
+    $actual_href = str_replace('/en/', '/', $actual_href);
+    $this->assertEquals($expected_href, $actual_href);
 
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('pt-pt'));

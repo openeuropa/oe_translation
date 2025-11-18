@@ -30,6 +30,7 @@ class TranslationGenericTest extends TranslationTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('menu_link_content', 'menu_link_content', TRUE);
     \Drupal::service('router.builder')->rebuild();
+    $this->rebuildContainer();
   }
 
   /**

@@ -61,6 +61,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     'block',
     'oe_editorial_workflow_demo',
     'oe_translation',
+    'oe_translation_local',
     'oe_translation_remote',
     'oe_translation_remote_test',
     'oe_translation_corporate_workflow',
@@ -121,6 +122,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $this->drupalPlaceBlock('local_tasks_block');
 
     $this->user = $this->setUpTranslatorUser();
+    $this->rebuildContainer();
     $this->drupalLogin($this->user);
   }
 
