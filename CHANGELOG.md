@@ -1,9 +1,20 @@
 # Changelog
 
-## [2.18.0](https://github.com/openeuropa/oe_translation/tree/2.18.0) (2025-10-21)
+## [2.19.0](https://github.com/openeuropa/oe_translation/tree/2.19.0) (2025-11-18)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.18.0...2.19.0)
+
+**Merged pull requests:**
+
+- EWPP-6065: Upgrade to Drupal 11.2. [\#368](https://github.com/openeuropa/oe_translation/pull/368) ([gorsky87](https://github.com/gorsky87))
+
+## [2.18.0](https://github.com/openeuropa/oe_translation/tree/2.18.0) (2025-10-22)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.17.1...2.18.0)
 
+**Merged pull requests:**
+
+- Release-2.18.0: Update changelog. [\#369](https://github.com/openeuropa/oe_translation/pull/369) ([22Alexandra](https://github.com/22Alexandra))
 - EWPP-6047: Move oe\_translation to GitLab CI. [\#366](https://github.com/openeuropa/oe_translation/pull/366) ([intelektron](https://github.com/intelektron))
 - EWPP-5970: Passing optional context to the translation data extractor. [\#363](https://github.com/openeuropa/oe_translation/pull/363) ([upchuk](https://github.com/upchuk))
 - EWPP-5663: Fixing URI translatability when switching types. [\#359](https://github.com/openeuropa/oe_translation/pull/359) ([upchuk](https://github.com/upchuk))
@@ -13,6 +24,7 @@
 
 **Merged pull requests:**
 
+- Release-2.17.1: Update changelog. [\#367](https://github.com/openeuropa/oe_translation/pull/367) ([nagyad](https://github.com/nagyad))
 - EWPP-5805: Unlock entity\_browser. [\#362](https://github.com/openeuropa/oe_translation/pull/362) ([nagyad](https://github.com/nagyad))
 
 ## [2.17.0](https://github.com/openeuropa/oe_translation/tree/2.17.0) (2025-09-09)

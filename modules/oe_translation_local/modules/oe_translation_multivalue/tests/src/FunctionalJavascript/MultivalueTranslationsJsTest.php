@@ -205,6 +205,7 @@ class MultivalueTranslationsJsTest extends TranslationTestBase {
       $this->getSession()->getPage()->pressButton('Save settings');
     }
 
+    $this->rebuildAll();
     $field = FieldStorageConfig::load('node.field_test');
     $this->assertTrue($field->getSetting('translation_multivalue'));
   }
