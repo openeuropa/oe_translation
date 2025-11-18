@@ -9,4 +9,6 @@ junit-export
 phpunit.xml
 runner.yml
 vendor
+patches.lock.json
+recipes
 /.gitattributes
