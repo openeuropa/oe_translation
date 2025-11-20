@@ -14,7 +14,7 @@
         "php-http/guzzle7-adapter": "^1.0"
     },
     "require-dev": {
-        "composer/installers": "^1.11",
+        "composer/installers": "^2.3",
         "drupal/address": "^2.0.1",
         "drupal/block_field": "^1.0@RC",
         "drupal/config_devel": "^1.2",
@@ -37,8 +37,8 @@
         "openeuropa/oe_editorial": "^2.0",
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
-        "symfony/property-access": "^6",
-        "symfony/property-info": "^6"
+        "symfony/property-access": "^6 || ^7",
+        "symfony/property-info": "^6 || ^7"
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them."
