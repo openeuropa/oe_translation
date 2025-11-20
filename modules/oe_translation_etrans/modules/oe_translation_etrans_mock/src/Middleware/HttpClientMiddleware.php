@@ -53,10 +53,60 @@ class HttpClientMiddleware {
           $request->getBody()->rewind();
           $this->state->set('oe_translation_etrans_mock.mock_requests', $requests);
 
+          // Throw an error if globally configured.
+          $error = $this->state->get('oe_translation_etrans_mock.error_response', []);
+          if ($error) {
+            $response = new Response(headers: [
+              'Content-Type' => 'application/json',
+            ], body: json_encode($error));
+
+            return new FulfilledPromise($response);
+          }
+
+          // Check to see the node being translated in case we need to throw
+          // an error for a specific request.
+          $contents = $request->getBody()->getContents();
+          $request->getBody()->rewind();
+          $decoded = json_decode($contents);
+          $translation_requests = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->loadByProperties(['etrans_access_token' => $decoded->callerInformation->externalReference]);
+          $translation_request = reset($translation_requests);
+          $document = \Drupal::service('oe_translation_content_formatter.html_formatter')->import(base64_decode($decoded->documentToTranslate->document->content), $translation_request);
+          $document = reset($document);
+          if (isset($document['title']) && str_contains($document['title'][0]['value']['#text'], 'errorCode:')) {
+            $response = new Response(headers: [
+              'Content-Type' => 'application/json',
+            ], body: json_encode([
+              'errorCode' => str_replace('errorCode:', '', $document['title'][0]['value']['#text']),
+              'errorMessage' => 'Error message',
+            ]));
+
+            return new FulfilledPromise($response);
+          }
           $response = new Response(headers: [
             'Content-Type' => 'application/json',
           ], body: json_encode([
             'requestId' => '55555',
+          ]));
+          return new FulfilledPromise($response);
+        }
+
+        if (str_contains($uri->getPath(), 'etranslation/api/status')) {
+
+          // Return a specific heavy usage for testing.
+          $heavy_usage = $this->state->get('oe_translation_etrans_mock.heavy_usage', []);
+          if ($heavy_usage) {
+            $response = new Response(headers: [
+              'Content-Type' => 'application/json',
+            ], body: json_encode($heavy_usage));
+            return new FulfilledPromise($response);
+          }
+
+          // By default, return a normal status.
+          $response = new Response(headers: [
+            'Content-Type' => 'application/json',
+          ], body: json_encode([
+            'level' => '0',
+            'message' => 'Normal service',
           ]));
           return new FulfilledPromise($response);
         }
