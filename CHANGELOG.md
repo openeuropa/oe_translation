@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.20.0](https://github.com/openeuropa/oe_translation/tree/2.20.0) (2025-11-21)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.19.0...2.20.0)
+
+- EWPP-6214: Mock improvements and server usage client method. [\#371](https://github.com/openeuropa/oe_translation/pull/371) ([upchuk](https://github.com/upchuk))
+
 ## [2.19.0](https://github.com/openeuropa/oe_translation/tree/2.19.0) (2025-11-18)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.18.0...2.19.0)
