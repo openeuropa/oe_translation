@@ -134,7 +134,7 @@ class EtransSubscriber implements EventSubscriberInterface {
     $target_languages = $event->getTargetLanguages();
     $target_languages_string = count($target_languages) > 1 ? implode(', ', $target_languages) : reset($target_languages);
 
-    $message = 'Etrans sent a failure notification for the Request ID: <strong>@request_id</strong> with the following error code @code and error message: @error_message.';
+    $message = 'Etrans sent a failure notification for the Request ID: <strong>@request_id</strong> with the following error code @code and error message: @error_message';
     $variables = [
       '@request_id' => $request_id,
       '@code' => $error_code,
