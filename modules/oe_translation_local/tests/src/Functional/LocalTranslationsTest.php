@@ -803,6 +803,76 @@ class LocalTranslationsTest extends TranslationTestBase {
   }
 
   /**
+   * Tests link translatability.
+   *
+   * Tests that internal URIs are not translatable.
+   *
+   * External URI transltability is covered in testTranslatabilityChange().
+   */
+  public function testUriTranslatability(): void {
+    $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+    // Grant permission to edit nodes for the Translator role.
+    $role = Role::load('oe_translator');
+    $role->grantPermission('edit any oe_demo_translatable_page content');
+    $role->save();
+    // Create a node and translate it to French.
+    $node = $this->createFullTestNode();
+    // Add an internal URL.
+    $node->set('ott_demo_link_field', [
+      'uri' => 'entity:node/' . $node->id(),
+      'title' => 'Overridden front Link',
+    ]);
+    $node->save();
+    $this->drupalGet($node->toUrl());
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    // Translate each of the fields.
+    foreach ($this->fields as $key => $data) {
+      $table_header = $this->getSession()->getPage()->find('xpath', $data['xpath']);
+      if (!$table_header) {
+        $this->fail(sprintf('The form label for the "%s" field was not found on the page.', $key));
+      }
+      $table = $table_header->getParent()->getParent()->getParent();
+      $element = $table->find('xpath', "//textarea[contains(@name,'[translation]')]");
+      if (!$element) {
+        $this->fail(sprintf('The translation element for the "%s" field was not found on the page.', $key));
+      }
+      // Set a translation value.
+      if (isset($data['translate'])) {
+        $element->setValue($data['value'] . ' FR');
+      }
+    }
+    // Translate the link as well. The URI cannot be translated.
+    $this->assertSession()->fieldNotExists('ott_demo_link_field|0|uri[translation]');
+    $this->getSession()->getPage()->fillField('ott_demo_link_field|0|title[translation]', 'Overridden FR front Link');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    // Assert the node now has the FR translation.
+    $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
+    $link = $this->getSession()->getPage()->findLink('Overridden FR front Link');
+    $this->assertEquals('/build/fr/full-translation-node-fr', $link->getAttribute('href'));
+    $node_storage->resetCache();
+    $node = $node_storage->load($node->id());
+
+    // Update the URI to another node and translate it.
+    $new_node = $this->createBasicTestNode();
+    $this->drupalGet($node->toUrl('edit-form'));
+    $this->getSession()->getPage()->fillField('ott_demo_link_field[0][uri]', 'entity:node/' . $new_node->id());
+    $this->getSession()->getPage()->fillField('ott_demo_link_field[0][title]', 'Overridden front Link 2');
+    $this->getSession()->getPage()->pressButton('Save (this translation)');
+    $this->clickLink('Translate');
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'table tbody tr[hreflang="fr"] a')->click();
+    $this->assertSession()->fieldNotExists('ott_demo_link_field|0|uri[translation]');
+    $this->getSession()->getPage()->fillField('ott_demo_link_field|0|title[translation]', 'Overridden FR front Link 2');
+    $this->getSession()->getPage()->pressButton('Save and synchronise');
+    // Assert the node now has the FR translation.
+    $this->drupalGet('/fr/node/' . $node->id(), ['external' => FALSE]);
+    $link = $this->getSession()->getPage()->findLink('Overridden FR front Link 2');
+    $this->assertEquals('/build/fr/node/' . $new_node->id(), $link->getAttribute('href'));
+  }
+
+  /**
    * Asserts the ongoing translations table.
    *
    * @param array $languages
