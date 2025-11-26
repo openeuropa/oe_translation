@@ -94,7 +94,7 @@ class EtransTranslationMockHelper {
     $data = [
       'requestId' => $request->get('remote_id')->value ?? '1',
       'externalReference' => $request->getSavedAccessToken(),
-      'targetLanguage' => $langcode,
+      'targetLanguages' => [$langcode],
       'errorCode' => $error_code,
       'errorMessage' => $error_message,
     ];

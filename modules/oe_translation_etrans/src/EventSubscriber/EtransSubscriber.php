@@ -92,8 +92,8 @@ class EtransSubscriber implements EventSubscriberInterface {
     $request_id = $event->getRequestId();
     $translation = $event->getTranslation();
     $language = $event->getLanguage();
+    $translation_request = $event->getTranslationRequest();
 
-    $translation_request = $this->getTranslationRequest($request_id);
     $language = LanguageMapper::getDrupalLanguageCode($language, $translation_request);
 
     try {
@@ -128,13 +128,13 @@ class EtransSubscriber implements EventSubscriberInterface {
    */
   public function onFailure(EtransFailureEvent $event): void {
     $request_id = $event->getRequestId();
-    $translation_request = $this->getTranslationRequest($request_id);
+    $translation_request = $event->getTranslationRequest();
     $error_code = $event->getErrorCode();
     $error_message = $event->getErrorMessage();
     $target_languages = $event->getTargetLanguages();
     $target_languages_string = count($target_languages) > 1 ? implode(', ', $target_languages) : reset($target_languages);
 
-    $message = 'Etrans sent a failure notification for the Request ID: <strong>@request_id</strong> with the following error code @code and error message: @error_message.';
+    $message = 'Etrans sent a failure notification for the Request ID: <strong>@request_id</strong> with the following error code @code and error message: @error_message';
     $variables = [
       '@request_id' => $request_id,
       '@code' => $error_code,
@@ -159,26 +159,6 @@ class EtransSubscriber implements EventSubscriberInterface {
     }
 
     $translation_request->save();
-  }
-
-  /**
-   * Returns the translation request based on the request ID.
-   *
-   * @param string $request_id
-   *   The request ID.
-   *
-   * @return \Drupal\oe_translation_etrans\TranslationRequestEtransInterface
-   *   The translation request.
-   */
-  protected function getTranslationRequest(string $request_id): TranslationRequestEtransInterface {
-    $ids = $this->entityTypeManager->getStorage('oe_translation_request')
-      ->getQuery()
-      ->condition('remote_id', $request_id)
-      ->accessCheck(FALSE)
-      ->execute();
-
-    $id = reset($ids);
-    return $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
   }
 
 }

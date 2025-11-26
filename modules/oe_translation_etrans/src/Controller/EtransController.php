@@ -11,6 +11,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation_etrans\EtransTranslationRequestRemoteIdResolver;
 use Drupal\oe_translation_etrans\Event\EtransDeliveryEvent;
 use Drupal\oe_translation_etrans\Event\EtransFailureEvent;
 use Drupal\oe_translation_etrans\TranslationRequestEtransInterface;
@@ -42,6 +43,13 @@ class EtransController extends ControllerBase {
   protected $logger;
 
   /**
+   * The request resolver.
+   *
+   * @var \Drupal\oe_translation_etrans\EtransTranslationRequestRemoteIdResolver
+   */
+  protected $requestResolver;
+
+  /**
    * Constructs a EtransController.
    *
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
@@ -50,11 +58,14 @@ class EtransController extends ControllerBase {
    *   The logger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\oe_translation_etrans\EtransTranslationRequestRemoteIdResolver $requestResolver
+   *   The request resolver.
    */
-  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager, EtransTranslationRequestRemoteIdResolver $requestResolver) {
     $this->eventDispatcher = $eventDispatcher;
     $this->logger = $loggerChannelFactory->get('oe_translation_etrans');
     $this->entityTypeManager = $entityTypeManager;
+    $this->requestResolver = $requestResolver;
   }
 
   /**
@@ -64,7 +75,8 @@ class EtransController extends ControllerBase {
     return new static(
       $container->get('event_dispatcher'),
       $container->get('logger.factory'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('oe_translation_etrans.translation_request_remote_id_resolver')
     );
   }
 
@@ -94,7 +106,7 @@ class EtransController extends ControllerBase {
     $remote_id = (string) $content->requestId;
     $token = (string) $content->externalReference;
 
-    $translation_request = $this->getTranslationRequest($remote_id, $token);
+    $translation_request = $this->requestResolver->resolveTranslationRequest($remote_id, $token);
     if (!$translation_request) {
       // We don't care about any failure notification if we cannot determine
       // a translation request. It's also the only access check we get.
@@ -106,7 +118,7 @@ class EtransController extends ControllerBase {
     $error_code = (string) $content->errorCode;
     $target_languages = $content->targetLanguages ?? [];
 
-    $event = new EtransFailureEvent($remote_id, $error_code, $error_message, $target_languages);
+    $event = new EtransFailureEvent($remote_id, $error_code, $error_message, $target_languages, $translation_request);
     $this->eventDispatcher->dispatch($event, EtransFailureEvent::class);
 
     // We don't need to return any particular thing, even if we have any errors.
@@ -128,7 +140,7 @@ class EtransController extends ControllerBase {
     $remote_id = (string) $content->requestId;
     $token = (string) $content->externalReference;
 
-    $translation_request = $this->getTranslationRequest($remote_id, $token);
+    $translation_request = $this->requestResolver->resolveTranslationRequest($remote_id, $token);
     if (!$translation_request) {
       $this->logger->warning(sprintf('An etrans delivery was attempted for the request ID %s but for which there was no translation request.', $remote_id));
       throw new NotFoundHttpException();
@@ -141,7 +153,7 @@ class EtransController extends ControllerBase {
       '@etrans' => $content->result,
     ]);
     $translation = base64_decode($content->result);
-    $event = new EtransDeliveryEvent($remote_id, $target_language, $translation);
+    $event = new EtransDeliveryEvent($remote_id, $target_language, $translation, $translation_request);
     $this->eventDispatcher->dispatch($event, EtransDeliveryEvent::class);
 
     // We don't need to return any particular thing, even if we have any errors.
@@ -197,33 +209,6 @@ class EtransController extends ControllerBase {
     }
 
     return AccessResult::allowed();
-  }
-
-  /**
-   * Returns the translation request based on the request ID.
-   *
-   * @param string $request_id
-   *   The request ID.
-   * @param string $token
-   *   The access token.
-   *
-   * @return null|\Drupal\oe_translation_etrans\TranslationRequestEtransInterface
-   *   The translation request.
-   */
-  protected function getTranslationRequest(string $request_id, string $token): ?TranslationRequestEtransInterface {
-    $ids = $this->entityTypeManager->getStorage('oe_translation_request')
-      ->getQuery()
-      ->condition('remote_id', $request_id)
-      ->condition('etrans_access_token', $token)
-      ->accessCheck(FALSE)
-      ->execute();
-
-    if (!$ids) {
-      return NULL;
-    }
-
-    $id = reset($ids);
-    return $this->entityTypeManager->getStorage('oe_translation_request')->load($id);
   }
 
 }

@@ -15,3 +15,6 @@ services:
     class: Drupal\oe_translation_etrans\EventSubscriber\TranslationSourceEventSubscriber
     tags:
       - { name: event_subscriber }
+  oe_translation_etrans.translation_request_remote_id_resolver:
+    class: Drupal\oe_translation_etrans\EtransTranslationRequestRemoteIdResolver
+    arguments: ['@entity_type.manager', '@event_dispatcher']
