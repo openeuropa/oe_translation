@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_remote;
 
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
@@ -48,6 +49,13 @@ class RemoteTranslationSynchroniser {
   protected $eventDispatcher;
 
   /**
+   * The logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * Constructs a RemoteTranslationSynchroniser.
    *
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
@@ -58,12 +66,15 @@ class RemoteTranslationSynchroniser {
    *   The messenger.
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory.
    */
-  public function __construct(LanguageManagerInterface $languageManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(LanguageManagerInterface $languageManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->languageManager = $languageManager;
     $this->translationSourceManager = $translationSourceManager;
     $this->messenger = $messenger;
     $this->eventDispatcher = $eventDispatcher;
+    $this->logger = $loggerChannelFactory->get('oe_translation_remote');
   }
 
   /**
@@ -93,14 +104,34 @@ class RemoteTranslationSynchroniser {
     }
 
     $language_data['#translation_request'] = $translation_request;
-    $saved = $this->translationSourceManager->saveData($language_data, $entity, $language->getId(), TRUE, $translation_request->getData());
-    if (!$saved) {
+    try {
+      $saved = $this->translationSourceManager->saveData($language_data, $entity, $language->getId(), TRUE, $translation_request->getData());
+
+      if (!$saved) {
+        $translation_request->log('An attempt to sync @auto the <strong>@language</strong> translation has failed.', [
+          '@language' => $language->getName(),
+          '@auto' => $auto ? 'automatically' : '',
+        ], TranslationRequestLogInterface::ERROR);
+        $translation_request->save();
+        $this->messenger->addError($this->t('There was a problem synchronising the translation.'));
+
+        return;
+      }
+    }
+    catch (\Exception $exception) {
       $translation_request->log('An attempt to sync @auto the <strong>@language</strong> translation has failed.', [
         '@language' => $language->getName(),
         '@auto' => $auto ? 'automatically' : '',
       ], TranslationRequestLogInterface::ERROR);
       $translation_request->save();
+
       $this->messenger->addError($this->t('There was a problem synchronising the translation. Check the global site logs for the error.'));
+      $this->logger->error('There was a problem synchronising the @provider translation in @language for the Drupal translation request ID <strong>@id</strong>: @error', [
+        '@provider' => $translation_request->getTranslatorProvider()->label(),
+        '@id' => $translation_request->id(),
+        '@language' => $language_code,
+        '@error' => $exception->getMessage(),
+      ]);
 
       return;
     }
