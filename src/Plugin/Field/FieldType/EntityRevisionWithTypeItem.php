@@ -102,8 +102,10 @@ class EntityRevisionWithTypeItem extends FieldItemBase {
       ],
     ];
 
+    $indexes = ['idx_revision_lookup' => ['entity_type', 'entity_id']];
     return [
       'columns' => $columns,
+      'indexes' => $indexes,
     ];
   }
 
