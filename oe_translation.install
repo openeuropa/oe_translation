@@ -145,3 +145,74 @@ function oe_translation_update_9001(): void {
   $update_manager->installEntityType($translation_request_log);
 
 }
+
+/**
+ * Add index to all fields of type oe_translation_language_with_entity_revision.
+ */
+function oe_translation_update_9002(): void {
+  /** @var \Drupal\Core\Entity\EntityFieldManager $field_manager */
+  $field_manager = \Drupal::service('entity_field.manager');
+  $definition_manager = \Drupal::entityDefinitionUpdateManager();
+  $database = \Drupal::database();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $field_type = 'oe_translation_language_with_entity_revision';
+  // Get all field storage configs for this field type.
+  $field_storage_configs = \Drupal::entityTypeManager()
+    ->getStorage('field_storage_config')
+    ->loadByProperties(['type' => $field_type]);
+
+  foreach ($field_storage_configs as $field_storage) {
+    $field_name = $field_storage->getName();
+    $entity_type_id = $field_storage->getTargetEntityTypeId();
+    $storage = $entity_type_manager->getStorage($entity_type_id);
+    $table_mapping = $storage->getTableMapping();
+    $table_name = $table_mapping->getFieldTableName($field_name);
+    $table_schema = $field_storage->getSchema();
+    $spec_properties = ['entity_type', 'entity_id'];
+    $index_columns = [
+      $field_name . '_entity_type',
+      $field_name . '_entity_id',
+    ];
+
+    $spec = [];
+    $column_number = count($index_columns);
+    for ($i = 0; $i < $column_number; $i++) {
+      $id = $index_columns[$i];
+      $property = $spec_properties[$i];
+      if (isset($table_schema['columns'][$property])) {
+        $spec[$id] = $table_schema['columns'][$property];
+      }
+    }
+
+    // Add index to data table.
+    if (!$database->schema()->indexExists($table_name, 'idx_revision_lookup')) {
+      $database->schema()->addIndex(
+        $table_name,
+        'idx_revision_lookup',
+        $index_columns,
+        ['fields' => $spec]
+      );
+    }
+
+    $field_manager->clearCachedFieldDefinitions();
+    $field_storage = $definition_manager->getFieldStorageDefinition($field_name, $entity_type_id);
+    $definition_manager->updateFieldStorageDefinition($field_storage);
+  }
+}
+
+/**
+ * Add index to oe_translation_request.
+ */
+function oe_translation_update_9003(): void {
+  /** @var \Drupal\Core\Entity\EntityFieldManager $field_manager */
+  $field_manager = \Drupal::service('entity_field.manager');
+  $definition_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_storage_definitions = $field_manager->getFieldStorageDefinitions('oe_translation_request');
+  if (isset($field_storage_definitions['content_entity'])) {
+    \Drupal::service('entity.last_installed_schema.repository')
+      ->setLastInstalledFieldStorageDefinition($field_storage_definitions['content_entity']);
+  }
+
+  $field_storage = $definition_manager->getFieldStorageDefinition('content_entity', 'oe_translation_request');
+  $definition_manager->updateFieldStorageDefinition($field_storage);
+}
