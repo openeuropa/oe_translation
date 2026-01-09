@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.21.0](https://github.com/openeuropa/oe_translation/tree/2.21.0) (2026-01-09)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.20.0...2.21.0)
+
+**Merged pull requests:**
+
+- EWPP-6400: Update testing matrix. [\#379](https://github.com/openeuropa/oe_translation/pull/379) ([nagyad](https://github.com/nagyad))
+- EWPP-6355: Add missing index on field\_language\_revision. [\#378](https://github.com/openeuropa/oe_translation/pull/378) ([hernani](https://github.com/hernani))
+- EWPP-6304: Minor etrans test fix. [\#376](https://github.com/openeuropa/oe_translation/pull/376) ([upchuk](https://github.com/upchuk))
+- EWPP-6261: Bump composer/installers to 2.x. [\#373](https://github.com/openeuropa/oe_translation/pull/373) ([nagyad](https://github.com/nagyad))
+- EWPP-6153: Fixing internal URI translatability. [\#370](https://github.com/openeuropa/oe_translation/pull/370) ([upchuk](https://github.com/upchuk))
+- EWPP-5910: Catching and logging exceptions in remote content sync. [\#360](https://github.com/openeuropa/oe_translation/pull/360) ([upchuk](https://github.com/upchuk))
+
 ## [2.20.0](https://github.com/openeuropa/oe_translation/tree/2.20.0) (2025-11-21)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.19.0...2.20.0)
