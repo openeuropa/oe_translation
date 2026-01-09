@@ -44,6 +44,7 @@ class AvailableLanguagesSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function alterAvailableLanguages(AvailableLanguagesAlterEvent $event) {
+    $this->state->resetCache();
     $to_remove = $this->state->get('oe_translation_test.remove_languages', []);
     $languages = $event->getLanguages();
     foreach ($to_remove as $langcode) {

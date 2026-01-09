@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_etrans\Event;
 
+use Drupal\oe_translation_etrans\TranslationRequestEtransInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
@@ -33,6 +34,13 @@ class EtransDeliveryEvent extends Event {
   protected string $translation;
 
   /**
+   * The translation request.
+   *
+   * @var \Drupal\oe_translation_etrans\TranslationRequestEtransInterface
+   */
+  protected $translationRequest;
+
+  /**
    * Constructs a EtransDeliveryEvent.
    *
    * @param string $requestId
@@ -41,11 +49,14 @@ class EtransDeliveryEvent extends Event {
    *   The language for which the translation is being delivered.
    * @param string $translation
    *   The translation HTML string.
+   * @param \Drupal\oe_translation_etrans\TranslationRequestEtransInterface $translationRequest
+   *   The translation request.
    */
-  public function __construct(string $requestId, string $language, string $translation) {
+  public function __construct(string $requestId, string $language, string $translation, TranslationRequestEtransInterface $translationRequest) {
     $this->requestId = $requestId;
     $this->translation = $translation;
     $this->language = $language;
+    $this->translationRequest = $translationRequest;
   }
 
   /**
@@ -76,6 +87,16 @@ class EtransDeliveryEvent extends Event {
    */
   public function getLanguage(): string {
     return $this->language;
+  }
+
+  /**
+   * Returns the translation request.
+   *
+   * @return \Drupal\oe_translation_etrans\TranslationRequestEtransInterface
+   *   The translation request.
+   */
+  public function getTranslationRequest(): TranslationRequestEtransInterface {
+    return $this->translationRequest;
   }
 
 }

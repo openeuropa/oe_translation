@@ -82,10 +82,12 @@ class HttpClientMiddleware {
 
             return new FulfilledPromise($response);
           }
+
+          $request_id = $this->state->get('oe_translation_etrans_mock.default_request_id', '55555');
           $response = new Response(headers: [
             'Content-Type' => 'application/json',
           ], body: json_encode([
-            'requestId' => '55555',
+            'requestId' => $request_id,
           ]));
           return new FulfilledPromise($response);
         }

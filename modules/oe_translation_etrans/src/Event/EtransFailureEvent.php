@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_etrans\Event;
 
+use Drupal\oe_translation_etrans\TranslationRequestEtransInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
@@ -40,6 +41,13 @@ class EtransFailureEvent extends Event {
   protected array $targetLanguages;
 
   /**
+   * The translation request.
+   *
+   * @var \Drupal\oe_translation_etrans\TranslationRequestEtransInterface
+   */
+  protected $translationRequest;
+
+  /**
    * Constructs a EtransDeliveryEvent.
    *
    * @param string $requestId
@@ -50,12 +58,15 @@ class EtransFailureEvent extends Event {
    *   The error message.
    * @param array $targetLanguages
    *   The target languages.
+   * @param \Drupal\oe_translation_etrans\TranslationRequestEtransInterface $translationRequest
+   *   The translation request.
    */
-  public function __construct(string $requestId, string $errorCode, string $errorMessage, array $targetLanguages = []) {
+  public function __construct(string $requestId, string $errorCode, string $errorMessage, array $targetLanguages, TranslationRequestEtransInterface $translationRequest) {
     $this->requestId = $requestId;
     $this->errorCode = $errorCode;
     $this->errorMessage = $errorMessage;
     $this->targetLanguages = $targetLanguages;
+    $this->translationRequest = $translationRequest;
   }
 
   /**
@@ -96,6 +107,16 @@ class EtransFailureEvent extends Event {
    */
   public function getTargetLanguages(): array {
     return $this->targetLanguages;
+  }
+
+  /**
+   * Returns the translation request.
+   *
+   * @return \Drupal\oe_translation_etrans\TranslationRequestEtransInterface
+   *   The translation request.
+   */
+  public function getTranslationRequest(): TranslationRequestEtransInterface {
+    return $this->translationRequest;
   }
 
 }
