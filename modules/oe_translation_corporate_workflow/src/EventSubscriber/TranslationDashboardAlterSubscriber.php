@@ -363,12 +363,13 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
   protected function getTranslationVersionTitle(ContentEntityInterface $translation): TranslatableMarkup {
     $version = $this->getEntityVersion($translation);
     $translation_request = $translation->get('translation_request')->entity;
-    if (!$translation_request instanceof TranslationRequestInterface) {
+    $translated_entity = $translation_request?->getContentEntity();
+
+    if (!$translation_request instanceof TranslationRequestInterface || !$translated_entity) {
       // We cannot determine.
       return $this->t('Version @version (carried over)', ['@version' => $version]);
     }
 
-    $translated_entity = $translation_request->getContentEntity();
     $translation_version = $this->getEntityVersion($translated_entity);
     if ($translation_version === $version) {
       // If the current translation version is the one onto which the
