@@ -82,19 +82,22 @@ class EtransTranslationMockHelper {
    *
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $request
    *   The translation request.
-   * @param string $langcode
+   * @param array $langcodes
    *   The langcode.
    * @param string $error_code
    *   The error code.
    * @param string $error_message
    *   The error message.
    */
-  public static function sendErrorCallback(TranslationRequestInterface $request, string $langcode, string $error_code, string $error_message): void {
-    $langcode = LanguageMapper::getMappedLanguageCode($langcode, $request);
+  public static function sendErrorCallback(TranslationRequestInterface $request, array $langcodes, string $error_code, string $error_message): void {
+    foreach ($langcodes as &$langcode) {
+      $langcode = LanguageMapper::getMappedLanguageCode($langcode, $request);
+    }
+
     $data = [
       'requestId' => $request->get('remote_id')->value ?? '1',
       'externalReference' => $request->getSavedAccessToken(),
-      'targetLanguages' => [$langcode],
+      'targetLanguages' => $langcodes,
       'errorCode' => $error_code,
       'errorMessage' => $error_message,
     ];

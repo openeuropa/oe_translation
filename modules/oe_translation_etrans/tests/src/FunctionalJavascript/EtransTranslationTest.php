@@ -302,7 +302,7 @@ class EtransTranslationTest extends TranslationTestBase {
 
     // Send a delivery error request.
     EtransTranslationMockHelper::$databasePrefix = $this->databasePrefix;
-    EtransTranslationMockHelper::sendErrorCallback($request, 'fr', '4000', 'There was an error with the request.');
+    EtransTranslationMockHelper::sendErrorCallback($request, ['fr'], '4000', 'There was an error with the request.');
     $logs = \Drupal::service('oe_translation_test.logger.mock_logger')->getLogs();
     $log = reset($logs);
     $message = 'Etrans sent a failure notification for the Request ID: <strong>55555</strong> with the following error code 4000 and error message: There was an error with the request. The notification was for the following languages: FR';

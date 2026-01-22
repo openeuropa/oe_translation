@@ -63,6 +63,16 @@ class HttpClientMiddleware {
             return new FulfilledPromise($response);
           }
 
+          // Throw an 502 if globally configured.
+          $error = $this->state->get('oe_translation_etrans_mock.error_response_502', FALSE);
+          if ($error) {
+            $response = new Response(status: 502, headers: [
+              'Content-Type' => 'application/json',
+            ]);
+
+            return new FulfilledPromise($response);
+          }
+
           // Check to see the node being translated in case we need to throw
           // an error for a specific request.
           $contents = $request->getBody()->getContents();
