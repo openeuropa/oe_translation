@@ -5,6 +5,12 @@ OpenEuropa contents and translatable items.
 
 You can read the user guide [here](https://github.com/openeuropa/oe_translation/blob/2.x/USER_GUIDE.md).
 
+## Upgrade from 2.x to 3.x
+
+As of 3.x we have removed Drupal/tmgmt dependency from this module!
+After using this version composer will remove tmgmt module. Make sure that it is
+uninstalled correctly before upgrading to this version!
+
 ## Development setup
 
 You can build the development site by running the following steps:
