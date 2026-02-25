@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_etrans;
 
+use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\Site\Settings;
 use GuzzleHttp\Client;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Client for sending requests to DGT for etranslations.
@@ -31,20 +31,13 @@ class EtransClient {
   /**
    * Constructs a EtransClient.
    *
-   * @param \GuzzleHttp\Client $client
-   *   The HTTP client.
+   * @param \Drupal\Core\Http\ClientFactory $client_factory
+   *   The HTTP client factory.
    */
-  public function __construct(Client $client) {
-    $this->client = $client;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('http_client')
-    );
+  public function __construct(ClientFactory $client_factory) {
+    $this->client = $client_factory->fromOptions([
+      'timeout' => 120,
+    ]);
   }
 
   /**

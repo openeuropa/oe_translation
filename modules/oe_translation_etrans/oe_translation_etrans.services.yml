@@ -1,7 +1,7 @@
 services:
   oe_translation_etrans.client:
     class: Drupal\oe_translation_etrans\EtransClient
-    arguments: ['@http_client']
+    arguments: ['@http_client_factory']
   oe_translation_etrans.etrans_subscriber:
     class: Drupal\oe_translation_etrans\EventSubscriber\EtransSubscriber
     arguments: ['@entity_type.manager', '@logger.factory', '@oe_translation_content_formatter.html_formatter', '@queue.database']
