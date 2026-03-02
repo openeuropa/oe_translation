@@ -1,11 +1,22 @@
 # Changelog
 
+## [3.0.0-rc1](https://github.com/openeuropa/oe_translation/tree/3.0.0-rc1) (2026-03-02)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.21.0...3.0.0-rc1)
+
+**Merged pull requests:**
+
+- EWPP-6584: Increasing Guzzle requests for etrans to 120 second timeout. [\#388](https://github.com/openeuropa/oe_translation/pull/388) ([upchuk](https://github.com/upchuk))
+- EWPP-6486: Minor fix on the etrans mock. [\#383](https://github.com/openeuropa/oe_translation/pull/383) ([upchuk](https://github.com/upchuk))
+- EWPP-6349: Remove tmgmt completely. [\#382](https://github.com/openeuropa/oe_translation/pull/382) ([nagyad](https://github.com/nagyad))
+
 ## [2.21.0](https://github.com/openeuropa/oe_translation/tree/2.21.0) (2026-01-09)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.20.0...2.21.0)
 
 **Merged pull requests:**
 
+- Release-2.21.0: Update changelog. [\#380](https://github.com/openeuropa/oe_translation/pull/380) ([nagyad](https://github.com/nagyad))
 - EWPP-6400: Update testing matrix. [\#379](https://github.com/openeuropa/oe_translation/pull/379) ([nagyad](https://github.com/nagyad))
 - EWPP-6355: Add missing index on field\_language\_revision. [\#378](https://github.com/openeuropa/oe_translation/pull/378) ([hernani](https://github.com/hernani))
 - EWPP-6304: Minor etrans test fix. [\#376](https://github.com/openeuropa/oe_translation/pull/376) ([upchuk](https://github.com/upchuk))
