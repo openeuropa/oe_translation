@@ -290,7 +290,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
     ]);
     $node->save();
     $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(5, $revision_ids);
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');

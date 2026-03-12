@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation\Kernel;
 
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\node\Entity\NodeType;
@@ -22,6 +24,7 @@ class TranslationKernelTestBase extends KernelTestBase {
     'address',
     'system',
     'node',
+    'node_storage_body_field',
     'field',
     'file',
     'link',
@@ -73,6 +76,7 @@ class TranslationKernelTestBase extends KernelTestBase {
     $this->installConfig([
       'system',
       'node',
+      'node_storage_body_field',
       'field',
       'link',
       'language',
@@ -91,7 +95,16 @@ class TranslationKernelTestBase extends KernelTestBase {
     // Create a node type and set it translatable.
     $type = NodeType::create(['type' => 'page', 'name' => 'page']);
     $type->save();
-    node_add_body_field($type);
+    $field = FieldConfig::create([
+      'field_storage' => FieldStorageConfig::loadByName('node', 'body'),
+      'bundle' => $type->id(),
+      'label' => 'Body',
+      'settings' => [
+        'display_summary' => TRUE,
+        'allowed_formats' => [],
+      ],
+    ]);
+    $field->save();
     $this->container->get('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('router.builder')->rebuild();
   }
