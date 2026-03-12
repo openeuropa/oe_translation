@@ -374,7 +374,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $node = $this->moderateNode($node, 'validated');
 
     // At this point, we expect to have 4 revisions of the node.
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(4, $revision_ids);
 
     // Create a local translation request.
@@ -391,7 +391,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     // Publish the node before finalizing the translation request.
     $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(5, $revision_ids);
 
     // Finalize the translation and check that the translation got saved onto
@@ -424,10 +424,10 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $node->set('title', 'My node 2');
     $node->set('moderation_state', 'draft');
     $node->save();
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(6, $revision_ids);
     $node = $this->moderateNode($node, 'validated');
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(9, $revision_ids);
     // Assert that the latest revision that was just validated is the correct
     // version and inherited the translation from the previous version.
@@ -464,7 +464,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     // Publish the node before finalizing the translation.
     $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(10, $revision_ids);
     // Assert the dashboard contains the ongoing requests.
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
@@ -497,7 +497,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertEquals('My node 2 FR', $node->getTranslation('fr')->label());
 
     // The previous published revisions have the old FR translation.
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     /** @var \Drupal\node\NodeInterface[] $revisions */
     $revisions = $node_storage->loadMultipleRevisions($revision_ids);
     foreach ($revisions as $revision) {
@@ -513,7 +513,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $node->set('moderation_state', 'draft');
     $node->save();
     $this->moderateNode($node, 'validated');
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     // We have 14 new revisions now.
     $this->assertCount(14, $revision_ids);
     // Test the UI changes when we have a published version and we make a new
@@ -593,7 +593,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     // Assert the translations got saved on the correct revisions.
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     /** @var \Drupal\node\NodeInterface[] $revisions */
     $revisions = $node_storage->loadMultipleRevisions($revision_ids);
     foreach ($revisions as $revision) {
@@ -1099,7 +1099,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     ]);
     $node->save();
     $node = $this->moderateNode($node, 'published');
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(5, $revision_ids);
 
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
@@ -1243,6 +1243,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       $this->assertSession()->addressEquals('/' . $entity_type . '/' . $entity->id() . '/translations');
       // The last revision no longer has a translation and there are the same
       // number of revisions in the system.
+      $storage->resetCache();
       $non_translated_revision_ids = [1, 2, 3, 4, 9];
       $translated_revision_ids = [5, 6, 7, 8];
       foreach ($non_translated_revision_ids as $id) {

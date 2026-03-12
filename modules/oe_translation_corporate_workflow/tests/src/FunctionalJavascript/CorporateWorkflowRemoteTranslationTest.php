@@ -177,7 +177,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // Publish the node.
     $node = $this->moderateNode($node, 'published');
     $validated = $node_storage->loadRevision($validated_id);
-    $revision_ids = $node_storage->revisionIds($node);
+    $revision_ids = array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $this->assertCount(5, $revision_ids);
 
     // Visit the dashboard and the remote translation requests page and assert
@@ -284,7 +284,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     ]);
     $node->save();
     $node = $this->moderateNode($node, 'published');
-    $this->assertCount(5, $node_storage->revisionIds($node));
+    $this->assertCount(5, array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute()));
     $published_revision_id = $node->getRevisionId();
 
     // Start a translation for the published node.
@@ -317,7 +317,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     $node->set('title', 'My node 2');
     $node->set('moderation_state', 'draft');
     $node->save();
-    $this->assertCount(6, $node_storage->revisionIds($node));
+    $this->assertCount(6, array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute()));
 
     $this->getSession()->reload();
 
@@ -355,7 +355,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
     // Validate the draft and assert we still cannot request a new translation
     // because we have an active one.
     $node = $this->moderateNode($node, 'validated');
-    $this->assertCount(9, $node_storage->revisionIds($node));
+    $this->assertCount(9, array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute()));
     $this->getSession()->reload();
     $this->assertSession()->fieldDisabled('Translator');
     $this->assertSession()->elementContains('css', '.translator-wrapper .messages--warning', 'No new translation request can be made because there is already an active translation request for this entity version.');
