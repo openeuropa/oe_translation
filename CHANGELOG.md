@@ -1,11 +1,20 @@
 # Changelog
 
+## [3.0.0-rc2](https://github.com/openeuropa/oe_translation/tree/3.0.0-rc2) (2026-03-16)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.0.0-rc1...3.0.0-rc2)
+
+**Merged pull requests:**
+
+- EWPP-6663: Requiring doctrine/annotations until we deprecate it. [\#390](https://github.com/openeuropa/oe_translation/pull/390) ([upchuk](https://github.com/upchuk))
+
 ## [3.0.0-rc1](https://github.com/openeuropa/oe_translation/tree/3.0.0-rc1) (2026-03-02)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/2.21.0...3.0.0-rc1)
 
 **Merged pull requests:**
 
+- Release-3.0.0-rc1: Update changelog. [\#389](https://github.com/openeuropa/oe_translation/pull/389) ([nagyad](https://github.com/nagyad))
 - EWPP-6584: Increasing Guzzle requests for etrans to 120 second timeout. [\#388](https://github.com/openeuropa/oe_translation/pull/388) ([upchuk](https://github.com/upchuk))
 - EWPP-6486: Minor fix on the etrans mock. [\#383](https://github.com/openeuropa/oe_translation/pull/383) ([upchuk](https://github.com/upchuk))
 - EWPP-6349: Remove tmgmt completely. [\#382](https://github.com/openeuropa/oe_translation/pull/382) ([nagyad](https://github.com/nagyad))
