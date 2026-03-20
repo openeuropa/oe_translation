@@ -38,14 +38,19 @@
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
         "symfony/property-access": "^6 || ^7",
-        "symfony/property-info": "^6 || ^7"
+        "symfony/property-info": "^6 || ^7",
+        "php-standard-library/php-standard-library": "^4.3"
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
-        "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions."
+        "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions.",
+        "Added a replace azjezz/psl because it was replaced by php-standard-library/php-standard-library package and it was abadoned. Also ensuring php-standard-library/php-standard-library doesnt go over 4.3"
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
+    },
+    "replace": {
+        "azjezz/psl": "*"
     },
     "scripts": {
         "post-install-cmd": "./vendor/bin/run drupal:site-setup",
