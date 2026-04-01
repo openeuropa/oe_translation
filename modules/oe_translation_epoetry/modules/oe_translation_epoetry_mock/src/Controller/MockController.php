@@ -112,17 +112,8 @@ class MockController extends ControllerBase {
       return $response;
     }
 
-    $xml = str_ireplace([
-      'SOAPENV:',
-      'SOAP:',
-      'eu:',
-      'SOAP-ENV:',
-      'ns1:',
-      'xsi:',
-      ':ProxyTicket',
-    ], '', $request_xml);
-    $xml = simplexml_load_string($xml);
-    if ((string) $xml->Header->ecas !== 'ticket' && !\Drupal::state()->get('oe_translation_epoetry_mock.bypass_mock_authentication', FALSE)) {
+    $xml = $this->stripNamespacePrefixes($request_xml);
+    if ((string) $xml->Header->ProxyTicket !== 'ticket' && !\Drupal::state()->get('oe_translation_epoetry_mock.bypass_mock_authentication', FALSE)) {
       throw new AccessDeniedHttpException();
     }
 
@@ -153,6 +144,30 @@ class MockController extends ControllerBase {
     $response->headers->set('Content-type', 'application/xml; charset=utf-8');
 
     return $response;
+  }
+
+  /**
+   * Strips all namespace prefixes from an XML string.
+   *
+   * Removes namespace prefixes from elements and attributes, and strips
+   * namespace declarations, producing a SimpleXMLElement with plain,
+   * unqualified element names regardless of which prefixes are used.
+   *
+   * @param string $xml_string
+   *   The raw XML string.
+   *
+   * @return \SimpleXMLElement
+   *   The parsed XML without namespace prefixes.
+   */
+  protected function stripNamespacePrefixes(string $xml_string): \SimpleXMLElement {
+    // Strip namespace prefixes from element names.
+    $stripped = preg_replace('/(<\/?)[a-zA-Z0-9_-]+:/', '$1', $xml_string);
+    // Strip namespace declarations.
+    $stripped = preg_replace('/\s+xmlns(:[a-zA-Z0-9_-]*)?\s*=\s*"[^"]*"/', '', $stripped);
+    // Strip prefixed attributes (e.g., xsi:type).
+    $stripped = preg_replace('/\s+[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+\s*=\s*"[^"]*"/', '', $stripped);
+
+    return simplexml_load_string($stripped);
   }
 
   /**
