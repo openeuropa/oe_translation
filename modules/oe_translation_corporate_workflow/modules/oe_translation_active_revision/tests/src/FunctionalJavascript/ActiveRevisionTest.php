@@ -2088,8 +2088,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $node->addTranslation('fr', ['title' => 'test fr'] + $node->toArray());
     $node->save();
 
-    $this->assertEquals(0, $node->get('version')->major);
-    $this->assertEquals(1, $node->get('version')->minor);
+    $this->assertEquals(0, $node->get('field_entity_version')->major);
+    $this->assertEquals(1, $node->get('field_entity_version')->minor);
 
     // Edit the node to make a new draft and then publish it.
     $this->drupalGet($node->toUrl('edit-form'));
@@ -2106,8 +2106,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());
     // We now have a major version.
-    $this->assertEquals(1, $node->get('version')->major);
-    $this->assertEquals(0, $node->get('version')->minor);
+    $this->assertEquals(1, $node->get('field_entity_version')->major);
+    $this->assertEquals(0, $node->get('field_entity_version')->minor);
 
     // And if now we make a new draft and then publish, we'll also get an
     // active revision entity.
@@ -2124,8 +2124,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertInstanceOf(ActiveRevisionInterface::class, $active_revision);
     $node_storage->resetCache();
     $node = $node_storage->load($node->id());
-    $this->assertEquals(2, $node->get('version')->major);
-    $this->assertEquals(0, $node->get('version')->minor);
+    $this->assertEquals(2, $node->get('field_entity_version')->major);
+    $this->assertEquals(0, $node->get('field_entity_version')->minor);
   }
 
 }
