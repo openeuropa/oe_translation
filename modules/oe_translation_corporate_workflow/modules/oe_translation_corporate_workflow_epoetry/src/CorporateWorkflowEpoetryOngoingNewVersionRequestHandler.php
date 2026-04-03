@@ -57,17 +57,21 @@ class CorporateWorkflowEpoetryOngoingNewVersionRequestHandler extends EpoetryOng
       return FALSE;
     }
 
-    if (!$entity->hasField('version') || $entity->get('version')->isEmpty()) {
-      // We rely on the corporate workflow entity version field.
+    $version_field_setting = $this->entityTypeManager->getStorage('entity_version_settings')->load($entity->getEntityTypeId() . '.' . $entity->bundle());
+    if (!$version_field_setting) {
+      return FALSE;
+    }
+    $version_field = $version_field_setting->getTargetField();
+    if (empty($version_field) || !$entity->hasField($version_field) || $entity->get($version_field)->isEmpty()) {
       return FALSE;
     }
 
     // At this point, we are sure we are dealing with a corporate workflow
     // entity, so we need to check that the update revision is not in the same
     // major version because then it's not an update of the content.
-    $original_version = $entity->get('version')->first();
+    $original_version = $entity->get($version_field)->first();
     $original_major = (int) $original_version->get('major')->getValue();
-    $update_version = $update_entity->get('version')->first();
+    $update_version = $update_entity->get($version_field)->first();
     $update_major = (int) $update_version->get('major')->getValue();
 
     if ($original_major === $update_major) {

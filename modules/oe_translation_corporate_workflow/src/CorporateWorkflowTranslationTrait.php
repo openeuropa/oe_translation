@@ -63,15 +63,25 @@ trait CorporateWorkflowTranslationTrait {
    *   The entity.
    */
   protected function queryRevisionsInSameMajorAndMinor(ContentEntityInterface $entity): array {
+    $cid = $entity->getEntityTypeId() . '.' . $entity->bundle();
+    if (!isset($this->versionFieldStaticCache[$cid])) {
+      // Ensure the version field is resolved and cached.
+      $this->getEntityVersion($entity);
+    }
+    $version_field = $this->versionFieldStaticCache[$cid] ?? NULL;
+    if (!$version_field) {
+      return [];
+    }
+
     /** @var \Drupal\entity_version\Plugin\Field\FieldType\EntityVersionItem $original_version */
-    $original_version = $entity->get('version')->first();
+    $original_version = $entity->get($version_field)->first();
     $original_major = $original_version->get('major')->getValue();
     $original_minor = $original_version->get('minor')->getValue();
     return $this->entityTypeManager->getStorage($entity->getEntityTypeId())
       ->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
-      ->condition('version.major', $original_major)
-      ->condition('version.minor', $original_minor)
+      ->condition($version_field . '.major', $original_major)
+      ->condition($version_field . '.minor', $original_minor)
       ->accessCheck(FALSE)
       ->allRevisions()
       ->execute();
