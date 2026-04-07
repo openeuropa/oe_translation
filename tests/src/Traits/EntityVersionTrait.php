@@ -19,9 +19,15 @@ trait EntityVersionTrait {
    * @param array $default_values
    *   The default values for the version field.
    * @param string $field_name
-   *   The field name. Defaults to 'field_entity_version'.
+   *   The field name. If empty, a random name is generated.
+   *
+   * @return string
+   *   The field name that was used.
    */
-  protected function installEntityVersionField(string $entity_type, string $bundle, array $default_values = [], string $field_name = 'field_entity_version'): void {
+  protected function installEntityVersionField(string $entity_type, string $bundle, array $default_values = [], string $field_name = ''): string {
+    if (empty($field_name)) {
+      $field_name = $this->randomMachineName();
+    }
     if (empty($default_values)) {
       $default_values = [
         'major' => 0,
@@ -55,6 +61,8 @@ trait EntityVersionTrait {
       'target_bundle' => $bundle,
       'target_field' => $field_name,
     ])->save();
+
+    return $field_name;
   }
 
 }

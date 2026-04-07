@@ -31,6 +31,13 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
   protected $entityTypeManager;
 
   /**
+   * The version field name.
+   *
+   * @var string
+   */
+  protected string $versionFieldName;
+
+  /**
    * {@inheritdoc}
    */
   protected static $modules = [
@@ -65,7 +72,7 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('oe_editorial_corporate_workflow.workflow_installer')->installWorkflow('page');
-    $this->installEntityVersionField('node', 'page');
+    $this->versionFieldName = $this->installEntityVersionField('node', 'page');
 
     \Drupal::service('router.builder')->rebuild();
 
