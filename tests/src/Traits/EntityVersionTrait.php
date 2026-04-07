@@ -16,25 +16,21 @@ trait EntityVersionTrait {
    *   The entity type ID.
    * @param string $bundle
    *   The bundle.
-   * @param array $default_values
-   *   The default values for the version field.
    * @param string $field_name
    *   The field name. If empty, a random name is generated.
    *
    * @return string
    *   The field name that was used.
    */
-  protected function installEntityVersionField(string $entity_type, string $bundle, array $default_values = [], string $field_name = ''): string {
+  protected function installEntityVersionField(string $entity_type, string $bundle, string $field_name = ''): string {
     if (empty($field_name)) {
       $field_name = $this->randomMachineName();
     }
-    if (empty($default_values)) {
-      $default_values = [
-        'major' => 0,
-        'minor' => 1,
-        'patch' => 0,
-      ];
-    }
+    $default_values = [
+      'major' => 0,
+      'minor' => 1,
+      'patch' => 0,
+    ];
 
     $entity_type_manager = \Drupal::entityTypeManager();
 
