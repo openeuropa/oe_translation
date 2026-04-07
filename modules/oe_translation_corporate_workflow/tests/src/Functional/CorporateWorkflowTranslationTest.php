@@ -109,7 +109,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('oe_editorial_corporate_workflow.workflow_installer')->installWorkflow('page');
-    $this->versionFieldName = $this->installEntityVersionField('node', 'page');
+    $this->versionFieldName = $this->installEntityVersionField('node', 'page', 'field_custom_version');
     \Drupal::service('router.builder')->rebuild();
 
     $form_display = EntityFormDisplay::load('node.oe_workflow_demo.default');
