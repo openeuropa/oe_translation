@@ -216,3 +216,22 @@ function oe_translation_update_9003(): void {
   $field_storage = $definition_manager->getFieldStorageDefinition('content_entity', 'oe_translation_request');
   $definition_manager->updateFieldStorageDefinition($field_storage);
 }
+
+/**
+ * Synchronize oe_translation_request entity and field schema data.
+ */
+function oe_translation_update_9004(): void {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Update the entity type definition to ensure stored entity schema data
+  // (indexes, keys) is in sync with the current code definition.
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('oe_translation_request');
+  $update_manager->updateEntityType($entity_type);
+
+  // Also update the content_entity field storage definition so the field
+  // schema data is in sync.
+  $field_storage = $update_manager->getFieldStorageDefinition('content_entity', 'oe_translation_request');
+  if ($field_storage) {
+    $update_manager->updateFieldStorageDefinition($field_storage);
+  }
+}
