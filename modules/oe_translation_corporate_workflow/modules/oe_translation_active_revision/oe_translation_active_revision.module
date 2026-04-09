@@ -305,7 +305,14 @@ function oe_translation_active_revision_entity_presave(EntityInterface $entity):
     return;
   }
 
-  $original = $entity->original;
+  if (version_compare(\Drupal::VERSION, '11', '>=')) {
+    $original = $entity->getOriginal();
+  }
+  // @todo Remove this once Drupal 10 support is dropped.
+  else {
+    // Drupal 10 fallback.
+    $original = $entity->original;
+  }
 
   if (isset($entity->translation_drop) && $entity->translation_drop === TRUE) {
     // If translations are being dropped, it means we need remove the active
