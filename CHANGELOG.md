@@ -1,11 +1,22 @@
 # Changelog
 
+## [3.0.0](https://github.com/openeuropa/oe_translation/tree/3.0.0) (2026-04-20)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.0.0-rc2...3.0.0)
+
+**Merged pull requests:**
+
+- EWPP-0000: Fix php-standard-library dependency. [\#394](https://github.com/openeuropa/oe_translation/pull/394) ([intelektron](https://github.com/intelektron))
+- EWPP-6429: Change to use new method to access original entity. [\#387](https://github.com/openeuropa/oe_translation/pull/387) ([gorsky87](https://github.com/gorsky87))
+- EWPP-6488: Update path to sync the entity and field schema data. [\#386](https://github.com/openeuropa/oe_translation/pull/386) ([nagyad](https://github.com/nagyad))
+
 ## [3.0.0-rc2](https://github.com/openeuropa/oe_translation/tree/3.0.0-rc2) (2026-03-16)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.0.0-rc1...3.0.0-rc2)
 
 **Merged pull requests:**
 
+- Release-3.0.0-rc2: Update changelog. [\#392](https://github.com/openeuropa/oe_translation/pull/392) ([nagyad](https://github.com/nagyad))
 - EWPP-6663: Requiring doctrine/annotations until we deprecate it. [\#390](https://github.com/openeuropa/oe_translation/pull/390) ([upchuk](https://github.com/upchuk))
 
 ## [3.0.0-rc1](https://github.com/openeuropa/oe_translation/tree/3.0.0-rc1) (2026-03-02)
