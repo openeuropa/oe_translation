@@ -39,6 +39,10 @@ services:
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3 --skip-log-bin --innodb-flush-log-at-trx-commit=2 --innodb-read-io-threads=16 --innodb-write-io-threads=16
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./custom.cnf:/etc/my.cnf.d/custom.cnf:ro
+    tmpfs:
+      - /tmpdbdata
 #    ports:
 #      - 3306:3306
 
