@@ -541,7 +541,7 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertEquals('Updated basic translation node FR', $node->getTranslation('fr')->label());
 
     // Assert that in this process, no new node revisions were created.
-    $this->assertCount(2, $node_storage->revisionIds($node));
+    $this->assertCount(2, array_keys($node_storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute()));
   }
 
   /**

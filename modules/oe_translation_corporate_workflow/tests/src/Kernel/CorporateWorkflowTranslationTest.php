@@ -23,6 +23,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
   protected static $modules = [
     'system',
     'node',
+    'node_storage_body_field',
     'oe_translation',
     'content_translation',
     'language',

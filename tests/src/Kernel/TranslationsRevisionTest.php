@@ -31,6 +31,7 @@ class TranslationsRevisionTest extends KernelTestBase {
     'options',
     'text',
     'node',
+    'node_storage_body_field',
     'user',
     'system',
     'filter',
@@ -52,6 +53,7 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->installConfig([
       'system',
       'node',
+      'node_storage_body_field',
       'field',
       'user',
       'workflows',
@@ -98,15 +100,15 @@ class TranslationsRevisionTest extends KernelTestBase {
     ]);
 
     $node->save();
-    $this->assertCount(1, $storage->revisionIds($node));
+    $this->assertCount(1, $storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $node->save();
-    $this->assertCount(2, $storage->revisionIds($node));
+    $this->assertCount(2, $storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
 
     // Add a translation and assert that translations create revisions as per
     // the default content moderation setup.
     $translation = $node->addTranslation('fr', ['title' => 'Revisions FR']);
     $translation->save();
-    $this->assertCount(3, $storage->revisionIds($node));
+    $this->assertCount(3, $storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
 
     // Install our module and check that saving translations no longer creates
     // extra revisions.
@@ -115,14 +117,14 @@ class TranslationsRevisionTest extends KernelTestBase {
     $this->assertInstanceOf(TranslationModerationHandler::class, $this->container->get('entity_type.manager')->getHandler('node', 'moderation'));
     $translation = $node->addTranslation('de', ['title' => 'Revisions DE']);
     $translation->save();
-    $this->assertCount(3, $storage->revisionIds($node));
+    $this->assertCount(3, $storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     $translation->set('title', 'Revisions DE 2');
     $translation->save();
-    $this->assertCount(3, $storage->revisionIds($node));
+    $this->assertCount(3, $storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
     // Saving on the source node should create a new revision.
     $node->set('title', 'Revisions 2');
     $node->save();
-    $this->assertCount(4, $storage->revisionIds($node));
+    $this->assertCount(4, $storage->getQuery()->allRevisions()->condition('nid', $node->id())->accessCheck(FALSE)->execute());
   }
 
   /**

@@ -48,6 +48,7 @@ class RevisionTranslationDeleteForm extends RevisionDeleteForm {
     $untranslated_revision = $this->revision->getUntranslated();
     $untranslated_revision->removeTranslation($language->getId());
     $untranslated_revision->setNewRevision(FALSE);
+    $untranslated_revision->setSyncing(TRUE);
     $untranslated_revision->save();
 
     $this->logger('content')->notice('@type: deleted %title revision %revision translation in %language.', [
