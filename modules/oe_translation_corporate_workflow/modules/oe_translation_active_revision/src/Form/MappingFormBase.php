@@ -202,9 +202,24 @@ abstract class MappingFormBase extends FormBase {
 
     $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
     $storage = $this->entityTypeManager->getStorage($entity_type);
+
+    // Determine the version field name from entity_version_settings.
+    $entity = $storage->load($entity_id);
+    if (!$entity) {
+      return [];
+    }
+    $version_field_setting = $this->entityTypeManager->getStorage('entity_version_settings')->load($entity_type . '.' . $entity->bundle());
+    if (!$version_field_setting) {
+      return [];
+    }
+    $version_field = $version_field_setting->getTargetField();
+    if (empty($version_field)) {
+      return [];
+    }
+
     $ids = $storage->getQuery()
       ->condition($entity_type_definition->getKey('id'), $entity_id)
-      ->condition('version.minor', 0)
+      ->condition($version_field . '.minor', 0)
       ->accessCheck(TRUE)
       ->allRevisions()
       ->execute();

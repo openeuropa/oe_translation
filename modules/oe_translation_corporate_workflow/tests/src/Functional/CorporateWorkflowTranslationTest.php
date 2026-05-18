@@ -10,6 +10,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\content_moderation\Entity\ContentModerationState;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -44,6 +45,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
   use CorporateWorkflowTrait;
   use CorporateWorkflowTranslationTrait;
+  use EntityVersionTrait;
   use TranslationsTestTrait;
 
   /**
@@ -52,6 +54,13 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The version field name.
+   *
+   * @var string
+   */
+  protected string $versionFieldName;
 
   /**
    * The current user.
@@ -100,18 +109,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('oe_editorial_corporate_workflow.workflow_installer')->installWorkflow('page');
-    $default_values = [
-      'major' => 0,
-      'minor' => 1,
-      'patch' => 0,
-    ];
-    \Drupal::service('entity_version.entity_version_installer')->install('node', ['page'], $default_values);
-    // We apply the entity version setting for the version field.
-    $this->entityTypeManager->getStorage('entity_version_settings')->create([
-      'target_entity_type_id' => 'node',
-      'target_bundle' => 'page',
-      'target_field' => 'version',
-    ])->save();
+    $this->versionFieldName = $this->installEntityVersionField('node', 'page', 'field_custom_version');
     \Drupal::service('router.builder')->rebuild();
 
     $form_display = EntityFormDisplay::load('node.oe_workflow_demo.default');
@@ -433,8 +431,8 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     // version and inherited the translation from the previous version.
     /** @var \Drupal\node\NodeInterface $validated_node */
     $validated_node = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
-    $this->assertEquals('2', $validated_node->get('version')->major);
-    $this->assertEquals('0', $validated_node->get('version')->minor);
+    $this->assertEquals('2', $validated_node->get($this->versionFieldName)->major);
+    $this->assertEquals('0', $validated_node->get($this->versionFieldName)->minor);
     $this->assertEquals('My node FR', $validated_node->getTranslation('fr')->label());
 
     // Create a new local translation request for the new version (validated
@@ -501,7 +499,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     /** @var \Drupal\node\NodeInterface[] $revisions */
     $revisions = $node_storage->loadMultipleRevisions($revision_ids);
     foreach ($revisions as $revision) {
-      if ($revision->isPublished() && (int) $revision->get('version')->major === 1) {
+      if ($revision->isPublished() && (int) $revision->get($this->versionFieldName)->major === 1) {
         $this->assertEquals('My node FR', $revision->getTranslation('fr')->label());
         break;
       }
@@ -597,17 +595,17 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     /** @var \Drupal\node\NodeInterface[] $revisions */
     $revisions = $node_storage->loadMultipleRevisions($revision_ids);
     foreach ($revisions as $revision) {
-      if ($revision->isPublished() && (int) $revision->get('version')->major === 1) {
+      if ($revision->isPublished() && (int) $revision->get($this->versionFieldName)->major === 1) {
         // The very first version which we didn't touch this time around.
         $this->assertEquals('My node FR', $revision->getTranslation('fr')->label());
         break;
       }
-      if ($revision->isPublished() && (int) $revision->get('version')->major === 2) {
+      if ($revision->isPublished() && (int) $revision->get($this->versionFieldName)->major === 2) {
         // The published version whose translation we updated.
         $this->assertEquals('My node 2 FR (updated but no actual change cause we already have a translation)', $revision->getTranslation('fr')->label());
         break;
       }
-      if ($revision->isPublished() && (int) $revision->get('version')->major === 3) {
+      if ($revision->isPublished() && (int) $revision->get($this->versionFieldName)->major === 3) {
         // The validated version whose translation we just created.
         $this->assertEquals('My node 3 FR (brand new translation)', $revision->getTranslation('fr')->label());
         break;
@@ -640,8 +638,14 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       'node' => 'title',
       'link_list' => 'administrative_title',
     ];
+    $version_fields = [
+      'node' => $this->versionFieldName,
+      // The link_list version field is installed by the test module .install.
+      'link_list' => 'version',
+    ];
     foreach (['node', 'link_list'] as $entity_type) {
       $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      $version_field = $version_fields[$entity_type];
       switch ($entity_type) {
 
         case 'node':
@@ -736,12 +740,12 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       /** @var \Drupal\node\NodeInterface[] $revisions */
       $revisions = $storage->loadMultipleRevisions($revision_ids);
       foreach ($revisions as $revision) {
-        if ($revision->isPublished() && (int) $revision->get('version')->major === 1) {
+        if ($revision->isPublished() && (int) $revision->get($version_field)->major === 1) {
           $this->assertEquals('My editorial content FR', $revision->getTranslation('fr')->label());
           continue;
         }
 
-        if ($revision->isPublished() && (int) $revision->get('version')->major === 2) {
+        if ($revision->isPublished() && (int) $revision->get($version_field)->major === 2) {
           $this->assertEquals('My editorial content 2 FR', $revision->getTranslation('fr')->label());
           continue;
         }

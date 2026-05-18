@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_active_revision\FunctionalJavascript;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\oe_editorial\Traits\BatchTrait;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\user\Entity\Role;
 
@@ -18,6 +19,7 @@ use Drupal\user\Entity\Role;
 abstract class ActiveRevisionTestBase extends WebDriverTestBase {
 
   use BatchTrait;
+  use EntityVersionTrait;
   use TranslationsTestTrait;
   use CorporateWorkflowTrait;
 
@@ -27,6 +29,13 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The version field name.
+   *
+   * @var string
+   */
+  protected string $versionFieldName;
 
   /**
    * {@inheritdoc}
@@ -63,18 +72,7 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('oe_editorial_corporate_workflow.workflow_installer')->installWorkflow('page');
-    $default_values = [
-      'major' => 0,
-      'minor' => 1,
-      'patch' => 0,
-    ];
-    \Drupal::service('entity_version.entity_version_installer')->install('node', ['page'], $default_values);
-
-    \Drupal::entityTypeManager()->getStorage('entity_version_settings')->create([
-      'target_entity_type_id' => 'node',
-      'target_bundle' => 'page',
-      'target_field' => 'version',
-    ])->save();
+    $this->versionFieldName = $this->installEntityVersionField('node', 'page');
 
     \Drupal::service('router.builder')->rebuild();
 

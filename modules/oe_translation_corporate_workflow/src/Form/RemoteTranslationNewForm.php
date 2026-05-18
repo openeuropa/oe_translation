@@ -299,7 +299,12 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       return $access;
     }
 
-    if (!$entity->hasField('version') || $entity->get('version')->isEmpty()) {
+    $version_field_setting = $this->entityTypeManager->getStorage('entity_version_settings')->load($entity->getEntityTypeId() . '.' . $entity->bundle());
+    if (!$version_field_setting) {
+      return $access;
+    }
+    $version_field = $version_field_setting->getTargetField();
+    if (empty($version_field) || !$entity->hasField($version_field) || $entity->get($version_field)->isEmpty()) {
       return $access;
     }
 

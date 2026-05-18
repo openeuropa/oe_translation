@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\oe_editorial\Traits\BatchTrait;
+use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\oe_link_lists\Entity\LinkList;
 use Drupal\user\Entity\Role;
@@ -21,6 +22,7 @@ use Drupal\user\Entity\Role;
 class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
 
   use BatchTrait;
+  use EntityVersionTrait;
   use TranslationsTestTrait;
 
   /**
@@ -68,18 +70,7 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('oe_editorial_corporate_workflow.workflow_installer')->installWorkflow('page');
-    $default_values = [
-      'major' => 0,
-      'minor' => 1,
-      'patch' => 0,
-    ];
-    \Drupal::service('entity_version.entity_version_installer')->install('node', ['page'], $default_values);
-
-    \Drupal::entityTypeManager()->getStorage('entity_version_settings')->create([
-      'target_entity_type_id' => 'node',
-      'target_bundle' => 'page',
-      'target_field' => 'version',
-    ])->save();
+    $this->installEntityVersionField('node', 'page');
 
     \Drupal::service('router.builder')->rebuild();
 

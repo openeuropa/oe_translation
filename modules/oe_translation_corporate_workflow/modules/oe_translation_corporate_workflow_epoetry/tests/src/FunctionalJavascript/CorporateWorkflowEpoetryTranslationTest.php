@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_corporate_workflow_epoetry\FunctionalJavas
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\Tests\oe_translation_epoetry\EpoetryTranslationTestTrait;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
@@ -26,6 +27,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
 
   use CorporateWorkflowTrait;
   use CorporateWorkflowTranslationTrait;
+  use EntityVersionTrait;
   use TranslationsTestTrait;
   use EpoetryTranslationTestTrait;
 
@@ -85,18 +87,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
     \Drupal::service('oe_editorial_corporate_workflow.workflow_installer')->installWorkflow('page');
-    $default_values = [
-      'major' => 0,
-      'minor' => 1,
-      'patch' => 0,
-    ];
-    \Drupal::service('entity_version.entity_version_installer')->install('node', ['page'], $default_values);
-    // We apply the entity version setting for the version field.
-    $this->entityTypeManager->getStorage('entity_version_settings')->create([
-      'target_entity_type_id' => 'node',
-      'target_bundle' => 'page',
-      'target_field' => 'version',
-    ])->save();
+    $this->installEntityVersionField('node', 'page');
     \Drupal::service('router.builder')->rebuild();
 
     $this->drupalPlaceBlock('page_title_block', ['region' => 'content']);

@@ -246,7 +246,13 @@ class LocalTranslationOverviewAlterSubscriber implements EventSubscriberInterfac
       return;
     }
 
-    if (!$entity->hasField('version') || $entity->get('version')->isEmpty()) {
+    // Use the version field from entity_version_settings.
+    $version_field_setting = $this->entityTypeManager->getStorage('entity_version_settings')->load($entity->getEntityTypeId() . '.' . $entity->bundle());
+    if (!$version_field_setting) {
+      return;
+    }
+    $version_field = $version_field_setting->getTargetField();
+    if (empty($version_field) || !$entity->hasField($version_field) || $entity->get($version_field)->isEmpty()) {
       return;
     }
 

@@ -118,16 +118,27 @@ function oe_translation_active_revision_form_content_moderation_entity_moderatio
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $form_state->get('entity');
 
+    // Determine the version field name from the entity_version_settings config.
+    $entity_version_storage = \Drupal::entityTypeManager()->getStorage('entity_version_settings');
+    $version_field_setting = $entity_version_storage->load($entity->getEntityTypeId() . '.' . $entity->bundle());
+    if (!$version_field_setting) {
+      return;
+    }
+    $version_field = $version_field_setting->getTargetField();
+    if (empty($version_field)) {
+      return;
+    }
+
     // We need to determine the latest revision of the previous major.
     /** @var \Drupal\entity_version\Plugin\Field\FieldType\EntityVersionItem $original_version */
-    $version = $entity->get('version')->first();
+    $version = $entity->get($version_field)->first();
     $major = $version->get('major')->getValue();
 
     $results = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())
       ->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
-      ->condition('version.major', $major)
-      ->condition('version.minor', 0)
+      ->condition($version_field . '.major', $major)
+      ->condition($version_field . '.minor', 0)
       ->sort($entity->getEntityType()->getKey('revision'), 'DESC')
       ->accessCheck(FALSE)
       ->allRevisions()

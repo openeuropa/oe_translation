@@ -83,13 +83,17 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    if (!$entity->hasField('version') || $entity->get('version')->isEmpty()) {
-      // We rely on the corporate workflow entity version field.
+    $version_field_setting = $this->entityTypeManager->getStorage('entity_version_settings')->load($entity->getEntityTypeId() . '.' . $entity->bundle());
+    if (!$version_field_setting) {
+      return;
+    }
+    $version_field = $version_field_setting->getTargetField();
+    if (empty($version_field) || !$entity->hasField($version_field) || $entity->get($version_field)->isEmpty()) {
       return;
     }
 
     /** @var \Drupal\entity_version\Plugin\Field\FieldType\EntityVersionItem $original_version */
-    $original_version = $entity->get('version')->first();
+    $original_version = $entity->get($version_field)->first();
     $original_major = $original_version->get('major')->getValue();
     $original_minor = $original_version->get('minor')->getValue();
 
@@ -100,8 +104,8 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     // validated to ensure we save the translation onto that version.
     $results = $storage->getQuery()
       ->condition($entity->getEntityType()->getKey('id'), $entity->id())
-      ->condition('version.major', $original_major)
-      ->condition('version.minor', $original_minor)
+      ->condition($version_field . '.major', $original_major)
+      ->condition($version_field . '.minor', $original_minor)
       ->accessCheck(FALSE)
       ->allRevisions()
       ->execute();
