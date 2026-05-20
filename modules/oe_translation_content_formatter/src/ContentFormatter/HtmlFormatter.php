@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_content_formatter\ContentFormatter;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\LanguageMapper;
@@ -168,7 +169,7 @@ class HtmlFormatter implements ContentFormatterInterface {
    */
   protected function prepareValueRenderable(array $value): array {
     return [
-      '#markup' => $value['#text'],
+      '#markup' => Markup::create($value['#text']),
     ];
   }
 
