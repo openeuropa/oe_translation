@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Transaction xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="//static.cdt.europa.eu/webtranslations/schemas/Drupal-Translation-V8-2.xsd">
+  <TransactionHeader>
+    <SenderDetails drupalVersion="@drupal_version" moduleVersion="@module_version">
+      <ProducerDateTime>2024-03-20T11:55:29+00:00</ProducerDateTime>
+    </SenderDetails>
+  </TransactionHeader>
+  <TransactionIdentifier>@transaction_identifier</TransactionIdentifier>
+  <TransactionCode>Drupal Translation Request</TransactionCode>
+  <TransactionData>
+    <TranslationDetails>
+      <Translation>
+        <PreviewLink>NO PREVIEW LINK</PreviewLink>
+        <SourceReference>@source_reference</SourceReference>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][title][0][value" resType="text" resMaxSize="255" resLabel="Title">English title</StaticContent>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][ott_content_reference][0][entity][title][0][value" resType="text" resMaxSize="255" resLabel="Content reference / Title">Referenced node</StaticContent>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][translatable_text_field][0][value" resType="html" resMaxSize="255" resLabel="translatable_text_field"><![CDATA[<h1>This is a heading</h1><p>This is a paragraph</p>]]></StaticContent>
+        <StaticContent indexType="node" instanceId="@node_id" resName="][translatable_text_field_plain][0][value" resType="text" resMaxSize="255" resLabel="translatable_text_field_plain">plain text field value</StaticContent>
+      </Translation>
+      <TotalCharacterLength>86</TotalCharacterLength>
+    </TranslationDetails>
+  </TransactionData>
+</Transaction>

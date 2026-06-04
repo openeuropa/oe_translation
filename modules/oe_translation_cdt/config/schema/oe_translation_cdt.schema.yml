@@ -1,0 +1,18 @@
+oe_translation_remote.remote_translation_provider.plugin.cdt:
+  type: mapping
+  label: Plugin configuration for the CDT plugin
+  mapping:
+    language_mapping:
+      type: sequence
+      label: The language mapping
+      sequence:
+        type: string
+        label: The language code
+
+views.filter.oe_translation_cdt_target_languages_filter:
+  type: views.filter.in_operator
+  label: Target language filter
+
+views.field.oe_translation_cdt_target_languages_with_tooltip:
+  type: views_field
+  label: 'Target languages with tooltip'

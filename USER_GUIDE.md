@@ -208,6 +208,74 @@ Apart from the individual Node translations dashboard, you also have a dashboard
 
 `/admin/content/epoetry-translation-requests`
 
+## CDT translations
+
+### Configuration
+
+Define the configuration of the module in the ENV variables. If the mocking module is enabled, the configuration does not matter and is always valid.
+```
+CDT_BASE_API_URL: "https://example.com/api"
+CDT_CLIENT: "test_client"
+CDT_USERNAME: "test_username"
+CDT_PASSWORD: "test_password"
+CDT_API_KEY: "test_apikey"
+```
+
+Optionally, you may configure this in the plugin settings (`/admin/structure/remote-translation-provider/cdt/edit`):
+
+* Language mapping (if you have languages whose language codes do not match the ones CDT expects, for example pt-pt -> PT)
+
+### Translations
+
+CDT translations requests can be started from the Remote translations dashboard.
+
+Request values (the mandatory ones are marked accordingly on the form):
+
+* **Languages** (you can pick as many as you like)
+* **Comments** (a message to translators)
+* **Confidentiality** (select it from the list)
+* **Contact usernames** (select it from the list)
+* **Deliver to** (select it from the list)
+* **Department** (select it from the list)
+* **Phone number** (so the translator can reach you)
+* **Priority** (select it from the list)
+
+None of these values can be manually changed later in Drupal. However, if CDT updates them on your site, Drupal will update them automatically.
+
+Once the translation request has been submitted, you need to wait for CDT to assign a permanent ID to it. You can do this manually by clicking "Get permanent ID", or you can wait for a callback from CDT.
+
+#### Statuses
+
+CDT translation requests are marked with two sets of Statuses:
+
+1. Translation Request Status
+   * **Requested**
+     -> the initial status set when the request is first created.
+   * **Translated**
+     -> set when all the individual language jobs have arrived from CDT and their work is done on this request.
+   * **Finished**
+     -> set when all the individual language translations have been synchronised onto the content or the request has failed.
+2. Translation Job Status
+   * **Requested**
+	   -> the initial status set when the job is first created.
+   * **Review**
+	   -> the translation has arrived and is ready for Review. A Review button will take you to a form to check the translation values.
+   * **Accepted**
+	   -> the translation has been marked as Accepted by the site translator.
+   * **Synchronised**
+	   -> the translation has been Synchronised with the content.
+   * **Cancelled** [in CDT]
+	   -> set by CDT to indicate that they cancelled this translation. The flow for this translation stops here.
+   * **Failed** [in CDT]
+	   -> set by CDT to indicate that this translation has failed.
+
+#### Translation review
+
+When a given language translation is in Review, you can click the Review button for that language and check the translation values. You can then do the following:
+
+* Accept the translation -> saves the request with this translation marked as Accepted
+* Synchronise the translation -> synchronises the translation with the Node
+
 ## Synchronisation
 
 Synchronisation means that the translation values will be saved onto the Node itself (creating or updating the translation).

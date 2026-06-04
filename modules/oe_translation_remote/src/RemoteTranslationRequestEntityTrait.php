@@ -127,6 +127,22 @@ trait RemoteTranslationRequestEntityTrait {
   /**
    * {@inheritdoc}
    */
+  public function removeTranslatedData(string $langcode): TranslationRequestRemoteInterface {
+    $values = $this->get('translated_data')->getValue();
+    foreach ($values as $key => $value) {
+      if ($value['langcode'] === $langcode) {
+        unset($values[$key]);
+        break;
+      }
+    }
+    $this->set('translated_data', $values);
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTranslatedData(): array {
     $values = $this->get('translated_data')->getValue();
     $data = [];
