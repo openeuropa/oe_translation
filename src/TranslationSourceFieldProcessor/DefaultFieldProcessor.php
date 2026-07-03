@@ -147,6 +147,12 @@ class DefaultFieldProcessor implements TranslationSourceFieldProcessorInterface,
             continue;
           }
 
+          if ($field->getFieldDefinition()->getType() === 'typed_link' && $field->offsetGet($delta) && $property === 'link_type') {
+            // Keep the link_type property in sync with the source.
+            $field->offsetGet($delta)->set($property, $source_offset->get($property)->getValue());
+            continue;
+          }
+
           // We directly skip if we don't have to translate this property.
           continue;
         }

@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_workflow_typed_link
+    - node.type.oe_workflow_demo
+  module:
+    - typed_link
+id: node.oe_workflow_demo.field_workflow_typed_link
+field_name: field_workflow_typed_link
+entity_type: node
+bundle: oe_workflow_demo
+label: 'Typed link'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+third_party_settings:
+  content_translation:
+    translation_sync:
+      uri: uri
+      title: title
+      options: '0'
+      link_type: '0'
+settings:
+  title: 1
+  link_type: 17
+field_type: typed_link
