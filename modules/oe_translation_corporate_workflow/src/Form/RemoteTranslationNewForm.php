@@ -18,6 +18,7 @@ use Drupal\oe_translation_remote\Form\RemoteTranslationNewForm as RemoteTranslat
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Form for starting a new remote translation request.
@@ -46,8 +47,8 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, ModerationInformationInterface $moderationInformation, EntityRevisionInfoInterface $entityRevisionInfo) {
-    parent::__construct($entityTypeManager, $providerManager, $account);
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, ModerationInformationInterface $moderationInformation, EntityRevisionInfoInterface $entityRevisionInfo, EventDispatcherInterface $eventDispatcher) {
+    parent::__construct($entityTypeManager, $providerManager, $account, $eventDispatcher);
     $this->entityTypeManager = $entityTypeManager;
     $this->providerManager = $providerManager;
     $this->account = $account;
@@ -64,7 +65,8 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       $container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager'),
       $container->get('current_user'),
       $container->get('content_moderation.moderation_information'),
-      $container->get('oe_translation.entity_revision_info')
+      $container->get('oe_translation.entity_revision_info'),
+      $container->get('event_dispatcher')
     );
   }
 

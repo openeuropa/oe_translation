@@ -11,6 +11,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
 use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\oe_translation_epoetry\NotificationTicketValidation;
@@ -197,20 +198,44 @@ class EpoetryController extends ControllerBase {
    *   The access result.
    */
   public function finishFailedRequestAccess(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    $cache->addCacheableDependency($translation_request);
-
-    if (!$account->hasPermission('translate any entity')) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+    $access = $account->hasPermission('translate any entity')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
+    if (!$access->isAllowed()) {
+      $access = $this->dispatchCreateAccessEvent($translation_request, $account, $access);
+    }
+    $access->addCacheableDependency($translation_request);
+    if (!$access->isAllowed()) {
+      return $access;
     }
 
     // Only failed requests can be marked.
-    if ($translation_request->getRequestStatus() !== TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+    $allowed = $translation_request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED;
+    return AccessResult::allowedIf($allowed)->inheritCacheability($access);
+  }
+
+  /**
+   * Dispatches an event to allow overriding a forbidden permission check.
+   *
+   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $translation_request
+   *   The translation request.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user.
+   * @param \Drupal\Core\Access\AccessResultInterface $access
+   *   The existing access.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access.
+   */
+  protected function dispatchCreateAccessEvent(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account, AccessResultInterface $access): AccessResultInterface {
+    $entity = $translation_request->getContentEntity();
+    if (!$entity) {
+      return $access;
     }
 
-    return AccessResult::allowed();
+    $event = new TranslationRequestCreateAccessEvent($entity, $account, $access, $translation_request->bundle());
+    $this->eventDispatcher->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
+    return $event->getAccess();
   }
 
   /**
@@ -228,26 +253,25 @@ class EpoetryController extends ControllerBase {
    *   The access result.
    */
   public function createNewVersionRequestAccess(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    $cache->addCacheableDependency($translation_request);
-
-    if (!$account->hasPermission('translate any entity') || !$account->hasPermission('request epoetry translation')) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+    $access = $account->hasPermission('translate any entity') && $account->hasPermission('request epoetry translation')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
+    if (!$access->isAllowed()) {
+      $access = $this->dispatchCreateAccessEvent($translation_request, $account, $access);
+    }
+    $access->addCacheableDependency($translation_request);
+    if (!$access->isAllowed()) {
+      return $access;
     }
 
     $provider = $translation_request->getTranslatorProvider();
-    $cache->addCacheableDependency($provider);
+    $access->addCacheableDependency($provider);
     if (!$provider->isEnabled()) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
     $allowed = $this->newVersionRequestHandler->canCreateRequest($translation_request);
-    if ($allowed) {
-      return AccessResult::allowed()->addCacheableDependency($cache);
-    }
-
-    return AccessResult::forbidden()->addCacheableDependency($cache);
+    return AccessResult::allowedIf($allowed)->inheritCacheability($access);
   }
 
 }

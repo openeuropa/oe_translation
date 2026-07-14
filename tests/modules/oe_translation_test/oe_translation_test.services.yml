@@ -8,6 +8,11 @@ services:
     arguments: ['@state']
     tags:
       - { name: event_subscriber }
+  oe_translation_test.translation_operation_access_event_subscriber:
+    class: Drupal\oe_translation_test\EventSubscriber\TranslationOperationAccessEventSubscriber
+    arguments: ['@state']
+    tags:
+      - { name: event_subscriber }
   oe_translation_test.logger.mock_logger:
     class: Drupal\oe_translation_test\Logger\MockLogger
     arguments: ['@state']

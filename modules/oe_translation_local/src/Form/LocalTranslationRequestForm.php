@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_local\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -14,6 +15,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation\Event\TranslationRequestAcceptAccessEvent;
+use Drupal\oe_translation\Event\TranslationRequestSynchronizeAccessEvent;
 use Drupal\oe_translation\Event\TranslationSynchronisationEvent;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\TranslationFormTrait;
@@ -182,7 +185,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::accept', '::save'],
-      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() === TranslationRequestLocal::STATUS_LANGUAGE_DRAFT && $this->currentUser->hasPermission('accept translation request'),
+      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() === TranslationRequestLocal::STATUS_LANGUAGE_DRAFT && $this->acceptAccess(),
       '#value' => $this->t('Save and accept'),
     ];
 
@@ -190,7 +193,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::save', '::synchronise'],
-      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
+      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED && $this->syncAccess(),
       '#value' => $this->t('Save and synchronise'),
     ];
 
@@ -222,6 +225,52 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     }
 
     return $actions;
+  }
+
+  /**
+   * Checks access for accepting the translation request.
+   *
+   * @return bool
+   *   Whether access is granted.
+   */
+  protected function acceptAccess(): bool {
+    $access = $this->currentUser->hasPermission('accept translation request')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation accept permission.')->cachePerPermissions();
+
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    $translation_request = $this->entity;
+    if ($access->isAllowed() || !$translation_request->getContentEntity()) {
+      return $access->isAllowed();
+    }
+
+    $event = new TranslationRequestAcceptAccessEvent($translation_request, $this->currentUser, $access);
+    $this->eventDispatcher->dispatch($event, TranslationRequestAcceptAccessEvent::EVENT);
+
+    return $event->getAccess()->isAllowed();
+  }
+
+  /**
+   * Checks access for synchronising the translation request.
+   *
+   * @return bool
+   *   Whether access is granted.
+   */
+  protected function syncAccess(): bool {
+    $access = $this->currentUser->hasPermission('sync translation request')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation sync permission.')->cachePerPermissions();
+
+    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
+    $translation_request = $this->entity;
+    if ($access->isAllowed() || !$translation_request->getContentEntity()) {
+      return $access->isAllowed();
+    }
+
+    $event = new TranslationRequestSynchronizeAccessEvent($translation_request, $this->currentUser, $access);
+    $this->eventDispatcher->dispatch($event, TranslationRequestSynchronizeAccessEvent::EVENT);
+
+    return $event->getAccess()->isAllowed();
   }
 
   /**

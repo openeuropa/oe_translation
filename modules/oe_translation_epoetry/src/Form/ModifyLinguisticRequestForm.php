@@ -7,7 +7,6 @@ namespace Drupal\oe_translation_epoetry\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
@@ -17,6 +16,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
 use Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider\Epoetry;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -120,18 +120,26 @@ class ModifyLinguisticRequestForm extends FormBase {
    *   The access result.
    */
   public static function access(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    $cache->addCacheableDependency($translation_request);
-
-    if (!$account->hasPermission('translate any entity') || !$account->hasPermission('request epoetry translation')) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+    $access = $account->hasPermission('translate any entity') && $account->hasPermission('request epoetry translation')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
+    if (!$access->isAllowed()) {
+      $entity = $translation_request->getContentEntity();
+      if ($entity) {
+        $event = new TranslationRequestCreateAccessEvent($entity, $account, $access, $translation_request->bundle());
+        \Drupal::service('event_dispatcher')->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
+        $access = $event->getAccess();
+      }
+    }
+    $access->addCacheableDependency($translation_request);
+    if (!$access->isAllowed()) {
+      return $access;
     }
 
     $provider = $translation_request->getTranslatorProvider();
-    $cache->addCacheableDependency($provider);
+    $access->addCacheableDependency($provider);
     if (!$provider->isEnabled()) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
     // If there are no more languages to request, do not allow access.
@@ -152,7 +160,7 @@ class ModifyLinguisticRequestForm extends FormBase {
     }
 
     if ($all_covered) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
     // We only allow to add new languages if the request is accepted or
@@ -167,11 +175,7 @@ class ModifyLinguisticRequestForm extends FormBase {
       TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
     ];
     $allowed = in_array($translation_request->getEpoetryRequestStatus(), $epoetry_statuses) && in_array($translation_request->getRequestStatus(), $request_statuses);
-    if ($allowed) {
-      return AccessResult::allowed()->addCacheableDependency($cache);
-    }
-
-    return AccessResult::forbidden()->addCacheableDependency($cache);
+    return AccessResult::allowedIf($allowed)->inheritCacheability($access);
   }
 
   /**

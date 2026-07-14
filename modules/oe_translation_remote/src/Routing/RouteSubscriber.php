@@ -63,7 +63,6 @@ class RouteSubscriber extends RouteSubscriberBase {
           'entity_type_id' => $entity_type_id,
         ],
         [
-          '_permission' => 'translate any entity',
           '_custom_access' => '\Drupal\oe_translation_remote\Form\RemoteTranslationNewForm::access',
         ],
         [
@@ -97,7 +96,6 @@ class RouteSubscriber extends RouteSubscriberBase {
       ])
        // The route to review a given language can be done by a user that can
        // accept or sync a translation.
-      ->setRequirement('_permission', 'accept translation request+sync translation request')
       ->setRequirement('_custom_access', RemoteTranslationReviewForm::class . '::access')
       ->setOption('parameters', [
         $entity_type_id => ['type' => 'entity:' . $entity_type_id],

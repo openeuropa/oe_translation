@@ -18,6 +18,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_epoetry\Event\EpoetryRequestEvent;
 use Drupal\oe_translation_epoetry\Plugin\Field\FieldType\ContactItem;
@@ -133,7 +134,16 @@ class Epoetry extends RemoteTranslationProviderBase {
    * {@inheritdoc}
    */
   public function createAccess(?AccountInterface $account = NULL): AccessResultInterface {
-    return AccessResult::allowedIfHasPermission($account, 'request epoetry translation');
+    $access = $account && $account->hasPermission('request epoetry translation')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
+    if ($access->isAllowed() || !$account || !$this->entity) {
+      return $access;
+    }
+
+    $event = new TranslationRequestCreateAccessEvent($this->entity, $account, $access, 'epoetry');
+    $this->eventDispatcher->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
+    return $event->getAccess();
   }
 
   /**

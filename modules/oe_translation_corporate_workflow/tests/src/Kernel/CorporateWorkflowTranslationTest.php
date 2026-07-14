@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_corporate_workflow\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\oe_link_lists\Entity\LinkList;
+use Drupal\oe_translation_local\Controller\TranslationLocalController;
 use Drupal\workflows\Entity\Workflow;
 
 /**
@@ -17,6 +20,8 @@ use Drupal\workflows\Entity\Workflow;
  */
 class CorporateWorkflowTranslationTest extends KernelTestBase {
 
+  use UserCreationTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -25,6 +30,8 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     'node',
     'node_storage_body_field',
     'oe_translation',
+    'oe_translation_local',
+    'oe_translation_test',
     'content_translation',
     'language',
     'field',
@@ -57,6 +64,7 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     $this->installEntitySchema('link_list');
     $this->installEntitySchema('paragraph');
     $this->installEntitySchema('content_moderation_state');
+    $this->installEntitySchema('oe_translation_request');
 
     $this->installSchema('node', ['node_access']);
     $this->installConfig([
@@ -194,6 +202,50 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     // This time we should have an extra revision after deleting the
     // translation because that is the core default.
     $this->assertCount(3, $entity_type_manager->getStorage('entity_test_mulrev')->getQuery()->accessCheck(FALSE)->allRevisions()->condition('id', $entity->id())->execute());
+  }
+
+  /**
+   * Tests the precedence of the translation request access events.
+   */
+  public function testCreateAccessEventOrdering(): void {
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::create([
+      'type' => 'ct_example',
+      'title' => 'Test node',
+      'moderation_state' => 'draft',
+    ]);
+    $node->save();
+
+    // Create an empty user to avoid having uid=1.
+    $this->createUser();
+
+    $account = $this->createUser([]);
+    $language_manager = $this->container->get('language_manager');
+    $source = $language_manager->getLanguage('en');
+    $target = $language_manager->getLanguage('fr');
+
+    /** @var \Drupal\oe_translation_local\Controller\TranslationLocalController $controller */
+    $controller = TranslationLocalController::create($this->container);
+
+    // The user does not have global permission to translate entities.
+    // We grant the access through the events.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'allowed']);
+
+    // The node is still in draft state, so access must remain forbidden.
+    // The oe_translation_corporate_workflow subscriber has precedence here.
+    $access = $controller->createLocalTranslationRequestAccess($node, $source, $target, $account);
+    $this->assertTrue($access->isForbidden(), 'Translations cannot be added to entities in "draft" state.');
+
+    // Now, publish the entity and check the access again.
+    $node->set('moderation_state', 'published');
+    $node->save();
+    $access = $controller->createLocalTranslationRequestAccess($node, $source, $target, $account);
+    $this->assertTrue($access->isAllowed(), 'Translations should be allowed for entities in "published" state.');
+
+    // Disable the event override and fail if the user has no global permission.
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
+    $access = $controller->createLocalTranslationRequestAccess($node, $source, $target, $account);
+    $this->assertTrue($access->isForbidden(), 'Translations cannot be added without global permissions.');
   }
 
 }

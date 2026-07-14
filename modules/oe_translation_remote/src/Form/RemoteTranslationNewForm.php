@@ -14,9 +14,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Form for starting a new remote translation request.
@@ -45,6 +47,13 @@ class RemoteTranslationNewForm extends FormBase {
   protected $account;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Constructs a new RemoteTranslationNewForm.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -53,11 +62,14 @@ class RemoteTranslationNewForm extends FormBase {
    *   The remote translation provider manager.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, EventDispatcherInterface $eventDispatcher) {
     $this->entityTypeManager = $entityTypeManager;
     $this->providerManager = $providerManager;
     $this->account = $account;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -67,7 +79,8 @@ class RemoteTranslationNewForm extends FormBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.oe_translation_remote.remote_translation_provider_manager'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -80,15 +93,36 @@ class RemoteTranslationNewForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The current route match.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user.
+   * @param null|string $entity_type_id
+   *   The entity type ID.
    */
-  public function access(): AccessResultInterface {
+  public function access(RouteMatchInterface $route_match, AccountInterface $account, $entity_type_id = NULL): AccessResultInterface {
     /** @var \Drupal\oe_translation_remote\Entity\RemoteTranslatorProviderInterface[] $translators */
     $translators = $this->entityTypeManager->getStorage('remote_translation_provider')->loadByProperties(['enabled' => TRUE]);
     if (!$translators) {
       return AccessResult::forbidden()->addCacheTags(['config:remote_translation_provider_list']);
     }
 
-    return AccessResult::allowed()->addCacheTags(['config:remote_translation_provider_list']);
+    $cache = new CacheableMetadata();
+    $cache->addCacheTags(['config:remote_translation_provider_list']);
+    $cache->addCacheContexts(['user.permissions']);
+    $access = $account->hasPermission('translate any entity')
+      ? AccessResult::allowed()->addCacheableDependency($cache)
+      : AccessResult::forbidden('The user is missing the translation permission.')->addCacheableDependency($cache);
+
+    $entity = $entity_type_id ? $route_match->getParameter($entity_type_id) : NULL;
+    if ($access->isAllowed() || !$entity instanceof ContentEntityInterface) {
+      return $access;
+    }
+
+    $event = new TranslationRequestCreateAccessEvent($entity, $account, $access, 'remote');
+    $this->eventDispatcher->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
+    return $event->getAccess();
   }
 
   /**
@@ -132,6 +166,7 @@ class RemoteTranslationNewForm extends FormBase {
     $options = [];
     foreach ($translators as $translator) {
       $plugin = $this->providerManager->createInstance($translator->getProviderPlugin(), $translator->getProviderConfiguration());
+      $plugin->setEntity($entity);
       $access = $plugin->createAccess($this->account);
       if (!$access->isAllowed()) {
         continue;
@@ -401,11 +436,17 @@ class RemoteTranslationNewForm extends FormBase {
    *   The access result.
    */
   protected function createNewRequestAccess(ContentEntityInterface $entity): AccessResultInterface {
-    $has_permission = $this->account->hasPermission('translate any entity');
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    if (!$has_permission) {
-      return AccessResult::forbidden('The user is missing the translation permission.')->addCacheableDependency($cache);
+
+    $access = $this->account->hasPermission('translate any entity')
+      ? AccessResult::allowed()->cachePerPermissions()
+      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
+    if (!$access->isAllowed()) {
+      $event = new TranslationRequestCreateAccessEvent($entity, $this->account, $access, 'remote');
+      $this->eventDispatcher->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
+      $access = $event->getAccess();
+      if (!$access->isAllowed()) {
+        return $event->getAccess();
+      }
     }
 
     // Check that there are no translation requests already for this entity. For
@@ -422,12 +463,11 @@ class RemoteTranslationNewForm extends FormBase {
       return $request->getTranslatorProvider()->isEnabled();
     });
 
-    $cache->addCacheTags(['oe_translation_request_list']);
     if (!$translation_requests) {
-      return AccessResult::allowed()->addCacheableDependency($cache);
+      return AccessResult::allowed()->inheritCacheability($access)->addCacheTags(['oe_translation_request_list']);
     }
 
-    return AccessResult::forbidden('No new translation request can be made because there is already an active translation request for this entity version.')->addCacheableDependency($cache);
+    return AccessResult::forbidden('No new translation request can be made because there is already an active translation request for this entity version.')->inheritCacheability($access)->addCacheTags(['oe_translation_request_list']);
   }
 
   /**
