@@ -112,6 +112,8 @@ toolkit:
         - batch1
         - batch2
         - batch3
+        - batch4
+        - batch5
   ci:
     PHP:
       - 8.3

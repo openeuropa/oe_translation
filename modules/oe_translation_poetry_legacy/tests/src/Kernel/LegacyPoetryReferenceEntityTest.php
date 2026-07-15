@@ -9,7 +9,7 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 /**
  * Tests the Legacy Poetry reference entity.
  *
- * @group batch1
+ * @group batch5
  */
 class LegacyPoetryReferenceEntityTest extends TranslationKernelTestBase {
 

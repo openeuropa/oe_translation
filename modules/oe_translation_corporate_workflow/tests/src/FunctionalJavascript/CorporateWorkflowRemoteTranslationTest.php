@@ -26,7 +26,7 @@ use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
  * published revision. But not on any future drafts which create new minor
  * versions.
  *
- * @group batch3
+ * @group batch4
  */
 class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
 

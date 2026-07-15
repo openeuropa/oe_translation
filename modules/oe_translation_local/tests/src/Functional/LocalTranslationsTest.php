@@ -16,7 +16,7 @@ use Drupal\user\Entity\Role;
 /**
  * Tests the local translation system.
  *
- * @group batch1
+ * @group batch4
  */
 class LocalTranslationsTest extends TranslationTestBase {
 

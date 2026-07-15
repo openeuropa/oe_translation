@@ -10,7 +10,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 /**
  * Tests the multivalue translations.
  *
- * @group batch1
+ * @group batch5
  */
 class MultivalueTranslationsJsTest extends TranslationTestBase {
 
