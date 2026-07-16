@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 
 /**
@@ -12,6 +13,7 @@ use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
  */
 class TranslationTestBase extends BrowserTestBase {
 
+  use CachedDatabaseInstallTrait;
   use TranslationsTestTrait;
 
   /**
@@ -49,6 +51,8 @@ class TranslationTestBase extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');

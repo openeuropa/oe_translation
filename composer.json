@@ -40,6 +40,7 @@
         "openeuropa/oe_editorial": "^2.8",
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "^1.17",
+        "openeuropa/oe_testing_utils": "^1",
         "symfony/property-access": "^6 || ^7",
         "symfony/property-info": "^6 || ^7",
         "php-standard-library/php-standard-library": "^4.3",
@@ -84,7 +85,8 @@
             "Drupal\\Tests\\oe_translation_content_formatter\\": "./modules/oe_translation_content_formatter/tests/src",
             "Drupal\\Tests\\oe_translation_corporate_workflow\\": "./modules/oe_translation_corporate_workflow/tests/src",
             "Drupal\\Tests\\oe_translation_active_revision\\": "./modules/oe_translation_corporate_workflow/modules/oe_translation_active_revision/tests/src",
-            "Drupal\\Tests\\oe_translation_active_revision_link_lists\\": "./modules/oe_translation_corporate_workflow/modules/oe_translation_active_revision/modules/oe_translation_active_revision_link_lists/tests/src"
+            "Drupal\\Tests\\oe_translation_active_revision_link_lists\\": "./modules/oe_translation_corporate_workflow/modules/oe_translation_active_revision/modules/oe_translation_active_revision_link_lists/tests/src",
+            "OpenEuropa\\TestingUtilities\\": "./vendor/openeuropa/oe_testing_utils/src"
         }
     },
     "extra": {
@@ -113,6 +115,7 @@
             "php-http/discovery": false,
             "phpro/grumphp-shim": true,
             "phpstan/extension-installer": true,
+            "symfony/runtime": true,
             "tbachert/spi": false
         },
         "discard-changes": true

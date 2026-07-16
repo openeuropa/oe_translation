@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 
 /**
  * Base class for functional javsacript tests.
@@ -12,6 +13,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * @group batch1
  */
 class TranslationTestBase extends WebDriverTestBase {
+
+  use CachedDatabaseInstallTrait;
 
   /**
    * The entity type manager.
@@ -47,6 +50,8 @@ class TranslationTestBase extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');

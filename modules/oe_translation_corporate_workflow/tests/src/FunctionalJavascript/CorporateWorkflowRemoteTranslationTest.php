@@ -7,6 +7,7 @@ namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
@@ -33,6 +34,7 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
   use CorporateWorkflowTranslationTrait;
   use EntityVersionTrait;
   use TranslationsTestTrait;
+  use CachedDatabaseInstallTrait;
 
   /**
    * The entity type manager.
@@ -79,6 +81,8 @@ class CorporateWorkflowRemoteTranslationTest extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = \Drupal::service('entity_type.manager');

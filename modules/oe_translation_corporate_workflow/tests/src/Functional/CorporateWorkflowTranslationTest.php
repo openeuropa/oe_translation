@@ -10,6 +10,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\content_moderation\Entity\ContentModerationState;
@@ -47,6 +48,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
   use CorporateWorkflowTranslationTrait;
   use EntityVersionTrait;
   use TranslationsTestTrait;
+  use CachedDatabaseInstallTrait;
 
   /**
    * The entity type manager.
@@ -99,6 +101,8 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   public function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = \Drupal::service('entity_type.manager');
