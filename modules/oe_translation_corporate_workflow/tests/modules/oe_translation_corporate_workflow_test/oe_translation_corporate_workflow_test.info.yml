@@ -9,3 +9,4 @@ dependencies:
   - paragraphs:paragraphs
   - oe_link_lists:oe_link_lists
   - oe_link_lists:oe_link_lists_test
+  - typed_link:typed_link

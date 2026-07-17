@@ -82,6 +82,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     'options',
     'paragraphs',
     'block',
+    'typed_link',
     'oe_editorial_workflow_demo',
     'oe_translation',
     'oe_translation_local',
@@ -1130,6 +1131,65 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $this->assertInstanceOf(TranslationRequestInterface::class, $node->getTranslation('fr')->get('translation_request')->entity);
     $version_two_request = $node->getTranslation('fr')->get('translation_request')->entity;
     $this->assertNotEquals($version_one_request->id(), $version_two_request->id());
+  }
+
+  /**
+   * Tests that typed_link field properties are not overwritten by translations.
+   */
+  public function testTypedLinkFieldPropertySync(): void {
+    // Create a node with a typed link field value.
+    $node = Node::create([
+      'type' => 'oe_workflow_demo',
+      'title' => 'Node with a typed link',
+      'moderation_state' => 'draft',
+      'field_workflow_typed_link' => [
+        'uri' => 'https://example.com',
+        'title' => 'Link Label',
+        'link_type' => 'type_one',
+      ],
+    ]);
+    $node->save();
+
+    // Publish the node.
+    $node = $this->moderateNode($node, 'published');
+    $this->assertEquals('type_one', $node->get('field_workflow_typed_link')->first()->get('link_type')->getValue());
+
+    // Add a local translation for the node and synchronize it.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] a')->click();
+    $this->submitForm([], 'Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation has been synchronised.');
+
+    // Add a new draft for the node and change the link type.
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $node = $node_storage->load($node->id());
+    $node->set('moderation_state', 'draft');
+    $node->set('field_workflow_typed_link', [
+      'uri' => 'https://example.com',
+      'title' => 'Link Label',
+      'link_type' => 'type_two',
+    ]);
+    $node->save();
+
+    // Moderate the node to validated.
+    $node = $this->moderateNode($node, 'validated');
+    $this->assertEquals('type_two', $node->get('field_workflow_typed_link')->first()->get('link_type')->getValue());
+
+    // Add a local translation for the validated revision of the node, without
+    // making any changes, and synchronize it.
+    $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
+    $this->clickLink('Local translations');
+    $this->getSession()->getPage()->find('css', 'tr[hreflang="fr"] td[data-version="2.0.0"] a')->click();
+    $this->submitForm([], 'Save and synchronise');
+    $this->assertSession()->pageTextContains('The translation has been synchronised.');
+
+    // Go to the validated revision of the node and check that the link type
+    // is still "Type two" and was not overridden with the translation.
+    $node_storage->resetCache();
+    $validated = $node_storage->loadRevision($node_storage->getLatestRevisionId($node->id()));
+    $this->assertEquals('type_two', $validated->get('field_workflow_typed_link')->first()->get('link_type')->getValue());
   }
 
   /**
