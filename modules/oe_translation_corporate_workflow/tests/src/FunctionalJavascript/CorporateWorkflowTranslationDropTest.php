@@ -183,7 +183,10 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
       // Assert the translation overview page shows the FR translation link.
       $this->drupalGet($entity->toUrl('drupal:content-translation-overview'));
       $this->assertSession()->linkExistsExact('My editorial content');
-      $this->assertEquals('Version 1.0.0', $this->getSession()->getPage()->find('xpath', '//tr[@hreflang="fr"]/td[2]')->getText());
+      $french_title_cell = $this->getSession()->getPage()->find('xpath', '//tr[@hreflang="fr"]/td[2]');
+      $this->assertEquals('Version 1.0.0', $this->getTooltipAnchorText($french_title_cell));
+      // The tooltip shows the translated title.
+      $this->assertTitleTooltipText('My editorial content FR', $french_title_cell);
       $this->assertDashboardExistingTranslations([
         'en' => ['title' => 'My editorial content'],
         'fr' => ['title' => 'Version 1.0.0'],

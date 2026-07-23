@@ -9,6 +9,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\content_translation\ContentTranslationManagerInterface;
@@ -137,7 +138,7 @@ class ContentTranslationDashboardController extends ContentTranslationController
       $translation = $entity->hasTranslation($language->getId()) ? $entity->getTranslation($language->getId()) : NULL;
       $row = [
         'data' => [
-          'language' => $language->getName(),
+          'language' => ['data' => static::buildLanguageTooltip($language)],
         ],
       ];
 
@@ -245,6 +246,51 @@ class ContentTranslationDashboardController extends ContentTranslationController
     }
 
     return $links;
+  }
+
+  /**
+   * Builds a tooltip render array showing the language code and full name.
+   *
+   * The language code is shown as the visible anchor and the full language
+   * name is revealed on hover.
+   *
+   * @param \Drupal\Core\Language\LanguageInterface $language
+   *   The language.
+   *
+   * @return array
+   *   The tooltip render array.
+   */
+  public static function buildLanguageTooltip(LanguageInterface $language): array {
+    $code = strtoupper($language->getId());
+
+    // Allow other modules to alter the language code shown as the tooltip
+    // anchor, e.g. to map it to a different display code.
+    \Drupal::moduleHandler()->alter('oe_translation_dashboard_language_code', $code, $language);
+
+    return [
+      '#theme' => 'tooltip',
+      '#label' => $code,
+      '#text' => $language->getName(),
+    ];
+  }
+
+  /**
+   * Builds a tooltip render array for a translation title.
+   *
+   * @param mixed $label
+   *   The label.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $translation
+   *   The translation whose title to show in the tooltip.
+   *
+   * @return array
+   *   The tooltip render array.
+   */
+  public static function buildTranslationTitleTooltip($label, ContentEntityInterface $translation): array {
+    return [
+      '#theme' => 'tooltip',
+      '#label' => $label,
+      '#text' => $translation->label(),
+    ];
   }
 
 }

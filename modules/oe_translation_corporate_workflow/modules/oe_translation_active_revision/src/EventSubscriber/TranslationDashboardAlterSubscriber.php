@@ -12,6 +12,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation\Controller\ContentTranslationDashboardController;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
 use Drupal\oe_translation_active_revision\LanguageRevisionMapping;
@@ -202,6 +203,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $row['data']['operations']['data'] = $this->getOperationsForSingleVersion($entity, $langcode, $mapping);
 
     if ($mapping->isMappedToNull()) {
+      // The translation is hidden, so there is no translated title to show in
+      // a tooltip.
       $row['data']['title'] = [
         'data' => [
           '#markup' => $this->t('Mapped to "hidden" (translation hidden)'),
@@ -214,10 +217,12 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $mapped_revision = $mapping->getEntity();
     if ($mapped_revision) {
       $mapped_version = $this->getEntityVersion($mapped_revision);
+      $label = $this->t('Mapped to version @version', ['@version' => $mapped_version]);
+      // The tooltip shows the title of the translation on the mapped revision,
+      // not the current one.
+      $mapped_translation = $mapped_revision->hasTranslation($langcode) ? $mapped_revision->getTranslation($langcode) : NULL;
       $row['data']['title'] = [
-        'data' => [
-          '#markup' => $this->t('Mapped to version @version', ['@version' => $mapped_version]),
-        ],
+        'data' => $mapped_translation ? ContentTranslationDashboardController::buildTranslationTitleTooltip($label, $mapped_translation) : ['#markup' => $label],
       ];
     }
   }
@@ -257,7 +262,8 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     if ($mapping->isMappedToNull()) {
       foreach ($cols as $col) {
         // Check that it actually has a translation that is being hidden before
-        // altering the label.
+        // altering the label. The translation is hidden, so there is no
+        // translated title to show in a tooltip.
         if ($col === 'title_published' && $entity->hasTranslation($langcode)) {
           $row['data'][$col] = [
             'data' => [
@@ -290,10 +296,12 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
           // version.
           continue;
         }
+        $label = $this->t('Mapped to version @version', ['@version' => $mapped_version]);
+        // The tooltip shows the title of the translation on the mapped
+        // revision, not the current or latest one.
+        $mapped_translation = $mapped_revision->hasTranslation($langcode) ? $mapped_revision->getTranslation($langcode) : NULL;
         $row['data'][$col] = [
-          'data' => [
-            '#markup' => $this->t('Mapped to version @version', ['@version' => $mapped_version]),
-          ],
+          'data' => $mapped_translation ? ContentTranslationDashboardController::buildTranslationTitleTooltip($label, $mapped_translation) : ['#markup' => $label],
         ];
       }
     }

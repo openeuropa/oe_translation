@@ -775,8 +775,11 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $italian_row = $table->find('xpath', '//tr[@hreflang="it"]');
     // The FR translation is mapped to version 1 and we don't have a translation
     // for IT.
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('No translation', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    // The mapping tooltip shows the translated title of the version it is
+    // mapped to, which here is the previous version.
+    $this->assertTitleTooltipText('My FR version 1 node', $french_row->find('xpath', '//td[2]'));
+    $this->assertEquals('No translation', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
     $this->assertOperationLinks([
       'View' => TRUE,
       // We cannot delete the translation as it's mapped.
@@ -801,7 +804,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The mapping has been removed. There are no more language mappings for this entity.');
     // The existing active revision entity was deleted.
     $this->assertCount(0, $active_revision_storage->loadMultiple());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
@@ -831,7 +834,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'langcode' => 'fr',
       'scope' => 0,
     ], $language_values[0]);
-    $this->assertEquals('Mapped to "hidden" (translation hidden)', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to "hidden" (translation hidden)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
@@ -868,7 +871,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'langcode' => 'fr',
       'scope' => 0,
     ], $language_values[0]);
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
@@ -893,7 +896,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The mapping has been removed. There are no more language mappings for this entity.');
     // The existing active revision entity was deleted.
     $this->assertCount(0, $active_revision_storage->loadMultiple());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
@@ -929,7 +932,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'langcode' => 'fr',
       'scope' => 0,
     ], $language_values[0]);
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     $french_operations = $french_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
@@ -954,8 +957,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 2.0.0', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 2.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
     $this->assertOperationLinks([
       'View' => TRUE,
       'Delete translation' => FALSE,
@@ -1011,7 +1014,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'langcode' => 'it',
       'scope' => 0,
     ], $language_values[1]);
-    $this->assertEquals('Mapped to "hidden" (translation hidden)', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to "hidden" (translation hidden)', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
     $italian_operations = $italian_row->findAll('xpath', '//td[3]//a');
     $this->assertOperationLinks([
       'View' => TRUE,
@@ -1133,8 +1136,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Submit');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
     $this->assertSession()->pageTextContains('The mapping has been updated.');
-    $this->assertEquals('Mapped to version 2.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 2.0.0', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 2.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 2.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
   }
 
   /**
@@ -1209,8 +1212,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
     // Both published and validated versions are mapped to 1.0.0.
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
     $french_published_operations = $french_row->findAll('xpath', '//td[3]//a');
     $french_validated_operations = $french_row->findAll('xpath', '//td[5]//a');
     $french_mapping_operations = $french_row->findAll('xpath', '//td[6]//a');
@@ -1277,10 +1280,10 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     // But, because the version 2 translation was not synced but was carried
     // over, we display that it is in fact the translation from version 1,
     // carried over.
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     // For the validated version, we do display that we have a mapping to
     // whatever is being used on version 2.
-    $this->assertEquals('Mapped to version 2.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 2.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Map to hidden.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1290,8 +1293,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Confirm');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
     $this->assertSession()->pageTextContains('The translation has been mapped to "hidden". It has not been deleted so you can always remove this mapping.');
-    $this->assertEquals('Mapped to "hidden" (translation hidden)', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to "hidden" (translation hidden)', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to "hidden" (translation hidden)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to "hidden" (translation hidden)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Remove mapping.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1301,8 +1304,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Confirm');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
     $this->assertSession()->pageTextContains('The mapping has been removed. There are no more language mappings for this entity.');
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Add back a mapping.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1319,8 +1322,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Submit');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
     $this->assertSession()->pageTextContains('The mapping has been added.');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Update the scope of the mapping to only apply to published version.
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
@@ -1337,8 +1340,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $active_revision->set('field_language_revision', $language_values);
     $active_revision->save();
     $this->getSession()->reload();
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Update the mapping.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1361,8 +1364,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
       'scope' => 1,
     ], $language_values[0]);
     // We mapped to version 2, but version 2 is in fact version 1 carried over.
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Map to hidden.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1372,8 +1375,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Confirm');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
     $this->assertSession()->pageTextContains('The translation has been mapped to "hidden". It has not been deleted so you can always remove this mapping.');
-    $this->assertEquals('Mapped to "hidden" (translation hidden)', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to "hidden" (translation hidden)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Remove the mapping.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1383,8 +1386,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->getSession()->getPage()->pressButton('Confirm');
     $this->assertSession()->addressEquals('/node/' . $node->id() . '/translations');
     $this->assertSession()->pageTextContains('The mapping has been removed. There are no more language mappings for this entity.');
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
   }
 
   /**
@@ -1463,15 +1466,15 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->drupalGet('/node/' . $node->id() . '/translations');
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 3.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Remove the mapping.
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
     $active_revision->delete();
     $this->getSession()->reload();
-    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 3.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Version 1.0.0 (carried over to the current version)', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
 
     // Add back a mapping.
     $french_row->find('xpath', '//td[6]')->pressButton('List additional actions');
@@ -1487,8 +1490,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The mapping has been added.');
     // The published version shows the mapping but the validated one has its
     // own translation and the scope applies only to the published.
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 3.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();
     $this->assertEquals(LanguageWithEntityRevisionItem::SCOPE_PUBLISHED, $language_values[0]['scope']);
@@ -1557,8 +1560,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->drupalGet('/node/' . $node->id() . '/translations');
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $italian_row = $table->find('xpath', '//tr[@hreflang="it"]');
-    $this->assertEquals('No translation', $italian_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 2.0.0', $italian_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('No translation', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 2.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[4]')));
 
     // Map the IT to hidden.
     // There is only one operation for the IT row so we don't have a dropdown
@@ -1572,8 +1575,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The translation has been mapped to "hidden". It has not been deleted so you can always remove this mapping.');
     // The Published version row remains unaffected because it had no
     // translation.
-    $this->assertEquals('No translation', $italian_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to "hidden" (translation hidden)', $italian_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('No translation', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to "hidden" (translation hidden)', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[4]')));
 
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();
@@ -1701,7 +1704,7 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
     $french_operations = $french_row->findAll('xpath', '//td[3]//a');
-    $this->assertEquals('Mapped to version 3.0.0', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
     $this->assertOperationLinks([
       'View' => TRUE,
       'Delete translation' => FALSE,
@@ -1795,8 +1798,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
     $italian_row = $table->find('xpath', '//tr[@hreflang="it"]');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 1.0.0', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();
     $this->assertCount(2, $language_values);
@@ -1823,8 +1826,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
-    $this->assertEquals('Version 2.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 1.0.0', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Version 2.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
     $active_revision_storage->resetCache();
     $active_revision = $active_revision_storage->load($active_revision->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();
@@ -1862,8 +1865,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
     $italian_row = $table->find('xpath', '//tr[@hreflang="it"]');
-    $this->assertEquals('Version 2.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 2.0.0', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Version 2.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 2.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
     $active_revision_storage->resetCache();
     $this->assertCount(0, $active_revision_storage->loadMultiple());
   }
@@ -1937,8 +1940,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->drupalGet('/node/' . $node->id() . '/translations');
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();
     $this->assertCount(1, $language_values);
@@ -1978,8 +1981,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 3.0.0', $french_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
     $active_revision_storage->resetCache();
     $active_revision = $active_revision_storage->load($active_revision->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();
@@ -2013,8 +2016,8 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
     $italian_row = $table->find('xpath', '//tr[@hreflang="it"]');
-    $this->assertEquals('Version 3.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 3.0.0', $italian_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
 
     // Now create a new version, validated and create a translation for that
     // only in FR.
@@ -2037,10 +2040,10 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->assertSession()->pageTextContains('The translation has been saved.');
     $this->assertSession()->pageTextContains('The translation has been synchronised.');
     $this->drupalGet('/node/' . $node->id() . '/translations');
-    $this->assertEquals('Version 3.0.0', $french_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Version 4.0.0', $french_row->find('xpath', '//td[4]')->getText());
-    $this->assertEquals('Version 3.0.0', $italian_row->find('xpath', '//td[2]')->getText());
-    $this->assertEquals('Mapped to version 3.0.0', $italian_row->find('xpath', '//td[4]')->getText());
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Version 4.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[4]')));
+    $this->assertEquals('Version 3.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[2]')));
+    $this->assertEquals('Mapped to version 3.0.0', $this->getTooltipAnchorText($italian_row->find('xpath', '//td[4]')));
 
     $active_revision = $active_revision_storage->getActiveRevisionForEntity('node', $node->id());
     $language_values = $active_revision->get('field_language_revision')->getValue();

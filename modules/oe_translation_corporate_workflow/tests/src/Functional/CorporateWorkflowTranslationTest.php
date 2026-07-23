@@ -14,7 +14,6 @@ use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\content_moderation\Entity\ContentModerationState;
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\oe_link_lists\Entity\LinkList;
@@ -289,7 +288,13 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         'published_title' => 'Version 1.0.0',
         'validated_title' => 'Version 1.0.0 (carried over to the current version)',
       ],
-    ], ['1.0.0 / published', '2.0.0 / validated']);
+    ], ['1.0.0 / Published', '2.0.0 / Validated']);
+
+    // The title cell tooltips show the translated node title on each version.
+    $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
+    $fr_row = $table->find('xpath', '//tr[@hreflang="fr"]');
+    $this->assertTitleTooltipText('My node FR', $fr_row->find('xpath', '//td[2]'));
+    $this->assertTitleTooltipText('My node FR', $fr_row->find('xpath', '//td[4]'));
 
     $this->assertNewLocalTranslationLinks($node, ['en'], ['en']);
 
@@ -317,7 +322,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         // we don't have any translations on the new version.
         'validated_title' => 'No translation',
       ],
-    ], ['1.0.0 / published', '2.0.0 / validated']);
+    ], ['1.0.0 / Published', '2.0.0 / Validated']);
 
     // Start another translation and save as draft.
     $this->clickLink('Local translations');
@@ -1285,7 +1290,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
           'published_title' => 'Version 1.0.0',
           'validated_title' => 'Version 1.0.0 (carried over to the current version)',
         ],
-      ], ['1.0.0 / published', '2.0.0 / validated']);
+      ], ['1.0.0 / Published', '2.0.0 / Validated']);
 
       // Count all the node revisions and their translations to establish a
       // baseline.
@@ -1447,7 +1452,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $rows = array_filter($table->findAll('css', 'tbody tr'), function (NodeElement $row) {
       // Filter out the rows that don't have a translation.
-      return $row->find('xpath', '//td[2]')->getText() !== 'No translation';
+      return $this->getTooltipAnchorText($row->find('xpath', '//td[2]')) !== 'No translation';
     });
     $this->assertCount(count($languages), $rows);
     $header = $table->findAll('css', 'thead th');
@@ -1461,8 +1466,7 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
       $cols = $row->findAll('css', 'td');
       $hreflang = $row->getAttribute('hreflang');
       $expected_info = $languages[$hreflang];
-      $language = ConfigurableLanguage::load($hreflang);
-      $this->assertEquals($language->getName(), $cols[0]->getText());
+      $this->assertLanguageCell($hreflang, $cols[0]);
       if ($hreflang === 'en') {
         $this->assertNotNull($cols[1]->findLink($expected_info['published_title']));
         $this->assertNotNull($cols[3]->findLink($expected_info['validated_title']));
@@ -1473,14 +1477,14 @@ class CorporateWorkflowTranslationTest extends BrowserTestBase {
         $this->assertEquals('N/A', $cols[1]->getText());
       }
       else {
-        $this->assertEquals($expected_info['published_title'], $cols[1]->getText());
+        $this->assertEquals($expected_info['published_title'], $this->getTooltipAnchorText($cols[1]));
       }
 
       if ($expected_info['validated_title'] === 'N/A') {
         $this->assertEquals('N/A', $cols[3]->getText());
       }
       else {
-        $this->assertEquals($expected_info['validated_title'], $cols[3]->getText());
+        $this->assertEquals($expected_info['validated_title'], $this->getTooltipAnchorText($cols[3]));
       }
     }
   }
