@@ -6,6 +6,7 @@ namespace Drupal\Tests\oe_translation_corporate_workflow\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\oe_editorial\Traits\BatchTrait;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\oe_link_lists\Entity\LinkList;
@@ -24,6 +25,7 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
   use BatchTrait;
   use EntityVersionTrait;
   use TranslationsTestTrait;
+  use CachedDatabaseInstallTrait;
 
   /**
    * The entity type manager.
@@ -59,6 +61,8 @@ class CorporateWorkflowTranslationDropTest extends WebDriverTestBase {
    * {@inheritdoc}
    */
   public function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = \Drupal::entityTypeManager();
