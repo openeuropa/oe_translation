@@ -85,7 +85,10 @@ class HtmlFormatter implements ContentFormatterInterface {
     $translation_data = [];
 
     $dom = new \DOMDocument();
+    $use_errors = libxml_use_internal_errors(TRUE);
     $dom->loadHTML($file);
+    libxml_clear_errors();
+    libxml_use_internal_errors($use_errors);
     $xml = simplexml_import_dom($dom);
 
     if (!$xml) {
