@@ -17,7 +17,7 @@ use Drupal\user\UserInterface;
 /**
  * Tests the remote translations via CDT.
  *
- * @group batch2
+ * @group batch5
  */
 class TranslationProviderTest extends TranslationTestBase {
 

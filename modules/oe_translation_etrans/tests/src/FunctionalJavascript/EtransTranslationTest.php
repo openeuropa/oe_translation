@@ -22,7 +22,7 @@ use Drupal\user\Entity\Role;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
- * @group batch1
+ * @group batch5
  */
 class EtransTranslationTest extends TranslationTestBase {
 

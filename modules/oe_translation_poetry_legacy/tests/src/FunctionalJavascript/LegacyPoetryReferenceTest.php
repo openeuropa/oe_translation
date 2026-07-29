@@ -15,7 +15,7 @@ use Drupal\user\Entity\Role;
 /**
  * Tests the Legacy Poetry reference entity.
  *
- * @group batch1
+ * @group batch5
  */
 class LegacyPoetryReferenceTest extends TranslationTestBase {
 

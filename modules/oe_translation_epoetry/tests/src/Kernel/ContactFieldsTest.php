@@ -9,7 +9,7 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 /**
  * Tests the Poetry contact fields type and formatter.
  *
- * @group batch2
+ * @group batch5
  */
 class ContactFieldsTest extends TranslationKernelTestBase {
 
