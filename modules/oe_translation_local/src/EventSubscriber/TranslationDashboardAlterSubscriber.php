@@ -123,6 +123,9 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $rows = [];
     foreach ($translation_requests as $translation_request) {
       $entity = $translation_request->getContentEntity();
+      if (!$entity instanceof ContentEntityInterface) {
+        continue;
+      }
       $language = $this->languageManager->getLanguage($translation_request->getTargetLanguageWithStatus()->getLangcode());
       $row = [
         'language' => $language->getName(),
