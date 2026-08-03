@@ -106,22 +106,3 @@ toolkit:
   test:
     phpstan:
       config: phpstan.neon.dist
-    phpunit:
-      execution: parallel
-      batches:
-        - batch1
-        - batch2
-        - batch3
-  ci:
-    PHP:
-      - 8.3
-    DRUPAL:
-      - ~10.6.0
-      - ~11.2.0
-      - ~11.3.0
-    PUBLISH: false
-    BEHAT: false
-    PHPUNIT: true
-    SELENIUM: true
-    SELENIUM_VERSION: 4.1.3-20220405
-    SPARQL: false
