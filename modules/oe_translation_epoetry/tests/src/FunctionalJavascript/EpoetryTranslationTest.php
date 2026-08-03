@@ -78,6 +78,9 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $this->user = $this->setUpTranslatorUser();
     $role = Role::load('oe_translator');
     $role->grantPermission('request epoetry translation');
+    // From Drupal 11.4 the username is only rendered as a link to the user
+    // profile if the current user has "access user profiles" permission.
+    $role->grantPermission('access user profiles');
     $role->save();
     $this->drupalLogin($this->user);
   }
