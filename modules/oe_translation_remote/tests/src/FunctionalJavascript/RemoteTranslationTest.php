@@ -605,8 +605,16 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->drupalGet($translation_url);
     $this->assertSession()->pageTextContains('Access denied');
 
-    // Force the create access event to grant exceptional access.
+    // Granting "create" access alone is not enough to see the tab.
     \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'allowed']);
+    $this->drupalGet($translation_url);
+    $this->assertSession()->pageTextContains('Access denied');
+
+    // "overview" access grants the tab itself.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', [
+      'create' => 'allowed',
+      'overview' => 'allowed',
+    ]);
 
     // With no existing translation request, the page is now accessible and
     // the translator select is enabled.

@@ -16,7 +16,6 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
-use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
 use Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider\Epoetry;
 use Drupal\oe_translation_epoetry\RequestFactory;
 use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
@@ -120,18 +119,11 @@ class ModifyLinguisticRequestForm extends FormBase {
    *   The access result.
    */
   public static function access(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $access = $account->hasPermission('translate any entity') && $account->hasPermission('request epoetry translation')
-      ? AccessResult::allowed()->cachePerPermissions()
-      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
-    if (!$access->isAllowed()) {
-      $entity = $translation_request->getContentEntity();
-      if ($entity) {
-        $event = new TranslationRequestCreateAccessEvent($entity, $account, $access, $translation_request->bundle());
-        \Drupal::service('event_dispatcher')->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
-        $access = $event->getAccess();
-      }
-    }
-    $access->addCacheableDependency($translation_request);
+    $access = \Drupal::service('oe_translation.access_check')->checkCreateAccessForTranslationRequest(
+      translation_request: $translation_request,
+      account: $account,
+      global_permission: ['translate any entity', 'request epoetry translation'],
+    );
     if (!$access->isAllowed()) {
       return $access;
     }
@@ -175,7 +167,11 @@ class ModifyLinguisticRequestForm extends FormBase {
       TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
     ];
     $allowed = in_array($translation_request->getEpoetryRequestStatus(), $epoetry_statuses) && in_array($translation_request->getRequestStatus(), $request_statuses);
-    return AccessResult::allowedIf($allowed)->inheritCacheability($access);
+    if (!$allowed) {
+      return AccessResult::forbidden()->inheritCacheability($access);
+    }
+
+    return $access;
   }
 
   /**

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_local\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -15,8 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\oe_translation\Event\TranslationRequestAcceptAccessEvent;
-use Drupal\oe_translation\Event\TranslationRequestSynchronizeAccessEvent;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\Event\TranslationSynchronisationEvent;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\TranslationFormTrait;
@@ -55,6 +53,13 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   protected $eventDispatcher;
 
   /**
+   * The translation access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * Constructs a new instance of this class.
    *
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
@@ -71,13 +76,16 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   The current user.
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translation_request_access_check
+   *   The translation access check.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EventDispatcherInterface $event_dispatcher, TranslationRequestAccessCheck $translation_request_access_check) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->translationSourceManager = $translation_source_manager;
     $this->currentUser = $current_user;
     $this->eventDispatcher = $event_dispatcher;
+    $this->translationRequestAccessCheck = $translation_request_access_check;
   }
 
   /**
@@ -91,7 +99,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $container->get('entity_type.manager'),
       $container->get('oe_translation.translation_source_manager'),
       $container->get('current_user'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -234,20 +243,10 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   Whether access is granted.
    */
   protected function acceptAccess(): bool {
-    $access = $this->currentUser->hasPermission('accept translation request')
-      ? AccessResult::allowed()->cachePerPermissions()
-      : AccessResult::forbidden('The user is missing the translation accept permission.')->cachePerPermissions();
-
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
-    $translation_request = $this->entity;
-    if ($access->isAllowed() || !$translation_request->getContentEntity()) {
-      return $access->isAllowed();
-    }
-
-    $event = new TranslationRequestAcceptAccessEvent($translation_request, $this->currentUser, $access);
-    $this->eventDispatcher->dispatch($event, TranslationRequestAcceptAccessEvent::EVENT);
-
-    return $event->getAccess()->isAllowed();
+    return $this->translationRequestAccessCheck->checkAcceptAccess(
+      translation_request: $this->entity,
+      account: $this->currentUser,
+    )->isAllowed();
   }
 
   /**
@@ -257,20 +256,10 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   Whether access is granted.
    */
   protected function syncAccess(): bool {
-    $access = $this->currentUser->hasPermission('sync translation request')
-      ? AccessResult::allowed()->cachePerPermissions()
-      : AccessResult::forbidden('The user is missing the translation sync permission.')->cachePerPermissions();
-
-    /** @var \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request */
-    $translation_request = $this->entity;
-    if ($access->isAllowed() || !$translation_request->getContentEntity()) {
-      return $access->isAllowed();
-    }
-
-    $event = new TranslationRequestSynchronizeAccessEvent($translation_request, $this->currentUser, $access);
-    $this->eventDispatcher->dispatch($event, TranslationRequestSynchronizeAccessEvent::EVENT);
-
-    return $event->getAccess()->isAllowed();
+    return $this->translationRequestAccessCheck->checkSynchronizeAccess(
+      translation_request: $this->entity,
+      account: $this->currentUser,
+    )->isAllowed();
   }
 
   /**

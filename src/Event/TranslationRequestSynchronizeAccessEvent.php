@@ -14,8 +14,6 @@ use Drupal\oe_translation\Entity\TranslationRequestInterface;
  */
 class TranslationRequestSynchronizeAccessEvent extends TranslationRequestAccessEventBase {
 
-  const EVENT = 'translation_request_synchronize_access_event';
-
   /**
    * Constructs a new TranslationRequestSynchronizeAccessEvent.
    *

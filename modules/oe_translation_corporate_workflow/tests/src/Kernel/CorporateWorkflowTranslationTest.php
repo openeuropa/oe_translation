@@ -205,9 +205,9 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
   }
 
   /**
-   * Tests the precedence of the translation request access events.
+   * Tests the moderation state restriction on local translation creation.
    */
-  public function testCreateAccessEventOrdering(): void {
+  public function testLocalTranslationCreateAccess(): void {
     /** @var \Drupal\node\NodeInterface $node */
     $node = Node::create([
       'type' => 'ct_example',
@@ -220,6 +220,60 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     $this->createUser();
 
     $account = $this->createUser([]);
+    $access_manager = $this->container->get('access_manager');
+    $route_name = 'oe_translation_local.create_local_translation_request';
+    $parameters = [
+      'entity_type' => 'node',
+      'entity' => $node->getRevisionId(),
+      'source' => 'en',
+      'target' => 'fr',
+    ];
+
+    // The user does not have global permission to translate entities.
+    // We grant the access through the events.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'allowed']);
+
+    // The node is still in draft state, so the moderation state requirement
+    // on the route keeps the access forbidden, even though the event
+    // granted it.
+    $access = $access_manager->checkNamedRoute($route_name, $parameters, $account, TRUE);
+    $this->assertTrue($access->isForbidden(), 'Translations cannot be added to entities in "draft" state.');
+
+    // Now, publish the entity and check the access again.
+    $node->set('moderation_state', 'published');
+    $node->save();
+    $parameters['entity'] = $node->getRevisionId();
+    $access = $access_manager->checkNamedRoute($route_name, $parameters, $account, TRUE);
+    $this->assertTrue($access->isAllowed(), 'Translations should be allowed for entities in "published" state.');
+
+    // Disable the event override and fail if the user has no global permission.
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
+    $access = $access_manager->checkNamedRoute($route_name, $parameters, $account, TRUE);
+    $this->assertTrue($access->isForbidden(), 'Translations cannot be added without global permissions.');
+  }
+
+  /**
+   * Tests that the deprecated TranslationAccessEvent is still functional.
+   *
+   * The oe_translation_corporate_workflow module no longer subscribes to
+   * this event (its moderation state restriction became a requirement on
+   * the creation route), but the event itself, and
+   * TranslationLocalController's dispatch of it, must remain functional for
+   * backwards compatibility with any other subscriber.
+   */
+  public function testDeprecatedTranslationAccessEvent(): void {
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::create([
+      'type' => 'ct_example',
+      'title' => 'Test node',
+      'moderation_state' => 'published',
+    ]);
+    $node->save();
+
+    // Create an empty user to avoid having uid=1.
+    $this->createUser();
+
+    $account = $this->createUser(['translate any entity']);
     $language_manager = $this->container->get('language_manager');
     $source = $language_manager->getLanguage('en');
     $target = $language_manager->getLanguage('fr');
@@ -227,25 +281,19 @@ class CorporateWorkflowTranslationTest extends KernelTestBase {
     /** @var \Drupal\oe_translation_local\Controller\TranslationLocalController $controller */
     $controller = TranslationLocalController::create($this->container);
 
-    // The user does not have global permission to translate entities.
-    // We grant the access through the events.
-    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'allowed']);
-
-    // The node is still in draft state, so access must remain forbidden.
-    // The oe_translation_corporate_workflow subscriber has precedence here.
+    // The user has the global permission, so access is allowed by default.
     $access = $controller->createLocalTranslationRequestAccess($node, $source, $target, $account);
-    $this->assertTrue($access->isForbidden(), 'Translations cannot be added to entities in "draft" state.');
+    $this->assertTrue($access->isAllowed(), 'Translations should be allowed for a user with global permission.');
 
-    // Now, publish the entity and check the access again.
-    $node->set('moderation_state', 'published');
-    $node->save();
+    // The deprecated event can still revoke access, even for a user with
+    // the global permission.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['deprecated' => 'forbidden']);
     $access = $controller->createLocalTranslationRequestAccess($node, $source, $target, $account);
-    $this->assertTrue($access->isAllowed(), 'Translations should be allowed for entities in "published" state.');
+    $this->assertTrue($access->isForbidden(), 'The deprecated event should still be able to revoke access.');
 
-    // Disable the event override and fail if the user has no global permission.
     \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
     $access = $controller->createLocalTranslationRequestAccess($node, $source, $target, $account);
-    $this->assertTrue($access->isForbidden(), 'Translations cannot be added without global permissions.');
+    $this->assertTrue($access->isAllowed(), 'Access should be restored once the override is removed.');
   }
 
 }

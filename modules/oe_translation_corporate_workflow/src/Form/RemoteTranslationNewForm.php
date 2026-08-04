@@ -12,13 +12,13 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\content_moderation\ModerationInformationInterface;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
 use Drupal\oe_translation_remote\Form\RemoteTranslationNewForm as RemoteTranslationNewFormOriginal;
 use Drupal\oe_translation_remote\Plugin\RemoteTranslationProviderManager;
 use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Form for starting a new remote translation request.
@@ -47,8 +47,8 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
   /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, ModerationInformationInterface $moderationInformation, EntityRevisionInfoInterface $entityRevisionInfo, EventDispatcherInterface $eventDispatcher) {
-    parent::__construct($entityTypeManager, $providerManager, $account, $eventDispatcher);
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, RemoteTranslationProviderManager $providerManager, AccountInterface $account, ModerationInformationInterface $moderationInformation, EntityRevisionInfoInterface $entityRevisionInfo, TranslationRequestAccessCheck $translationRequestAccessCheck) {
+    parent::__construct($entityTypeManager, $providerManager, $account, $translationRequestAccessCheck);
     $this->entityTypeManager = $entityTypeManager;
     $this->providerManager = $providerManager;
     $this->account = $account;
@@ -66,16 +66,17 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       $container->get('current_user'),
       $container->get('content_moderation.moderation_information'),
       $container->get('oe_translation.entity_revision_info'),
-      $container->get('event_dispatcher')
+      $container->get('oe_translation.access_check')
     );
   }
 
   /**
    * {@inheritdoc}
    *
-   * Ensure the content is in the proper moderation state for starting.
-   * Also ensure that we don't have already a translation request started on
-   * the same version (but previous revision).
+   * Moderation state is checked by TranslationAccessSubscriber, via the
+   * create access event dispatched by the parent method. Here we only
+   * check for an existing translation request on the same version, which
+   * only applies to entities using the corporate workflow.
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    * @SuppressWarnings(PHPMD.NPathComplexity)
@@ -87,17 +88,13 @@ class RemoteTranslationNewForm extends RemoteTranslationNewFormOriginal {
       return $access;
     }
 
-    $cache = CacheableMetadata::createFromObject($access);
     /** @var \Drupal\workflows\WorkflowInterface $workflow */
     $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
     if (!$workflow || $workflow->id() !== 'oe_corporate_workflow') {
       return $access;
     }
 
-    $state = $entity->get('moderation_state')->value;
-    if (!in_array($state, ['validated', 'published'])) {
-      return AccessResult::forbidden()->setReason($this->t('This content cannot be translated yet as it does not have a Validated nor Published major version.'))->addCacheableDependency($cache);
-    }
+    $cache = CacheableMetadata::createFromObject($access);
 
     if ($entity->isDefaultRevision() && !$entity->isLatestRevision()) {
       /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */

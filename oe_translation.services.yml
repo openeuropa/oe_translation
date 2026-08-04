@@ -29,3 +29,6 @@ services:
   oe_translation.content_translation_preview_manager:
     class: Drupal\oe_translation\TranslationPreviewManager
     arguments: ['@oe_translation.translation_source_manager']
+  oe_translation.access_check:
+    class: Drupal\oe_translation\TranslationRequestAccessCheck
+    arguments: ['@event_dispatcher']

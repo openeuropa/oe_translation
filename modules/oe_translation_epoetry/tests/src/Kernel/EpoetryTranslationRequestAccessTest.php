@@ -72,11 +72,16 @@ class EpoetryTranslationRequestAccessTest extends TranslationKernelTestBase {
     // Without an account, access is forbidden and the event never fires.
     $this->assertTrue($this->plugin->createAccess(NULL)->isForbidden(), 'Access should be forbidden if there is no account');
 
-    // With the permission, access is allowed regardless of the entity or any
-    // override.
+    // With the permission, access is still allowed as long as there is no
+    // event subscriber overriding it.
     $this->plugin->setEntity($node);
-    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
     $this->assertTrue($this->plugin->createAccess($with_permission)->isAllowed(), 'Access should be allowed when the user has global permission.');
+
+    // A subscriber can revoke access even for a user with the global
+    // permission.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    $this->assertTrue($this->plugin->createAccess($with_permission)->isForbidden(), 'Access should be revocable by the event even when the user has global permission.');
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
 
     // Without the permission and without an entity set on the plugin, the
     // event cannot be dispatched, so the access remains forbidden.
@@ -117,9 +122,14 @@ class EpoetryTranslationRequestAccessTest extends TranslationKernelTestBase {
 
     $controller = EpoetryController::create($this->container);
 
-    // With the permission, access is allowed regardless of any override.
-    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    // With the permission, access is allowed as long as there is no event
+    // subscriber overriding it.
     $this->assertTrue($controller->finishFailedRequestAccess($request, $with_permission)->isAllowed(), 'Access should be allowed when the user has global permission.');
+
+    // A subscriber can revoke access even for a user with the global
+    // permission.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    $this->assertTrue($controller->finishFailedRequestAccess($request, $with_permission)->isForbidden(), 'Access should be revocable by the event even when the user has global permission.');
 
     // Without the permission and without an event subscriber override,
     // access remains forbidden.
@@ -161,9 +171,14 @@ class EpoetryTranslationRequestAccessTest extends TranslationKernelTestBase {
 
     $controller = EpoetryController::create($this->container);
 
-    // With the permissions, access is allowed regardless of any override.
-    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    // With the permissions, access is allowed as long as there is no event
+    // subscriber overriding it.
     $this->assertTrue($controller->createNewVersionRequestAccess($request, $with_permission)->isAllowed(), 'Access should be allowed when the user has global permissions.');
+
+    // A subscriber can revoke access even for a user with the global
+    // permissions.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    $this->assertTrue($controller->createNewVersionRequestAccess($request, $with_permission)->isForbidden(), 'Access should be revocable by the event even when the user has global permissions.');
 
     // Without the permissions and without an event subscriber override,
     // access remains forbidden.
@@ -198,9 +213,14 @@ class EpoetryTranslationRequestAccessTest extends TranslationKernelTestBase {
     $request->setEpoetryRequestStatus(TranslationRequestEpoetryInterface::STATUS_REQUEST_ACCEPTED);
     $request->save();
 
-    // With the permissions, access is allowed regardless of any override.
-    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    // With the permissions, access is allowed as long as there is no event
+    // subscriber overriding it.
     $this->assertTrue(ModifyLinguisticRequestForm::access($request, $with_permission)->isAllowed(), 'Access should be allowed when the user has global permissions.');
+
+    // A subscriber can revoke access even for a user with the global
+    // permissions.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
+    $this->assertTrue(ModifyLinguisticRequestForm::access($request, $with_permission)->isForbidden(), 'Access should be revocable by the event even when the user has global permissions.');
 
     // Without the permissions and without an event subscriber override,
     // access remains forbidden.

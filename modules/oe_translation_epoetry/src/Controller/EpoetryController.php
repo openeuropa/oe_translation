@@ -11,7 +11,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface;
 use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 use Drupal\oe_translation_epoetry\NotificationTicketValidation;
@@ -64,6 +64,13 @@ class EpoetryController extends ControllerBase {
   protected $ticketValidation;
 
   /**
+   * The translation access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * Constructs a EpoetryController.
    *
    * @param \Drupal\oe_translation_epoetry\EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler
@@ -76,13 +83,16 @@ class EpoetryController extends ControllerBase {
    *   The ticket validation service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translationRequestAccessCheck
+   *   The translation access check.
    */
-  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, TicketValidationInterface $ticketValidation, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(EpoetryOngoingNewVersionRequestHandlerInterface $newVersionRequestHandler, EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, TicketValidationInterface $ticketValidation, EntityTypeManagerInterface $entityTypeManager, TranslationRequestAccessCheck $translationRequestAccessCheck) {
     $this->newVersionRequestHandler = $newVersionRequestHandler;
     $this->eventDispatcher = $eventDispatcher;
     $this->loggerChannelFactory = $loggerChannelFactory;
     $this->ticketValidation = $ticketValidation;
     $this->entityTypeManager = $entityTypeManager;
+    $this->translationRequestAccessCheck = $translationRequestAccessCheck;
   }
 
   /**
@@ -94,7 +104,8 @@ class EpoetryController extends ControllerBase {
       $container->get('event_dispatcher'),
       $container->get('logger.factory'),
       $container->get('oe_translation_epoetry.notification_ticket_validation'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -198,44 +209,17 @@ class EpoetryController extends ControllerBase {
    *   The access result.
    */
   public function finishFailedRequestAccess(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $access = $account->hasPermission('translate any entity')
-      ? AccessResult::allowed()->cachePerPermissions()
-      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
-    if (!$access->isAllowed()) {
-      $access = $this->dispatchCreateAccessEvent($translation_request, $account, $access);
-    }
-    $access->addCacheableDependency($translation_request);
+    $access = $this->translationRequestAccessCheck->checkCreateAccessForTranslationRequest($translation_request, $account);
     if (!$access->isAllowed()) {
       return $access;
     }
 
     // Only failed requests can be marked.
-    $allowed = $translation_request->getRequestStatus() === TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED;
-    return AccessResult::allowedIf($allowed)->inheritCacheability($access);
-  }
-
-  /**
-   * Dispatches an event to allow overriding a forbidden permission check.
-   *
-   * @param \Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface $translation_request
-   *   The translation request.
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   The current user.
-   * @param \Drupal\Core\Access\AccessResultInterface $access
-   *   The existing access.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The access.
-   */
-  protected function dispatchCreateAccessEvent(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account, AccessResultInterface $access): AccessResultInterface {
-    $entity = $translation_request->getContentEntity();
-    if (!$entity) {
-      return $access;
+    if ($translation_request->getRequestStatus() !== TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED) {
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
-    $event = new TranslationRequestCreateAccessEvent($entity, $account, $access, $translation_request->bundle());
-    $this->eventDispatcher->dispatch($event, TranslationRequestCreateAccessEvent::EVENT);
-    return $event->getAccess();
+    return $access;
   }
 
   /**
@@ -253,12 +237,16 @@ class EpoetryController extends ControllerBase {
    *   The access result.
    */
   public function createNewVersionRequestAccess(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $access = $account->hasPermission('translate any entity') && $account->hasPermission('request epoetry translation')
-      ? AccessResult::allowed()->cachePerPermissions()
-      : AccessResult::forbidden('The user is missing the translation permission.')->cachePerPermissions();
-    if (!$access->isAllowed()) {
-      $access = $this->dispatchCreateAccessEvent($translation_request, $account, $access);
-    }
+    // Check access against the latest revision of the content entity, since
+    // this is the version that would actually be sent for translation, not
+    // the one that was pinned on the translation request when it was
+    // originally created.
+    $access = $this->translationRequestAccessCheck->checkCreateAccess(
+      account: $account,
+      entity: $this->newVersionRequestHandler->getUpdateEntity($translation_request),
+      translation_request_bundle: $translation_request->bundle(),
+      global_permission: ['translate any entity', 'request epoetry translation'],
+    );
     $access->addCacheableDependency($translation_request);
     if (!$access->isAllowed()) {
       return $access;
@@ -270,8 +258,11 @@ class EpoetryController extends ControllerBase {
       return AccessResult::forbidden()->inheritCacheability($access);
     }
 
-    $allowed = $this->newVersionRequestHandler->canCreateRequest($translation_request);
-    return AccessResult::allowedIf($allowed)->inheritCacheability($access);
+    if (!$this->newVersionRequestHandler->canCreateRequest($translation_request)) {
+      return AccessResult::forbidden()->inheritCacheability($access);
+    }
+
+    return $access;
   }
 
 }

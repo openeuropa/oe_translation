@@ -6,19 +6,18 @@ namespace Drupal\oe_translation\Event;
 
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Event for determining access to create a translation request.
+ * Event for determining access to a translation overview page (a tab).
  *
- * This is dispatched before a translation request entity exists, so the
- * content entity and bundle are passed explicitly.
+ * Independent of TranslationRequestCreateAccessEvent: a tab can stay
+ * visible even when a request can't actually be created yet.
  */
-class TranslationRequestCreateAccessEvent extends TranslationRequestAccessEventBase {
+class TranslationRequestOverviewAccessEvent extends TranslationRequestAccessEventBase {
 
   /**
-   * Constructs a new TranslationRequestCreateAccessEvent.
+   * Constructs a new TranslationRequestOverviewAccessEvent.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being translated.
@@ -28,15 +27,12 @@ class TranslationRequestCreateAccessEvent extends TranslationRequestAccessEventB
    *   The existing access result.
    * @param string $bundle
    *   The bundle of the oe_translation_request this operation is for.
-   * @param \Drupal\Core\Language\LanguageInterface|null $target
-   *   The target language, if known at the time of the check.
    */
   public function __construct(
     protected ContentEntityInterface $entity,
     AccountInterface $account,
     AccessResultInterface $access,
     protected string $bundle,
-    protected ?LanguageInterface $target = NULL,
   ) {
     parent::__construct($account, $access);
   }
@@ -53,16 +49,6 @@ class TranslationRequestCreateAccessEvent extends TranslationRequestAccessEventB
    */
   public function getBundle(): string {
     return $this->bundle;
-  }
-
-  /**
-   * Returns the target language, if known at the time of the check.
-   *
-   * @return \Drupal\Core\Language\LanguageInterface|null
-   *   The target language.
-   */
-  public function getTarget(): ?LanguageInterface {
-    return $this->target;
   }
 
 }

@@ -435,9 +435,9 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertTrue($create_url->access(NULL, TRUE)->isAllowed(), 'Translators with global permission should access the URL.');
 
     // Force the subscriber to forbid the "create" operation and assert that
-    // access remains allowed.
+    // access is revoked, even for a user with the global permission.
     \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
-    $this->assertTrue($create_url->access(NULL, TRUE)->isAllowed(), 'The events shouldn\'t be able to revoke access');
+    $this->assertTrue($create_url->access(NULL, TRUE)->isForbidden(), 'The events should be able to revoke access, even for global roles');
 
     // Revoke the permission but force the event to allow access.
     $role = Role::load('oe_translator');
@@ -461,9 +461,11 @@ class LocalTranslationsTest extends TranslationTestBase {
     $edit_url = $request->toUrl('local-translation');
     $this->assertTrue($edit_url->access(NULL, TRUE)->isAllowed(), 'Translation requests should be visible for global roles');
 
-    // With the permission present, a "forbidden" override has no effect.
+    // With the permission present, a "forbidden" override still revokes
+    // access.
     \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'forbidden']);
-    $this->assertTrue($edit_url->access(NULL, TRUE)->isAllowed(), 'Translation requests access cannot be revoked for global roles');
+    $this->assertTrue($edit_url->access(NULL, TRUE)->isForbidden(), 'Translation requests access can be revoked for global roles');
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
 
     // Without the permission, the override can still grant access.
     $role->revokePermission('translate any entity');
@@ -482,14 +484,16 @@ class LocalTranslationsTest extends TranslationTestBase {
     $this->assertSession()->buttonExists('Save and accept');
     $this->assertSession()->buttonExists('Save and synchronise');
 
-    // With the permissions present, a "forbidden" override has no effect.
+    // With the permissions present, a "forbidden" override still revokes
+    // access to the buttons.
     \Drupal::state()->set('oe_translation_test.operation_access_overrides', [
       'accept' => 'forbidden',
       'sync' => 'forbidden',
     ]);
     $this->getSession()->reload();
-    $this->assertSession()->buttonExists('Save and accept');
-    $this->assertSession()->buttonExists('Save and synchronise');
+    $this->assertSession()->buttonNotExists('Save and accept');
+    $this->assertSession()->buttonNotExists('Save and synchronise');
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
 
     // Without the permissions, the events can grant access to the buttons.
     $role->revokePermission('accept translation request');
@@ -514,6 +518,35 @@ class LocalTranslationsTest extends TranslationTestBase {
 
     $role->grantPermission('accept translation request');
     $role->grantPermission('sync translation request');
+    $role->save();
+  }
+
+  /**
+   * Tests that overview (tab) access is independent from create access.
+   *
+   * @see \Drupal\oe_translation_test\EventSubscriber\TranslationOperationAccessEventSubscriber
+   */
+  public function testOverviewAccessEvents(): void {
+    $node = $this->createBasicTestNode();
+    $overview_url = Url::fromRoute('entity.node.local_translation', ['node' => $node->id()]);
+
+    $this->assertTrue($overview_url->access(NULL, TRUE)->isAllowed(), 'Translators with global permission should access the overview.');
+
+    $role = Role::load('oe_translator');
+    $role->revokePermission('translate any entity');
+    $role->save();
+
+    $this->assertTrue($overview_url->access(NULL, TRUE)->isForbidden(), 'Without global permission and event subscribers, the overview should not be accessible.');
+
+    // Granting "create" access alone is not enough.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'allowed']);
+    $this->assertTrue($overview_url->access(NULL, TRUE)->isForbidden(), 'Create access should not grant overview access.');
+
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['overview' => 'allowed']);
+    $this->assertTrue($overview_url->access(NULL, TRUE)->isAllowed(), 'The overview access event should be able to grant access.');
+
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
+    $role->grantPermission('translate any entity');
     $role->save();
   }
 
