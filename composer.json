@@ -8,7 +8,6 @@
     "require": {
         "php": ">=8.1",
         "cweagans/composer-patches": "^1.7 || ^2",
-        "doctrine/annotations": "^2",
         "drupal/backport_node_storage_body_field": "^1 || ^2",
         "drupal/core": "^10.3 || ^11",
         "jakeasmith/http_build_url": "^1.0",
@@ -48,7 +47,6 @@
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
-        "Requiring doctrine/annotations for epoetry-client, as it may be absent in some Drupal versions.",
         "Added a replace azjezz/psl because it was replaced by php-standard-library/php-standard-library package and it was abadoned. Also ensuring php-standard-library/php-standard-library doesnt go over 4.3",
         "Requiring symfony/serializer for the oe_translation_cdt module."
     ],
