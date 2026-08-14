@@ -92,6 +92,23 @@ class TranslationRequestAccessCheck {
   }
 
   /**
+   * Checks access to preview a translation request.
+   *
+   * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $oe_translation_request
+   *   The translation request.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The account.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access.
+   */
+  public function checkPreviewAccess(TranslationRequestInterface $oe_translation_request, AccountInterface $account): AccessResultInterface {
+    // The preview page is only ever linked to accept/synchronize form.
+    $access = $this->checkAcceptOrSynchronizeAccess($oe_translation_request, $account);
+    return $access->addCacheableDependency($oe_translation_request);
+  }
+
+  /**
    * Checks access to accept a translation request.
    *
    * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $translation_request
@@ -141,7 +158,11 @@ class TranslationRequestAccessCheck {
     $accept_access = $this->checkAcceptAccess($translation_request, $account);
     $sync_access = $this->checkSynchronizeAccess($translation_request, $account);
 
-    return AccessResult::allowedIf($accept_access->isAllowed() || $sync_access->isAllowed())
+    $access = $accept_access->isAllowed() || $sync_access->isAllowed()
+      ? AccessResult::allowed()
+      : AccessResult::forbidden('Neither the accept nor the synchronise access grants access.');
+
+    return $access
       ->inheritCacheability($accept_access)
       ->inheritCacheability($sync_access);
   }

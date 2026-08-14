@@ -21,3 +21,6 @@ services:
     arguments: ['@entity_type.manager', '@oe_translation.entity_revision_info']
     tags:
       - { name: event_subscriber }
+  oe_translation_active_revision.mapping_access_check:
+    class: Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck
+    arguments: ['@entity_type.manager', '@event_dispatcher']
