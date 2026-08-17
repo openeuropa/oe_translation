@@ -70,7 +70,7 @@ class ActiveRevisionLinkListTest extends ActiveRevisionTestBase {
 
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $french_row = $table->find('xpath', '//tr[@hreflang="fr"]');
-    $this->assertEquals('Mapped to version 1.0.0', $french_row->find('xpath', '//td[2]')->getText());
+    $this->assertEquals('Mapped to version 1.0.0', $this->getTooltipAnchorText($french_row->find('xpath', '//td[2]')));
   }
 
   /**

@@ -13,6 +13,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\node\NodeInterface;
+use Drupal\oe_translation\Controller\ContentTranslationDashboardController;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
 use Drupal\oe_translation\Event\ContentTranslationDashboardAlterEvent;
@@ -202,13 +203,18 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     if ($latest_entity->get('moderation_state')->value !== 'validated') {
       // It means we have not reached far enough to have a new version so all
       // we have to do is alter the titles of the translations.
+      $build['existing_translations']['table']['#header'][1] = $this->t('@version / Published', ['@version' => $published_version]);
       $rows = &$build['existing_translations']['table']['#rows'];
       foreach ($rows as &$row) {
         $langcode = $row['hreflang'];
         $translation = $entity->hasTranslation($langcode) ? $entity->getTranslation($langcode) : NULL;
-        if ($translation && !$translation->isDefaultTranslation()) {
-          $row['data']['title'] = $this->getTranslationVersionTitle($translation);
+        if (!$translation) {
+          continue;
         }
+        $label = $translation->isDefaultTranslation() ? $translation->toLink()->toRenderable() : $this->getTranslationVersionTitle($translation);
+        $row['data']['title'] = [
+          'data' => ContentTranslationDashboardController::buildTranslationTitleTooltip($label, $translation),
+        ];
       }
 
       return;
@@ -221,11 +227,12 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     // Create an array of languages across both versions, with info related
     // to each.
     $languages = [];
-    $language_names = [];
+    $languages_by_code = [];
     foreach ($all_languages as $language) {
       $translation = $entity->hasTranslation($language->getId()) ? $entity->getTranslation($language->getId()) : NULL;
       if ($translation) {
-        $title = $translation->isDefaultTranslation() ? $translation->toLink() : $this->getTranslationVersionTitle($translation);
+        $label = $translation->isDefaultTranslation() ? $translation->toLink()->toRenderable() : $this->getTranslationVersionTitle($translation);
+        $title = ContentTranslationDashboardController::buildTranslationTitleTooltip($label, $translation);
       }
       else {
         $title = [
@@ -272,12 +279,13 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       if ($translation && $translation->isDefaultTranslation()) {
         $languages[$language->getId()]['default_language'] = TRUE;
       }
-      $language_names[$language->getId()] = $language->getName();
+      $languages_by_code[$language->getId()] = $language;
     }
 
     foreach ($latest_entity->getTranslationLanguages(TRUE) as $language) {
       $translation = $latest_entity->getTranslation($language->getId());
-      $title = $translation->isDefaultTranslation() ? $translation->toLink(NULL, 'latest-version') : $this->getTranslationVersionTitle($translation);
+      $label = $translation->isDefaultTranslation() ? $translation->toLink(NULL, 'latest-version')->toRenderable() : $this->getTranslationVersionTitle($translation);
+      $title = ContentTranslationDashboardController::buildTranslationTitleTooltip($label, $translation);
       $info = [
         'title' => [
           'data' => $title,
@@ -287,22 +295,22 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
       ];
 
       $languages[$language->getId()][$latest_entity_version] = $info;
-      $language_names[$language->getId()] = $language->getName();
+      $languages_by_code[$language->getId()] = $language;
     }
 
     // Rebuild the table.
     $header = [
       $this->t('Language'),
-      $this->t('@published / published', ['@published' => $published_version]),
+      $this->t('@published / Published', ['@published' => $published_version]),
       $this->t('Operations'),
-      $this->t('@validated / validated', ['@validated' => $latest_entity_version]),
+      $this->t('@validated / Validated', ['@validated' => $latest_entity_version]),
       $this->t('Operations'),
     ];
 
     $rows = [];
     foreach ($languages as $langcode => $info) {
       $row = [];
-      $row['data']['language'] = $language_names[$langcode];
+      $row['data']['language'] = ['data' => ContentTranslationDashboardController::buildLanguageTooltip($languages_by_code[$langcode])];
       $row['data']['title_published'] = isset($info[$published_version]) ? $info[$published_version]['title'] : 'N/A';
       $row['data']['operations_published'] = isset($info[$published_version]) ? ['data' => $info[$published_version]['operations']] : 'N/A';
       $row['data']['title_validated'] = isset($info[$latest_entity_version]) ? $info[$latest_entity_version]['title'] : $this->t('No translation');

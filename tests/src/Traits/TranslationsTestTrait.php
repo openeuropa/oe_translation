@@ -257,20 +257,68 @@ trait TranslationsTestTrait {
     $table = $this->getSession()->getPage()->find('css', 'table.existing-translations-table');
     $rows = array_filter($table->findAll('css', 'tbody tr'), function (NodeElement $row) {
       // Filter out the rows that don't have a translation.
-      return $row->find('xpath', '//td[2]')->getText() !== 'No translation';
+      return $this->getTooltipAnchorText($row->find('xpath', '//td[2]')) !== 'No translation';
     });
     $this->assertCount(count($languages), $rows);
     foreach ($rows as $row) {
       $cols = $row->findAll('css', 'td');
       $hreflang = $row->getAttribute('hreflang');
       $expected_info = $languages[$hreflang];
-      $language = ConfigurableLanguage::load($hreflang);
-      $this->assertEquals($language->getName(), $cols[0]->getText());
-      $this->assertEquals($expected_info['title'], $cols[1]->getText());
+      $this->assertLanguageCell($hreflang, $cols[0]);
+      $this->assertEquals($expected_info['title'], $this->getTooltipAnchorText($cols[1]));
       if ($row->getAttribute('hreflang') === 'en') {
         $this->assertEmpty($cols[2]->getText());
       }
     }
+  }
+
+  /**
+   * Returns the visible anchor text of a (possibly tooltip-wrapped) cell.
+   *
+   * Cells that use the tooltip component render the anchor, a "ⓘ" icon and the
+   * hover text. This strips the icon and everything after it so tests can
+   * assert on the anchor alone. Cells without a tooltip are returned as-is.
+   *
+   * @param \Behat\Mink\Element\NodeElement $element
+   *   The cell.
+   *
+   * @return string
+   *   The anchor text.
+   */
+  protected function getTooltipAnchorText(NodeElement $element): string {
+    $text = $element->getText();
+    if (str_contains($text, 'ⓘ')) {
+      $text = strstr($text, 'ⓘ', TRUE);
+    }
+    return trim($text);
+  }
+
+  /**
+   * Asserts a language cell shows the uppercase code with a full-name tooltip.
+   *
+   * @param string $langcode
+   *   The expected langcode.
+   * @param \Behat\Mink\Element\NodeElement $cell
+   *   The language cell.
+   */
+  protected function assertLanguageCell(string $langcode, NodeElement $cell): void {
+    $language = ConfigurableLanguage::load($langcode);
+    $this->assertEquals(strtoupper($langcode), $this->getTooltipAnchorText($cell));
+    $this->assertEquals($language->getName(), $cell->find('css', '.oe-translation-tooltip--text')->getHtml());
+  }
+
+  /**
+   * Asserts the translated title shown in a title cell's tooltip.
+   *
+   * @param string $expected_title
+   *   The expected translated node title.
+   * @param \Behat\Mink\Element\NodeElement $cell
+   *   The title cell.
+   */
+  protected function assertTitleTooltipText(string $expected_title, NodeElement $cell): void {
+    $tooltip = $cell->find('css', '.oe-translation-tooltip--text');
+    $this->assertNotNull($tooltip);
+    $this->assertEquals($expected_title, $tooltip->getHtml());
   }
 
   /**
