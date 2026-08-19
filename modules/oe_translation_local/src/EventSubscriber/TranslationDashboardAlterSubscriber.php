@@ -99,7 +99,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\oe_translation_local\TranslationRequestLocal[] $translation_requests */
     $translation_requests = $storage->getTranslationRequestsForEntity($current_entity, 'local');
     $translation_requests = array_filter($translation_requests, function (TranslationRequestLocal $translation_request) {
-      return $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED;
+      // Skip synchronised requests and requests whose referenced content
+      // entity revision no longer exists (e.g. after revision cleanup/purge).
+      return $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED
+        && $translation_request->getContentEntity() !== NULL;
     });
 
     $this->addLocalTranslationOperation($build, $translation_requests, $current_entity);
@@ -123,9 +126,6 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     $rows = [];
     foreach ($translation_requests as $translation_request) {
       $entity = $translation_request->getContentEntity();
-      if (!$entity instanceof ContentEntityInterface) {
-        continue;
-      }
       $language = $this->languageManager->getLanguage($translation_request->getTargetLanguageWithStatus()->getLangcode());
       $row = [
         'language' => $language->getName(),
