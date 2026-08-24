@@ -39,7 +39,7 @@
         "openeuropa/oe_editorial": "2.x-dev",
         "openeuropa/oe_link_lists": "^1.1",
         "openeuropa/oe_multilingual": "dev-master",
-        "openeuropa/oe_testing_utils": "dev-main",
+        "openeuropa/oe_testing_utils": "dev-EWPP-7197",
         "symfony/property-access": "^6 || ^7",
         "symfony/property-info": "^6 || ^7",
         "php-standard-library/php-standard-library": "^4.3",
