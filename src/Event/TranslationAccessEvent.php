@@ -17,6 +17,13 @@ use Drupal\Core\Session\AccountInterface;
  *
  * Rules can differ on whether a given entity should be translatable so we allow
  * modules to specify it.
+ *
+ * @deprecated Use \Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent
+ *   instead, which can also allow and deny access to creating translation
+ *   requests. This event remains functional for backwards compatibility.
+ * @see \Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent
+ * @see \Drupal\oe_translation\Event\TranslationRequestAcceptAccessEvent
+ * @see \Drupal\oe_translation\Event\TranslationRequestSynchronizeAccessEvent
  */
 class TranslationAccessEvent extends Event {
 

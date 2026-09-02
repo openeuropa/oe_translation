@@ -7,7 +7,6 @@ namespace Drupal\oe_translation_epoetry\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
@@ -120,18 +119,19 @@ class ModifyLinguisticRequestForm extends FormBase {
    *   The access result.
    */
   public static function access(TranslationRequestEpoetryInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    $cache->addCacheableDependency($translation_request);
-
-    if (!$account->hasPermission('translate any entity') || !$account->hasPermission('request epoetry translation')) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+    $access = \Drupal::service('oe_translation.access_check')->checkCreateAccessForTranslationRequest(
+      translation_request: $translation_request,
+      account: $account,
+      global_permission: ['translate any entity', 'request epoetry translation'],
+    );
+    if (!$access->isAllowed()) {
+      return $access;
     }
 
     $provider = $translation_request->getTranslatorProvider();
-    $cache->addCacheableDependency($provider);
+    $access->addCacheableDependency($provider);
     if (!$provider->isEnabled()) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
     // If there are no more languages to request, do not allow access.
@@ -152,7 +152,7 @@ class ModifyLinguisticRequestForm extends FormBase {
     }
 
     if ($all_covered) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
     // We only allow to add new languages if the request is accepted or
@@ -167,11 +167,11 @@ class ModifyLinguisticRequestForm extends FormBase {
       TranslationRequestRemoteInterface::STATUS_REQUEST_TRANSLATED,
     ];
     $allowed = in_array($translation_request->getEpoetryRequestStatus(), $epoetry_statuses) && in_array($translation_request->getRequestStatus(), $request_statuses);
-    if ($allowed) {
-      return AccessResult::allowed()->addCacheableDependency($cache);
+    if (!$allowed) {
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
-    return AccessResult::forbidden()->addCacheableDependency($cache);
+    return $access;
   }
 
   /**

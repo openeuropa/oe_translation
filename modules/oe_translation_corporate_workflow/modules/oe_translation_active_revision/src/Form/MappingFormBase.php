@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\EntityRevisionInfoInterface;
+use Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 use Drupal\oe_translation_corporate_workflow\CorporateWorkflowTranslationTrait;
@@ -45,6 +46,13 @@ abstract class MappingFormBase extends FormBase {
   protected $entityRevisionInfo;
 
   /**
+   * The active revision mapping access check.
+   *
+   * @var \Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck
+   */
+  protected $mappingAccessCheck;
+
+  /**
    * Constructs a MappingFormBase.
    *
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
@@ -53,11 +61,14 @@ abstract class MappingFormBase extends FormBase {
    *   The entity type manager.
    * @param \Drupal\oe_translation\EntityRevisionInfoInterface $entityRevisionInfo
    *   The entity revision info service.
+   * @param \Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck $mappingAccessCheck
+   *   The active revision mapping access check.
    */
-  public function __construct(LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, EntityRevisionInfoInterface $entityRevisionInfo) {
+  public function __construct(LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, EntityRevisionInfoInterface $entityRevisionInfo, ActiveRevisionMappingAccessCheck $mappingAccessCheck) {
     $this->languageManager = $languageManager;
     $this->entityTypeManager = $entityTypeManager;
     $this->entityRevisionInfo = $entityRevisionInfo;
+    $this->mappingAccessCheck = $mappingAccessCheck;
   }
 
   /**
@@ -67,7 +78,8 @@ abstract class MappingFormBase extends FormBase {
     return new static(
       $container->get('language_manager'),
       $container->get('entity_type.manager'),
-      $container->get('oe_translation.entity_revision_info')
+      $container->get('oe_translation.entity_revision_info'),
+      $container->get('oe_translation_active_revision.mapping_access_check')
     );
   }
 

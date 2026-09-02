@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_epoetry\Plugin\RemoteTranslationProvider;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
@@ -16,6 +15,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
@@ -72,16 +72,24 @@ class Epoetry extends RemoteTranslationProviderBase {
   protected $eventDispatcher;
 
   /**
+   * The translation access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, RequestFactory $requestFactory, StateInterface $state, EventDispatcherInterface $eventDispatcher, TranslationRequestAccessCheck $translationRequestAccessCheck) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
 
     $this->requestFactory = $requestFactory;
     $this->state = $state;
     $this->eventDispatcher = $eventDispatcher;
+    $this->translationRequestAccessCheck = $translationRequestAccessCheck;
   }
 
   /**
@@ -98,7 +106,8 @@ class Epoetry extends RemoteTranslationProviderBase {
       $container->get('messenger'),
       $container->get('oe_translation_epoetry.request_factory'),
       $container->get('state'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -133,7 +142,12 @@ class Epoetry extends RemoteTranslationProviderBase {
    * {@inheritdoc}
    */
   public function createAccess(?AccountInterface $account = NULL): AccessResultInterface {
-    return AccessResult::allowedIfHasPermission($account, 'request epoetry translation');
+    return $this->translationRequestAccessCheck->checkCreateAccess(
+      global_permission: 'request epoetry translation',
+      account: $account,
+      entity: $this->entity,
+      translation_request_bundle: 'epoetry',
+    );
   }
 
   /**

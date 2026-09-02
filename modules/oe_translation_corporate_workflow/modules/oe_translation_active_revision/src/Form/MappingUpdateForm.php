@@ -7,6 +7,7 @@ namespace Drupal\oe_translation_active_revision\Form;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 
@@ -36,11 +37,18 @@ class MappingUpdateForm extends MappingFormBase {
    *   The entity type.
    * @param string|null $entity_id
    *   The entity ID.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   The account.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(?ActiveRevisionInterface $active_revision = NULL, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL): AccessResultInterface {
+  public function access(?ActiveRevisionInterface $active_revision = NULL, ?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL, ?AccountInterface $account = NULL): AccessResultInterface {
+    $access = $this->mappingAccessCheck->access($entity_type, $entity_id, $account);
+    if (!$access->isAllowed()) {
+      return $access;
+    }
+
     $options = $this->getVersionOptions($entity_type, $entity_id, $langcode);
     $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
     $mapping = $active_revision->getLanguageMapping($langcode, $entity);
@@ -55,10 +63,10 @@ class MappingUpdateForm extends MappingFormBase {
     }, ARRAY_FILTER_USE_BOTH);
 
     if (count($options) > 0) {
-      return AccessResult::allowed();
+      return $access;
     }
 
-    return AccessResult::forbidden();
+    return AccessResult::forbidden()->inheritCacheability($access);
   }
 
   /**

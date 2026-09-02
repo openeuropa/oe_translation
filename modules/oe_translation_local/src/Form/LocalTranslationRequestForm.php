@@ -14,6 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\Event\TranslationSynchronisationEvent;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\TranslationFormTrait;
@@ -52,6 +53,13 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
   protected $eventDispatcher;
 
   /**
+   * The translation access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * Constructs a new instance of this class.
    *
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
@@ -68,13 +76,16 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
    *   The current user.
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translation_request_access_check
+   *   The translation access check.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, TranslationSourceManagerInterface $translation_source_manager, AccountInterface $current_user, EventDispatcherInterface $event_dispatcher, TranslationRequestAccessCheck $translation_request_access_check) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->entityTypeManager = $entity_type_manager;
     $this->translationSourceManager = $translation_source_manager;
     $this->currentUser = $current_user;
     $this->eventDispatcher = $event_dispatcher;
+    $this->translationRequestAccessCheck = $translation_request_access_check;
   }
 
   /**
@@ -88,7 +99,8 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       $container->get('entity_type.manager'),
       $container->get('oe_translation.translation_source_manager'),
       $container->get('current_user'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -182,7 +194,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::accept', '::save'],
-      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() === TranslationRequestLocal::STATUS_LANGUAGE_DRAFT && $this->currentUser->hasPermission('accept translation request'),
+      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() === TranslationRequestLocal::STATUS_LANGUAGE_DRAFT && $this->acceptAccess(),
       '#value' => $this->t('Save and accept'),
     ];
 
@@ -190,7 +202,7 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::submitForm', '::save', '::synchronise'],
-      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
+      '#access' => $translation_request->getTargetLanguageWithStatus()->getStatus() !== TranslationRequestLocal::STATUS_LANGUAGE_SYNCHRONISED && $this->syncAccess(),
       '#value' => $this->t('Save and synchronise'),
     ];
 
@@ -222,6 +234,32 @@ class LocalTranslationRequestForm extends TranslationRequestForm {
     }
 
     return $actions;
+  }
+
+  /**
+   * Checks access for accepting the translation request.
+   *
+   * @return bool
+   *   Whether access is granted.
+   */
+  protected function acceptAccess(): bool {
+    return $this->translationRequestAccessCheck->checkAcceptAccess(
+      translation_request: $this->entity,
+      account: $this->currentUser,
+    )->isAllowed();
+  }
+
+  /**
+   * Checks access for synchronising the translation request.
+   *
+   * @return bool
+   *   Whether access is granted.
+   */
+  protected function syncAccess(): bool {
+    return $this->translationRequestAccessCheck->checkSynchronizeAccess(
+      translation_request: $this->entity,
+      account: $this->currentUser,
+    )->isAllowed();
   }
 
   /**

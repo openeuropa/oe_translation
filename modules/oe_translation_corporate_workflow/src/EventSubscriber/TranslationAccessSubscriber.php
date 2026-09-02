@@ -6,10 +6,9 @@ namespace Drupal\oe_translation_corporate_workflow\EventSubscriber;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\content_moderation\ModerationInformationInterface;
-use Drupal\oe_translation\Event\TranslationAccessEvent;
+use Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -27,23 +26,13 @@ class TranslationAccessSubscriber implements EventSubscriberInterface {
   protected $moderationInformation;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * TranslationAccessSubscriber constructor.
    *
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderationInformation
    *   The moderation info.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager.
    */
-  public function __construct(ModerationInformationInterface $moderationInformation, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(ModerationInformationInterface $moderationInformation) {
     $this->moderationInformation = $moderationInformation;
-    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -51,7 +40,10 @@ class TranslationAccessSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     return [
-      TranslationAccessEvent::EVENT => 'access',
+      // Run after other subscribers (default priority 0) so that this
+      // restriction always has the final say, even if another subscriber
+      // already granted access.
+      TranslationRequestCreateAccessEvent::class => ['access', -100],
     ];
   }
 
@@ -61,10 +53,10 @@ class TranslationAccessSubscriber implements EventSubscriberInterface {
    * Entities using the corporate workflow can only be translated if they are
    * in either validated or published state.
    *
-   * @param \Drupal\oe_translation\Event\TranslationAccessEvent $event
+   * @param \Drupal\oe_translation\Event\TranslationRequestCreateAccessEvent $event
    *   The event.
    */
-  public function access(TranslationAccessEvent $event) {
+  public function access(TranslationRequestCreateAccessEvent $event) {
     $entity = $event->getEntity();
     $cache = CacheableMetadata::createFromObject($event->getAccess());
     /** @var \Drupal\workflows\WorkflowInterface $workflow */

@@ -11,6 +11,7 @@ use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\Tests\oe_translation_remote\Traits\RemoteTranslationsTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\oe_translation\LanguageWithStatus;
+use Drupal\oe_translation_remote\TranslationRequestRemoteInterface;
 use Drupal\oe_translation_remote_test\TestRemoteTranslationMockHelper;
 use Drupal\oe_translation_remote_test\TranslationRequestTestRemote;
 use Drupal\user\Entity\Role;
@@ -586,6 +587,65 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->drupalGet($second_node->toUrl('drupal:content-translation-overview'));
     $this->clickLink('Remote translations');
     $this->assertSession()->fieldDisabled('Translator');
+  }
+
+  /**
+   * Tests that an existing active request still blocks a granted access.
+   */
+  public function testTranslationRequestAccessEvents(): void {
+    $node = $this->createBasicTestNode();
+
+    // Log in as an account without the "translate any entity" permission.
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+
+    $translation_url = '/node/' . $node->id() . '/translations/remote';
+
+    // Without any override, the account cannot even access the page.
+    $this->drupalGet($translation_url);
+    $this->assertSession()->pageTextContains('Access denied');
+
+    // Granting "create" access alone is not enough to see the tab.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', ['create' => 'allowed']);
+    $this->drupalGet($translation_url);
+    $this->assertSession()->pageTextContains('Access denied');
+
+    // "overview" access grants the tab itself.
+    \Drupal::state()->set('oe_translation_test.operation_access_overrides', [
+      'create' => 'allowed',
+      'overview' => 'allowed',
+    ]);
+
+    // With no existing translation request, the page is now accessible and
+    // the translator select is enabled.
+    $this->drupalGet($translation_url);
+    $this->assertSession()->pageTextNotContains('Access denied');
+    $this->assertSession()->fieldEnabled('Translator');
+
+    // Create an active (non-finished) translation request for this entity.
+    /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface $request */
+    $request = \Drupal::entityTypeManager()->getStorage('oe_translation_request')->create([
+      'bundle' => 'test_remote',
+      'source_language_code' => 'en',
+      'target_languages' => [
+        [
+          'langcode' => 'fr',
+          'status' => TranslationRequestRemoteInterface::STATUS_LANGUAGE_REQUESTED,
+        ],
+      ],
+      'request_status' => TranslationRequestRemoteInterface::STATUS_REQUEST_REQUESTED,
+      'translator_provider' => 'remote_one',
+    ]);
+    $request->setContentEntity($node);
+    $request->save();
+
+    // Now, check if the access to creating translation request is blocked.
+    $this->drupalGet($translation_url);
+    $this->assertSession()->pageTextNotContains('Access denied');
+    $this->assertSession()->fieldDisabled('Translator');
+    $this->assertSession()->pageTextContains('No new translation request can be made because there is already an active translation request for this entity version.');
+
+    \Drupal::state()->delete('oe_translation_test.operation_access_overrides');
   }
 
   /**

@@ -15,6 +15,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Form\TranslationRequestForm;
 use Drupal\oe_translation\LanguageWithStatus;
@@ -45,6 +46,13 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
   protected $translationSynchroniser;
 
   /**
+   * The translation access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * Constructs a new instance of this class.
    *
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
@@ -63,8 +71,10 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
    *   The messenger service.
    * @param \Drupal\oe_translation_remote\RemoteTranslationSynchroniser $translationSynchroniser
    *   The remote translation synchroniser service.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translationRequestAccessCheck
+   *   The translation access check.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, RouteMatchInterface $routeMatch, AccountInterface $currentUser, Messenger $messenger, RemoteTranslationSynchroniser $translationSynchroniser) {
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, EntityTypeManagerInterface $entity_type_manager, RouteMatchInterface $routeMatch, AccountInterface $currentUser, Messenger $messenger, RemoteTranslationSynchroniser $translationSynchroniser, TranslationRequestAccessCheck $translationRequestAccessCheck) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
 
     $this->entityTypeManager = $entity_type_manager;
@@ -72,6 +82,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
     $this->currentUser = $currentUser;
     $this->messenger = $messenger;
     $this->translationSynchroniser = $translationSynchroniser;
+    $this->translationRequestAccessCheck = $translationRequestAccessCheck;
   }
 
   /**
@@ -86,7 +97,8 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
       $container->get('current_route_match'),
       $container->get('current_user'),
       $container->get('messenger'),
-      $container->get('oe_translation_remote.translation_synchroniser')
+      $container->get('oe_translation_remote.translation_synchroniser'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -147,7 +159,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::saveData', '::accept'],
-      '#access' => $language_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW && $this->currentUser->hasPermission('accept translation request'),
+      '#access' => $language_status->getStatus() === TranslationRequestRemoteInterface::STATUS_LANGUAGE_REVIEW && $this->acceptAccess(),
       '#value' => $this->t('Save and accept'),
     ];
 
@@ -155,7 +167,7 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#submit' => ['::saveData', '::synchronise'],
-      '#access' => $language_status->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED && $this->currentUser->hasPermission('sync translation request'),
+      '#access' => $language_status->getStatus() !== TranslationRequestRemoteInterface::STATUS_LANGUAGE_SYNCHRONISED && $this->syncAccess(),
       '#value' => $this->t('Save and synchronise'),
     ];
 
@@ -326,9 +338,41 @@ class RemoteTranslationReviewForm extends TranslationRequestForm {
       return AccessResult::forbidden();
     }
 
-    // We can allow access as it would be forbidden by another access checker
-    // that checks for permissions.
-    return AccessResult::allowed();
+    if (!$oe_translation_request->getContentEntity()) {
+      return AccessResult::neutral();
+    }
+
+    // This page is used to either accept or synchronize the request.
+    return $this->translationRequestAccessCheck->checkAcceptOrSynchronizeAccess(
+      translation_request: $oe_translation_request,
+      account: $account,
+    );
+  }
+
+  /**
+   * Checks access for accepting the translation request.
+   *
+   * @return bool
+   *   Whether access is granted.
+   */
+  protected function acceptAccess(): bool {
+    return $this->translationRequestAccessCheck->checkAcceptAccess(
+      translation_request: $this->entity,
+      account: $this->currentUser,
+    )->isAllowed();
+  }
+
+  /**
+   * Checks access for synchronizing the translation request.
+   *
+   * @return bool
+   *   Whether access is granted.
+   */
+  protected function syncAccess(): bool {
+    return $this->translationRequestAccessCheck->checkSynchronizeAccess(
+      translation_request: $this->entity,
+      account: $this->currentUser,
+    )->isAllowed();
   }
 
 }

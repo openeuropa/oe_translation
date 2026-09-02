@@ -9,6 +9,8 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,13 +28,23 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
   protected $entityTypeManager;
 
   /**
+   * The active revision mapping access check.
+   *
+   * @var \Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck
+   */
+  protected $mappingAccessCheck;
+
+  /**
    * Constructs a MapToNullConfirmationForm.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\oe_translation_active_revision\Access\ActiveRevisionMappingAccessCheck $mappingAccessCheck
+   *   The active revision mapping access check.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ActiveRevisionMappingAccessCheck $mappingAccessCheck) {
     $this->entityTypeManager = $entityTypeManager;
+    $this->mappingAccessCheck = $mappingAccessCheck;
   }
 
   /**
@@ -40,7 +52,8 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('oe_translation_active_revision.mapping_access_check')
     );
   }
 
@@ -65,24 +78,31 @@ class MapToNullConfirmationForm extends ConfirmFormBase {
    *   The entity type.
    * @param string|null $entity_id
    *   The entity ID.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   The account.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL): AccessResultInterface {
+  public function access(?string $langcode = NULL, ?string $entity_type = NULL, ?string $entity_id = NULL, ?AccountInterface $account = NULL): AccessResultInterface {
+    $access = $this->mappingAccessCheck->access($entity_type, $entity_id, $account);
+    if (!$access->isAllowed()) {
+      return $access;
+    }
+
     $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
     if ($entity->hasTranslation($langcode)) {
-      return AccessResult::allowed()->addCacheableDependency($entity);
+      return $access->addCacheableDependency($entity);
     }
 
     /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity_type);
     $latest_entity = $storage->loadRevision($storage->getLatestRevisionId($entity->id()));
     if ($latest_entity->get('moderation_state')->value === 'validated' && $latest_entity->hasTranslation($langcode)) {
-      return AccessResult::allowed()->addCacheableDependency($entity);
+      return $access->addCacheableDependency($entity);
     }
 
-    return AccessResult::forbidden()->addCacheableDependency($entity);
+    return AccessResult::forbidden()->addCacheableDependency($entity)->inheritCacheability($access);
   }
 
   /**

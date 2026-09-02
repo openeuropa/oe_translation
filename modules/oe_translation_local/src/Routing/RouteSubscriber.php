@@ -64,7 +64,7 @@ class RouteSubscriber extends RouteSubscriberBase {
           'entity_type_id' => $entity_type_id,
         ],
         [
-          '_permission' => 'translate any entity',
+          '_custom_access' => TranslationLocalController::class . '::overviewAccess',
         ],
         [
           'parameters' => [
@@ -97,7 +97,7 @@ class RouteSubscriber extends RouteSubscriberBase {
         '_entity_form' => "{$entity_type_id}.{$operation}",
         '_title_callback' => TranslationLocalController::class . '::translateLocalFormTitle',
       ])
-      ->setRequirement('_permission', 'translate any entity')
+      ->setRequirement('_custom_access', TranslationLocalController::class . '::localTranslationRequestFormAccess')
       ->setOption('parameters', [
         $entity_type_id => ['type' => 'entity:' . $entity_type_id],
       ]);

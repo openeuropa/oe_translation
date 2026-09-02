@@ -14,6 +14,7 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\Event\TranslationAccessEvent;
@@ -68,6 +69,13 @@ class TranslationLocalController extends ControllerBase {
   protected $translatorProviders;
 
   /**
+   * The translation access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * Creates a new TranslationLocalController.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -80,13 +88,16 @@ class TranslationLocalController extends ControllerBase {
    *   The event dispatcher.
    * @param \Drupal\oe_translation\TranslatorProvidersInterface $translatorProviders
    *   The translation providers service.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translationRequestAccessCheck
+   *   The translation access check.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, Request $request, EventDispatcherInterface $eventDispatcher, TranslatorProvidersInterface $translatorProviders) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, Request $request, EventDispatcherInterface $eventDispatcher, TranslatorProvidersInterface $translatorProviders, TranslationRequestAccessCheck $translationRequestAccessCheck) {
     $this->entityTypeManager = $entityTypeManager;
     $this->translationSourceManager = $translationSourceManager;
     $this->request = $request;
     $this->eventDispatcher = $eventDispatcher;
     $this->translatorProviders = $translatorProviders;
+    $this->translationRequestAccessCheck = $translationRequestAccessCheck;
   }
 
   /**
@@ -98,7 +109,8 @@ class TranslationLocalController extends ControllerBase {
       $container->get('oe_translation.translation_source_manager'),
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('event_dispatcher'),
-      $container->get('oe_translation.translator_providers')
+      $container->get('oe_translation.translator_providers'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -119,6 +131,29 @@ class TranslationLocalController extends ControllerBase {
     return [
       '#markup' => $this->t('Local translations for @entity', ['@entity' => $entity->label()]),
     ];
+  }
+
+  /**
+   * Access callback for the local translation overview page.
+   *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The current route match.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user.
+   * @param null|string $entity_type_id
+   *   The entity type ID.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access.
+   */
+  public function overviewAccess(RouteMatchInterface $route_match, AccountInterface $account, $entity_type_id = NULL): AccessResultInterface {
+    $entity = $entity_type_id ? $route_match->getParameter($entity_type_id) : NULL;
+
+    return $this->translationRequestAccessCheck->checkOverviewAccess(
+      account: $account,
+      entity: $entity,
+      translation_request_bundle: 'local',
+    );
   }
 
   /**
@@ -227,54 +262,57 @@ class TranslationLocalController extends ControllerBase {
    *   The access.
    */
   public function createLocalTranslationRequestAccess(ContentEntityInterface $entity, Language $source, Language $target, AccountInterface $account): AccessResultInterface {
-    // Check that the user has the permission.
-    $has_permission = $account->hasPermission('translate any entity');
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    if (!$has_permission) {
-      $access = AccessResult::forbidden('The user is missing the translation permission.')->addCacheableDependency($cache);
-      return $this->dispatchLocalTranslationAccessEvent($entity, $account, $access, $source, $target);
+    // Check that the user has the permission, allowing other modules to
+    // grant or revoke access, regardless of whether the user already has
+    // the global permission.
+    $access = $this->translationRequestAccessCheck->checkCreateAccess(
+      account: $account,
+      entity: $entity,
+      translation_request_bundle: 'local',
+      target: $target,
+    );
+
+    // If the access is still forbidden, don't proceed.
+    if (!$access->isAllowed()) {
+      return $access;
     }
 
-    // Check that the entity type is using our translation system and it has
-    // local translation enabled.
+    // Check that the entity type is using our translation system.
     if (!$this->translatorProviders->hasLocal($entity->getEntityType())) {
-      return AccessResult::forbidden('The entity type is not using local translations.')->addCacheableDependency($cache);
+      return AccessResult::forbidden('The entity type is not using local translations.')->inheritCacheability($access);
     }
 
     // Check that there are no translation requests already for this entity.
-    $translation_requests = $this->getLocalTranslationRequests($entity, $target->getId());
-    $cache->addCacheTags(['oe_translation_request_list']);
-    if (!$translation_requests) {
-      $access = AccessResult::allowed()->addCacheableDependency($cache);
-      return $this->dispatchLocalTranslationAccessEvent($entity, $account, $access, $source, $target);
+    $access->addCacheTags(['oe_translation_request_list']);
+    if ($this->getLocalTranslationRequests($entity, $target->getId())) {
+      return AccessResult::forbidden('There is already a translation request for this entity version.')->inheritCacheability($access);
     }
 
-    $access = AccessResult::forbidden('There is already a translation request for this entity version.')->addCacheableDependency($cache);
-    return $this->dispatchLocalTranslationAccessEvent($entity, $account, $access, $source, $target);
+    // Finally, dispatch the deprecated event, kept for backwards
+    // compatibility, to allow blocking access to the translation.
+    // @phpstan-ignore new.deprecated
+    $event = new TranslationAccessEvent($entity, $account, $access, $source, $target);
+    // @phpstan-ignore classConstant.deprecatedClass
+    $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
+    return $event->getAccess();
   }
 
   /**
-   * Dispatches an event to allow others to have a say in the access.
+   * Access callback for viewing the local translation request form.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
+   * @param \Drupal\oe_translation\Entity\TranslationRequestInterface $oe_translation_request
+   *   The translation request.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
-   * @param \Drupal\Core\Access\AccessResultInterface $access
-   *   The existing access.
-   * @param \Drupal\Core\Language\Language $source
-   *   The source language.
-   * @param \Drupal\Core\Language\Language $target
-   *   The target language.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access.
    */
-  protected function dispatchLocalTranslationAccessEvent(ContentEntityInterface $entity, AccountInterface $account, AccessResultInterface $access, ?Language $source = NULL, ?Language $target = NULL): AccessResultInterface {
-    $event = new TranslationAccessEvent($entity, $account, $access, $source, $target);
-    $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
-    return $event->getAccess();
+  public function localTranslationRequestFormAccess(TranslationRequestInterface $oe_translation_request, AccountInterface $account): AccessResultInterface {
+    return $this->translationRequestAccessCheck->checkCreateAccessForTranslationRequest(
+      translation_request: $oe_translation_request,
+      account: $account,
+    );
   }
 
   /**

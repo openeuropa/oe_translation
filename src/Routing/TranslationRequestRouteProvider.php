@@ -25,7 +25,7 @@ class TranslationRequestRouteProvider extends AdminHtmlRouteProvider {
         '_controller' => '\Drupal\oe_translation\Controller\ContentTranslationPreviewController::previewRequest',
         '_title_callback' => '\Drupal\oe_translation\Controller\ContentTranslationPreviewController::previewRequestTitle',
       ])
-      ->setRequirement('_permission', 'translate any entity')
+      ->setRequirement('_custom_access', 'oe_translation.access_check:checkPreviewAccess')
       ->setOption('parameters', [
         'oe_translation_request' => ['type' => 'entity:oe_translation_request'],
       ]);
