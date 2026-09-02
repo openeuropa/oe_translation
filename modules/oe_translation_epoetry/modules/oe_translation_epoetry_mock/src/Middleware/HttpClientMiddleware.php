@@ -40,7 +40,7 @@ class HttpClientMiddleware {
         if (str_contains($uri->getPath(), 'epoetry-mock/server')) {
           // Log the requests done to the epoetry mock.
           $requests = $this->state->get('oe_translation_epoetry_mock.mock_requests', []);
-          $requests[] = trim(str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $request->getBody()->getContents()));
+          $requests[] = trim(str_replace('<?xml version="1.0"?>', '', $request->getBody()->getContents()));
           $request->getBody()->rewind();
           $this->state->set('oe_translation_epoetry_mock.mock_requests', $requests);
         }
