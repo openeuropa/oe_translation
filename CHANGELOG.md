@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.1.0](https://github.com/openeuropa/oe_translation/tree/3.1.0) (2026-09-09)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.0.0...3.1.0)
+
+**Merged pull requests:**
+
+- EWPP-0002: Before command to ensure there is a DB before running tests. [\#419](https://github.com/openeuropa/oe_translation/pull/419) ([upchuk](https://github.com/upchuk))
+- Fix crash on translation dashboard when referenced revision no longer exists [\#418](https://github.com/openeuropa/oe_translation/pull/418) ([lisotton](https://github.com/lisotton))
+- EWPP-7137: HtmlFormatter quiet mode. [\#415](https://github.com/openeuropa/oe_translation/pull/415) ([upchuk](https://github.com/upchuk))
+- EWPP-6781: Use github-ci. [\#414](https://github.com/openeuropa/oe_translation/pull/414) ([nagyad](https://github.com/nagyad))
+- EWPP-7129: Translation dashboard improvements. [\#413](https://github.com/openeuropa/oe_translation/pull/413) ([upchuk](https://github.com/upchuk))
+- EWPP-6988: Test against Drupal 11.4. [\#412](https://github.com/openeuropa/oe_translation/pull/412) ([nagyad](https://github.com/nagyad))
+- EWPP-7120: Functional test cached DB. [\#411](https://github.com/openeuropa/oe_translation/pull/411) ([upchuk](https://github.com/upchuk))
+- EWPP-7012: Allow more elastic access to translation requests. [\#410](https://github.com/openeuropa/oe_translation/pull/410) ([intelektron](https://github.com/intelektron))
+- EWPP-7083: Extra testing batch. [\#409](https://github.com/openeuropa/oe_translation/pull/409) ([upchuk](https://github.com/upchuk))
+- EWPP-7023: Fix overwriting of typed links properties. [\#408](https://github.com/openeuropa/oe_translation/pull/408) ([intelektron](https://github.com/intelektron))
+- EWPP-7024: Skip translation requests with unavailable entity on the Translation Dashboard. [\#407](https://github.com/openeuropa/oe_translation/pull/407) ([22Alexandra](https://github.com/22Alexandra))
+- EWPP-7028: Remove doctrine/annotations. [\#406](https://github.com/openeuropa/oe_translation/pull/406) ([hernani](https://github.com/hernani))
+- EWPP-6979: Fix drupal-media (and other custom) tags being stripped in ePoetry [\#405](https://github.com/openeuropa/oe_translation/pull/405) ([intelektron](https://github.com/intelektron))
+- EWPP-6978: Copy Text Format from source when translation is synchronised [\#404](https://github.com/openeuropa/oe_translation/pull/404) ([intelektron](https://github.com/intelektron))
+- EWPP-6977: Use same source for dossier part when using the Mock [\#403](https://github.com/openeuropa/oe_translation/pull/403) ([intelektron](https://github.com/intelektron))
+- Always retrieve the correct version field name from configuration [\#397](https://github.com/openeuropa/oe_translation/pull/397) ([brummbar](https://github.com/brummbar))
+- EWPP-6514: Support D11.3. [\#391](https://github.com/openeuropa/oe_translation/pull/391) ([nagyad](https://github.com/nagyad))
+- D8AGE-281: CDT integration. [\#318](https://github.com/openeuropa/oe_translation/pull/318) ([intelektron](https://github.com/intelektron))
+
 ## [3.0.0](https://github.com/openeuropa/oe_translation/tree/3.0.0) (2026-04-20)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.0.0-rc2...3.0.0)
