@@ -13,7 +13,7 @@ use Drupal\node\Entity\NodeType;
 /**
  * Base class for Kernel tests that test translation functionality.
  */
-class TranslationKernelTestBase extends KernelTestBase {
+abstract class TranslationKernelTestBase extends KernelTestBase {
 
   use TranslationsTestTrait;
 

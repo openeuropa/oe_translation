@@ -1031,6 +1031,10 @@ class ActiveRevisionTest extends ActiveRevisionTestBase {
     $this->drupalGet('/it/node/' . $node->id());
     $this->assertSession()->pageTextContains('My version 2 node');
     $this->assertSession()->pageTextContains('Non translatable updated version 2 value');
+    // The hreflang alternate link for the hidden IT translation is removed
+    // from the page, but the FR one, which is not hidden, is kept.
+    $this->assertSession()->elementNotExists('css', 'head link[rel="alternate"][hreflang="it"]');
+    $this->assertSession()->elementExists('css', 'head link[rel="alternate"][hreflang="fr"]');
 
     // Remove the mapping for IT.
     $this->drupalGet('/node/' . $node->id() . '/translations');

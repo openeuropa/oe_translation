@@ -290,9 +290,7 @@ class TranslationLocalController extends ControllerBase {
 
     // Finally, dispatch the deprecated event, kept for backwards
     // compatibility, to allow blocking access to the translation.
-    // @phpstan-ignore new.deprecated
     $event = new TranslationAccessEvent($entity, $account, $access, $source, $target);
-    // @phpstan-ignore classConstant.deprecatedClass
     $this->eventDispatcher->dispatch($event, TranslationAccessEvent::EVENT);
     return $event->getAccess();
   }

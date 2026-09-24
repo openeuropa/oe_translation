@@ -386,3 +386,76 @@ function oe_translation_active_revision_entity_presave(EntityInterface $entity):
     $active_revision->save();
   }
 }
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * Removes the hreflang alternate link that Drupal core's content_translation
+ * module adds for a translation mapped to "hidden".
+ */
+function oe_translation_active_revision_page_attachments_alter(array &$attachments) {
+  if (empty($attachments['#attached']['html_head_link'])) {
+    return;
+  }
+
+  // Check if there are any "alternate" hreflang links at all, before we
+  // resolve the route match and load any entities.
+  $links = [];
+  foreach ($attachments['#attached']['html_head_link'] as $key => $item) {
+    $link = $item[0] ?? [];
+    if (($link['rel'] ?? NULL) === 'alternate' && isset($link['hreflang'])) {
+      $links[$key] = $link['hreflang'];
+    }
+  }
+  if (!$links) {
+    return;
+  }
+
+  // Get the entity from the route.
+  $route_match = \Drupal::routeMatch();
+  $parameters = $route_match->getRouteObject()?->getOption('parameters') ?? [];
+  $entity = NULL;
+  foreach ($parameters as $name => $options) {
+    if (isset($options['type']) && str_starts_with($options['type'], 'entity:')) {
+      $entity = $route_match->getParameter($name);
+      break;
+    }
+  }
+  if (!$entity instanceof ContentEntityInterface || !$entity->hasLinkTemplate('canonical')) {
+    return;
+  }
+
+  // Narrow down to the links that actually correspond to a translation of
+  // this entity.
+  $candidates = [];
+  foreach ($links as $key => $langcode) {
+    if ($entity->hasTranslation($langcode)) {
+      $candidates[$key] = $langcode;
+    }
+  }
+  if (!$candidates) {
+    return;
+  }
+
+  $cache = CacheableMetadata::createFromRenderArray($attachments);
+
+  // Load the active revision for the entity.
+  /** @var \Drupal\oe_translation_active_revision\ActiveRevisionStorage $storage */
+  $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision');
+  $active_revision = $storage->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
+  if (!$active_revision) {
+    // Without an active revision, no translation can be mapped to "hidden".
+    $cache->addCacheTags(['oe_translation_active_revision_list']);
+    $cache->applyTo($attachments);
+    return;
+  }
+  $cache->addCacheableDependency($active_revision);
+
+  // Remove "alternate" links that correspond to languages mapped to hidden.
+  foreach ($candidates as $key => $langcode) {
+    if ($active_revision->getLanguageMapping($langcode, $entity)->isMappedToNull()) {
+      unset($attachments['#attached']['html_head_link'][$key]);
+    }
+  }
+  $cache->applyTo($attachments);
+}

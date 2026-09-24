@@ -9,6 +9,7 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\oe_translation_active_revision\ActiveRevisionInterface;
 use Drupal\oe_translation_active_revision\Plugin\Field\FieldType\LanguageWithEntityRevisionItem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -130,8 +131,9 @@ class MappingRemovalConfirmationForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    // We rely on the destination query parameter.
-    // @phpstan-ignore return.missing
+    // We rely on the destination query parameter, which takes precedence over
+    // this URL when building the cancel link.
+    return Url::fromRoute('<front>');
   }
 
 }
