@@ -10,7 +10,7 @@
         "cweagans/composer-patches": "^1.7 || ^2",
         "drupal/backport_node_storage_body_field": "^1 || ^2",
         "drupal/core": "^10.3 || ^11",
-        "jakeasmith/http_build_url": "^1.0",
+        "league/uri-interfaces": "^7.8",
         "php-http/guzzle7-adapter": "^1.0"
     },
     "require-dev": {

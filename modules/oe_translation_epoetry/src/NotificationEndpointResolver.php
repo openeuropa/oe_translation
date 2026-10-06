@@ -6,6 +6,7 @@ namespace Drupal\oe_translation_epoetry;
 
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
+use League\Uri\UriString;
 
 /**
  * Resolves the correct endpoint for ePoetry notifications.
@@ -43,7 +44,7 @@ class NotificationEndpointResolver {
       unset($parts['scheme']);
     }
 
-    $url = http_build_url($parts);
+    $url = ltrim(UriString::build($parts), '/');
     return $prefix . $url;
   }
 
