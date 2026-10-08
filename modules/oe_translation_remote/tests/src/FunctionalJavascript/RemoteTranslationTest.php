@@ -899,6 +899,7 @@ class RemoteTranslationTest extends TranslationTestBase {
     $this->getSession()->getPage()->clickLink('Review');
     $this->getSession()->getPage()->pressButton('Save and synchronise');
     $this->assertSession()->pageTextContains('The translation in French has been synchronised.');
+    $node_storage->resetCache();
     $node = $node_storage->load($node->id());
     // Assert that the TranslationSourceEventSubscriber added the #fake_value
     // to the node title. It's just a way of asserting that the subscriber

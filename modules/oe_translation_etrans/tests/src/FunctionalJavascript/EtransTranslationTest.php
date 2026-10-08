@@ -266,6 +266,7 @@ class EtransTranslationTest extends TranslationTestBase {
     ];
     $this->assertLogMessagesTable($expected_logs);
 
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('pt-pt'));
     $this->assertFalse((bool) $node->get('is_etranslation')->value);

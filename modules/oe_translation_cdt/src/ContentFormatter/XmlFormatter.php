@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\oe_translation_cdt\ContentFormatter;
 
 use Composer\InstalledVersions;
-use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\oe_translation\Entity\TranslationRequestInterface;
@@ -43,13 +43,13 @@ class XmlFormatter implements ContentFormatterInterface {
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Component\Datetime\Time $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
   public function __construct(
     protected RendererInterface $renderer,
     protected EntityTypeManagerInterface $entityTypeManager,
-    protected Time $time,
+    protected TimeInterface $time,
   ) {}
 
   /**

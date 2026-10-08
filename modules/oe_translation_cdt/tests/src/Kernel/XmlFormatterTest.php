@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
 use Composer\InstalledVersions;
-use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 use Drupal\field\Entity\FieldConfig;
@@ -162,7 +162,7 @@ class XmlFormatterTest extends TranslationKernelTestBase {
    * Test the XML content formatter export.
    */
   public function testXmlContentExporter(): void {
-    $time_prophecy = $this->prophesize(Time::class);
+    $time_prophecy = $this->prophesize(TimeInterface::class);
     $time_prophecy->getCurrentTime()->willReturn(1710935729);
     $this->container->set('datetime.time', $time_prophecy->reveal());
 

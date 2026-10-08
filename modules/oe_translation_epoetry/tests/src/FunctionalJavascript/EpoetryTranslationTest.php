@@ -539,6 +539,7 @@ class EpoetryTranslationTest extends TranslationTestBase {
     $actual_href = str_replace('/en/', '/', $actual_href);
     $this->assertEquals($expected_href, $actual_href);
 
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
     $node = Node::load($node->id());
     $this->assertTrue($node->hasTranslation('pt-pt'));
     $this->assertEquals("The translation's page - PT", $node->getTranslation('pt-pt')->label());
