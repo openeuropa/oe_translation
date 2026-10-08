@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_etrans\Plugin\RemoteTranslationProvider;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -14,6 +13,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
 use Drupal\oe_translation\LanguageMapper;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface;
 use Drupal\oe_translation_etrans\EtransClient;
@@ -61,16 +61,24 @@ class Etrans extends RemoteTranslationProviderBase {
   protected $contentFormatter;
 
   /**
+   * The translation request access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, EventDispatcherInterface $eventDispatcher, EtransClient $etransClient, ContentFormatterInterface $contentFormatter) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $languageManager, EntityTypeManagerInterface $entityTypeManager, TranslationSourceManagerInterface $translationSourceManager, MessengerInterface $messenger, EventDispatcherInterface $eventDispatcher, EtransClient $etransClient, ContentFormatterInterface $contentFormatter, TranslationRequestAccessCheck $translationRequestAccessCheck) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
 
     $this->eventDispatcher = $eventDispatcher;
     $this->etransClient = $etransClient;
     $this->contentFormatter = $contentFormatter;
+    $this->translationRequestAccessCheck = $translationRequestAccessCheck;
   }
 
   /**
@@ -87,7 +95,8 @@ class Etrans extends RemoteTranslationProviderBase {
       $container->get('messenger'),
       $container->get('event_dispatcher'),
       $container->get('oe_translation_etrans.client'),
-      $container->get('oe_translation_content_formatter.html_formatter')
+      $container->get('oe_translation_content_formatter.html_formatter'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -118,7 +127,11 @@ class Etrans extends RemoteTranslationProviderBase {
    * {@inheritdoc}
    */
   public function createAccess(?AccountInterface $account = NULL): AccessResultInterface {
-    return AccessResult::allowed();
+    return $this->translationRequestAccessCheck->checkCreateAccess(
+      account: $account,
+      entity: $this->entity,
+      translation_request_bundle: 'etrans',
+    );
   }
 
   /**

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\Plugin\RemoteTranslationProvider;
 
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation\Entity\TranslationRequestLogInterface;
 use Drupal\oe_translation\Event\AvailableLanguagesAlterEvent;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation\TranslationSourceManagerInterface;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\Event\CdtRequestEvent;
@@ -68,6 +71,8 @@ class Cdt extends RemoteTranslationProviderBase {
    *   The event dispatcher.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger factory.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translationRequestAccessCheck
+   *   The translation request access check.
    *
    * @SuppressWarnings(PHPMD.ExcessiveParameterList)
    */
@@ -84,6 +89,7 @@ class Cdt extends RemoteTranslationProviderBase {
     protected StateInterface $state,
     protected EventDispatcherInterface $eventDispatcher,
     protected LoggerChannelFactoryInterface $loggerFactory,
+    protected TranslationRequestAccessCheck $translationRequestAccessCheck,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $languageManager, $entityTypeManager, $translationSourceManager, $messenger);
   }
@@ -104,7 +110,19 @@ class Cdt extends RemoteTranslationProviderBase {
       $container->get('oe_translation_cdt.api_wrapper'),
       $container->get('state'),
       $container->get('event_dispatcher'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('oe_translation.access_check')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createAccess(?AccountInterface $account = NULL): AccessResultInterface {
+    return $this->translationRequestAccessCheck->checkCreateAccess(
+      account: $account,
+      entity: $this->entity,
+      translation_request_bundle: 'cdt',
     );
   }
 
