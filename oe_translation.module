@@ -328,7 +328,7 @@ function _oe_translation_create_request_logs_tables(TranslationRequestInterface 
 /**
  * Implements hook_entity_operation_alter().
  */
-function oe_translation_entity_operation_alter(array &$operations, EntityInterface $entity) {
+function oe_translation_entity_operation_alter(array &$operations, EntityInterface $entity, ?CacheableMetadata $cacheability = NULL) {
   if (!$entity instanceof TranslationRequestInterface) {
     return;
   }

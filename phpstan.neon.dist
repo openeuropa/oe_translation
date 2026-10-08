@@ -7,7 +7,22 @@ parameters:
     # Exclude the following file from analysis as RawDrupalContext is not
     # present.
     - tests/src/Traits/TranslationsTestTrait.php
-    # Exclude PHPUnit extension as contains classes that might not be present
-    # depending on PHPUnit version.
-    - tests/src/EnsurePHPUnitBatchingTestExtension.php
     - '*.yml'
+  ignoreErrors:
+    # The deprecated TranslationAccessEvent is intentionally kept dispatched
+    # and tested for backwards compatibility. Different PHPStan versions
+    # report its usage under different error identifiers, so ignore by
+    # message rather than with inline identifiers.
+    -
+      message: '#Drupal\\oe_translation\\Event\\TranslationAccessEvent#'
+      paths:
+        - modules/oe_translation_local/src/Controller/TranslationLocalController.php
+        - tests/modules/oe_translation_test/src/EventSubscriber/TranslationOperationAccessEventSubscriber.php
+      reportUnmatched: false
+    # On Drupal < 11.3, EntityListBuilder::getDefaultOperations() does not
+    # declare the CacheableMetadata parameter yet (core reads it through
+    # func_get_args()), so PHPStan flags the parent call extra argument.
+    -
+      message: '#Method Drupal\\Core\\Entity\\EntityListBuilder::getDefaultOperations\(\) invoked with 2 parameters, 1 required\.#'
+      path: src/TranslationRequestListBuilder.php
+      reportUnmatched: false

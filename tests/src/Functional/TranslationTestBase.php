@@ -11,7 +11,7 @@ use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 /**
  * Base class for functional tests.
  */
-class TranslationTestBase extends BrowserTestBase {
+abstract class TranslationTestBase extends BrowserTestBase {
 
   use CachedDatabaseInstallTrait;
   use TranslationsTestTrait;

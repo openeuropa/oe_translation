@@ -12,7 +12,7 @@ use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
  *
  * @group batch1
  */
-class TranslationTestBase extends WebDriverTestBase {
+abstract class TranslationTestBase extends WebDriverTestBase {
 
   use CachedDatabaseInstallTrait;
 
