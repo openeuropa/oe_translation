@@ -48,28 +48,34 @@ function oe_translation_cdt_oe_translation_request_view_alter(array &$build, Ent
 
   $operations = [];
   if (!$entity->getCdtId()) {
-    $operations['permanent_id'] = [
-      'title' => t('Get Permanent ID'),
-      'url' => Url::fromRoute('oe_translation_cdt.get_permanent_id', [
-        'translation_request' => $entity->id(),
-      ], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')->toString(),
-        ],
-      ]),
-    ];
+    $url = Url::fromRoute('oe_translation_cdt.get_permanent_id', [
+      'translation_request' => $entity->id(),
+    ], [
+      'query' => [
+        'destination' => Url::fromRoute('<current>')->toString(),
+      ],
+    ]);
+    if ($url->access()) {
+      $operations['permanent_id'] = [
+        'title' => t('Get Permanent ID'),
+        'url' => $url,
+      ];
+    }
   }
   else {
-    $operations['status'] = [
-      'title' => t('Refresh status'),
-      'url' => Url::fromRoute('oe_translation_cdt.refresh_status', [
-        'translation_request' => $entity->id(),
-      ], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')->toString(),
-        ],
-      ]),
-    ];
+    $url = Url::fromRoute('oe_translation_cdt.refresh_status', [
+      'translation_request' => $entity->id(),
+    ], [
+      'query' => [
+        'destination' => Url::fromRoute('<current>')->toString(),
+      ],
+    ]);
+    if ($url->access()) {
+      $operations['status'] = [
+        'title' => t('Refresh status'),
+        'url' => $url,
+      ];
+    }
   }
   $row['cdt_operations'] = [
     'data' => [
@@ -117,16 +123,21 @@ function oe_translation_cdt_preprocess_table__remote_language_list(array &$varia
       continue;
     }
 
+    $url = Url::fromRoute('oe_translation_cdt.fetch_translation', [
+      'translation_request' => $id,
+      'langcode' => $langcode,
+    ], [
+      'query' => [
+        'destination' => Url::fromRoute('<current>')->toString(),
+      ],
+    ]);
+    if (!$url->access()) {
+      continue;
+    }
+
     $row['cells']['operations']['content']['#links'][] = [
       'title' => 'Fetch the translation',
-      'url' => Url::fromRoute('oe_translation_cdt.fetch_translation', [
-        'translation_request' => $id,
-        'langcode' => $langcode,
-      ], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')->toString(),
-        ],
-      ]),
+      'url' => $url,
     ];
   }
 
