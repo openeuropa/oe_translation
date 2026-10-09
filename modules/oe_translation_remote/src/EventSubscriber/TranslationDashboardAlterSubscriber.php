@@ -94,8 +94,10 @@ class TranslationDashboardAlterSubscriber implements EventSubscriberInterface {
     /** @var \Drupal\oe_translation_remote\TranslationRequestRemoteInterface[] $translation_requests */
     $translation_requests = $this->providerManager->getExistingTranslationRequests($current_entity, FALSE);
     $translation_requests = array_filter($translation_requests, function (TranslationRequestRemoteInterface $request) {
-      // Filter out the non-enabled translators.
-      return $request->getTranslatorProvider()->isEnabled();
+      // Filter out the non-enabled translators and requests whose referenced
+      // content entity revision no longer exists (e.g., after revision
+      // cleanup/purge).
+      return $request->getTranslatorProvider()->isEnabled() && $request->getContentEntity() !== NULL;
     });
 
     $cache->addCacheTags(['oe_translation_request_list']);
