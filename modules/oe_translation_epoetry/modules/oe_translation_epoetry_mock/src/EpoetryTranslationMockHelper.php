@@ -268,7 +268,6 @@ class EpoetryTranslationMockHelper {
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     curl_exec($ch);
-    curl_close($ch);
   }
 
 }
