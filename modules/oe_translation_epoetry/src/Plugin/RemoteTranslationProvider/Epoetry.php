@@ -487,12 +487,10 @@ class Epoetry extends RemoteTranslationProviderBase {
       if ($response instanceof ResponseInterface) {
         $xml = (string) $response->getBody();
 
-        $xml = str_ireplace([
-          'S:',
-          'env:',
-          'S:',
-          'ns0:',
-        ], '', $xml);
+        // Strip namespace prefixes from element names.
+        $xml = preg_replace('/(<\/?)[a-zA-Z0-9_-]+:/', '$1', $xml);
+        // Strip namespace declarations.
+        $xml = preg_replace('/\s+xmlns(:[a-zA-Z0-9_-]*)?\s*=\s*"[^"]*"/', '', $xml);
         $xml = simplexml_load_string($xml);
         $fault = (string) $xml->Body->Fault->faultstring;
         if ($fault) {
