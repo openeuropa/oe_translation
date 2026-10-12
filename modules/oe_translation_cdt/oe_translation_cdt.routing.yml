@@ -20,7 +20,7 @@ oe_translation_cdt.get_permanent_id:
   defaults:
     _controller: '\Drupal\oe_translation_cdt\Controller\OperationController::getPermanentId'
   requirements:
-    _oe_translation_cdt_access_check: TRUE
+    _custom_access: '\Drupal\oe_translation_cdt\Controller\OperationController::requestOperationAccess'
   options:
     parameters:
       translation_request:
@@ -32,7 +32,7 @@ oe_translation_cdt.refresh_status:
   defaults:
     _controller: '\Drupal\oe_translation_cdt\Controller\OperationController::refreshStatus'
   requirements:
-    _oe_translation_cdt_access_check: TRUE
+    _custom_access: '\Drupal\oe_translation_cdt\Controller\OperationController::requestOperationAccess'
   options:
     parameters:
       translation_request:
@@ -44,7 +44,7 @@ oe_translation_cdt.fetch_translation:
   defaults:
     _controller: '\Drupal\oe_translation_cdt\Controller\OperationController::fetchTranslation'
   requirements:
-    _oe_translation_cdt_access_check: TRUE
+    _custom_access: '\Drupal\oe_translation_cdt\Controller\OperationController::requestOperationAccess'
   options:
     parameters:
       translation_request:

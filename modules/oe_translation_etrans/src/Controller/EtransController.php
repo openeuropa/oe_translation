@@ -6,11 +6,11 @@ namespace Drupal\oe_translation_etrans\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation_etrans\EtransTranslationRequestRemoteIdResolver;
 use Drupal\oe_translation_etrans\Event\EtransDeliveryEvent;
 use Drupal\oe_translation_etrans\Event\EtransFailureEvent;
@@ -50,6 +50,13 @@ class EtransController extends ControllerBase {
   protected $requestResolver;
 
   /**
+   * The translation request access check.
+   *
+   * @var \Drupal\oe_translation\TranslationRequestAccessCheck
+   */
+  protected $translationRequestAccessCheck;
+
+  /**
    * Constructs a EtransController.
    *
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
@@ -60,12 +67,15 @@ class EtransController extends ControllerBase {
    *   The entity type manager.
    * @param \Drupal\oe_translation_etrans\EtransTranslationRequestRemoteIdResolver $requestResolver
    *   The request resolver.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translationRequestAccessCheck
+   *   The translation request access check.
    */
-  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager, EtransTranslationRequestRemoteIdResolver $requestResolver) {
+  public function __construct(EventDispatcherInterface $eventDispatcher, LoggerChannelFactoryInterface $loggerChannelFactory, EntityTypeManagerInterface $entityTypeManager, EtransTranslationRequestRemoteIdResolver $requestResolver, TranslationRequestAccessCheck $translationRequestAccessCheck) {
     $this->eventDispatcher = $eventDispatcher;
     $this->logger = $loggerChannelFactory->get('oe_translation_etrans');
     $this->entityTypeManager = $entityTypeManager;
     $this->requestResolver = $requestResolver;
+    $this->translationRequestAccessCheck = $translationRequestAccessCheck;
   }
 
   /**
@@ -76,7 +86,8 @@ class EtransController extends ControllerBase {
       $container->get('event_dispatcher'),
       $container->get('logger.factory'),
       $container->get('entity_type.manager'),
-      $container->get('oe_translation_etrans.translation_request_remote_id_resolver')
+      $container->get('oe_translation_etrans.translation_request_remote_id_resolver'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -195,20 +206,17 @@ class EtransController extends ControllerBase {
    *   The access result.
    */
   public function finishFailedRequestAccess(TranslationRequestEtransInterface $translation_request, AccountInterface $account): AccessResultInterface {
-    $cache = new CacheableMetadata();
-    $cache->addCacheContexts(['user.permissions']);
-    $cache->addCacheableDependency($translation_request);
-
-    if (!$account->hasPermission('translate any entity')) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+    $access = $this->translationRequestAccessCheck->checkCreateAccessForTranslationRequest($translation_request, $account);
+    if (!$access->isAllowed()) {
+      return $access;
     }
 
     // Only failed requests can be marked.
     if ($translation_request->getRequestStatus() !== TranslationRequestRemoteInterface::STATUS_REQUEST_FAILED) {
-      return AccessResult::forbidden()->addCacheableDependency($cache);
+      return AccessResult::forbidden()->inheritCacheability($access);
     }
 
-    return AccessResult::allowed();
+    return $access;
   }
 
 }
