@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.2.0](https://github.com/openeuropa/oe_translation/tree/3.2.0) (2026-10-14)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.1.0...3.2.0)
+
+**Merged pull requests:**
+
+- EWPP-7314: Replace jakeasmith/http\_build\_url with League\\Uri\\UriString::build [\#425](https://github.com/openeuropa/oe_translation/pull/425) ([bircher](https://github.com/bircher))
+- EWPP-7269: Hide alternate links when translations are mapped to hidden. [\#423](https://github.com/openeuropa/oe_translation/pull/423) ([intelektron](https://github.com/intelektron))
+
 ## [3.1.0](https://github.com/openeuropa/oe_translation/tree/3.1.0) (2026-09-09)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.0.0...3.1.0)
