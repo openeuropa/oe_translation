@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.1](https://github.com/openeuropa/oe_translation/tree/3.2.1) (2026-11-03)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.2.0...3.2.1)
+
+**Merged pull requests:**
+
+- EWPP-7505: Attempt race condition fix for addTranslation in the entity revision info subscriber. [\#428](https://github.com/openeuropa/oe_translation/pull/428) ([upchuk](https://github.com/upchuk))
+
 ## [3.2.0](https://github.com/openeuropa/oe_translation/tree/3.2.0) (2026-10-14)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.1.0...3.2.0)
