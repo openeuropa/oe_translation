@@ -120,15 +120,22 @@ class EntityRevisionInfoSubscriber implements EventSubscriberInterface {
     // doesn't get later overridden in
     // TranslationSourceManager::doSaveTranslations().
     if (!$entity->hasTranslation($target_langcode)) {
-      // We need to ensure that after we create the translation, we maintain
-      // the "default revision" flag so that in case we are creating a
-      // translation for a non-default revision, it doesn't transform it by
-      // accident into a default revision. This happens, for example, if we
-      // have a published revision followed by a draft (default) revision as a
-      // result of an Unpublishing action.
-      $default_revision = $entity->isDefaultRevision();
-      $entity->addTranslation($target_langcode, $entity->toArray());
-      $entity->isDefaultRevision($default_revision);
+      // Computing the values can suspend the current Fiber (e.g. computed
+      // fields such as metatag resolving path aliases), during which another
+      // Fiber can add the same translation onto this revision object, so we
+      // need to check again before adding it.
+      $values = $entity->toArray();
+      if (!$entity->hasTranslation($target_langcode)) {
+        // We need to ensure that after we create the translation, we maintain
+        // the "default revision" flag so that in case we are creating a
+        // translation for a non-default revision, it doesn't transform it by
+        // accident into a default revision. This happens, for example, if we
+        // have a published revision followed by a draft (default) revision as
+        // a result of an Unpublishing action.
+        $default_revision = $entity->isDefaultRevision();
+        $entity->addTranslation($target_langcode, $values);
+        $entity->isDefaultRevision($default_revision);
+      }
     }
 
     // Check if the entity has a forward revision that is published and mark
