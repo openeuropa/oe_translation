@@ -11,3 +11,5 @@ jobs:
     uses: openeuropa/github-ci/.github/workflows/drupal-ci.yml@main
     with:
       run_phpunit_batches: TRUE
+      php_versions: '["8.3", "8.4"]'
+      core_versions: '["~11.4.0"]'
