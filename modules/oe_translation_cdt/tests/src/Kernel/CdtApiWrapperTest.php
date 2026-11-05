@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\oe_translation_cdt\Kernel;
 
-use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapper;
@@ -53,7 +53,7 @@ class CdtApiWrapperTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $time_prophecy = $this->prophesize(Time::class);
+    $time_prophecy = $this->prophesize(TimeInterface::class);
     $time_prophecy->getCurrentTime()->willReturn(100);
     $this->container->set('datetime.time', $time_prophecy->reveal());
     $this->apiProphecy = $this->prophesize(ApiClientInterface::class);

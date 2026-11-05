@@ -27,6 +27,14 @@ function oe_translation_cdt_mock_oe_translation_request_view_alter(array &$build
   }
   $row = &$build['meta']['#rows'][0];
 
+  // Access only depends on the translation request, so check it once.
+  $access_url = Url::fromRoute('oe_translation_cdt_mock.request_status', [
+    'translation_request' => $entity->id(),
+  ]);
+  if (!$access_url->access()) {
+    return;
+  }
+
   $operations = [];
   $all_statuses = [
     CdtApiWrapperInterface::STATUS_REQUEST_COMPLETED => 'Completed',
@@ -80,6 +88,16 @@ function oe_translation_cdt_mock_preprocess_table__remote_language_list(array &$
   ];
   foreach ($variables['rows'] as &$row) {
     $langcode = (string) $row['attributes']['hreflang'];
+    // Access only depends on the translation request, so check it once per
+    // language row instead of once per status link.
+    $access_url = Url::fromRoute('oe_translation_cdt_mock.job_status', [
+      'translation_request' => $id,
+      'langcode' => $langcode,
+    ]);
+    if (!$access_url->access()) {
+      continue;
+    }
+
     foreach ($all_statuses as $status => $label) {
       $row['cells']['operations']['content']['#links'][] = [
         'title' => sprintf('Update status to %s (mock)', $label),
