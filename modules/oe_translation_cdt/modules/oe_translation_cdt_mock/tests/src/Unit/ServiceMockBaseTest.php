@@ -15,7 +15,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Test the helper mocking methods.
  *
- * @group batch1
+ * @group batch2
  */
 final class ServiceMockBaseTest extends UnitTestCase {
 

@@ -10,11 +10,10 @@ use Drupal\Tests\oe_editorial_corporate_workflow\Traits\CorporateWorkflowTrait;
 use Drupal\Tests\oe_translation\Traits\EntityVersionTrait;
 use Drupal\Tests\oe_translation\Traits\TranslationsTestTrait;
 use Drupal\user\Entity\Role;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 
 /**
  * Base class for the active revision tests.
- *
- * @group batch3
  */
 abstract class ActiveRevisionTestBase extends WebDriverTestBase {
 
@@ -22,6 +21,7 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
   use EntityVersionTrait;
   use TranslationsTestTrait;
   use CorporateWorkflowTrait;
+  use CachedDatabaseInstallTrait;
 
   /**
    * The entity type manager.
@@ -66,6 +66,8 @@ abstract class ActiveRevisionTestBase extends WebDriverTestBase {
    * {@inheritdoc}
    */
   public function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = \Drupal::entityTypeManager();

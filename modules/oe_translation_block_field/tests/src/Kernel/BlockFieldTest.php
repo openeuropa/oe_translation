@@ -13,7 +13,7 @@ use Drupal\node\Entity\Node;
 /**
  * Tests for the block title translation.
  *
- * @group batch1
+ * @group batch5
  */
 class BlockFieldTest extends TranslationKernelTestBase {
 

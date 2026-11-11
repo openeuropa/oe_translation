@@ -12,7 +12,7 @@ use Drupal\oe_translation_epoetry\NotificationEndpointResolver;
 /**
  * Tests the ePoetry notification callback resolver.
  *
- * @group batch5
+ * @group batch1
  */
 class NotificationsResolverTest extends TranslationKernelTestBase {
 

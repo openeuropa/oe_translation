@@ -10,7 +10,7 @@ use Drupal\Tests\oe_translation\Kernel\TranslationKernelTestBase;
 /**
  * Tests the Status values set in the requirements.
  *
- * @group batch1
+ * @group batch5
  */
 class RequirementsTest extends TranslationKernelTestBase {
 

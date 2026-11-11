@@ -14,7 +14,7 @@ use Drupal\paragraphs\Entity\Paragraph;
 /**
  * Tests the multivalue translations.
  *
- * @group batch4
+ * @group batch3
  */
 class MultivalueTranslationsTest extends TranslationTestBase {
 

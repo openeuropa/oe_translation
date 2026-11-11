@@ -14,7 +14,7 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 /**
  * Tests the ActiveRevisionMappingAccessCheck service.
  *
- * @group batch3
+ * @group batch5
  */
 class ActiveRevisionMappingAccessCheckTest extends KernelTestBase {
 

@@ -18,7 +18,7 @@ use Drupal\views\ResultRow;
  * The plugin displays the target languages with a formatted tooltip
  * showing the language name and translation status.
  *
- * @group batch1
+ * @group batch5
  */
 class TargetLanguagesWithTooltipTest extends TranslationKernelTestBase {
 
