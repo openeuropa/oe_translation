@@ -45,22 +45,28 @@ class EtransTranslationRequestRemoteIdResolver {
    *
    * @param string $request_id
    *   The remote request ID.
-   * @param string|null $token
+   * @param string $token
    *   The token.
    *
    * @return \Drupal\oe_translation_etrans\TranslationRequestEtransInterface|null
    *   The translation request entity.
    */
-  public function resolveTranslationRequest(string $request_id, ?string $token = NULL): ?TranslationRequestEtransInterface {
+  public function resolveTranslationRequest(string $request_id, string $token): ?TranslationRequestEtransInterface {
+    if ($request_id === '' || $token === '') {
+      // The token is the only way we can validate the incoming notification
+      // so we never resolve a request without it.
+      return NULL;
+    }
+
     $request = NULL;
 
-    $query = $this->entityTypeManager->getStorage('oe_translation_request')
+    $ids = $this->entityTypeManager->getStorage('oe_translation_request')
       ->getQuery()
-      ->condition('remote_id', $request_id);
-    if ($token) {
-      $query->condition('etrans_access_token', $token);
-    }
-    $ids = $query->accessCheck(FALSE)->execute();
+      ->condition('bundle', 'etrans')
+      ->condition('remote_id', $request_id)
+      ->condition('etrans_access_token', $token)
+      ->accessCheck(FALSE)
+      ->execute();
 
     if ($ids) {
       $id = reset($ids);

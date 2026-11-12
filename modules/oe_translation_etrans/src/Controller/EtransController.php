@@ -99,7 +99,7 @@ class EtransController extends ControllerBase {
    */
   public function error(Request $request) {
     $content = json_decode($request->getContent());
-    if (!$content || !isset($content->requestId) || !isset($content->externalReference)) {
+    if (!$content || !isset($content->requestId) || empty($content->externalReference) || !is_string($content->externalReference)) {
       throw new NotFoundHttpException();
     }
 
@@ -133,7 +133,7 @@ class EtransController extends ControllerBase {
    */
   public function delivery(Request $request) {
     $content = json_decode($request->getContent());
-    if (!$content || !isset($content->requestId) || !isset($content->externalReference)) {
+    if (!$content || !isset($content->requestId) || empty($content->externalReference) || !is_string($content->externalReference)) {
       throw new NotFoundHttpException();
     }
 
