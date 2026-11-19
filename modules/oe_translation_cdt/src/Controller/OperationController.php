@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\Controller;
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\oe_translation\LanguageMapper;
+use Drupal\oe_translation\TranslationRequestAccessCheck;
 use Drupal\oe_translation_cdt\Api\CdtApiWrapperInterface;
 use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 use Drupal\oe_translation_cdt\TranslationRequestUpdaterInterface;
@@ -29,11 +33,14 @@ final class OperationController extends ControllerBase {
    *   The translation request updater.
    * @param \Drupal\oe_translation_content_formatter\ContentFormatter\ContentFormatterInterface $xmlFormatter
    *   The XML formatter.
+   * @param \Drupal\oe_translation\TranslationRequestAccessCheck $translationRequestAccessCheck
+   *   The translation request access check.
    */
   public function __construct(
     private readonly CdtApiWrapperInterface $apiWrapper,
     private readonly TranslationRequestUpdaterInterface $updater,
     private readonly ContentFormatterInterface $xmlFormatter,
+    private readonly TranslationRequestAccessCheck $translationRequestAccessCheck,
   ) {}
 
   /**
@@ -43,7 +50,8 @@ final class OperationController extends ControllerBase {
     return new self(
       $container->get('oe_translation_cdt.api_wrapper'),
       $container->get('oe_translation_cdt.translation_request_updater'),
-      $container->get('oe_translation_cdt.xml_formatter')
+      $container->get('oe_translation_cdt.xml_formatter'),
+      $container->get('oe_translation.access_check')
     );
   }
 
@@ -144,6 +152,33 @@ final class OperationController extends ControllerBase {
     }
 
     return new RedirectResponse((string) $destination);
+  }
+
+  /**
+   * Access callback for the operations on a CDT request.
+   *
+   * @param \Drupal\oe_translation_cdt\TranslationRequestCdtInterface $translation_request
+   *   The translation request.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function requestOperationAccess(TranslationRequestCdtInterface $translation_request, AccountInterface $account): AccessResultInterface {
+    $access = $this->translationRequestAccessCheck->checkCreateAccessForTranslationRequest($translation_request, $account);
+    if (!$access->isAllowed()) {
+      return $access;
+    }
+
+    // The operations call the CDT endpoint, so the provider must be enabled.
+    $provider = $translation_request->getTranslatorProvider();
+    $access->addCacheableDependency($provider);
+    if (!$provider->isEnabled()) {
+      return AccessResult::forbidden()->inheritCacheability($access);
+    }
+
+    return $access;
   }
 
 }

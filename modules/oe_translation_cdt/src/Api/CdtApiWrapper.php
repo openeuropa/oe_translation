@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\oe_translation_cdt\Api;
 
-use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\oe_translation_cdt\Exception\CdtConnectionException;
 use GuzzleHttp\Client;
@@ -30,14 +30,14 @@ class CdtApiWrapper implements CdtApiWrapperInterface {
    *   The HTTP client.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state.
-   * @param \Drupal\Component\Datetime\Time $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
   public function __construct(
     protected readonly ApiClientInterface $apiClient,
     protected readonly Client $httpClient,
     protected readonly StateInterface $state,
-    protected readonly Time $time,
+    protected readonly TimeInterface $time,
   ) {}
 
   /**
