@@ -17,7 +17,7 @@ use Drupal\oe_translation_cdt\Mapper\TranslationRequestMapper;
 /**
  * Tests the TranslationRequestMapper class.
  *
- * @group batch1
+ * @group batch5
  */
 class TranslationRequestMapperTest extends TranslationKernelTestBase {
 

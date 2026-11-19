@@ -14,6 +14,7 @@ use Drupal\oe_translation_epoetry\TranslationRequestEpoetryInterface;
 use Drupal\oe_translation_epoetry_mock\EpoetryTranslationMockHelper;
 use Drupal\oe_translation_remote\Entity\RemoteTranslatorProvider;
 use Drupal\user\Entity\Role;
+use OpenEuropa\TestingUtilities\Traits\CachedDatabaseInstallTrait;
 
 /**
  * Tests the ePoetry translations with corporate workflow.
@@ -30,6 +31,7 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
   use EntityVersionTrait;
   use TranslationsTestTrait;
   use EpoetryTranslationTestTrait;
+  use CachedDatabaseInstallTrait;
 
   /**
    * The entity type manager.
@@ -76,6 +78,8 @@ class CorporateWorkflowEpoetryTranslationTest extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    $this->cacheDbInstall = TRUE;
+
     parent::setUp();
 
     $this->entityTypeManager = \Drupal::service('entity_type.manager');

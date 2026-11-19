@@ -11,7 +11,7 @@ use Drupal\oe_translation_cdt\TranslationRequestCdtInterface;
 /**
  * Tests the CDT bundle class for "Translation Request" entity.
  *
- * @group batch1
+ * @group batch5
  */
 class TranslationRequestBundleClassTest extends TranslationKernelTestBase {
 

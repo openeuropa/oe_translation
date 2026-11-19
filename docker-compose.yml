@@ -56,6 +56,10 @@ services:
       - SE_SCREEN_HEIGHT=1080
       - SE_VNC_NO_PASSWORD=1
       - SE_START_VNC=true
+      # Allow two concurrent browser sessions so the parallel PHPUnit batches
+      # go faster.
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
     ports:
       - '4444:4444'
       - '7900:7900'

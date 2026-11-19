@@ -16,7 +16,7 @@ use Drupal\workflows\Entity\Workflow;
 /**
  * Testing custom translation-related logic.
  *
- * @group batch3
+ * @group batch4
  */
 class CorporateWorkflowTranslationTest extends KernelTestBase {
 

@@ -43,12 +43,14 @@
         "symfony/property-access": "^6 || ^7",
         "symfony/property-info": "^6 || ^7",
         "php-standard-library/php-standard-library": "^4.3",
-        "symfony/serializer": "^6 || ^7"
+        "symfony/serializer": "^6 || ^7",
+        "consolidation/robo": "5.1.1"
     },
     "_readme": [
         "Requiring symfony property-access and propery-info for the ePoetry mock for the serializer that uses them.",
         "Added a replace azjezz/psl because it was replaced by php-standard-library/php-standard-library package and it was abadoned. Also ensuring php-standard-library/php-standard-library doesnt go over 4.3",
-        "Requiring symfony/serializer for the oe_translation_cdt module."
+        "Requiring symfony/serializer for the oe_translation_cdt module.",
+        "Locking consolidation/robo to 5.1.1 due to 5.2.x calling Application::addCommand() which doesn't exists. Remove when support for Drupal core 10.6.x is dropped."
     ],
     "conflict": {
         "openeuropa/oe_editorial": "<1.2.0"
