@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.3.0](https://github.com/openeuropa/oe_translation/tree/3.3.0) (2026-11-23)
+
+[Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.2.1...3.3.0)
+
+**Merged pull requests:**
+
+- EWPP-7619: Fix for entity->id that returns int instead of string. [\#432](https://github.com/openeuropa/oe_translation/pull/432) ([fmmribeiro](https://github.com/fmmribeiro))
+- EWPP-0000: Unlock consolidation/robo. [\#431](https://github.com/openeuropa/oe_translation/pull/431) ([hernani](https://github.com/hernani))
+- EWPP-7532: Fix bug with externalReference. [\#430](https://github.com/openeuropa/oe_translation/pull/430) ([bircher](https://github.com/bircher))
+- EWPP-7225: Add custom access events to CDT and eTrans. [\#426](https://github.com/openeuropa/oe_translation/pull/426) ([intelektron](https://github.com/intelektron))
+
 ## [3.2.1](https://github.com/openeuropa/oe_translation/tree/3.2.1) (2026-11-03)
 
 [Full Changelog](https://github.com/openeuropa/oe_translation/compare/3.2.0...3.2.1)
