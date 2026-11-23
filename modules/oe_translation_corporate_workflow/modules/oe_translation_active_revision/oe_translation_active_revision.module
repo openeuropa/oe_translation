@@ -442,7 +442,8 @@ function oe_translation_active_revision_page_attachments_alter(array &$attachmen
   // Load the active revision for the entity.
   /** @var \Drupal\oe_translation_active_revision\ActiveRevisionStorage $storage */
   $storage = \Drupal::entityTypeManager()->getStorage('oe_translation_active_revision');
-  $active_revision = $storage->getActiveRevisionForEntity($entity->getEntityTypeId(), $entity->id());
+  // In some cases like feeds, id() returns integer, we need a string.
+  $active_revision = $storage->getActiveRevisionForEntity($entity->getEntityTypeId(), (string) $entity->id());
   if (!$active_revision) {
     // Without an active revision, no translation can be mapped to "hidden".
     $cache->addCacheTags(['oe_translation_active_revision_list']);
